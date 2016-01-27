@@ -1,0 +1,128 @@
+ifeq ($(MAKECMDGOALS),debug_firmware)
+DEFINES+=-DDEBUG
+DEFINES+=-g
+DEFINES+=-O0
+LDFLAGS+=-O0
+endif
+
+ifeq ($(MAKECMDGOALS),firmware)
+DEFINES+=-Os
+LDFLAGS+=-Os
+endif
+
+ifneq (,$(filter debug_firmware firmware,$(MAKECMDGOALS)))
+
+DEFINES+=-DUSE_FREERTOS
+
+# Where to find source files that do not live in this directory.
+VPATH+=${ROOT}/sources
+VPATH+=${ROOT}/sources/hal
+VPATH+=${ROOT}/sources/os
+VPATH+=${ROOT}/sources/dev
+VPATH+=${ROOT}/sources/app
+VPATH+=${ROOT}/sources/app/test_apps
+VPATH+=${RTOS_SOURCE_DIR}
+VPATH+=${RTOS_SOURCE_DIR}/portable/MemMang
+VPATH+=${RTOS_SOURCE_DIR}/portable/GCC/ARM_CM4F
+VPATH+=${ROOT}/libraries/CMSIS/Source
+VPATH+=${ROOT}/libraries/STM32F30x_StdPeriph_Driver/src
+VPATH+=${ROOT}/device
+
+# Where to find header files that do not live in the source directory.
+IPATH=${ROOT}/sources
+IPATH+=${ROOT}/sources/config
+IPATH+=${ROOT}/sources/hal
+IPATH+=${ROOT}/sources/os
+IPATH+=${ROOT}/sources/dev
+IPATH+=${ROOT}/sources/app
+IPATH+=${ROOT}/sources/app/test_apps
+IPATH+=${ROOT}/sources/interface
+IPATH+=${ROOT}/sources/utility
+IPATH+=${ROOT}/definitions
+IPATH+=${RTOS_SOURCE_DIR}/include
+IPATH+=${RTOS_SOURCE_DIR}/portable/GCC/ARM_CM4F
+IPATH+=${ROOT}/libraries/CMSIS/Include
+IPATH+=${ROOT}/libraries/STM32F30x_StdPeriph_Driver/inc
+IPATH+=${ROOT}/libraries
+
+# PMD firmware
+${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/main.o
+${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/versionfile.o
+
+# HAL Layer
+${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/pmd_Adc.o
+${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/pmd_CRC.o
+${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/pmd_Dma.o
+${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/pmd_Exti.o
+${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/pmd_Gpio.o
+${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/pmd_I2c.o
+${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/pmd_Rtc.o
+${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/pmd_Spi.o
+${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/pmd_SpiWithDma.o
+${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/pmd_Tim.o
+${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/pmd_TimHalfBridge.o
+${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/pmd_TimHallDecoder.o
+${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/pmd_TimPwm.o
+${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/pmd_Usart.o
+${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/pmd_UsartWithDma.o
+
+# DEV Layer
+${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/pmd_Battery.o
+${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/pmd_DebugInterface.o
+${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/pmd_Light.o
+${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/pmd_PIDController.o
+${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/pmd_TemperatureSensor.o
+${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/pmd_TemperatureSensor_Internal.o
+${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/pmd_TemperatureSensor_NTC.o
+${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/pmd_TimSensorBldc.o
+
+# OS Layer
+${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/pmd_CountingSemaphore.o
+${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/pmd_DeepSleepInterface.o
+${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/pmd_Mutex.o
+${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/pmd_RecursiveMutex.o
+${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/pmd_Semaphore.o
+${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/pmd_Task.o
+${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/pmd_TaskEndless.o
+${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/pmd_TaskInterruptable.o
+
+# App Layer
+#${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/pmd_BatteryObserver.o
+${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/pmd_MotorController.o
+
+#PMD TestApps
+#${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/pmd_TestLed.o
+#${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/pmd_TestRtc.o
+
+# device
+${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/startup_stm32f30x.o
+${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/system_stm32f30x.o
+${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/syscalls.o
+${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/stm32f30x_it.o
+
+# driverlib
+${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/stm32f30x_rcc.o
+${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/stm32f30x_pwr.o
+${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/stm32f30x_rtc.o
+${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/stm32f30x_gpio.o
+${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/stm32f30x_usart.o
+${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/stm32f30x_spi.o
+${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/stm32f30x_dma.o
+${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/stm32f30x_misc.o
+${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/stm32f30x_exti.o
+${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/stm32f30x_syscfg.o
+${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/stm32f30x_tim.o
+${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/stm32f30x_adc.o
+${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/stm32f30x_crc.o
+${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/stm32f30x_i2c.o
+
+# freeRTOS
+${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/croutine.o
+${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/list.o
+${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/queue.o
+${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/tasks.o
+${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/port.o
+${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/heap_3.o
+${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/event_groups.o
+
+endif
