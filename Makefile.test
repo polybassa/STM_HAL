@@ -1,4 +1,5 @@
 IPATH+=${ROOT}/sources
+IPATH+=${ROOT}/sources/config
 IPATH+=${ROOT}/sources/app
 IPATH+=${ROOT}/sources/os
 IPATH+=${ROOT}/sources/dev
