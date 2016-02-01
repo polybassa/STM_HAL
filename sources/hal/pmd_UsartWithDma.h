@@ -53,6 +53,8 @@ struct UsartWithDma {
 
     void registerTransferCompleteCallback(std::function<void(void)> ) const;
 
+    size_t getNonBlockingSendDataCounter(void) const;
+
 private:
     constexpr UsartWithDma(Usart const* const usartInterface = nullptr,
                            const uint16_t&    dmaCmd = 0,

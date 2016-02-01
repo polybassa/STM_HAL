@@ -61,6 +61,13 @@ void UsartWithDma::registerTransferCompleteCallback(std::function<void(void)> f)
     }
 }
 
+size_t UsartWithDma::getNonBlockingSendDataCounter(void) const
+{
+    if (mTxDma != nullptr) {
+        return mTxDma->getCurrentDataCounter();
+    }
+}
+
 size_t UsartWithDma::send(uint8_t const* const data, const size_t length) const
 {
     if (data == nullptr) {
