@@ -32,7 +32,7 @@ MotorController::MotorController(
     const float       motorResistance,
     const float       Kp,
     const float       Ki) : os::DeepSleepModule(),
-    mMotorControllerTask("MotorControl",
+    mMotorControllerTask("1MotorControl",
                          MotorController::STACKSIZE,
                          os::Task::Priority::HIGH,
                          [this](const bool& join)

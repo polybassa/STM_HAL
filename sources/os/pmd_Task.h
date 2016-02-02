@@ -91,6 +91,8 @@ struct ThisTask {
 
     static void sleep(const std::chrono::milliseconds ms);
     static void yield(void);
+
+    static char* getName(void);
 };
 }
 
