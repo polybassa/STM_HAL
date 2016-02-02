@@ -86,7 +86,6 @@ public:
     friend int ::ut_TestPIDOutput(void);
     friend int ::ut_TestPIDInOut(void);
     friend int ::ut_TestSetTorque(void);
-
 #endif
 };
 }

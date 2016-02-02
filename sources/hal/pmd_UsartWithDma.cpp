@@ -24,6 +24,7 @@ using hal::Usart;
 using hal::UsartWithDma;
 
 std::array<os::Semaphore, Usart::__ENUM__SIZE> UsartWithDma::DmaTransferCompleteSemaphores;
+std::array<os::Semaphore, Usart::__ENUM__SIZE> UsartWithDma::DmaReceiveCompleteSemaphores;
 
 void UsartWithDma::initialize() const
 {
@@ -34,7 +35,9 @@ void UsartWithDma::initialize() const
     USART_DMACmd(reinterpret_cast<USART_TypeDef*>(mUsart->mPeripherie), mDmaCmd, ENABLE);
     USART_Cmd(reinterpret_cast<USART_TypeDef*>(mUsart->mPeripherie), ENABLE);
 
-    if (!DmaTransferCompleteSemaphores[static_cast<size_t>(mUsart->mDescription)]) {
+    if (!DmaTransferCompleteSemaphores[static_cast<size_t>(mUsart->mDescription)] ||
+        !DmaReceiveCompleteSemaphores[static_cast<size_t>(mUsart->mDescription)])
+    {
         Trace(ZONE_ERROR, "Semaphore allocation failed/r/n");
     } else {
         registerInterruptSemaphores();
@@ -49,7 +52,7 @@ void UsartWithDma::registerInterruptSemaphores(void) const
     }
 
     if ((mRxDma != nullptr)) {
-        mRxDma->registerInterruptSemaphore(&DmaTransferCompleteSemaphores.at(
+        mRxDma->registerInterruptSemaphore(&DmaReceiveCompleteSemaphores.at(
                                                mUsart->mDescription), Dma::InterruptSource::TC);
     }
 }
@@ -66,9 +69,10 @@ size_t UsartWithDma::getNonBlockingSendDataCounter(void) const
     if (mTxDma != nullptr) {
         return mTxDma->getCurrentDataCounter();
     }
+    return 0;
 }
 
-size_t UsartWithDma::send(uint8_t const* const data, const size_t length) const
+size_t UsartWithDma::send(uint8_t const* const data, const size_t length, const uint32_t ticksToWait) const
 {
     if (data == nullptr) {
         return 0;
@@ -79,19 +83,27 @@ size_t UsartWithDma::send(uint8_t const* const data, const size_t length) const
         mTxDma->setupTransfer(data, length);
         mTxDma->enable();
 
-        DmaTransferCompleteSemaphores.at(mUsart->mDescription).take();
-
-        mTxDma->disable();
-        return length;
+        if (DmaTransferCompleteSemaphores.at(mUsart->mDescription).take(ticksToWait)) {
+            mTxDma->disable();
+            return length;
+        } else {
+            mTxDma->disable();
+            return 0;
+        }
     } else {
         return mUsart->send(data, length);
     }
 }
 
-size_t UsartWithDma::receive(uint8_t* const data, const size_t length) const
+size_t UsartWithDma::receive(uint8_t* const data, const size_t length, const uint32_t ticksToWait) const
 {
     if (data == nullptr) {
         return 0;
+    }
+
+    if (mUsart->hasOverRunError()) {
+        mUsart->clearOverRunError();
+        //Trace(ZONE_INFO, "OverRun Error detected \r\n");
     }
 
     if ((mRxDma != nullptr) && (mDmaCmd & USART_DMAReq_Rx) && (length > MIN_LENGTH_FOR_DMA_TRANSFER)) {
@@ -99,10 +111,13 @@ size_t UsartWithDma::receive(uint8_t* const data, const size_t length) const
         mRxDma->setupTransfer(data, length);
         mRxDma->enable();
 
-        DmaTransferCompleteSemaphores.at(mUsart->mDescription).take();
-
-        mRxDma->disable();
-        return length;
+        if (DmaReceiveCompleteSemaphores.at(mUsart->mDescription).take(ticksToWait)) {
+            mRxDma->disable();
+            return length;
+        } else {
+            mRxDma->disable();
+            return 0;
+        }
     } else {
         return mUsart->receive(data, length);
     }

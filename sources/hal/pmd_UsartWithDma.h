@@ -34,11 +34,11 @@ struct UsartWithDma {
 
     template<size_t n>
     size_t send(const std::array<uint8_t, n>&) const;
-    size_t send(uint8_t const* const, const size_t) const;
+    size_t send(uint8_t const* const, const size_t, const uint32_t ticksToWait = portMAX_DELAY) const;
 
     template<size_t n>
     size_t receive(std::array<uint8_t, n>&) const;
-    size_t receive(uint8_t* const, const size_t) const;
+    size_t receive(uint8_t* const, const size_t, const uint32_t ticksToWait = portMAX_DELAY) const;
 
     template<size_t n>
     void sendNonBlocking(const std::array<uint8_t, n>& rx, const bool repeat) const;
@@ -72,6 +72,7 @@ private:
 
     static constexpr const size_t MIN_LENGTH_FOR_DMA_TRANSFER = 10;
     static std::array<os::Semaphore, Usart::__ENUM__SIZE> DmaTransferCompleteSemaphores;
+    static std::array<os::Semaphore, Usart::__ENUM__SIZE> DmaReceiveCompleteSemaphores;
 
     friend class Factory<UsartWithDma>;
     friend struct Dma;
