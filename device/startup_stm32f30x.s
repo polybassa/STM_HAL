@@ -117,7 +117,7 @@ LoopFillZerobss:
   b  LoopFillHeap
 /* Zero fill the bss segment. */
 FillHeap:
-  movs  r3, #0xFFFFFFFF
+  movs  r3, #0x00000000
   str  r3, [r2], #4
 
 LoopFillHeap:
