@@ -13,33 +13,41 @@
  *  You should have received a copy of the GNU General Public License
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>. */
 
-#ifndef _TRACE_H_
-#define _TRACE_H_
+#include "Mutex.h"
 
-#define ZONE_ERROR   0x00000001
-#define ZONE_WARNING 0x00000002
-#define ZONE_INFO    0x00000004
-#define ZONE_VERBOSE 0x00000008
+using os::Mutex;
 
-#if defined(DEBUG)
-#include "DebugInterface.h"
+Mutex::Mutex(void) : mMutexHandle(xSemaphoreCreateMutex())
+{}
 
-static const dev::DebugInterface terminal;
+Mutex::Mutex(Mutex&& rhs) : mMutexHandle(rhs.mMutexHandle)
+{
+    rhs.mMutexHandle = nullptr;
+}
 
-#define Trace(ZONE, ...) do { \
-        if (g_DebugZones & (ZONE)) { \
-            terminal.print("%s:%u: ", __FILE__, __LINE__); \
-            terminal.print(__VA_ARGS__); \
-        } \
-} while (0)
+Mutex& Mutex::operator=(Mutex&& rhs)
+{
+    mMutexHandle = rhs.mMutexHandle;
+    rhs.mMutexHandle = nullptr;
+    return *this;
+}
 
-#define TraceInit() do { \
-        terminal.clearTerminal(); \
-        terminal.printStartupMessage(); \
-} while (0)
+Mutex::~Mutex(void)
+{
+    vSemaphoreDelete(mMutexHandle);
+}
 
-#else
-#define Trace(ZONE, ...)
-#define TraceInit()
-#endif
-#endif /* #ifndef _TRACE_H_ */
+bool Mutex::take(uint32_t ticksToWait) const
+{
+    return *this ? xSemaphoreTake(mMutexHandle, ticksToWait) : false;
+}
+
+bool Mutex::give(void) const
+{
+    return *this ? xSemaphoreGive(mMutexHandle) : false;
+}
+
+Mutex::operator bool() const
+{
+    return mMutexHandle != nullptr;
+}

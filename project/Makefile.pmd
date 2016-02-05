@@ -27,10 +27,11 @@ VPATH+=${RTOS_SOURCE_DIR}/portable/GCC/ARM_CM4F
 VPATH+=${ROOT}/libraries/CMSIS/Source
 VPATH+=${ROOT}/libraries/STM32F30x_StdPeriph_Driver/src
 VPATH+=${ROOT}/device
+VPATH+=${ROOT}/project
 
 # Where to find header files that do not live in the source directory.
 IPATH=${ROOT}/sources
-IPATH+=${ROOT}/sources/config
+IPATH+=${ROOT}/project/config
 IPATH+=${ROOT}/sources/hal
 IPATH+=${ROOT}/sources/os
 IPATH+=${ROOT}/sources/dev
@@ -50,49 +51,49 @@ ${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/main.o
 ${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/versionfile.o
 
 # HAL Layer
-${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/pmd_Adc.o
-${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/pmd_CRC.o
-${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/pmd_Dma.o
-${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/pmd_Exti.o
-${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/pmd_Gpio.o
-${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/pmd_I2c.o
-${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/pmd_Rtc.o
-${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/pmd_Spi.o
-${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/pmd_SpiWithDma.o
-${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/pmd_Tim.o
-${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/pmd_TimHalfBridge.o
-${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/pmd_TimHallDecoder.o
-${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/pmd_TimPwm.o
-${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/pmd_Usart.o
-${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/pmd_UsartWithDma.o
+${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/Adc.o
+${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/CRC.o
+${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/Dma.o
+${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/Exti.o
+${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/Gpio.o
+${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/I2c.o
+${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/Rtc.o
+${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/Spi.o
+${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/SpiWithDma.o
+${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/Tim.o
+${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/TimHalfBridge.o
+${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/TimHallDecoder.o
+${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/TimPwm.o
+${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/Usart.o
+${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/UsartWithDma.o
 
 # DEV Layer
-${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/pmd_Battery.o
-${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/pmd_DebugInterface.o
-${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/pmd_Light.o
-${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/pmd_PIDController.o
-${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/pmd_TemperatureSensor.o
-${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/pmd_TemperatureSensor_Internal.o
-${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/pmd_TemperatureSensor_NTC.o
-${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/pmd_TimSensorBldc.o
+${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/Battery.o
+${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/DebugInterface.o
+${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/Light.o
+${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/PIDController.o
+${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/TemperatureSensor.o
+${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/TemperatureSensor_Internal.o
+${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/TemperatureSensor_NTC.o
+${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/TimSensorBldc.o
 
 # OS Layer
-${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/pmd_CountingSemaphore.o
-${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/pmd_DeepSleepInterface.o
-${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/pmd_Mutex.o
-${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/pmd_RecursiveMutex.o
-${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/pmd_Semaphore.o
-${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/pmd_Task.o
-${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/pmd_TaskEndless.o
-${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/pmd_TaskInterruptable.o
+${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/CountingSemaphore.o
+${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/DeepSleepInterface.o
+${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/Mutex.o
+${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/RecursiveMutex.o
+${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/Semaphore.o
+${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/os_Task.o
+${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/TaskEndless.o
+${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/TaskInterruptable.o
 
 # App Layer
-#${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/pmd_BatteryObserver.o
-${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/pmd_MotorController.o
+#${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/BatteryObserver.o
+${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/MotorController.o
 
 #PMD TestApps
-#${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/pmd_TestLed.o
-#${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/pmd_TestRtc.o
+#${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/TestLed.o
+#${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/TestRtc.o
 
 # device
 ${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/startup_stm32f30x.o

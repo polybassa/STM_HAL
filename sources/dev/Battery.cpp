@@ -13,33 +13,29 @@
  *  You should have received a copy of the GNU General Public License
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>. */
 
-#ifndef _TRACE_H_
-#define _TRACE_H_
+#include "Battery.h"
+#include "trace.h"
 
-#define ZONE_ERROR   0x00000001
-#define ZONE_WARNING 0x00000002
-#define ZONE_INFO    0x00000004
-#define ZONE_VERBOSE 0x00000008
+static const int __attribute__((unused)) g_DebugZones = ZONE_ERROR | ZONE_WARNING | ZONE_VERBOSE | ZONE_INFO;
 
-#if defined(DEBUG)
-#include "DebugInterface.h"
+using dev::Battery;
 
-static const dev::DebugInterface terminal;
+float Battery::getTemperature(void) const
+{
+    return temperatureSensor.getTemperature();
+}
 
-#define Trace(ZONE, ...) do { \
-        if (g_DebugZones & (ZONE)) { \
-            terminal.print("%s:%u: ", __FILE__, __LINE__); \
-            terminal.print(__VA_ARGS__); \
-        } \
-} while (0)
+float Battery::getVoltage(void) const
+{
+    return voltagePeripherie.getVoltage() * Battery::VOLTAGE_FACTOR;
+}
 
-#define TraceInit() do { \
-        terminal.clearTerminal(); \
-        terminal.printStartupMessage(); \
-} while (0)
+float Battery::getCurrent(void) const
+{
+    return (currentPeripherie.getVoltage() - 2.5) * 10;
+}
 
-#else
-#define Trace(ZONE, ...)
-#define TraceInit()
-#endif
-#endif /* #ifndef _TRACE_H_ */
+float Battery::getPower(void) const
+{
+    return getVoltage() * getCurrent();
+}

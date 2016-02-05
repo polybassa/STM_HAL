@@ -75,14 +75,14 @@ check:
 	@@CPPCHECKER@ --enable=all --inconclusive -I sources/hal/ -I sources/dev/ -I sources/app/ -I sources/utility/ -I sources/interface/ -I sources/os/ -I ../libraries/STM32F30x_StdPeriph_Driver/inc/ --std=posix --quiet .
 
 ENDINGS=c h cpp
-CODE_DIRS=sources
+CODE_DIRS=../sources config
 filelist:
 	@rm -f $@.txt
 	@$(foreach END, ${ENDINGS}, $(foreach DIR, ${CODE_DIRS}, find ./$(DIR) -name "*.$(END)" >> $@.txt;))
 	@echo "Created $@.txt"
 
 uncrustify: filelist
-	${UNCRUSTIFY} -F filelist.txt --no-backup -c utilities/uncrustify.cfg
+	${UNCRUSTIFY} -F filelist.txt --no-backup -c ../utilities/uncrustify.cfg
 
 
 # The rule to clean out all the build products.

@@ -13,33 +13,29 @@
  *  You should have received a copy of the GNU General Public License
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>. */
 
-#ifndef _TRACE_H_
-#define _TRACE_H_
+#ifndef SOURCES_PMD_TASK_INTERRUPTABLE_H_
+#define SOURCES_PMD_TASK_INTERRUPTABLE_H_
 
-#define ZONE_ERROR   0x00000001
-#define ZONE_WARNING 0x00000002
-#define ZONE_INFO    0x00000004
-#define ZONE_VERBOSE 0x00000008
+#include "os_Task.h"
+#include "semphr.h"
 
-#if defined(DEBUG)
-#include "DebugInterface.h"
+namespace os
+{
+class TaskInterruptable : public Task {
+    xSemaphoreHandle mJoinSemaphore;
+    bool mJoinFlag;
 
-static const dev::DebugInterface terminal;
+public:
+    TaskInterruptable(const char* name, uint16_t stackSize, uint32_t priority,
+                      std::function<void(const bool&)> function);
+    virtual ~TaskInterruptable(void) override;
+    using Task::Task;
 
-#define Trace(ZONE, ...) do { \
-        if (g_DebugZones & (ZONE)) { \
-            terminal.print("%s:%u: ", __FILE__, __LINE__); \
-            terminal.print(__VA_ARGS__); \
-        } \
-} while (0)
+    virtual void taskFunction(void) override;
+    void start(void);
+    void join(void);
+    void detach(void);
+};
+}
 
-#define TraceInit() do { \
-        terminal.clearTerminal(); \
-        terminal.printStartupMessage(); \
-} while (0)
-
-#else
-#define Trace(ZONE, ...)
-#define TraceInit()
-#endif
-#endif /* #ifndef _TRACE_H_ */
+#endif /* SOURCES_PMD_TASK_INTERRUPTABLE_H_ */

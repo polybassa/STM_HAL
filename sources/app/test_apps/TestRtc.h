@@ -13,33 +13,14 @@
  *  You should have received a copy of the GNU General Public License
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>. */
 
-#ifndef _TRACE_H_
-#define _TRACE_H_
+#ifndef SOURCES_PMD_TEST_RTC_H_
+#define SOURCES_PMD_TEST_RTC_H_
 
-#define ZONE_ERROR   0x00000001
-#define ZONE_WARNING 0x00000002
-#define ZONE_INFO    0x00000004
-#define ZONE_VERBOSE 0x00000008
+#include "TaskEndless.h"
 
-#if defined(DEBUG)
-#include "DebugInterface.h"
+namespace app
+{
+extern const os::TaskEndless rtcTest;
+}
 
-static const dev::DebugInterface terminal;
-
-#define Trace(ZONE, ...) do { \
-        if (g_DebugZones & (ZONE)) { \
-            terminal.print("%s:%u: ", __FILE__, __LINE__); \
-            terminal.print(__VA_ARGS__); \
-        } \
-} while (0)
-
-#define TraceInit() do { \
-        terminal.clearTerminal(); \
-        terminal.printStartupMessage(); \
-} while (0)
-
-#else
-#define Trace(ZONE, ...)
-#define TraceInit()
-#endif
-#endif /* #ifndef _TRACE_H_ */
+#endif /* SOURCES_PMD_TEST_RTC_H_ */

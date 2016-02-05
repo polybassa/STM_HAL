@@ -13,33 +13,33 @@
  *  You should have received a copy of the GNU General Public License
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>. */
 
-#ifndef _TRACE_H_
-#define _TRACE_H_
+#ifndef SOURCES_PMD__SEMAPHORE_H_
+#define SOURCES_PMD__SEMAPHORE_H_
 
-#define ZONE_ERROR   0x00000001
-#define ZONE_WARNING 0x00000002
-#define ZONE_INFO    0x00000004
-#define ZONE_VERBOSE 0x00000008
+#include "FreeRTOS.h"
+#include "semphr.h"
+#include "os_Task.h"
 
-#if defined(DEBUG)
-#include "DebugInterface.h"
+namespace os
+{
+class Semaphore {
+    SemaphoreHandle_t mSemaphoreHandle = nullptr;
 
-static const dev::DebugInterface terminal;
+public:
+    Semaphore(void);
+    Semaphore(const Semaphore&) = delete;
+    Semaphore(Semaphore&&);
+    Semaphore& operator=(const Semaphore&) = delete;
+    Semaphore& operator=(Semaphore&&);
+    ~Semaphore(void);
 
-#define Trace(ZONE, ...) do { \
-        if (g_DebugZones & (ZONE)) { \
-            terminal.print("%s:%u: ", __FILE__, __LINE__); \
-            terminal.print(__VA_ARGS__); \
-        } \
-} while (0)
+    bool take(uint32_t ticksToWait = portMAX_DELAY) const;
+    bool give(void) const;
+    bool giveFromISR(void) const;
+    bool takeFromISR(void) const;
 
-#define TraceInit() do { \
-        terminal.clearTerminal(); \
-        terminal.printStartupMessage(); \
-} while (0)
+    operator bool() const;
+};
+}
 
-#else
-#define Trace(ZONE, ...)
-#define TraceInit()
-#endif
-#endif /* #ifndef _TRACE_H_ */
+#endif /* SOURCES_PMD__SEMAPHORE_H_ */
