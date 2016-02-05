@@ -11,6 +11,7 @@ IPATH+=${RTOS_SOURCE_DIR}/portable/GCC/ARM_CM4F
 IPATH+=${ROOT}/libraries/STM32F30x_StdPeriph_Driver/inc
 IPATH+=${ROOT}/libraries/CMSIS/Include
 IPATH+=${ROOT}/libraries
+IPATH+=${ROOT}/project/config
 
 VPATH+=${ROOT}/sources
 VPATH+=${ROOT}/sources/dev
@@ -21,32 +22,32 @@ VPATH+=${ROOT}/sources/hal
 
 ####################################DebugInterface############################################
 
-${BINDIR}/pmd_DebugInterface_ut.bin: DEFINES+=-DDEBUG
-${BINDIR}/pmd_DebugInterface_ut.bin: ${OBJDIR}/pmd_DebugInterface_ut.o 
-${BINDIR}/pmd_DebugInterface_ut.bin: ${OBJDIR}/pmd_DebugInterface.o
-${BINDIR}/pmd_DebugInterface_ut.bin: ${OBJDIR}/pmd_Mutex.o
+${BINDIR}/DebugInterface_ut.bin: DEFINES+=-DDEBUG
+${BINDIR}/DebugInterface_ut.bin: ${OBJDIR}/DebugInterface_ut.o 
+${BINDIR}/DebugInterface_ut.bin: ${OBJDIR}/DebugInterface.o
+${BINDIR}/DebugInterface_ut.bin: ${OBJDIR}/Mutex.o
 
 ####################################BatteryObserver############################################
 
-${BINDIR}/pmd_BatteryObserver_ut.bin: DEFINES+=-DUNITTEST 
-${BINDIR}/pmd_BatteryObserver_ut.bin: ${OBJDIR}/pmd_BatteryObserver_ut.o 
-${BINDIR}/pmd_BatteryObserver_ut.bin: ${OBJDIR}/pmd_BatteryObserver.o 
-${BINDIR}/pmd_BatteryObserver_ut.bin: ${OBJDIR}/pmd_DeepSleepInterface.o 
-${BINDIR}/pmd_BatteryObserver_ut.bin: ${OBJDIR}/pmd_TemperatureSensor.o
+${BINDIR}/BatteryObserver_ut.bin: DEFINES+=-DUNITTEST 
+${BINDIR}/BatteryObserver_ut.bin: ${OBJDIR}/BatteryObserver_ut.o 
+${BINDIR}/BatteryObserver_ut.bin: ${OBJDIR}/BatteryObserver.o 
+${BINDIR}/BatteryObserver_ut.bin: ${OBJDIR}/DeepSleepInterface.o 
+${BINDIR}/BatteryObserver_ut.bin: ${OBJDIR}/TemperatureSensor.o
 
 ####################################TemperatureSensor############################################
 
-${BINDIR}/pmd_TemperatureSensor_ut.bin: DEFINES+=-DUNITTEST
-${BINDIR}/pmd_TemperatureSensor_ut.bin: ${OBJDIR}/pmd_TemperatureSensor.o
-${BINDIR}/pmd_TemperatureSensor_ut.bin: ${OBJDIR}/pmd_TemperatureSensor_NTC.o
-${BINDIR}/pmd_TemperatureSensor_ut.bin: ${OBJDIR}/pmd_TemperatureSensor_Internal.o
-${BINDIR}/pmd_TemperatureSensor_ut.bin: ${OBJDIR}/pmd_TemperatureSensor_ut.o
+${BINDIR}/TemperatureSensor_ut.bin: DEFINES+=-DUNITTEST
+${BINDIR}/TemperatureSensor_ut.bin: ${OBJDIR}/TemperatureSensor.o
+${BINDIR}/TemperatureSensor_ut.bin: ${OBJDIR}/TemperatureSensor_NTC.o
+${BINDIR}/TemperatureSensor_ut.bin: ${OBJDIR}/TemperatureSensor_Internal.o
+${BINDIR}/TemperatureSensor_ut.bin: ${OBJDIR}/TemperatureSensor_ut.o
 
 ####################################PIDController############################################
 
-${BINDIR}/pmd_PIDController_ut.bin: DEFINES+=-DUNITTEST
-${BINDIR}/pmd_PIDController_ut.bin: ${OBJDIR}/pmd_PIDController.o
-${BINDIR}/pmd_PIDController_ut.bin: ${OBJDIR}/pmd_PIDController_ut.o
+${BINDIR}/PIDController_ut.bin: DEFINES+=-DUNITTEST
+${BINDIR}/PIDController_ut.bin: ${OBJDIR}/PIDController.o
+${BINDIR}/PIDController_ut.bin: ${OBJDIR}/PIDController_ut.o
 
 ################################################################################
 
@@ -55,10 +56,10 @@ test: clean-all ${BINDIR} ${OBJDIR} test_binarys
 	@${LCOV} --directory ${OBJDIR}/ --base-directory ${OBJDIR}/ --gcov-tool ${GCOV} --capture -o ${OBJDIR}/cov.info
 	@${GENHTML} ${OBJDIR}/cov.info -o ${COVERAGEDIR}
 
-TESTS=${BINDIR}/pmd_DebugInterface_ut.bin
-TESTS+=${BINDIR}/pmd_BatteryObserver_ut.bin
-TESTS+=${BINDIR}/pmd_TemperatureSensor_ut.bin	
-TESTS+=${BINDIR}/pmd_PIDController_ut.bin
+TESTS=${BINDIR}/DebugInterface_ut.bin
+TESTS+=${BINDIR}/BatteryObserver_ut.bin
+TESTS+=${BINDIR}/TemperatureSensor_ut.bin	
+TESTS+=${BINDIR}/PIDController_ut.bin
 
 test_binarys: ${TESTS}  
 	@echo "-------------------------------------------------------------"

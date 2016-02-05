@@ -24,7 +24,7 @@
 #
 #
 #*****************************************************************************
-PRJ_PREFIX=PMD_
+PRJ_PREFIX=HAL_
 PRJ_NAME=${PRJ_PREFIX}$(MAKECMDGOALS)
 FLAVOUR=$(MAKECMDGOALS)
 
@@ -106,6 +106,6 @@ ${OBJDIR}:
 ${BINDIR}:
 	@mkdir -p ${BINDIR}
 
-include Makefile.pmd
+include Makefile.prj
 include Makefile.test
 
