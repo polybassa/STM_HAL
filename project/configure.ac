@@ -2,14 +2,14 @@
 # Process this file with autoconf to produce a configure script.
 
 AC_PREREQ([2.69])
-AC_INIT([PMD], [0.1], [nils.weiss@st.oth-regensburg.de])
+AC_INIT([STM_HAL], [0.1], [nils.weiss@st.oth-regensburg.de])
 AC_CONFIG_HEADERS([config.h])
 
 # Checks for programs.
 AC_PROG_CXX
 AC_PROG_CC
 AC_PROG_MAKE_SET
-AC_SUBST(AM_CXXFLAGS, [-std=c++0x])
+AC_SUBST(AM_CXXFLAGS, [-std=c++14])
 AC_SUBST(AM_CXXFLAGS, [-pedantic])
 AC_SUBST(AM_CXXFLAGS, [-Wall])
 
@@ -118,17 +118,17 @@ AC_FUNC_MALLOC
 AC_CHECK_FUNCS([clock_gettime floor getcwd gettimeofday inet_ntoa localtime_r memset pow select socket sqrt strstr strtoul])
 
 
-AC_CONFIG_FILES([Makefile utilities/pre-commit.settings])
+AC_CONFIG_FILES([Makefile ../utilities/pre-commit.settings])
 AC_OUTPUT
 
 
-rm .git/hooks/pre-commit
-ln -Fv utilities/pre-commit.uncrustify .git/hooks/pre-commit
-chmod a+x .git/hooks/pre-commit
+rm ../.git/hooks/pre-commit
+ln -Fv ../utilities/pre-commit.uncrustify ../.git/hooks/pre-commit
+chmod a+x ../.git/hooks/pre-commit
 echo Added pre-commit hook to this repository
 
-rm .git/hooks/pre-push
-ln -Fv utilities/pre-push .git/hooks/pre-push
-chmod a+x .git/hooks/pre-push
+rm ../.git/hooks/pre-push
+ln -Fv ../utilities/pre-push ../.git/hooks/pre-push
+chmod a+x ../.git/hooks/pre-push
 echo Added pre-push hook to this repository
 

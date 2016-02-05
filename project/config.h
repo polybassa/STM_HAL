@@ -96,13 +96,13 @@
 #define PACKAGE_BUGREPORT "nils.weiss@st.oth-regensburg.de"
 
 /* Define to the full name of this package. */
-#define PACKAGE_NAME "PMD"
+#define PACKAGE_NAME "STM_HAL"
 
 /* Define to the full name and version of this package. */
-#define PACKAGE_STRING "PMD 0.1"
+#define PACKAGE_STRING "STM_HAL 0.1"
 
 /* Define to the one symbol short name of this package. */
-#define PACKAGE_TARNAME "pmd"
+#define PACKAGE_TARNAME "stm_hal"
 
 /* Define to the home page for this package. */
 #define PACKAGE_URL ""
