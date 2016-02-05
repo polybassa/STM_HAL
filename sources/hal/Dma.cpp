@@ -67,13 +67,22 @@ void Dma::DMA_TEIRQHandler(const Dma& peripherie)
     DMA_IRQHandlerCallback(peripherie, Dma::TEInterruptCallbacks);
 }
 
+void DMA1_Channel2_IRQHandler(void)
+{
+    const uint32_t base = DMA1_Channel2_BASE;
+    const uint32_t TCFlag = DMA1_IT_TC2;
+    const uint32_t HTFlag = DMA1_IT_HT2;
+    const uint32_t TEFlag = DMA1_IT_TE2;
+    Dma::DMA_IRQHandler(Factory<Dma>::getByPeripherie<base>(), TCFlag, HTFlag, TEFlag);
+}
+
 void DMA1_Channel3_IRQHandler(void)
 {
-//    const uint32_t base = DMA1_Channel3_BASE;
-//    const uint32_t TCFlag = DMA1_IT_TC3;
-//    const uint32_t HTFlag = DMA1_IT_HT3;
-//    const uint32_t TEFlag = DMA1_IT_TE3;
-//    Dma::DMA_IRQHandler(Factory<Dma>::getByPeripherie<base>(), TCFlag, HTFlag, TEFlag);
+    const uint32_t base = DMA1_Channel3_BASE;
+    const uint32_t TCFlag = DMA1_IT_TC3;
+    const uint32_t HTFlag = DMA1_IT_HT3;
+    const uint32_t TEFlag = DMA1_IT_TE3;
+    Dma::DMA_IRQHandler(Factory<Dma>::getByPeripherie<base>(), TCFlag, HTFlag, TEFlag);
 }
 void DMA1_Channel5_IRQHandler(void)
 {
