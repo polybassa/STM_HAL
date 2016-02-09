@@ -43,7 +43,7 @@ static constexpr const std::array<const uint32_t, hal::Usart::__ENUM__SIZE> Cloc
 { {
       RCC_APB2Periph_USART1,
       RCC_APB1Periph_USART2,
-	  RCC_APB1Periph_USART3
+      RCC_APB1Periph_USART3
   } };
 
 #endif /* SOURCES_PMD_USART_CONFIG_CONTAINER_H_ */

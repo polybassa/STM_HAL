@@ -18,6 +18,7 @@
 #include <cmath>
 
 using app::MotorController;
+using dev::Battery;
 using dev::PIDController;
 using dev::SensorBLDC;
 
@@ -28,6 +29,7 @@ constexpr std::chrono::milliseconds MotorController::controllerInterval;
 
 MotorController::MotorController(
     const SensorBLDC& motor,
+    const Battery&    battery,
     const float       motorConstant,
     const float       motorResistance,
     const float       Kp,
@@ -40,7 +42,7 @@ MotorController::MotorController(
     motorControllerTaskFunction(join);
 }),
     mMotor(motor),
-    mBattery(),
+    mBattery(battery),
     mMotorConstant(motorConstant),
     mMotorCoilResistance(motorResistance),
     mController(mCurrentTorque,

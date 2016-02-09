@@ -23,7 +23,7 @@ using app::BatteryObserver;
 
 const std::chrono::milliseconds BatteryObserver::energyRecordInterval = std::chrono::milliseconds(100);
 
-BatteryObserver::BatteryObserver(const std::function<void(void)>&& overcurrentCallback,
+BatteryObserver::BatteryObserver(const dev::Battery& battery, const std::function<void(void)>&& overcurrentCallback,
                                  const std::function<void(void)>&& undervoltageCallback) :
     os::DeepSleepModule(),
     mEnergyRecordTask("2BatteryObserver", os::Task::Priority::LOW, BatteryObserver::STACKSIZE, [this](
@@ -32,7 +32,7 @@ BatteryObserver::BatteryObserver(const std::function<void(void)>&& overcurrentCa
 }),
     mOvercurrentCallback(std::move(overcurrentCallback)),
     mUndervoltageCallback(std::move(undervoltageCallback)),
-    mBattery() {}
+    mBattery(battery) {}
 
 void BatteryObserver::enterDeepSleep(void)
 {

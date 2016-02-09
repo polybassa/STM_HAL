@@ -31,7 +31,7 @@ class BatteryObserver final : private os::DeepSleepModule {
     os::TaskInterruptable mEnergyRecordTask;
     const std::function<void(void)> mOvercurrentCallback;
     const std::function<void(void)> mUndervoltageCallback;
-    const dev::Battery mBattery;
+    const dev::Battery& mBattery;
     float mEnergy = 0;
     float mMaxEnergy = 0;
     hal::Rtc::time_point mEnteredDeepSleep;
@@ -52,7 +52,7 @@ class BatteryObserver final : private os::DeepSleepModule {
     void increaseEnergyLevel(const float);
 
 public:
-    BatteryObserver(const std::function<void(void)>&& overcurrentCallback,
+    BatteryObserver(const dev::Battery&, const std::function<void(void)>&& overcurrentCallback,
                     const std::function<void(void)>&& undervoltageCallback);
 
     BatteryObserver(const BatteryObserver&) = delete;

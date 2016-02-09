@@ -42,7 +42,7 @@ class MotorController final : private os::DeepSleepModule, public interface::Mot
 
     os::TaskInterruptable mMotorControllerTask;
     const dev::SensorBLDC& mMotor;
-    const dev::Battery mBattery;
+    const dev::Battery& mBattery;
     const float mMotorConstant = 0.00768;
     const float mMotorCoilResistance = 0.844;
     dev::PIDController mController;
@@ -63,6 +63,7 @@ class MotorController final : private os::DeepSleepModule, public interface::Mot
 public:
     MotorController(
         const dev::SensorBLDC& motor,
+        const dev::Battery&    battery,
         const float            motorConstant,
         const float            motorResistance,
         const float            Kp,
