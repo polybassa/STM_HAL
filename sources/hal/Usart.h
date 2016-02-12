@@ -63,6 +63,8 @@ struct Usart {
 
     bool isInitalized(void) const;
 
+    void setBaudRate(const size_t) const;
+
 private:
     constexpr Usart(const enum Description&  desc,
                     const uint32_t&          peripherie,

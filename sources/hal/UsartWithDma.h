@@ -52,8 +52,11 @@ struct UsartWithDma {
     void stopNonBlockingReceive(void) const;
 
     void registerTransferCompleteCallback(std::function<void(void)> ) const;
+    void registerReceiveCompleteCallback(std::function<void(void)> ) const;
 
     size_t getNonBlockingSendDataCounter(void) const;
+
+    void setBaudRate(const size_t) const;
 
 private:
     constexpr UsartWithDma(Usart const* const usartInterface = nullptr,
@@ -70,7 +73,7 @@ private:
     void initialize(void) const;
     void registerInterruptSemaphores(void) const;
 
-    static constexpr const size_t MIN_LENGTH_FOR_DMA_TRANSFER = 10;
+    static constexpr const size_t MIN_LENGTH_FOR_DMA_TRANSFER = 0;
     static std::array<os::Semaphore, Usart::__ENUM__SIZE> DmaTransferCompleteSemaphores;
     static std::array<os::Semaphore, Usart::__ENUM__SIZE> DmaReceiveCompleteSemaphores;
 

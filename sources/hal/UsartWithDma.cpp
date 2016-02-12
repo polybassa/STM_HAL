@@ -64,12 +64,26 @@ void UsartWithDma::registerTransferCompleteCallback(std::function<void(void)> f)
     }
 }
 
+void UsartWithDma::registerReceiveCompleteCallback(std::function<void(void)> f) const
+{
+    if (mRxDma != nullptr) {
+        mRxDma->registerInterruptCallback(f, Dma::InterruptSource::TC);
+    }
+}
+
 size_t UsartWithDma::getNonBlockingSendDataCounter(void) const
 {
     if (mTxDma != nullptr) {
         return mTxDma->getCurrentDataCounter();
     }
     return 0;
+}
+
+void UsartWithDma::setBaudRate(const size_t baudRate) const
+{
+    if (mUsart) {
+        mUsart->setBaudRate(baudRate);
+    }
 }
 
 size_t UsartWithDma::send(uint8_t const* const data, const size_t length, const uint32_t ticksToWait) const

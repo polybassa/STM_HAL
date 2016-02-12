@@ -50,6 +50,7 @@ extern "C" {
 #include <sys/times.h>
 #include <stdint.h>
 #include <sys/time.h>
+#include <unistd.h>
 #include "stm32f30x.h"
 /*
  | module variables
@@ -476,6 +477,10 @@ pid_t _wait_r(struct _reent* r, int* stat_loc)
 * \return 0 for success.
 *//*-------------------------------------------------------------------------*/
 
+#ifdef DEBUG
+void _console_write_r(const void* buf);
+#endif
+
 ssize_t _write_r(struct _reent* r, int file, const void* buf, size_t nbyte)
 {
     r = r;                                  // suppress warning
@@ -483,11 +488,31 @@ ssize_t _write_r(struct _reent* r, int file, const void* buf, size_t nbyte)
     buf = buf;                              // suppress warning
     nbyte = nbyte;                          // suppress warning
 
+#ifdef DEBUG
+    int i;
+
+    if ((file == STDOUT_FILENO) || (file == STDERR_FILENO)) {
+        _console_write_r(buf);
+        return nbyte;
+    }
+    errno = EIO;
+    return -1;
+#else
     return 0;
+#endif
 }
 
 #endif
 
 #ifdef __cplusplus
+}
+#endif
+
+#ifdef DEBUG
+#include "trace.h"
+void _console_write_r(const void* buf)
+{
+    terminal.print(reinterpret_cast<const char*>(buf));
+    terminal.print("\r");
 }
 #endif
