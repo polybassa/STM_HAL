@@ -25,70 +25,7 @@ using hal::Exti;
 using hal::Factory;
 using hal::Gpio;
 
-extern "C" {
-extern void MpuInterruptHandler(void);
-
-void EXTI0_IRQHandler(void)
-{
-    constexpr const Exti& exti = hal::Factory<Exti>::get<(Exti::Description)EXTI_Line0>();
-    exti.handleInterrupt();
-}
-
-void EXTI1_IRQHandler(void)
-{
-    constexpr const Exti& exti = hal::Factory<Exti>::get<(Exti::Description)EXTI_Line1>();
-    exti.handleInterrupt();
-}
-
-// TODO Uncomment if you want to use on to the following Extis
-void EXTI2_TSC_IRQHandler(void)
-{
-    //constexpr const Exti& exti = hal::Factory<Exti>::get<(Exti::Description)EXTI_Line2>();
-    //exti.handleInterrupt();
-}
-
-void EXTI3_IRQHandler(void)
-{
-//    constexpr const Exti& exti = hal::Factory<Exti>::get<(Exti::Description)EXTI_Line3>();
-//    exti.handleInterrupt();
-}
-
-void EXTI4_IRQHandler(void)
-{
-//	  constexpr const Exti& exti = hal::Factory<Exti>::get<(Exti::Description)EXTI_Line4>();
-//    exti.handleInterrupt();
-}
-
-void EXTI9_5_IRQHandler(void)
-{
-//    constexpr const Exti& exti5 = hal::Factory<Exti>::get<(Exti::Description)EXTI_Line5>();
-//    exti5.handleInterrupt();
-//    constexpr const Exti& exti6 = hal::Factory<Exti>::get<(Exti::Description)EXTI_Line6>();
-//    exti6.handleInterrupt();
-//    constexpr const Exti& exti7 = hal::Factory<Exti>::get<(Exti::Description)EXTI_Line7>();
-//    exti7.handleInterrupt();
-//    constexpr const Exti& exti8 = hal::Factory<Exti>::get<(Exti::Description)EXTI_Line8>();
-//    exti8.handleInterrupt();
-//    constexpr const Exti& exti9 = hal::Factory<Exti>::get<(Exti::Description)EXTI_Line9>();
-//    exti9.handleInterrupt();
-}
-
-void EXTI15_10_IRQHandler(void)
-{
-//    constexpr const Exti& exti10 = hal::Factory<Exti>::get<(Exti::Description)EXTI_Line10>();
-//    exti10.handleInterrupt();
-//    constexpr const Exti& exti11 = hal::Factory<Exti>::get<(Exti::Description)EXTI_Line11>();
-//    exti11.handleInterrupt();
-//    constexpr const Exti& exti12 = hal::Factory<Exti>::get<(Exti::Description)EXTI_Line12>();
-//    exti12.handleInterrupt();
-//    constexpr const Exti& exti13 = hal::Factory<Exti>::get<(Exti::Description)EXTI_Line13>();
-//    exti13.handleInterrupt();
-//    constexpr const Exti& exti14 = hal::Factory<Exti>::get<(Exti::Description)EXTI_Line14>();
-//    exti14.handleInterrupt();
-//    constexpr const Exti& exti15 = hal::Factory<Exti>::get<(Exti::Description)EXTI_Line15>();
-//    exti15.handleInterrupt();
-}
-}
+#include "Exti_IRQ_config.cpp"
 
 Exti::CallbackArray Exti::ExtiCallbacks;
 

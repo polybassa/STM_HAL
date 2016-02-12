@@ -101,6 +101,14 @@ class Factory<Exti> {
         }
     }
 
+    template<uint32_t Exti_Line, enum Exti::Description index>
+    static constexpr const Exti& getByExtiLine(void)
+    {
+        return (Container[index]).mGpio.mPinSource ==
+               Exti_Line ? Container[index] : getByExtiLine<Exti_Line,
+                                                            static_cast<enum Exti::Description>(index - 1)>();
+    }
+
 public:
 
     template<enum Exti::Description index>
@@ -110,13 +118,25 @@ public:
         static_assert(IS_EXTI_PIN_SOURCE(Container[index].mGpio.mPinSource), "Invalid PinSource");
         static_assert(IS_EXTI_LINE_ALL(Container[index].mConfiguration.EXTI_Line), "Invalid Line");
         static_assert(IS_EXTI_TRIGGER(Container[index].mConfiguration.EXTI_Trigger), "Invalid Trigger");
-        static_assert(Container[index].mConfiguration.EXTI_Line == index,
-                      "Exti declaration in the wrong place. EXTI_LINE must be equal to index");
+        static_assert(Container[index].mConfiguration.EXTI_Line == Container[index].mGpio.mPinSource,
+                      "Exti declaration in the wrong place. EXTI_LINE must be equal gpio pin Source");
+
+        static_assert(
+            Container[index].mDescription == getByExtiLine<Container[index].mConfiguration.EXTI_Line>().mDescription,
+            "Can not access Exti correct");
 
         static_assert(index != Exti::__ENUM__SIZE, "__ENUM__SIZE is not accessible");
         static_assert(Container[index].mDescription == index, "Wrong mapping between Description and Container");
 
         return Container[index];
+    }
+
+    template<uint32_t Exti_Line>
+    static constexpr const Exti& getByExtiLine(void)
+    {
+        static_assert(IS_EXTI_LINE_EXT(Exti_Line), "Invalid Line ");
+        return getByExtiLine<Exti_Line,
+                             static_cast<enum Exti::Description>(Exti::Description::__ENUM__SIZE - 1)>();
     }
 
     template<typename U>
