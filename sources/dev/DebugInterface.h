@@ -42,6 +42,7 @@ public:
     void printStartupMessage(void) const;
     void clearTerminal(void) const;
     void print(const char*, ...) const;
+    void send(const char* str, const size_t len) const;
     bool dataAvailable(void) const;
     size_t receiveAvailableData(uint8_t* const data, const size_t length) const;
 };
