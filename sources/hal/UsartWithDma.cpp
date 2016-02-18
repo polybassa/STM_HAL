@@ -31,9 +31,7 @@ void UsartWithDma::initialize() const
     if (!IS_USART_DMAREQ(mDmaCmd) || (mUsart == nullptr)) {
         return;
     }
-    USART_Cmd(reinterpret_cast<USART_TypeDef*>(mUsart->mPeripherie), DISABLE);
     USART_DMACmd(reinterpret_cast<USART_TypeDef*>(mUsart->mPeripherie), mDmaCmd, ENABLE);
-    USART_Cmd(reinterpret_cast<USART_TypeDef*>(mUsart->mPeripherie), ENABLE);
 
     if (!DmaTransferCompleteSemaphores[static_cast<size_t>(mUsart->mDescription)] ||
         !DmaReceiveCompleteSemaphores[static_cast<size_t>(mUsart->mDescription)])

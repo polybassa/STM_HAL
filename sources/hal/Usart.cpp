@@ -36,9 +36,6 @@ bool Usart::isInitalized(void) const
 
 void Usart::setBaudRate(const size_t baudRate) const
 {
-    USART_Cmd(reinterpret_cast<USART_TypeDef*>(mPeripherie), DISABLE);
-    USART_DeInit(reinterpret_cast<USART_TypeDef*>(mPeripherie));
-
     USART_InitTypeDef configuration = mConfiguration;
     configuration.USART_BaudRate = baudRate;
 
