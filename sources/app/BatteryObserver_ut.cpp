@@ -103,7 +103,9 @@ int ut_LoadBattery(void)
     g_currentVoltage = 10;
     g_currentTickCount = 0;
 
-    app::BatteryObserver testee([] {printf("overcurrent\n");
+    dev::Battery batt;
+
+    app::BatteryObserver testee(batt, [] {printf("overcurrent\n");
                                 }, [] {printf("undervoltage\n");
                                 });
 
@@ -137,7 +139,9 @@ int ut_LoadAndDischargeBattery(void)
     g_currentVoltage = 10;
     g_currentTickCount = 0;
 
-    app::BatteryObserver testee([] {printf("overcurrent\n");
+    dev::Battery batt;
+
+    app::BatteryObserver testee(batt, [] {printf("overcurrent\n");
                                 }, [] {printf("undervoltage\n");
                                 });
 
@@ -196,7 +200,9 @@ int ut_OvercurrentTest(void)
 
     bool overcurrentDetected = false;
 
-    app::BatteryObserver testee([&] {overcurrentDetected = true;
+    dev::Battery batt;
+
+    app::BatteryObserver testee(batt, [&] {overcurrentDetected = true;
                                 }, [] {printf("undervoltage\n");
                                 });
 
@@ -222,7 +228,9 @@ int ut_UndervoltageTest(void)
 
     bool undervoltage = false;
 
-    app::BatteryObserver testee([] {printf("overcurrent\n");
+    dev::Battery batt;
+
+    app::BatteryObserver testee(batt, [] {printf("overcurrent\n");
                                 }, [&] {undervoltage = true;
                                 });
 
@@ -247,7 +255,9 @@ int ut_DeepSleep(void)
     g_currentVoltage = 10;
     g_currentTickCount = 0;
 
-    app::BatteryObserver testee([] {printf("overcurrent\n");
+    dev::Battery batt;
+
+    app::BatteryObserver testee(batt, [] {printf("overcurrent\n");
                                 }, [] {printf("undervoltage\n");
                                 });
 
