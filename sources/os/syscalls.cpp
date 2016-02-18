@@ -478,7 +478,7 @@ pid_t _wait_r(struct _reent* r, int* stat_loc)
 *//*-------------------------------------------------------------------------*/
 
 #ifdef DEBUG
-void _console_write_r(const void* buf);
+void _console_write_r(const void* buf, const size_t len);
 #endif
 
 ssize_t _write_r(struct _reent* r, int file, const void* buf, size_t nbyte)
@@ -492,7 +492,7 @@ ssize_t _write_r(struct _reent* r, int file, const void* buf, size_t nbyte)
     int i;
 
     if ((file == STDOUT_FILENO) || (file == STDERR_FILENO)) {
-        _console_write_r(buf);
+        _console_write_r(buf, nbyte);
         return nbyte;
     }
     errno = EIO;
@@ -510,9 +510,9 @@ ssize_t _write_r(struct _reent* r, int file, const void* buf, size_t nbyte)
 
 #ifdef DEBUG
 #include "trace.h"
-void _console_write_r(const void* buf)
+void _console_write_r(const void* buf, const size_t len)
 {
-    terminal.print(reinterpret_cast<const char*>(buf));
-    terminal.print("\r");
+    terminal.send(reinterpret_cast<const char*>(buf), len);
+    terminal.send("\r", 1);
 }
 #endif
