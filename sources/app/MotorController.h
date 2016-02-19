@@ -51,7 +51,7 @@ class MotorController final : private os::DeepSleepModule, public interface::Mot
     float mOutputTorque = std::numeric_limits<float>::epsilon();
     float mCurrentOmega = std::numeric_limits<float>::epsilon();
 
-    const os::Queue<float, 1> mSetTorqueQueue;
+    os::Queue<float, 1> mSetTorqueQueue;
 
     static constexpr std::chrono::milliseconds motorCheckInterval = std::chrono::milliseconds(1);
     static constexpr std::chrono::milliseconds controllerInterval = std::chrono::milliseconds(5);
@@ -74,7 +74,7 @@ public:
     MotorController& operator=(const MotorController&) = delete;
     MotorController& operator=(MotorController&&) = delete;
 
-    void setTorque(const float) const;
+    void setTorque(const float);
     float getCurrentRPS(void) const;
 
 #if defined(DEBUG)

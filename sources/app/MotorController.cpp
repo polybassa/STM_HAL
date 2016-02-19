@@ -125,7 +125,7 @@ void MotorController::updatePwmOutput(void)
     mMotor.setPulsWidthInMill(pulswidth);
 }
 
-void MotorController::setTorque(const float setValue) const
+void MotorController::setTorque(const float setValue)
 {
     mSetTorqueQueue.overwrite(setValue);
 }

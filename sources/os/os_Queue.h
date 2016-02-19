@@ -59,8 +59,8 @@ public:
 
     bool peek(T& message, uint32_t ticksToWait = portMAX_DELAY) const;
     bool peekFromISR(T& message) const;
-    bool overwrite(T message) const;
-    bool overwriteFromISR(T message) const;
+    bool overwrite(const T message);
+    bool overwriteFromISR(const T message);
     bool receive(T& message, uint32_t ticksToWait = portMAX_DELAY) const;
     void reset(void) const;
 };
@@ -198,13 +198,13 @@ bool Queue<T, 1>::peekFromISR(T& message) const
 }
 
 template<typename T>
-bool Queue<T, 1>::overwrite(T message) const
+bool Queue<T, 1>::overwrite(const T message)
 {
     return xQueueOverwrite(mQueueHandle, &message);
 }
 
 template<typename T>
-bool Queue<T, 1>::overwriteFromISR(T message) const
+bool Queue<T, 1>::overwriteFromISR(T message)
 {
     uint32_t highPriorityTaskWoken = 0;
 
