@@ -24,13 +24,36 @@
 
 namespace app
 {
-class BatteryObserver final : private os::DeepSleepModule {
+struct BatteryObserver final : private os::DeepSleepModule {
+    enum class ErrorCode {
+        OVERCURRENT = 0,
+        UNDERVOLTAGE,
+        OVERVOLTAGE,
+        BATTERY_EMPTY,
+        BATTERY_ALMOST_EMPTY
+    };
+
+    BatteryObserver(const dev::Battery&, const std::function<void(ErrorCode)> errorCallback);
+
+    BatteryObserver(const BatteryObserver&) = delete;
+    BatteryObserver(BatteryObserver&&) = delete;
+    BatteryObserver& operator=(const BatteryObserver&) = delete;
+    BatteryObserver& operator=(BatteryObserver&&) = delete;
+
+    float getEnergyLevelInPercent(void) const;
+    float getEnergy(void) const;
+    float getMaxEnergy(void) const;
+
+#ifdef UNITTEST
+    void triggerTaskExecution(void) { this->energyRecordTaskFunction(true); }
+#endif
+private:
+
     virtual void enterDeepSleep(void) override;
     virtual void exitDeepSleep(void) override;
 
     os::TaskInterruptable mEnergyRecordTask;
-    const std::function<void(void)> mOvercurrentCallback;
-    const std::function<void(void)> mUndervoltageCallback;
+    const std::function<void(ErrorCode)> mErrorCallback;
     const dev::Battery& mBattery;
     float mEnergy = 0;
     float mMaxEnergy = 0;
@@ -50,23 +73,6 @@ class BatteryObserver final : private os::DeepSleepModule {
     void energyRecordTaskFunction(const bool&);
     void decreaseEnergyLevel(const float);
     void increaseEnergyLevel(const float);
-
-public:
-    BatteryObserver(const dev::Battery&, const std::function<void(void)>&& overcurrentCallback,
-                    const std::function<void(void)>&& undervoltageCallback);
-
-    BatteryObserver(const BatteryObserver&) = delete;
-    BatteryObserver(BatteryObserver&&) = delete;
-    BatteryObserver& operator=(const BatteryObserver&) = delete;
-    BatteryObserver& operator=(BatteryObserver&&) = delete;
-
-    float getEnergyLevelInPercent(void) const;
-    float getEnergy(void) const;
-    float getMaxEnergy(void) const;
-
-#ifdef UNITTEST
-    void triggerTaskExecution(void) { this->energyRecordTaskFunction(true); }
-#endif
 };
 }
 

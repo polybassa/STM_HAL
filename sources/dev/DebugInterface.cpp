@@ -90,7 +90,7 @@ size_t DebugInterface::receiveAvailableData(uint8_t* const data, const size_t le
 
 void DebugInterface::send(const char* str, const size_t len) const
 {
-	this->interface.send(reinterpret_cast<const uint8_t*>(str), len);
+    this->interface.send(reinterpret_cast<const uint8_t*>(str), len);
 }
 
 void DebugInterface::print(const char* format, ...) const

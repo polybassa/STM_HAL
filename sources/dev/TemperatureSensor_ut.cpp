@@ -18,7 +18,7 @@
 #include "dev_Factory.h"
 #include "TemperatureSensor.h"
 
-#define DoPlot true
+#define DoPlot false
 
 //--------------------------BUFFERS--------------------------
 float gCurrentVoltage;

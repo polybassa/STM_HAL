@@ -23,15 +23,13 @@ using app::BatteryObserver;
 
 const std::chrono::milliseconds BatteryObserver::energyRecordInterval = std::chrono::milliseconds(100);
 
-BatteryObserver::BatteryObserver(const dev::Battery& battery, const std::function<void(void)>&& overcurrentCallback,
-                                 const std::function<void(void)>&& undervoltageCallback) :
+BatteryObserver::BatteryObserver(const dev::Battery& battery, const std::function<void(ErrorCode)> errorCallback) :
     os::DeepSleepModule(),
     mEnergyRecordTask("2BatteryObserver", os::Task::Priority::LOW, BatteryObserver::STACKSIZE, [this](
                           const bool& join) {
     energyRecordTaskFunction(join);
 }),
-    mOvercurrentCallback(std::move(overcurrentCallback)),
-    mUndervoltageCallback(std::move(undervoltageCallback)),
+    mErrorCallback(errorCallback),
     mBattery(battery) {}
 
 void BatteryObserver::enterDeepSleep(void)
@@ -62,7 +60,7 @@ void BatteryObserver::overcurrentDetection(void)
     const bool overcurrent = mBattery.getCurrent() > BatteryObserver::limitOvercurrent;
 
     if (overcurrent) {
-        mOvercurrentCallback();
+        mErrorCallback(ErrorCode::OVERCURRENT);
     }
 }
 
@@ -71,7 +69,7 @@ void BatteryObserver::undervoltageDetection(void)
     const bool undervoltage = mBattery.getVoltage() < BatteryObserver::limitUndervoltage;
 
     if (undervoltage) {
-        mUndervoltageCallback();
+        mErrorCallback(ErrorCode::UNDERVOLTAGE);
     }
 }
 
