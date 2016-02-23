@@ -45,11 +45,17 @@ SECTIONS
   .version :
   {
   	. = ALIGN(4);
-  	_version_start = .;
-  	. = . + _version_size;
-  	_version_end = .;
+  	*(.version)
     . = ALIGN(4);
-  }
+  } >FLASH
+  
+  .startcount :
+  {
+  	. = ALIGN(4);
+  	_startcount = .;
+  	. = . + 4;
+    . = ALIGN(4);
+  } >FLASH
 
   /* The program code and other data goes into FLASH */
   .text :

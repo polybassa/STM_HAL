@@ -55,6 +55,21 @@ SECTIONS
     KEEP(*(.isr_vector)) /* Startup code */
     . = ALIGN(4);
   } >FLASH
+  
+  .version :
+  {
+  	. = ALIGN(4);
+  	*(.version)
+    . = ALIGN(4);
+  } >FLASH
+  
+  .startcount :
+  {
+  	. = ALIGN(4);
+  	_startcount = .;
+  	. = . + 4;
+    . = ALIGN(4);
+  } >FLASH
 
   /* The program code and other data goes into FLASH */
   .text :
