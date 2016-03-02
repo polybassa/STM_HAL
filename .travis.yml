@@ -14,7 +14,7 @@ addons:
       - clang-3.7
       - g++-5
       - gcc-5
-      - ggcov-5
+      - ggcov
       - lcov
 
 # We use cpp for unit tests, and c for the main project.
