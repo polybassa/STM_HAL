@@ -17,16 +17,18 @@
 #include "DebugInterface.h"
 #include "Usart.h"
 #include "unittest.h"
+#include <array>
+#include <cstring>
 
 #define NUM_TEST_LOOPS 255
 
 //--------------------------BUFFERS--------------------------
-std::string output = "";
+std::array<uint8_t, 1024> output;
 
 //--------------------------MOCKING--------------------------
 size_t hal::Usart::send(const uint8_t* str, size_t n) const
 {
-    output = std::string(reinterpret_cast<const char*>(str), n);
+    std::memcpy(output.data(), str, n);
     return n;
 }
 
@@ -84,15 +86,15 @@ int ut_Send_Hello(void)
 
     std::string teststring = "HELLO_TEST";
 
-    CHECK(teststring != output);
+    CHECK_NOT_MEMCMP(teststring.c_str(), output.data(), teststring.size());
 
     out.print(teststring.c_str());
 
-    CHECK(teststring == output);
+    CHECK_MEMCMP(teststring.c_str(), output.data(), teststring.size());
 
     out.print("%s", teststring.c_str());
 
-    CHECK(teststring == output);
+    CHECK_MEMCMP(teststring.c_str(), output.data(), teststring.size());
 
     TestCaseEnd();
 }
@@ -105,7 +107,9 @@ int ut_Send_Number(void)
 
     out.print("%d", testnum);
 
-    CHECK(std::to_string(testnum) == output);
+    std::string testout = std::to_string(testnum);
+
+    CHECK_MEMCMP(testout.c_str(), output.data(), testout.size());
 
     TestCaseEnd();
 }
@@ -119,7 +123,9 @@ int ut_Send_Two_Numbers(void)
 
     out.print("%d%f", num1, num2);
 
-    CHECK((std::to_string(num1) + std::to_string(num2)) == output);
+    std::string testout = (std::to_string(num1) + std::to_string(num2));
+
+    CHECK_MEMCMP(testout.c_str(), output.data(), testout.size());
 
     TestCaseEnd();
 }
@@ -134,7 +140,9 @@ int ut_Send_Multiple_Data(void)
 
     out.print("%d%f%s", num1, num2, teststring.c_str());
 
-    CHECK((std::to_string(num1) + std::to_string(num2) + teststring) == output);
+    std::string testout = (std::to_string(num1) + std::to_string(num2) + teststring);
+
+    CHECK_MEMCMP(testout.c_str(), output.data(), testout.size());
 
     TestCaseEnd();
 }
@@ -151,7 +159,9 @@ int ut_Send_to_much_Data(void)
 
     out.print("%s", teststring.c_str());
 
-    CHECK(teststring != output);
+    std::string testout = teststring;
+
+    CHECK_NOT_MEMCMP(testout.c_str(), output.data(), testout.size());
 
     TestCaseEnd();
 }

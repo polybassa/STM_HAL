@@ -29,7 +29,10 @@
 
 #define CHECK_MEMCMP(BUFFER, REF_DATA, REF_SIZE) { \
         CHECK(0 == memcmp(BUFFER, REF_DATA, REF_SIZE)); \
-        BUFFER += REF_SIZE; \
+}
+
+#define CHECK_NOT_MEMCMP(BUFFER, REF_DATA, REF_SIZE) { \
+        CHECK(0 != memcmp(BUFFER, REF_DATA, REF_SIZE)); \
 }
 
 #define NOT_IMPLEMENTED(X) { \
