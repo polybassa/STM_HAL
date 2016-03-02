@@ -42,8 +42,7 @@ static constexpr const std::array<const Usart, Usart::__ENUM__SIZE + 1> Containe
 static constexpr const std::array<const uint32_t, hal::Usart::__ENUM__SIZE> Clocks =
 { {
       RCC_APB2Periph_USART1,
-      RCC_APB1Periph_USART2,
-      RCC_APB1Periph_USART3
+      RCC_APB1Periph_USART2
   } };
 
 #endif /* SOURCES_PMD_USART_CONFIG_CONTAINER_H_ */
