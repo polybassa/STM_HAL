@@ -26,9 +26,9 @@ if test -z "$OPENSSL" || test "X$OPENSSL" = "Xnot_found"; then
 	AC_MSG_ERROR([openssl not found!]) 
 fi 
 
-if test -z "$UNCRUSTIFY" || test "X$UNCRUSTIFY" = "Xnot_found"; then 
-	AC_MSG_ERROR([uncrustify not found!]) 
-fi 
+#if test -z "$UNCRUSTIFY" || test "X$UNCRUSTIFY" = "Xnot_found"; then 
+#	AC_MSG_ERROR([uncrustify not found!]) 
+#fi 
 
 
 AC_DEFUN(AC_PATH_PROG_ARM_GCC, [

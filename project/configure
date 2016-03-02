@@ -3749,9 +3749,9 @@ if test -z "$OPENSSL" || test "X$OPENSSL" = "Xnot_found"; then
 	as_fn_error $? "openssl not found!" "$LINENO" 5
 fi
 
-if test -z "$UNCRUSTIFY" || test "X$UNCRUSTIFY" = "Xnot_found"; then
-	as_fn_error $? "uncrustify not found!" "$LINENO" 5
-fi
+#if test -z "$UNCRUSTIFY" || test "X$UNCRUSTIFY" = "Xnot_found"; then
+#	AC_MSG_ERROR([uncrustify not found!])
+#fi
 
 
 

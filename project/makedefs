@@ -137,12 +137,7 @@ LDFLAGS+= -lpthread \
 		-lcrypto \
 		--coverage 
 							
-CC=${CC}
 CPP=${CXX}
-AR=${AR}
-LD=${LD}
-OBJCOPY=${OBJCOPY}
-SIZE=${SIZE}
 
 endif
 
