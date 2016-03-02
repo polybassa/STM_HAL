@@ -40,6 +40,7 @@
 
 /* DEV LAYER INLCUDES */
 #include "TimSensorBldc.h"
+#include "Battery.h"
 
 /* APP LAYER INLCUDES */
 #include "BatteryObserver.h"
@@ -87,8 +88,10 @@ int main(void)
 
     os::ThisTask::sleep(std::chrono::milliseconds(10));
 
+    dev::Battery* battery = new dev::Battery();
+
     auto motor = new app::MotorController(
-        dev::Factory<dev::SensorBLDC>::get<dev::SensorBLDC::BLDC>(), 0.00768, 0.844, 0.8, 0.5);
+        dev::Factory<dev::SensorBLDC>::get<dev::SensorBLDC::BLDC>(), *battery, 0.00768, 0.844, 0.8, 0.5);
 
     os::Task::startScheduler();
 
