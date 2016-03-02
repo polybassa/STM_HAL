@@ -24,5 +24,6 @@ install:
   - export PATH=$PATH:$PWD/gcc-arm-none-eabi-4_9-2015q2/bin
 
 before_script: arm-none-eabi-gcc --version
-script: ./configure
-        make
+script: cd project
+        ./configure
+        make test
