@@ -18,7 +18,7 @@ addons:
 
 # We use cpp for unit tests, and c for the main project.
 language: cpp
-compiler: gcc
+compiler: clang
 
 before_install:
   - curl --retry 10 --retry-max-time 120 -L "https://launchpad.net/gcc-arm-embedded/4.9/4.9-2015-q2-update/+download/gcc-arm-none-eabi-4_9-2015q2-20150609-linux.tar.bz2" | tar xfj -
