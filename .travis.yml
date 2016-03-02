@@ -14,7 +14,6 @@ addons:
       - clang-3.7
       - g++-5
       - gcc-5
-      - ggcov
       - lcov
 
 # We use cpp for unit tests, and c for the main project.
@@ -25,7 +24,7 @@ before_install:
   - curl --retry 10 --retry-max-time 120 -L "https://launchpad.net/gcc-arm-embedded/4.9/4.9-2015-q2-update/+download/gcc-arm-none-eabi-4_9-2015q2-20150609-linux.tar.bz2" | tar xfj -
   - sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-5 50
   - sudo update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-5 50
-  - sudo update-alternatives --install /usr/bin/gcov gcov /usr/bin/gcov-5 50
+  - sudo update-alternatives --install /usr/bin/gcov gcov /usr/bin/llvm-cov 50
 
 install:
   - export PATH=$PATH:$PWD/gcc-arm-none-eabi-4_9-2015q2/bin
