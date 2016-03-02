@@ -18,14 +18,14 @@ addons:
       - clang-3.7
       - g++-5
       - gcc-5
-      - gcov-5
+      - gcov-4.9
       - lcov
       - rubygems
     alternatives:
       - alternative:
          name: gcov
          link: /usr/bin/gcov
-         path: /usr/bin/gcov-5
+         path: /usr/bin/gcov-4.9
          priority: 50
 
 # We use cpp for unit tests, and c for the main project.
