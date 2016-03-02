@@ -16,7 +16,6 @@ addons:
       - gcc-5
       - ggcov-5
       - lcov
-      - genhtml
 
 # We use cpp for unit tests, and c for the main project.
 language: cpp
