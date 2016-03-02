@@ -26,4 +26,8 @@ install:
 before_script: arm-none-eabi-gcc --version
 script: cd project &&
         ./configure &&
-        make test
+        make test &&
+        make clean &&
+        make firmware &&
+        make clean &&
+        make debug_firmware
