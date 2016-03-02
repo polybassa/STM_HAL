@@ -20,6 +20,12 @@ addons:
       - gcc-5
       - lcov
       - rubygems
+    alternatives:
+      - alternative:
+         name: gcov
+         link: /usr/bin/gcov
+         path: /usr/bin/gcov-5
+         priority: 50
 
 # We use cpp for unit tests, and c for the main project.
 language: cpp
@@ -29,9 +35,6 @@ before_install:
   - curl --retry 10 --retry-max-time 120 -L "https://launchpad.net/gcc-arm-embedded/4.9/4.9-2015-q2-update/+download/gcc-arm-none-eabi-4_9-2015q2-20150609-linux.tar.bz2" | tar xfj -
 
 install:
-  - sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-5 50
-  - sudo update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-5 50
-  - sudo update-alternatives --install /usr/bin/gcov gcov /usr/bin/gcov-5 50
   - export PATH=$PATH:$PWD/gcc-arm-none-eabi-4_9-2015q2/bin
   - if [ "$CXX" = "g++" ]; then export CXX="g++-5" CC="gcc-5"; fi
   - if [ "$CXX" = "clang++" ]; then export CXX="clang++-3.7" CC="clang-3.7"; fi
