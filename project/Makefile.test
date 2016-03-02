@@ -53,8 +53,8 @@ ${BINDIR}/PIDController_ut.bin: ${OBJDIR}/PIDController_ut.o
 
 test: clean-all ${BINDIR} ${OBJDIR} test_binarys
 	@echo "Generate coverage report. See ${COVERAGEDIR}/index.html"
-	@${LCOV} --directory ${OBJDIR}/ --base-directory ${OBJDIR}/ --gcov-tool ${GCOV} --capture -o ${OBJDIR}/cov.info
-	@${GENHTML} ${OBJDIR}/cov.info -o ${COVERAGEDIR}
+	-@${LCOV} --directory ${OBJDIR}/ --base-directory ${OBJDIR}/ --gcov-tool ${GCOV} --capture -o ${OBJDIR}/cov.info
+	-@${GENHTML} ${OBJDIR}/cov.info -o ${COVERAGEDIR}
 
 TESTS=${BINDIR}/DebugInterface_ut.bin
 TESTS+=${BINDIR}/BatteryObserver_ut.bin
