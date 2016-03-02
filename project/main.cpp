@@ -56,11 +56,9 @@ void initializePowerSupply(void)
 {
     constexpr auto& supply5V0 = hal::Factory<hal::Gpio>::get<hal::Gpio::ENABLE_5V0_SUPPLY>();
     constexpr auto& supply5V8 = hal::Factory<hal::Gpio>::get<hal::Gpio::ENABLE_5V8_SUPPLY>();
-    constexpr auto& nSupplyWifi = hal::Factory<hal::Gpio>::get<hal::Gpio::NWP_SUPPLY_N_ENABLE>();
 
     supply5V0 = true;
     supply5V8 = true;
-    nSupplyWifi = true; // Turn Wifi Off
 }
 
 int main(void)
