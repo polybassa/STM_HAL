@@ -1,5 +1,5 @@
 # use new docker environment
-sudo: false
+sudo: required
 
 addons:
   apt:
