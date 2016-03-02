@@ -12,6 +12,8 @@ addons:
       - wkhtmltopdf
       - libxml2-dev
       - libxslt-dev
+      - uncrustify
+      - cppcheck
 
 # We use cpp for unit tests, and c for the main project.
 language: cpp
