@@ -24,7 +24,7 @@ addons:
       - alternative:
          name: gcov
          link: /usr/bin/gcov
-         path: /usr/bin/gcov-4.9
+         path: /usr/bin/llvm-cov
          priority: 50
 
 # We use cpp for unit tests, and c for the main project.
