@@ -9,7 +9,10 @@ RUN apt-get update && apt-get install -y \
   make \
   automake \
   doxygen \
-  vim 
+  vim \
+  git \
+  software-properties-common \
+  python-software-properties
 
 RUN add-apt-repository -y ppa:ubuntu-toolchain-r/test 
 
@@ -21,9 +24,16 @@ RUN apt-get update && \
   lcov \
   uncrustify \
   cppcheck \
-  openssl \
-  texlive-full \
+  openssl 
+
+RUN apt-get update && \
+  apt-get install -y \
+  texlive \
   graphviz 
+
+RUN apt-get update && \
+  apt-get install -y \
+  libssl-dev
 
 # arm-none-eabi toolchain
 RUN add-apt-repository ppa:terry.guo/gcc-arm-embedded && \
