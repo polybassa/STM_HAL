@@ -6,7 +6,7 @@ Setup:
 ----------
 * Install Docker: [Docker](https://www.docker.com)
 * Go to project folder: `cd STM_HAL/project`
-* Start build environment: `./enterBuildEnvironmen.sh`
+* Start build environment: `./enterBuildEnvironment.sh`
 
 Build:
 -----------
