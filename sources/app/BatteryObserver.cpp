@@ -25,7 +25,7 @@ const std::chrono::milliseconds BatteryObserver::energyRecordInterval = std::chr
 
 BatteryObserver::BatteryObserver(const dev::Battery& battery, const std::function<void(ErrorCode)> errorCallback) :
     os::DeepSleepModule(),
-    mEnergyRecordTask("2BatteryObserver", os::Task::Priority::LOW, BatteryObserver::STACKSIZE, [this](
+    mEnergyRecordTask("2BatteryObserver", BatteryObserver::STACKSIZE, os::Task::Priority::LOW, [this](
                           const bool& join) {
     energyRecordTaskFunction(join);
 }),

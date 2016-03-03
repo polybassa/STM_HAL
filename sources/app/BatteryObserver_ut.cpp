@@ -48,14 +48,15 @@ void os::TaskInterruptable::start(void)
     g_taskStarted = true;
 }
 
-os::TaskInterruptable::TaskInterruptable(char const* name, unsigned short stack, unsigned int prio,
+os::TaskInterruptable::TaskInterruptable(char const* name, unsigned short stack, os::Task::Priority prio,
                                          std::function<void(bool const&)> func) : Task(name, stack, prio, func) {}
 
 os::TaskInterruptable::~TaskInterruptable(void) {}
 
 void os::TaskInterruptable::taskFunction(void) {}
 
-os::Task::Task(char const* name, unsigned short stack, unsigned int prio, std::function<void(bool const&)> func) {}
+os::Task::Task(char const* name, unsigned short stack, os::Task::Priority prio,
+               std::function<void(bool const&)> func) {}
 
 os::Task::~Task(void) {}
 
