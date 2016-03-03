@@ -489,8 +489,6 @@ ssize_t _write_r(struct _reent* r, int file, const void* buf, size_t nbyte)
     nbyte = nbyte;                          // suppress warning
 
 #ifdef DEBUG
-    int i;
-
     if ((file == STDOUT_FILENO) || (file == STDERR_FILENO)) {
         _console_write_r(buf, nbyte);
         return nbyte;
