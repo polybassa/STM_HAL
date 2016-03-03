@@ -26,7 +26,7 @@ class TaskInterruptable : public Task {
     bool mJoinFlag;
 
 public:
-    TaskInterruptable(const char* name, uint16_t stackSize, uint32_t priority,
+    TaskInterruptable(const char* name, uint16_t stackSize, os::Task::Priority priority,
                       std::function<void(const bool&)> function);
     virtual ~TaskInterruptable(void) override;
     using Task::Task;
