@@ -5,18 +5,10 @@ LABEL Description="Docker image for building pmd projects"
 # General dependencies
 RUN apt-get update && apt-get install -y \
   build-essential \
-  git \
-  subversion \
   cmake \
   make \
   automake \
-  python-setuptools \
-  ninja-build \
-  python-dev \
-  libffi-dev \
-  libssl-dev \
-  software-properties-common \
-  python-software-properties \
+  doxygen \
   vim 
 
 RUN add-apt-repository -y ppa:ubuntu-toolchain-r/test 
