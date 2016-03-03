@@ -19,7 +19,7 @@
 #include <chrono>
 #include "DeepSleepInterface.h"
 #include "TaskInterruptable.h"
-#include "Task.h"
+#include "os_Task.h"
 #include "Gpio.h"
 #include "Exti.h"
 #include "stm32f30x_pwr.h"
