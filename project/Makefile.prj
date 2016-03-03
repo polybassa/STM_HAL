@@ -94,6 +94,7 @@ ${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/MotorController.o
 #PMD TestApps
 #${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/TestLed.o
 #${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/TestRtc.o
+${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/TestSleep.o
 
 # device
 ${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/startup_stm32f30x.o
