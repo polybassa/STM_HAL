@@ -17,7 +17,7 @@
 #define SOURCES_PMD_EXTI_CONFIG_DESCRIPTION_H_
 
 enum Description {
-    NWP_INT,
+    WAKEUP,
     IMU_INT,
     __ENUM__SIZE
 };
@@ -28,8 +28,8 @@ enum Description {
 
 static constexpr const std::array<const Exti, Exti::__ENUM__SIZE> Container =
 { {
-      Exti(Exti::NWP_INT,
-           Factory<Gpio>::get<Gpio::NWP_INTERRUPT>(),
+      Exti(Exti::WAKEUP,
+           Factory<Gpio>::get<Gpio::USER_BUTTON>(),
            EXTI_Trigger_Rising),
       Exti(Exti::IMU_INT,
            Factory<Gpio>::get<Gpio::MPU_INTERRUPT>(),

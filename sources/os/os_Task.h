@@ -45,7 +45,7 @@ public:
         LOWEST = 1
     };
 
-    Task(const char* name, uint16_t stackSize, uint32_t priority,
+    Task(const char* name, uint16_t stackSize, os::Task::Priority priority,
          std::function<void(const bool&)> function);
     Task(const Task&) = delete;
     Task(Task&&) = delete;

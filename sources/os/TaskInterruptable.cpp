@@ -20,7 +20,7 @@ static const int __attribute__((unused)) g_DebugZones = ZONE_ERROR | ZONE_WARNIN
 
 using os::TaskInterruptable;
 
-TaskInterruptable::TaskInterruptable(const char* name, uint16_t stackSize, uint32_t priority,
+TaskInterruptable::TaskInterruptable(const char* name, uint16_t stackSize, os::Task::Priority priority,
                                      std::function<void(const bool&)> function) :
     Task(name, stackSize, priority, function),
     mJoinFlag(false)

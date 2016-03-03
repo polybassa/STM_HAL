@@ -13,29 +13,14 @@
  *  You should have received a copy of the GNU General Public License
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>. */
 
-#ifndef SOURCES_PMD_TASK_INTERRUPTABLE_H_
-#define SOURCES_PMD_TASK_INTERRUPTABLE_H_
+#ifndef SOURCES_PMD_TEST_SLEEP_H_
+#define SOURCES_PMD_TEST_SLEEP_H_
 
-#include "os_Task.h"
-#include "semphr.h"
+#include "TaskEndless.h"
 
-namespace os
+namespace app
 {
-class TaskInterruptable : public Task {
-    xSemaphoreHandle mJoinSemaphore;
-    bool mJoinFlag;
-
-public:
-    TaskInterruptable(const char* name, uint16_t stackSize, os::Task::Priority priority,
-                      std::function<void(const bool&)> function);
-    virtual ~TaskInterruptable(void) override;
-    using Task::Task;
-
-    virtual void taskFunction(void) override;
-    void start(void);
-    void join(void);
-    void detach(void);
-};
+extern const os::TaskEndless sleepTest;
 }
 
-#endif /* SOURCES_PMD_TASK_INTERRUPTABLE_H_ */
+#endif /* SOURCES_PMD_TEST_SLEEP_H_ */
