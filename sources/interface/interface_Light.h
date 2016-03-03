@@ -18,7 +18,7 @@
 
 namespace interface
 {
-typedef struct __attribute__((packed)){
+typedef struct __attribute__((packed)) {
     uint8_t red;
     uint8_t green;
     uint8_t blue;

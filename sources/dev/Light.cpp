@@ -67,7 +67,7 @@ void Light::setColor(const interface::Color& color) const
             pointer++;
             bitmask = bitmask >> 2;
         }
-    }
+    };
 
     for (size_t i = 0; i < LED_COUNT; i++) {
         fillBitArrayForColor(color.green);

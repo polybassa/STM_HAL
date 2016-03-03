@@ -68,7 +68,8 @@ struct Usart {
 private:
     constexpr Usart(const enum Description&  desc,
                     const uint32_t&          peripherie,
-                    const USART_InitTypeDef& conf) : mDescription(desc), mPeripherie(peripherie), mConfiguration(conf){}
+                    const USART_InitTypeDef& conf) : mDescription(desc), mPeripherie(peripherie),
+                                                     mConfiguration(conf) {}
 
     const uint32_t mPeripherie;
     const USART_InitTypeDef mConfiguration;

@@ -44,9 +44,9 @@ private:
 
 public:
     BlinkApp(void) : os::DeepSleepModule(),
-                     mBlinkTask("blinky", 2048, os::Task::Priority::LOW, [this](const bool& join){
+                     mBlinkTask("blinky", 2048, os::Task::Priority::LOW, [this](const bool& join) {
                                     blinkAppTaskFunction(join);
-                                }){}
+                                }) {}
 
     BlinkApp(const BlinkApp&) = delete;
     BlinkApp(BlinkApp &&) = delete;
