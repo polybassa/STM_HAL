@@ -69,7 +69,7 @@ debug_firmware: pre-build ${OBJDIR} ${BINDIR} ${BINDIR}/${PRJ_NAME}.elf post-bui
 	@echo DEBUG BUILD
 	
 docu:
-	@@DOXYGEN@ docs/Doxyfile
+	@@DOXYGEN@ ../docs/Doxyfile
 	
 check:
 	@@CPPCHECKER@ --enable=all --inconclusive -I sources/hal/ -I sources/dev/ -I sources/app/ -I sources/utility/ -I sources/interface/ -I sources/os/ -I ../libraries/STM32F30x_StdPeriph_Driver/inc/ --std=posix --quiet .
