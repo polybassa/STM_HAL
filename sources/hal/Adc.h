@@ -37,9 +37,9 @@ struct Adc {
 
         Channel() = delete;
         Channel(const Channel&) = delete;
-        Channel(Channel&&) = default;
+        Channel(Channel &&) = default;
         Channel& operator=(const Channel&) = delete;
-        Channel& operator=(Channel&&) = delete;
+        Channel& operator=(Channel &&) = delete;
 
         uint32_t getValue(void) const;
         uint32_t getCalibrationValue(void) const;
@@ -53,9 +53,10 @@ private:
             const uint8_t                   sampleTime,
             const std::chrono::milliseconds cacheTime = std::chrono::milliseconds(1),
             const float                     maxVoltage = 3.3,
-            const uint8_t                   rank = 1)
-            : mDescription(desc), mBaseDescription(baseDesc), mChannel(channel), mSampleTime(sampleTime),
-            mCacheTimeInTicks(cacheTime.count() / portTICK_PERIOD_MS), mMaxVoltage(maxVoltage), mRank(rank) {}
+            const uint8_t                   rank = 1) : mDescription(desc), mBaseDescription(baseDesc),
+                                                        mChannel(channel), mSampleTime(sampleTime),
+                                                        mCacheTimeInTicks(cacheTime.count() / portTICK_PERIOD_MS),
+                                                        mMaxVoltage(maxVoltage), mRank(rank) {}
 
         const enum Description mDescription;
         const enum Adc::Description mBaseDescription;
@@ -73,9 +74,9 @@ private:
 
     Adc() = delete;
     Adc(const Adc&) = delete;
-    Adc(Adc&&) = default;
+    Adc(Adc &&) = default;
     Adc& operator=(const Adc&) = delete;
-    Adc& operator=(Adc&&) = delete;
+    Adc& operator=(Adc &&) = delete;
 
     uint32_t getCalibrationValue(void) const;
 
@@ -85,9 +86,10 @@ private:
                   const ADC_InitTypeDef&       conf,
                   const ADC_CommonInitTypeDef& commonConf,
                   const enum IRQn&             irqn,
-                  const uint8_t                resolutionBits = 12) :
-        mDescription(desc), mPeripherie(peripherie), mConfiguration(conf), mCommonConfiguration(commonConf),
-        mIRQn(irqn), mResolutionBits(resolutionBits) {}
+                  const uint8_t                resolutionBits = 12) : mDescription(desc), mPeripherie(peripherie),
+                                                                      mConfiguration(conf),
+                                                                      mCommonConfiguration(commonConf),
+                                                                      mIRQn(irqn), mResolutionBits(resolutionBits) {}
 
     const enum Description mDescription;
     const uint32_t mPeripherie;

@@ -34,9 +34,9 @@ class DebugInterface {
 public:
     DebugInterface(void);
     DebugInterface(const DebugInterface&) = delete;
-    DebugInterface(DebugInterface&&) = delete;
+    DebugInterface(DebugInterface &&) = delete;
     DebugInterface& operator=(const DebugInterface&) = delete;
-    DebugInterface& operator=(DebugInterface&&) = delete;
+    DebugInterface& operator=(DebugInterface &&) = delete;
     virtual ~DebugInterface();
 
     void printStartupMessage(void) const;

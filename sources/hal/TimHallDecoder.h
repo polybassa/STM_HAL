@@ -34,9 +34,9 @@ struct HallDecoder {
 
     HallDecoder() = delete;
     HallDecoder(const HallDecoder&) = delete;
-    HallDecoder(HallDecoder&&) = default;
+    HallDecoder(HallDecoder &&) = default;
     HallDecoder& operator=(const HallDecoder&) = delete;
-    HallDecoder& operator=(HallDecoder&&) = delete;
+    HallDecoder& operator=(HallDecoder &&) = delete;
 
     void incrementCommutationDelay(void) const;
     void decrementCommutationDelay(void) const;
@@ -59,9 +59,10 @@ private:
                           const Tim&               timer,
                           const TIM_ICInitTypeDef& ic1Conf,
                           const TIM_OCInitTypeDef& oc2Conf,
-                          const TIM_OCInitTypeDef& oc3Conf) :
-        mDescription(desc), mTim(timer), mIc1Configuration(ic1Conf), mOc2Configuration(oc2Conf), mOc3Configuration(
-            oc3Conf) {}
+                          const TIM_OCInitTypeDef& oc3Conf) : mDescription(desc), mTim(timer),
+                                                              mIc1Configuration(ic1Conf), mOc2Configuration(oc2Conf),
+                                                              mOc3Configuration(
+                                                                  oc3Conf) {}
 
     const Tim& mTim;
     const TIM_ICInitTypeDef mIc1Configuration;

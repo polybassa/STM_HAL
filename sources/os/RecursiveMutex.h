@@ -27,9 +27,9 @@ class RecursiveMutex {
 public:
     RecursiveMutex(void);
     RecursiveMutex(const RecursiveMutex&) = delete;
-    RecursiveMutex(RecursiveMutex&&);
+    RecursiveMutex(RecursiveMutex &&);
     RecursiveMutex& operator=(const RecursiveMutex&) = delete;
-    RecursiveMutex& operator=(RecursiveMutex&&);
+    RecursiveMutex& operator=(RecursiveMutex &&);
     ~RecursiveMutex(void);
 
     bool take(uint32_t ticksToWait = portMAX_DELAY) const;

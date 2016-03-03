@@ -28,7 +28,7 @@ void prvGetRegistersFromStack(uint32_t* pulFaultStackAddress)
     volatile uint32_t __attribute__((unused)) r12;
     volatile uint32_t __attribute__((unused)) lr; /* Link register. */
     volatile uint32_t __attribute__((unused)) pc; /* Program counter. */
-    volatile uint32_t __attribute__((unused)) psr;/* Program status register. */
+    volatile uint32_t __attribute__((unused)) psr; /* Program status register. */
 
     r0 = pulFaultStackAddress[ 0 ];
     r1 = pulFaultStackAddress[ 1 ];

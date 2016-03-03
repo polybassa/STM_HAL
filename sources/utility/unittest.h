@@ -54,10 +54,10 @@
         } \
 }
 
-#define TestCaseBegin(X) size_t errors = 0;
-#define TestCaseEnd(X) return errors;
+#define TestCaseBegin(X) size_t errors = 0
+#define TestCaseEnd(X) return errors
 
-#define UnitTestMainBegin(X) int numErrors = 0; int numSkipped = 0; int numTests = 0;
+#define UnitTestMainBegin(X) int numErrors = 0; int numSkipped = 0; int numTests = 0
 #define UnitTestMainEnd(X) do { \
         printf("%36s run %2d Tests (%2d skipped | %2d errors)\n", __FILE__, numTests, numSkipped, numErrors); \
         return numErrors; \

@@ -20,31 +20,31 @@
 
 static const int __attribute__((unused)) g_DebugZones = ZONE_ERROR | ZONE_WARNING | ZONE_VERBOSE | ZONE_INFO;
 
-os::TaskEndless ledTest("LED_Test", 1024, 4, [](const bool&) {
-    const dev::Light& headLight = dev::Factory<dev::Light>::get<dev::Light::HEADLIGHT>();
-    const dev::Light& backLight = dev::Factory<dev::Light>::get<dev::Light::BACKLIGHT>();
+os::TaskEndless ledTest("LED_Test", 1024, 4, [] (const bool&){
+                            const dev::Light& headLight = dev::Factory<dev::Light>::get<dev::Light::HEADLIGHT>();
+                            const dev::Light& backLight = dev::Factory<dev::Light>::get<dev::Light::BACKLIGHT>();
 
-    uint8_t temp = 0;
+                            uint8_t temp = 0;
 
-    os::ThisTask::sleep(std::chrono::milliseconds(500));
-    backLight.setColor({0, 0, 255});
-    os::ThisTask::sleep(std::chrono::milliseconds(500));
-    backLight.setColor({0, 255, 255});
-    os::ThisTask::sleep(std::chrono::milliseconds(500));
-    backLight.setColor({0, 255, 0});
-    os::ThisTask::sleep(std::chrono::milliseconds(500));
-    backLight.setColor({255, 255, 0});
-    os::ThisTask::sleep(std::chrono::milliseconds(500));
-    backLight.setColor({255, 0, 0});
-    os::ThisTask::sleep(std::chrono::milliseconds(500));
-    backLight.setColor({255, 0, 255});
+                            os::ThisTask::sleep(std::chrono::milliseconds(500));
+                            backLight.setColor({0, 0, 255});
+                            os::ThisTask::sleep(std::chrono::milliseconds(500));
+                            backLight.setColor({0, 255, 255});
+                            os::ThisTask::sleep(std::chrono::milliseconds(500));
+                            backLight.setColor({0, 255, 0});
+                            os::ThisTask::sleep(std::chrono::milliseconds(500));
+                            backLight.setColor({255, 255, 0});
+                            os::ThisTask::sleep(std::chrono::milliseconds(500));
+                            backLight.setColor({255, 0, 0});
+                            os::ThisTask::sleep(std::chrono::milliseconds(500));
+                            backLight.setColor({255, 0, 255});
 
-    while (true) {
-        headLight.setColor({temp, temp, temp});
-        backLight.setColor({temp, temp, temp});
+                            while (true) {
+                                headLight.setColor({temp, temp, temp});
+                                backLight.setColor({temp, temp, temp});
 
-        temp++;
+                                temp++;
 
-        os::ThisTask::sleep(std::chrono::milliseconds(20));
-    }
-});
+                                os::ThisTask::sleep(std::chrono::milliseconds(20));
+                            }
+                        });
