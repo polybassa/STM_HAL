@@ -45,9 +45,9 @@ struct Exti {
 
     Exti() = delete;
     Exti(const Exti&) = delete;
-    Exti(Exti&&) = default;
+    Exti(Exti &&) = default;
     Exti& operator=(const Exti&) = delete;
-    Exti& operator=(Exti&&) = delete;
+    Exti& operator=(Exti &&) = delete;
 
     void enable(void) const;
     void disable(void) const;
@@ -59,12 +59,15 @@ private:
     constexpr Exti(const enum Description&   desc,
                    const Gpio&               gpio,
                    const EXTITrigger_TypeDef trigger,
-                   const uint32_t            priority = 0xf) :
-        mDescription(desc), mGpio(gpio), mConfiguration(EXTI_InitTypeDef
-        {
-            gpio.mPinSource, EXTI_Mode_Interrupt,
-            trigger, DISABLE
-        }), mPriority(priority) {}
+                   const uint32_t            priority = 0xf) : mDescription(desc), mGpio(gpio),
+                                                               mConfiguration(EXTI_InitTypeDef
+                                                                              {
+                                                                                  gpio
+                                                                                  .mPinSource, EXTI_Mode_Interrupt,
+                                                                                  trigger,
+                                                                                  DISABLE
+                                                                              }),
+                                                               mPriority(priority) {}
 
     const enum Description mDescription;
     const Gpio& mGpio;

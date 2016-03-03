@@ -28,9 +28,9 @@ protected:
     DeepSleepModule(void);
 
     DeepSleepModule(const DeepSleepModule&) = delete;
-    DeepSleepModule(DeepSleepModule&&) = delete;
+    DeepSleepModule(DeepSleepModule &&) = delete;
     DeepSleepModule& operator=(const DeepSleepModule&) = delete;
-    DeepSleepModule& operator=(DeepSleepModule&&) = delete;
+    DeepSleepModule& operator=(DeepSleepModule &&) = delete;
 
     virtual ~DeepSleepModule(void);
 

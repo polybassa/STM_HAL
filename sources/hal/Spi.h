@@ -33,9 +33,9 @@ struct Spi {
 
     Spi() = delete;
     Spi(const Spi&) = delete;
-    Spi(Spi&&) = default;
+    Spi(Spi &&) = default;
     Spi& operator=(const Spi&) = delete;
-    Spi& operator=(Spi&&) = delete;
+    Spi& operator=(Spi &&) = delete;
 
     template<size_t n>
     size_t receive(std::array<uint8_t, n>&) const;
@@ -54,8 +54,7 @@ struct Spi {
 private:
     constexpr Spi(const enum Description& desc,
                   const uint32_t&         peripherie,
-                  const SPI_InitTypeDef&  conf) :
-        mDescription(desc), mPeripherie(peripherie), mConfiguration(conf) {}
+                  const SPI_InitTypeDef&  conf) : mDescription(desc), mPeripherie(peripherie), mConfiguration(conf) {}
 
     const uint32_t mPeripherie;
     const SPI_InitTypeDef mConfiguration;

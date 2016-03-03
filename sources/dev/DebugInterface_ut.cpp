@@ -69,7 +69,7 @@ BaseType_t xQueueGenericReceive(QueueHandle_t    xQueue,
     return 1;
 }
 
-void RCC_GetClocksFreq(RCC_ClocksTypeDef*){}
+void RCC_GetClocksFreq(RCC_ClocksTypeDef*) {}
 
 constexpr const hal::Usart& dev::DebugInterface::interface;
 

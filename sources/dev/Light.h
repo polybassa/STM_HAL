@@ -27,9 +27,9 @@ namespace dev
 struct Light : interface::Light<Light> {
     Light() = delete;
     Light(const Light&) = delete;
-    Light(Light&&) = default;
+    Light(Light &&) = default;
     Light& operator=(const Light&) = delete;
-    Light& operator=(Light&&) = delete;
+    Light& operator=(Light &&) = delete;
 
     void setColor(const interface::Color& color) const;
 private:

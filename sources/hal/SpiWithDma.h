@@ -28,9 +28,9 @@ namespace hal
 struct SpiWithDma {
     SpiWithDma() = delete;
     SpiWithDma(const SpiWithDma&) = delete;
-    SpiWithDma(SpiWithDma&&) = default;
+    SpiWithDma(SpiWithDma &&) = default;
     SpiWithDma& operator=(const SpiWithDma&) = delete;
-    SpiWithDma& operator=(SpiWithDma&&) = delete;
+    SpiWithDma& operator=(SpiWithDma &&) = delete;
 
     template<size_t n>
     size_t receive(std::array<uint8_t, n>&) const;
@@ -44,9 +44,8 @@ private:
     constexpr SpiWithDma(Spi const* const spiInterface = nullptr,
                          const uint16_t&  dmaCmd = 0,
                          Dma const* const txDma = nullptr,
-                         Dma const* const rxDma = nullptr) :
-        mSpi(spiInterface), mDmaCmd(dmaCmd),
-        mTxDma(txDma), mRxDma(rxDma) {}
+                         Dma const* const rxDma = nullptr) : mSpi(spiInterface), mDmaCmd(dmaCmd),
+                                                             mTxDma(txDma), mRxDma(rxDma) {}
 
     Spi const* const mSpi;
     const uint16_t mDmaCmd;

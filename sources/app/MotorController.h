@@ -62,17 +62,17 @@ class MotorController final : private os::DeepSleepModule, public interface::Mot
 
 public:
     MotorController(
-        const dev::SensorBLDC& motor,
-        const dev::Battery&    battery,
-        const float            motorConstant,
-        const float            motorResistance,
-        const float            Kp,
-        const float            Ki);
+        const dev::SensorBLDC & motor,
+        const dev::Battery & battery,
+        const float motorConstant,
+        const float motorResistance,
+        const float Kp,
+        const float Ki);
 
-    MotorController(const MotorController&) = delete;
-    MotorController(MotorController&&) = delete;
+    MotorController(const MotorController &) = delete;
+    MotorController(MotorController &&) = delete;
     MotorController& operator=(const MotorController&) = delete;
-    MotorController& operator=(MotorController&&) = delete;
+    MotorController& operator=(MotorController &&) = delete;
 
     void setTorque(const float);
     float getCurrentRPS(void) const;

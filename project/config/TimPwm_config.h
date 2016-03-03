@@ -30,7 +30,8 @@ static constexpr const std::array<const Pwm, Pwm::__ENUM__SIZE> Container =
       Pwm(Pwm::BUZZER,
           Factory<Tim>::get<Tim::BUZZER>(),
           Pwm::CHANNEL1,
-          TIM_OCInitTypeDef { TIM_OCMode_PWM2, TIM_OutputState_Enable, TIM_OutputNState_Disable, 0, TIM_OCPolarity_High, TIM_OCNPolarity_Low, TIM_OCIdleState_Reset,
+          TIM_OCInitTypeDef { TIM_OCMode_PWM2, TIM_OutputState_Enable, TIM_OutputNState_Disable, 0, TIM_OCPolarity_High,
+                              TIM_OCNPolarity_Low, TIM_OCIdleState_Reset,
                               TIM_OCNIdleState_Reset})
   } };
 

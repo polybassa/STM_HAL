@@ -50,7 +50,7 @@
 static const int __attribute__((used)) g_DebugZones = ZONE_ERROR | ZONE_WARNING | ZONE_VERBOSE | ZONE_INFO;
 extern char _version_start;
 extern char _version_end;
-const std::string VERSION(&_version_start, (&_version_end - &_version_start));
+const std::string VERSION(&_version_start, ( &_version_end   -   & _version_start));
 
 void initializePowerSupply(void)
 {

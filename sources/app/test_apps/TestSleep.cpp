@@ -43,16 +43,15 @@ private:
     void blinkAppTaskFunction(const bool&);
 
 public:
-    BlinkApp(void) :
-        os::DeepSleepModule(),
-            mBlinkTask("blinky", 2048, os::Task::Priority::LOW, [this](const bool& join){
-        blinkAppTaskFunction(join);
-    }){}
+    BlinkApp(void) : os::DeepSleepModule(),
+                     mBlinkTask("blinky", 2048, os::Task::Priority::LOW, [this](const bool& join) {
+                                    blinkAppTaskFunction(join);
+                                }) {}
 
     BlinkApp(const BlinkApp&) = delete;
-    BlinkApp(BlinkApp&&) = delete;
+    BlinkApp(BlinkApp &&) = delete;
     BlinkApp& operator=(const BlinkApp&) = delete;
-    BlinkApp& operator=(BlinkApp&&) = delete;
+    BlinkApp& operator=(BlinkApp &&) = delete;
 };
 
 void BlinkApp::blinkAppTaskFunction(const bool& join)
@@ -67,12 +66,12 @@ void BlinkApp::blinkAppTaskFunction(const bool& join)
     led0 = true;
     led1 = true;
     do {
-        os::ThisTask::sleep(100ms);
-        led0 = true;
-        led1 = false;
-        os::ThisTask::sleep(100ms);
-        led0 = !true;
-        led1 = !false;
+    os::ThisTask::sleep(100ms);
+    led0 = true;
+    led1 = false;
+    os::ThisTask::sleep(100ms);
+    led0 = !true;
+    led1 = !false;
     } while (!join);
 
     led0 = false;
@@ -103,46 +102,46 @@ static void SYSCLKConfig_STOP(void)
     while (RCC_GetSYSCLKSource() != 0x08) {}
 }
 
-os::TaskEndless sleepTest("Sleep_Test", 2048, os::Task::Priority::MEDIUM, [](const bool&) {
-    using hal::Exti;
-    using hal::Factory;
-    using hal::Gpio;
-    static constexpr const auto& button = Factory<Gpio>::get<Gpio::USER_BUTTON>();
-    static constexpr const auto& wakeup = Factory<Exti>::get<Exti::WAKEUP>();
-    static constexpr const auto& led2 = Factory<Gpio>::get<Gpio::LED_5>();
+os::TaskEndless sleepTest("Sleep_Test", 2048, os::Task::Priority::MEDIUM, [] (const bool&){
+                              using hal::Exti;
+                              using hal::Factory;
+                              using hal::Gpio;
+                              static constexpr const auto& button = Factory<Gpio>::get<Gpio::USER_BUTTON>();
+                              static constexpr const auto& wakeup = Factory<Exti>::get<Exti::WAKEUP>();
+                              static constexpr const auto& led2 = Factory<Gpio>::get<Gpio::LED_5>();
 
-    wakeup.enable();
+                              wakeup.enable();
 
-    while (true) {
-        if (!button) {
-            os::ThisTask::sleep(std::chrono::milliseconds(20));
-            continue;
-        }
+                              while (true) {
+                                  if (!button) {
+                                      os::ThisTask::sleep(std::chrono::milliseconds(20));
+                                      continue;
+                                  }
 
-        while (button) {
-            os::ThisTask::sleep(std::chrono::milliseconds(20));
-        }
+                                  while (button) {
+                                      os::ThisTask::sleep(std::chrono::milliseconds(20));
+                                  }
 
-        os::ThisTask::sleep(std::chrono::milliseconds(50));
+                                  os::ThisTask::sleep(std::chrono::milliseconds(50));
 
-        os::DeepSleepController::enterGlobalDeepSleep();
+                                  os::DeepSleepController::enterGlobalDeepSleep();
 
-        os::Task::suspendAll();
+                                  os::Task::suspendAll();
 
-        led2 = false;
+                                  led2 = false;
 
-        PWR_EnterSTOPMode(PWR_Regulator_LowPower, PWR_STOPEntry_WFI);
+                                  PWR_EnterSTOPMode(PWR_Regulator_LowPower, PWR_STOPEntry_WFI);
 
-        portDISABLE_INTERRUPTS();
-        SYSCLKConfig_STOP();
-        SysTick_Config((configCPU_CLOCK_HZ / configTICK_RATE_HZ) - 1UL);
-        portENABLE_INTERRUPTS();
+                                  portDISABLE_INTERRUPTS();
+                                  SYSCLKConfig_STOP();
+                                  SysTick_Config((configCPU_CLOCK_HZ / configTICK_RATE_HZ) - 1UL);
+                                  portENABLE_INTERRUPTS();
 
-        led2 = true;
+                                  led2 = true;
 
-        os::Task::resumeAll();
+                                  os::Task::resumeAll();
 
-        os::DeepSleepController::exitGlobalDeepSleep();
-        os::ThisTask::sleep(std::chrono::milliseconds(500));
-    }
-});
+                                  os::DeepSleepController::exitGlobalDeepSleep();
+                                  os::ThisTask::sleep(std::chrono::milliseconds(500));
+                              }
+                          });

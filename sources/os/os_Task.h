@@ -48,9 +48,9 @@ public:
     Task(const char* name, uint16_t stackSize, os::Task::Priority priority,
          std::function<void(const bool&)> function);
     Task(const Task&) = delete;
-    Task(Task&&) = delete;
+    Task(Task &&) = delete;
     Task& operator=(const Task&) = delete;
-    Task& operator=(Task&&) = delete;
+    Task& operator=(Task &&) = delete;
 
     virtual ~Task(void);
 

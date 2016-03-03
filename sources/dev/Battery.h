@@ -27,9 +27,9 @@ namespace dev
 struct Battery : public interface::Battery<Battery> {
     Battery() = default;
     Battery(const Battery&) = delete;
-    Battery(Battery&&) = default;
+    Battery(Battery &&) = default;
     Battery& operator=(const Battery&) = delete;
-    Battery& operator=(Battery&&) = delete;
+    Battery& operator=(Battery &&) = delete;
 
     float getTemperature(void) const;
     float getVoltage(void) const;

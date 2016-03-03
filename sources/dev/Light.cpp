@@ -29,23 +29,23 @@ void Light::setColor(const interface::Color& color) const
     // Function returns bit code to create an High or Low Sequence for WS2812 with SPI
     // Waveform: |''|.. = High = 0xc = 0b1100
     // Waveform: |'|... = Low  = 0x8 = 0b1000
-    auto getBitmask = [](const uint8_t in) -> uint8_t {
-                          switch (in & 0x03) {
-                          case 0:
-                              return 0x88;
+    auto getBitmask = [] (const uint8_t in)->uint8_t {
+        switch (in & 0x03) {
+        case 0:
+            return 0x88;
 
-                          case 1:
-                              return 0x8c;
+        case 1:
+            return 0x8c;
 
-                          case 2:
-                              return 0xc8;
+        case 2:
+            return 0xc8;
 
-                          case 3:
-                              return 0xcc;
-                          }
+        case 3:
+            return 0xcc;
+        }
 
-                          return 0;
-                      };
+        return 0;
+    };
 
     uint8_t* pointer = LedBitArrays[mDescription].data();
 
@@ -57,17 +57,17 @@ void Light::setColor(const interface::Color& color) const
     // This function gets a color byte and converts each two bit from MSB to LSB
     // into 1 Byte for the LedBitArrays which is send over SPI later
     auto fillBitArrayForColor = [&](const uint8_t color) {
-                                    uint8_t bitmask = 0xc0;
-                                    for (size_t i = 0; i < 8; i = i + 2) {
-                                        // mask 2 Bits and shift to LSB and LSB+1
-                                        uint8_t value = (color & bitmask) >> (6 - i);
-                                        // get Byte for 2 bits color code and assign value to LedBitArrays
-                                        *pointer = getBitmask(value);
-                                        // prepare for next round
-                                        pointer++;
-                                        bitmask = bitmask >> 2;
-                                    }
-                                };
+        uint8_t bitmask = 0xc0;
+        for (size_t i = 0; i < 8; i = i + 2) {
+            // mask 2 Bits and shift to LSB and LSB+1
+            uint8_t value = (color & bitmask) >> (6 - i);
+            // get Byte for 2 bits color code and assign value to LedBitArrays
+            *pointer = getBitmask(value);
+            // prepare for next round
+            pointer++;
+            bitmask = bitmask >> 2;
+        }
+    };
 
     for (size_t i = 0; i < LED_COUNT; i++) {
         fillBitArrayForColor(color.green);

@@ -135,7 +135,7 @@ bool SensorBLDC::checkHallEvent(void) const
 
 void SensorBLDC::prepareCommutation(const size_t hallPosition) const
 {
-    static const std::array<std::array<const bool, 6>, 8> BLDC_BRIDGE_STATE_FORWARD =   // Motor step
+    static const std::array<std::array<const bool, 6>, 8> BLDC_BRIDGE_STATE_FORWARD = // Motor step
     {{
          // A AN  B BN  C CN
          { 0, 0, 0, 0, 0, 0 }, // 0
@@ -148,7 +148,7 @@ void SensorBLDC::prepareCommutation(const size_t hallPosition) const
          { 0, 0, 0, 0, 0, 0 }  // 0
      }};
 
-    static const std::array<std::array<const bool, 6>, 8> BLDC_BRIDGE_STATE_BACKWARD =   // Motor step
+    static const std::array<std::array<const bool, 6>, 8> BLDC_BRIDGE_STATE_BACKWARD = // Motor step
     {{
          // A AN  B BN  C CN
          { 0, 0, 0, 0, 0, 0 }, // V0
@@ -179,7 +179,7 @@ void SensorBLDC::checkMotor(void) const
 {
     dev::Battery battery;
 
-    const float blockingCurrent = 1;// [A]
+    const float blockingCurrent = 1; // [A]
     const float minimalRPS = 3.0;
     const uint32_t minimalPWM = 100;
 
@@ -203,8 +203,8 @@ void SensorBLDC::checkMotor(void) const
 void SensorBLDC::start(void) const
 {
     mHallDecoder.registerCommutationCallback([this] {
-        prepareCommutation(mHallDecoder.getCurrentHallState());
-    });
+                                                 prepareCommutation(mHallDecoder.getCurrentHallState());
+                                             });
 
     mHallDecoder.registerHallEventCheckCallback([this] {return checkHallEvent();
                                                 });

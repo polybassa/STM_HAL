@@ -32,9 +32,9 @@ struct Usart {
 
     Usart() = delete;
     Usart(const Usart&) = delete;
-    Usart(Usart&&) = default;
+    Usart(Usart &&) = default;
     Usart& operator=(const Usart&) = delete;
-    Usart& operator=(Usart&&) = delete;
+    Usart& operator=(Usart &&) = delete;
 
     template<size_t n>
     size_t send(const std::array<uint8_t, n>&) const;
@@ -68,8 +68,8 @@ struct Usart {
 private:
     constexpr Usart(const enum Description&  desc,
                     const uint32_t&          peripherie,
-                    const USART_InitTypeDef& conf) :
-        mDescription(desc), mPeripherie(peripherie), mConfiguration(conf){}
+                    const USART_InitTypeDef& conf) : mDescription(desc), mPeripherie(peripherie),
+                                                     mConfiguration(conf) {}
 
     const uint32_t mPeripherie;
     const USART_InitTypeDef mConfiguration;

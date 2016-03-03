@@ -21,24 +21,24 @@ extern "C" {
  | configuration
  */
 
-#define SYSCALLS_HAVE_CLOSE_R       1
-#define SYSCALLS_HAVE_EXECVE_R      0
-#define SYSCALLS_HAVE_EXIT          1
-#define SYSCALLS_HAVE_FORK_R        0
-#define SYSCALLS_HAVE_FSTAT_R       1
-#define SYSCALLS_HAVE_GETPID_R      1
-#define SYSCALLS_HAVE_ISATTY_R      1
-#define SYSCALLS_HAVE_KILL_R        1
-#define SYSCALLS_HAVE_LINK_R        0
-#define SYSCALLS_HAVE_LSEEK_R       1
-#define SYSCALLS_HAVE_OPEN_R        0
-#define SYSCALLS_HAVE_READ_R        1
-#define SYSCALLS_HAVE_SBRK_R        1
-#define SYSCALLS_HAVE_STAT_R        0
-#define SYSCALLS_HAVE_TIMES_R       0
-#define SYSCALLS_HAVE_UNLINK_R      0
-#define SYSCALLS_HAVE_WAIT_R        0
-#define SYSCALLS_HAVE_WRITE_R       1
+#define SYSCALLS_HAVE_CLOSE_R 1
+#define SYSCALLS_HAVE_EXECVE_R 0
+#define SYSCALLS_HAVE_EXIT 1
+#define SYSCALLS_HAVE_FORK_R 0
+#define SYSCALLS_HAVE_FSTAT_R 1
+#define SYSCALLS_HAVE_GETPID_R 1
+#define SYSCALLS_HAVE_ISATTY_R 1
+#define SYSCALLS_HAVE_KILL_R 1
+#define SYSCALLS_HAVE_LINK_R 0
+#define SYSCALLS_HAVE_LSEEK_R 1
+#define SYSCALLS_HAVE_OPEN_R 0
+#define SYSCALLS_HAVE_READ_R 1
+#define SYSCALLS_HAVE_SBRK_R 1
+#define SYSCALLS_HAVE_STAT_R 0
+#define SYSCALLS_HAVE_TIMES_R 0
+#define SYSCALLS_HAVE_UNLINK_R 0
+#define SYSCALLS_HAVE_WAIT_R 0
+#define SYSCALLS_HAVE_WRITE_R 1
 
 /*
  | includes

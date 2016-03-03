@@ -28,9 +28,9 @@ class Semaphore {
 public:
     Semaphore(void);
     Semaphore(const Semaphore&) = delete;
-    Semaphore(Semaphore&&);
+    Semaphore(Semaphore &&);
     Semaphore& operator=(const Semaphore&) = delete;
-    Semaphore& operator=(Semaphore&&);
+    Semaphore& operator=(Semaphore &&);
     ~Semaphore(void);
 
     bool take(uint32_t ticksToWait = portMAX_DELAY) const;
