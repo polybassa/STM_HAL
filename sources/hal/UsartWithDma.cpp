@@ -46,12 +46,14 @@ void UsartWithDma::registerInterruptSemaphores(void) const
 {
     if ((mTxDma != nullptr)) {
         mTxDma->registerInterruptSemaphore(&DmaTransferCompleteSemaphores.at(
-                                               mUsart->mDescription), Dma::InterruptSource::TC);
+                                                                             mUsart->mDescription),
+                                           Dma::InterruptSource::TC);
     }
 
     if ((mRxDma != nullptr)) {
         mRxDma->registerInterruptSemaphore(&DmaReceiveCompleteSemaphores.at(
-                                               mUsart->mDescription), Dma::InterruptSource::TC);
+                                                                            mUsart->mDescription),
+                                           Dma::InterruptSource::TC);
     }
 }
 

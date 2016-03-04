@@ -28,31 +28,31 @@ constexpr std::chrono::milliseconds MotorController::motorCheckInterval;
 constexpr std::chrono::milliseconds MotorController::controllerInterval;
 
 MotorController::MotorController(
-    const SensorBLDC& motor,
-    const Battery&    battery,
-    const float       motorConstant,
-    const float       motorResistance,
-    const float       Kp,
-    const float       Ki) : os::DeepSleepModule(),
-                            mMotorControllerTask("1MotorControl",
-                                                 MotorController::STACKSIZE,
-                                                 os::Task::Priority::HIGH,
-                                                 [this](const bool& join)
-                                                 {
-                                                     motorControllerTaskFunction(join);
-                                                 }),
-                            mMotor(motor),
-                            mBattery(battery),
-                            mMotorConstant(motorConstant),
-                            mMotorCoilResistance(motorResistance),
-                            mController(mCurrentTorque,
-                                        mOutputTorque,
-                                        mSetTorque,
-                                        Kp,
-                                        Ki,
-                                        static_cast<const float>(0.0),
-                                        PIDController::ControlDirection::DIRECT),
-                            mSetTorqueQueue()
+                                 const SensorBLDC& motor,
+                                 const Battery&    battery,
+                                 const float       motorConstant,
+                                 const float       motorResistance,
+                                 const float       Kp,
+                                 const float       Ki) : os::DeepSleepModule(),
+    mMotorControllerTask("1MotorControl",
+                         MotorController::STACKSIZE,
+                         os::Task::Priority::HIGH,
+                         [this](const bool& join)
+{
+    motorControllerTaskFunction(join);
+}),
+    mMotor(motor),
+    mBattery(battery),
+    mMotorConstant(motorConstant),
+    mMotorCoilResistance(motorResistance),
+    mController(mCurrentTorque,
+                mOutputTorque,
+                mSetTorque,
+                Kp,
+                Ki,
+                static_cast<const float>(0.0),
+                PIDController::ControlDirection::DIRECT),
+    mSetTorqueQueue()
 {
     mController.setSampleTime(controllerInterval);
     mController.setOutputLimits(-1.0, 1.0);

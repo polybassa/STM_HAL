@@ -23,10 +23,11 @@ bool Task::schedulerRunning = false;
 
 Task::Task(const char* name, uint16_t stackSize, os::Task::Priority priority,
            std::function<void(const bool&)> function) : mTaskFunction(
-                                                            function)
+                                                                      function)
 {
     xTaskCreate(Task::task, name, Task::STACKSIZE_IN_BYTE(
-                    stackSize), this, static_cast<uint16_t>(priority), &this->mHandle);
+                                                          stackSize), this, static_cast<uint16_t>(priority),
+                &this->mHandle);
 }
 
 Task::~Task(void)

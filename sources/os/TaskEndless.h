@@ -20,7 +20,8 @@
 
 namespace os
 {
-struct TaskEndless : public Task {
+struct TaskEndless :
+    public Task {
     using Task::Task;
 };
 }

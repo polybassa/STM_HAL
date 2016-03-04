@@ -24,16 +24,18 @@
 
 namespace dev
 {
-struct TemperatureSensor final : public interface::TemperatureSensor<TemperatureSensor> {
+struct TemperatureSensor final :
+    public interface::TemperatureSensor<TemperatureSensor> {
     TemperatureSensor() = delete;
-    TemperatureSensor(const TemperatureSensor &) = delete;
-    TemperatureSensor(TemperatureSensor &&) = delete;
+    TemperatureSensor(const TemperatureSensor&) = delete;
+    TemperatureSensor(TemperatureSensor&&) = delete;
     TemperatureSensor& operator=(const TemperatureSensor&) = delete;
-    TemperatureSensor& operator=(TemperatureSensor &&) = delete;
+    TemperatureSensor& operator=(TemperatureSensor&&) = delete;
 };
 
 template<>
-class Factory<TemperatureSensor> {
+class Factory<TemperatureSensor>
+{
     static constexpr std::tuple<const TemperatureSensor_Internal,
                                 const TemperatureSensor_NTC,
                                 const TemperatureSensor_NTC,
@@ -60,7 +62,7 @@ public:
                       "This is not an Temperaturesensor");
         static_assert(index <= TemperatureSensor::Description::__ENUM__SIZE, "__ENUM__SIZE is not accessible");
         static_assert(static_cast<size_t>(std::get<index>(
-                                              Container).mDescription) == static_cast<size_t>(index),
+                                                          Container).mDescription) == static_cast<size_t>(index),
                       "Wrong mapping between Description and Container");
 
         return std::get<index>(Container);

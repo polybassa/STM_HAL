@@ -21,12 +21,13 @@
 
 namespace dev
 {
-struct TemperatureSensor_Internal : public interface::TemperatureSensor<TemperatureSensor_Internal> {
+struct TemperatureSensor_Internal :
+    public interface::TemperatureSensor<TemperatureSensor_Internal> {
     TemperatureSensor_Internal() = delete;
     TemperatureSensor_Internal(const TemperatureSensor_Internal&) = delete;
-    TemperatureSensor_Internal(TemperatureSensor_Internal &&) = default;
+    TemperatureSensor_Internal(TemperatureSensor_Internal&&) = default;
     TemperatureSensor_Internal& operator=(const TemperatureSensor_Internal&) = delete;
-    TemperatureSensor_Internal& operator=(TemperatureSensor_Internal &&) = delete;
+    TemperatureSensor_Internal& operator=(TemperatureSensor_Internal&&) = delete;
 
     float getTemperature(void) const;
 private:
@@ -35,9 +36,9 @@ private:
                                          const hal::Adc::Channel& peripherie,
                                          const float              avgSlope = 0.0,
                                          const float              voltageAt25C = 0.0) : mDescription(desc), mPeripherie(
-                                                                                            peripherie),
-                                                                                        mAvgSlope(avgSlope),
-                                                                                        mVoltageAt25C(voltageAt25C) {}
+                                                                                                                        peripherie),
+        mAvgSlope(avgSlope),
+        mVoltageAt25C(voltageAt25C) {}
 
     const enum Description mDescription;
     const hal::Adc::Channel& mPeripherie;

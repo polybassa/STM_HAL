@@ -35,9 +35,9 @@ struct Pwm {
 
     Pwm() = delete;
     Pwm(const Pwm&) = delete;
-    Pwm(Pwm &&) = default;
+    Pwm(Pwm&&) = default;
     Pwm& operator=(const Pwm&) = delete;
-    Pwm& operator=(Pwm &&) = delete;
+    Pwm& operator=(Pwm&&) = delete;
 
     void setPulsWidthInMill(uint32_t) const;
 
@@ -46,7 +46,7 @@ private:
                   const Tim&               timer,
                   const enum Channel&      channel,
                   const TIM_OCInitTypeDef& ocConf) : mDescription(desc), mTim(timer), mChannel(channel),
-                                                     mOcConfiguration(ocConf) {}
+        mOcConfiguration(ocConf) {}
 
     const enum Description mDescription;
     const Tim& mTim;
@@ -59,7 +59,8 @@ private:
 };
 
 template<>
-class Factory<Pwm> {
+class Factory<Pwm>
+{
 #include "TimPwm_config.h"
     Factory(void)
     {

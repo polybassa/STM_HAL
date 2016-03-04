@@ -32,14 +32,15 @@ inline void initFactory(void)
 }
 
 template<typename T>
-class Factory {
+class Factory
+{
     Factory(void) = delete;
 
 public:
     Factory(const Factory&) = delete;
-    Factory(Factory &&) = delete;
+    Factory(Factory&&) = delete;
     Factory& operator=(const Factory&) = delete;
-    Factory& operator=(Factory &&) = delete;
+    Factory& operator=(Factory&&) = delete;
 };
 }
 

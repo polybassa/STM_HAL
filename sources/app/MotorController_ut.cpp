@@ -137,8 +137,8 @@ dev::PIDController::PIDController(float&                 input,
                                   const float            ki,
                                   const float            kd,
                                   const ControlDirection direction) : mInput(input),
-                                                                      mOutput(output),
-                                                                      mSetPoint(setPoint)
+    mOutput(output),
+    mSetPoint(setPoint)
 {
     g_PID_D = kd;
     g_PID_I = ki;

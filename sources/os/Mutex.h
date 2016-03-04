@@ -21,15 +21,16 @@
 
 namespace os
 {
-class Mutex {
+class Mutex
+{
     SemaphoreHandle_t mMutexHandle = nullptr;
 
 public:
     Mutex(void);
     Mutex(const Mutex&) = delete;
-    Mutex(Mutex &&);
+    Mutex(Mutex&&);
     Mutex& operator=(const Mutex&) = delete;
-    Mutex& operator=(Mutex &&);
+    Mutex& operator=(Mutex&&);
     ~Mutex(void);
 
     bool take(uint32_t ticksToWait = portMAX_DELAY) const;

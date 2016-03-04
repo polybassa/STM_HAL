@@ -33,9 +33,9 @@ struct Spi {
 
     Spi() = delete;
     Spi(const Spi&) = delete;
-    Spi(Spi &&) = default;
+    Spi(Spi&&) = default;
     Spi& operator=(const Spi&) = delete;
-    Spi& operator=(Spi &&) = delete;
+    Spi& operator=(Spi&&) = delete;
 
     template<size_t n>
     size_t receive(std::array<uint8_t, n>&) const;
@@ -68,7 +68,8 @@ private:
 };
 
 template<>
-class Factory<Spi> {
+class Factory<Spi>
+{
 #include "Spi_config.h"
 
     Factory(void)

@@ -22,7 +22,8 @@
 namespace os
 {
 template<typename T>
-class LockGuard {
+class LockGuard
+{
 public:
 
     explicit LockGuard(const T& lock, portTickType ticksToWait = portMAX_DELAY) : mLock(lock)

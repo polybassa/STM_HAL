@@ -45,9 +45,9 @@ struct Exti {
 
     Exti() = delete;
     Exti(const Exti&) = delete;
-    Exti(Exti &&) = default;
+    Exti(Exti&&) = default;
     Exti& operator=(const Exti&) = delete;
-    Exti& operator=(Exti &&) = delete;
+    Exti& operator=(Exti&&) = delete;
 
     void enable(void) const;
     void disable(void) const;
@@ -60,14 +60,14 @@ private:
                    const Gpio&               gpio,
                    const EXTITrigger_TypeDef trigger,
                    const uint32_t            priority = 0xf) : mDescription(desc), mGpio(gpio),
-                                                               mConfiguration(EXTI_InitTypeDef
-                                                                              {
-                                                                                  gpio
-                                                                                  .mPinSource, EXTI_Mode_Interrupt,
-                                                                                  trigger,
-                                                                                  DISABLE
-                                                                              }),
-                                                               mPriority(priority) {}
+        mConfiguration(EXTI_InitTypeDef
+        {
+            gpio
+            .mPinSource, EXTI_Mode_Interrupt,
+            trigger,
+            DISABLE
+        }),
+        mPriority(priority) {}
 
     const enum Description mDescription;
     const Gpio& mGpio;
@@ -89,7 +89,8 @@ private:
 };
 
 template<>
-class Factory<Exti> {
+class Factory<Exti>
+{
 #include "Exti_config.h"
 
     Factory(void)
@@ -125,8 +126,8 @@ public:
                       "Exti declaration in the wrong place. EXTI_LINE must be equal gpio pin Source");
 
         static_assert(
-            Container[index].mDescription == getByExtiLine<Container[index].mConfiguration.EXTI_Line>().mDescription,
-            "Can not access Exti correct");
+                      Container[index].mDescription == getByExtiLine<Container[index].mConfiguration.EXTI_Line>().mDescription,
+                      "Can not access Exti correct");
 
         static_assert(index != Exti::__ENUM__SIZE, "__ENUM__SIZE is not accessible");
         static_assert(Container[index].mDescription == index, "Wrong mapping between Description and Container");

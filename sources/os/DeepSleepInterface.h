@@ -20,7 +20,8 @@
 
 namespace os
 {
-class DeepSleepModule {
+class DeepSleepModule
+{
     static std::vector<DeepSleepModule*> Modules;
 
 protected:
@@ -28,9 +29,9 @@ protected:
     DeepSleepModule(void);
 
     DeepSleepModule(const DeepSleepModule&) = delete;
-    DeepSleepModule(DeepSleepModule &&) = delete;
+    DeepSleepModule(DeepSleepModule&&) = delete;
     DeepSleepModule& operator=(const DeepSleepModule&) = delete;
-    DeepSleepModule& operator=(DeepSleepModule &&) = delete;
+    DeepSleepModule& operator=(DeepSleepModule&&) = delete;
 
     virtual ~DeepSleepModule(void);
 
@@ -40,7 +41,8 @@ protected:
     friend class DeepSleepController;
 };
 
-class DeepSleepController {
+class DeepSleepController
+{
 public:
     static void enterGlobalDeepSleep(void)
     {

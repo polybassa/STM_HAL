@@ -21,7 +21,9 @@
 
 namespace os
 {
-class TaskInterruptable : public Task {
+class TaskInterruptable :
+    public Task
+{
     xSemaphoreHandle mJoinSemaphore;
     bool mJoinFlag;
 

@@ -32,9 +32,9 @@ struct Usart {
 
     Usart() = delete;
     Usart(const Usart&) = delete;
-    Usart(Usart &&) = default;
+    Usart(Usart&&) = default;
     Usart& operator=(const Usart&) = delete;
-    Usart& operator=(Usart &&) = delete;
+    Usart& operator=(Usart&&) = delete;
 
     template<size_t n>
     size_t send(const std::array<uint8_t, n>&) const;
@@ -69,7 +69,7 @@ private:
     constexpr Usart(const enum Description&  desc,
                     const uint32_t&          peripherie,
                     const USART_InitTypeDef& conf) : mDescription(desc), mPeripherie(peripherie),
-                                                     mConfiguration(conf) {}
+        mConfiguration(conf) {}
 
     const uint32_t mPeripherie;
     const USART_InitTypeDef mConfiguration;
@@ -94,7 +94,8 @@ size_t Usart::receive(std::array<uint8_t, n>& rx) const
 }
 
 template<>
-class Factory<Usart> {
+class Factory<Usart>
+{
 #include "Usart_config.h"
 
     Factory(void)
@@ -124,7 +125,8 @@ public:
         static_assert(IS_USART_PARITY(Container[index].mConfiguration.USART_Parity), "Invalid Parity");
         static_assert(IS_USART_MODE(Container[index].mConfiguration.USART_Mode), "Invalid Mode ");
         static_assert(IS_USART_HARDWARE_FLOW_CONTROL(
-                          Container[index].mConfiguration.USART_HardwareFlowControl), "Invalid HwFlowCtrl");
+                                                     Container[index].mConfiguration.USART_HardwareFlowControl),
+                      "Invalid HwFlowCtrl");
         static_assert(index != Usart::Description::__ENUM__SIZE, "__ENUM__SIZE is not accessible");
         static_assert(index < Container[index + 1].mDescription, "Incorrect order of instances in Factory");
         static_assert(Container[index].mDescription == index, "Wrong mapping between Description and Container");

@@ -54,9 +54,9 @@ struct Dma {
 
     Dma() = delete;
     Dma(const Dma&) = delete;
-    Dma(Dma &&) = default;
+    Dma(Dma&&) = default;
     Dma& operator=(const Dma&) = delete;
-    Dma& operator=(Dma &&) = delete;
+    Dma& operator=(Dma&&) = delete;
 
     void setupTransfer(uint8_t const* const data, const size_t length, const bool repeat = false) const;
     void setupSendSingleCharMultipleTimes(uint8_t const* const data, const size_t length) const;
@@ -87,11 +87,11 @@ private:
                   const DMA_InitTypeDef&  conf,
                   const uint32_t          interrupt = 0,
                   const IRQn_Type         interruptNumber = IRQn_Type::UsageFault_IRQn) : mDescription(desc),
-                                                                                          mPeripherie(peripherie),
-                                                                                          mConfiguration(conf),
-                                                                                          mDmaInterrupt(interrupt),
-                                                                                          mDmaIRQn(
-                                                                                              interruptNumber) {}
+        mPeripherie(peripherie),
+        mConfiguration(conf),
+        mDmaInterrupt(interrupt),
+        mDmaIRQn(
+                 interruptNumber) {}
 
     const uint32_t mPeripherie;
     const DMA_InitTypeDef mConfiguration;
@@ -116,7 +116,8 @@ private:
 };
 
 template<>
-class Factory<Dma> {
+class Factory<Dma>
+{
 #include "Dma_config.h"
 
     static constexpr const std::array<const uint32_t, 2> Clocks =
@@ -158,7 +159,8 @@ public:
         static_assert(IS_DMA_ALL_PERIPH_BASE(Container[index].mPeripherie), "Invalid Peripheries ");
         static_assert(IS_DMA_DIR(Container[index].mConfiguration.DMA_DIR), "Invalid DIR");
         static_assert(IS_DMA_PERIPHERAL_INC_STATE(
-                          Container[index].mConfiguration.DMA_PeripheralInc), "Invalid PeripheralInc");
+                                                  Container[index].mConfiguration.DMA_PeripheralInc),
+                      "Invalid PeripheralInc");
         static_assert(IS_DMA_MEMORY_INC_STATE(Container[index].mConfiguration.DMA_MemoryInc), "Invalid MemoryInc");
         static_assert(IS_DMA_MODE(Container[index].mConfiguration.DMA_Mode), "Invalid DMA MODE");
         static_assert(IS_DMA_PRIORITY(Container[index].mConfiguration.DMA_Priority), "Invalid Priority");

@@ -22,7 +22,8 @@
 
 namespace dev
 {
-class DebugInterface {
+class DebugInterface
+{
     static constexpr auto& interface = hal::Factory<hal::Usart>::get<hal::Usart::DEBUG_IF>();
 
 #if defined(DEBUG)
@@ -34,9 +35,9 @@ class DebugInterface {
 public:
     DebugInterface(void);
     DebugInterface(const DebugInterface&) = delete;
-    DebugInterface(DebugInterface &&) = delete;
+    DebugInterface(DebugInterface&&) = delete;
     DebugInterface& operator=(const DebugInterface&) = delete;
-    DebugInterface& operator=(DebugInterface &&) = delete;
+    DebugInterface& operator=(DebugInterface&&) = delete;
     virtual ~DebugInterface();
 
     void printStartupMessage(void) const;

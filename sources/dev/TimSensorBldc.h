@@ -37,9 +37,9 @@ struct SensorBLDC {
 
     SensorBLDC() = delete;
     SensorBLDC(const SensorBLDC&) = delete;
-    SensorBLDC(SensorBLDC &&) = default;
+    SensorBLDC(SensorBLDC&&) = default;
     SensorBLDC& operator=(const SensorBLDC&) = delete;
-    SensorBLDC& operator=(SensorBLDC &&) = delete;
+    SensorBLDC& operator=(SensorBLDC&&) = delete;
 
     void incrementCommutationDelay(void) const;
     void decrementCommutationDelay(void) const;
@@ -62,7 +62,7 @@ private:
     constexpr SensorBLDC(const enum Description& desc,
                          const hal::HalfBridge&  hBridge,
                          const hal::HallDecoder& hallDecoder) : mDescription(desc), mHBridge(hBridge),
-                                                                mHallDecoder(hallDecoder) {}
+        mHallDecoder(hallDecoder) {}
 
     const enum Description mDescription;
     const hal::HalfBridge& mHBridge;
@@ -80,14 +80,15 @@ private:
 };
 
 template<>
-class Factory<SensorBLDC> {
+class Factory<SensorBLDC>
+{
     static constexpr std::array<const SensorBLDC, SensorBLDC::__ENUM__SIZE> Container =
     { {
           SensorBLDC(
-              SensorBLDC::BLDC,
-              hal::Factory<hal::HalfBridge>::get<hal::HalfBridge::BLDC_PWM>(),
-              hal::Factory<hal::HallDecoder>::get<hal::HallDecoder::BLDC_DECODER>()
-              )
+                     SensorBLDC::BLDC,
+                     hal::Factory<hal::HalfBridge>::get<hal::HalfBridge::BLDC_PWM>(),
+                     hal::Factory<hal::HallDecoder>::get<hal::HallDecoder::BLDC_DECODER>()
+                     )
       } };
 
 public:

@@ -25,9 +25,9 @@ PIDController::PIDController(float&                 input,
                              const float            ki,
                              const float            kd,
                              const ControlDirection direction) : mInput(input),
-                                                                 mOutput(output),
-                                                                 mSetPoint(setPoint),
-                                                                 mLastTime(0)
+    mOutput(output),
+    mSetPoint(setPoint),
+    mLastTime(0)
 {
     setOutputLimits(0, 255);
     setControllerDirection(direction);

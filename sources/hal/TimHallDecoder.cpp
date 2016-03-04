@@ -114,8 +114,8 @@ float HallDecoder::getCurrentRPS(void) const
 
     const uint32_t avgTicksBetweenHallSignals =
         std::accumulate(
-            begin,
-            mTimestamps.end(), 0) / (NUMBER_OF_TIMESTAMPS - 1);
+                        begin,
+                        mTimestamps.end(), 0) / (NUMBER_OF_TIMESTAMPS - 1);
 
     const float timerFrequency = SYSTEMCLOCK / (mTim.mConfiguration.TIM_Prescaler + 1);
     const float hallSignalFrequency = timerFrequency / avgTicksBetweenHallSignals;

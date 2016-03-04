@@ -28,9 +28,9 @@ namespace hal
 struct UsartWithDma {
     UsartWithDma() = delete;
     UsartWithDma(const UsartWithDma&) = delete;
-    UsartWithDma(UsartWithDma &&) = default;
+    UsartWithDma(UsartWithDma&&) = default;
     UsartWithDma& operator=(const UsartWithDma&) = delete;
-    UsartWithDma& operator=(UsartWithDma &&) = delete;
+    UsartWithDma& operator=(UsartWithDma&&) = delete;
 
     template<size_t n>
     size_t send(const std::array<uint8_t, n>&) const;
@@ -63,7 +63,7 @@ private:
                            const uint16_t&    dmaCmd = 0,
                            Dma const* const   txDma = nullptr,
                            Dma const* const   rxDma = nullptr) : mUsart(usartInterface), mDmaCmd(dmaCmd), mTxDma(txDma),
-                                                                 mRxDma(rxDma) {}
+        mRxDma(rxDma) {}
 
     Usart const* const mUsart;
     const uint16_t mDmaCmd;
@@ -106,7 +106,8 @@ void UsartWithDma::receiveNonBlocking(const std::array<uint8_t, n>& rx, const bo
 }
 
 template<>
-class Factory<UsartWithDma> {
+class Factory<UsartWithDma>
+{
 #include "UsartWithDma_config.h"
 
     Factory(void)

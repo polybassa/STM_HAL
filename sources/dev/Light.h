@@ -24,12 +24,13 @@
 
 namespace dev
 {
-struct Light : interface::Light<Light> {
+struct Light :
+    interface::Light<Light> {
     Light() = delete;
     Light(const Light&) = delete;
-    Light(Light &&) = default;
+    Light(Light&&) = default;
     Light& operator=(const Light&) = delete;
-    Light& operator=(Light &&) = delete;
+    Light& operator=(Light&&) = delete;
 
     void setColor(const interface::Color& color) const;
 private:
@@ -49,7 +50,8 @@ private:
 };
 
 template<>
-class Factory<Light> {
+class Factory<Light>
+{
     static constexpr const std::array<const Light,
                                       Light::__ENUM__SIZE> Container =
     { {

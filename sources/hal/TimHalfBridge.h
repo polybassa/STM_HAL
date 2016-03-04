@@ -34,9 +34,9 @@ struct HalfBridge {
 
     HalfBridge() = delete;
     HalfBridge(const HalfBridge&) = delete;
-    HalfBridge(HalfBridge &&) = default;
+    HalfBridge(HalfBridge&&) = default;
     HalfBridge& operator=(const HalfBridge&) = delete;
-    HalfBridge& operator=(HalfBridge &&) = delete;
+    HalfBridge& operator=(HalfBridge&&) = delete;
 
     void setPulsWidthPerMill(uint32_t) const;
     uint32_t getPulsWidthPerMill(void) const;
@@ -52,8 +52,8 @@ private:
                          const Tim&                 timer,
                          const TIM_OCInitTypeDef&   ocConf,
                          const TIM_BDTRInitTypeDef& bdtrConf) : mDescription(desc), mTim(timer),
-                                                                mOcConfiguration(ocConf),
-                                                                mBdtrConfiguration(bdtrConf) {}
+        mOcConfiguration(ocConf),
+        mBdtrConfiguration(bdtrConf) {}
 
     const enum Description mDescription;
     const Tim& mTim;
@@ -71,7 +71,8 @@ private:
 };
 
 template<>
-class Factory<HalfBridge> {
+class Factory<HalfBridge>
+{
 #include "TimHalfBridge_config.h"
 
     Factory(void)
@@ -102,7 +103,8 @@ public:
         static_assert(IS_TIM_BREAK_POLARITY(Container[index].mBdtrConfiguration.TIM_BreakPolarity),
                       "Invalid Parameter ");
         static_assert(IS_TIM_AUTOMATIC_OUTPUT_STATE(
-                          Container[index].mBdtrConfiguration.TIM_AutomaticOutput), "Invalid Parameter ");
+                                                    Container[index].mBdtrConfiguration.TIM_AutomaticOutput),
+                      "Invalid Parameter ");
 
         static_assert(Container[index].mTim.mDescription != Tim::Description::__ENUM__SIZE, "Invalid Tim Object");
         static_assert(index != HalfBridge::Description::__ENUM__SIZE, "__ENUM__SIZE is not accessible");

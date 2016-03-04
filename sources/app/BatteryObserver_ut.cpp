@@ -106,9 +106,9 @@ int ut_LoadBattery(void)
 
     dev::Battery batt;
 
-    app::BatteryObserver testee(batt, [] (app::BatteryObserver::ErrorCode error){
-                                    printf("Error %d\n", error);
-                                });
+    app::BatteryObserver testee(batt, [](app::BatteryObserver::ErrorCode error){
+        printf("Error %d\n", error);
+    });
 
     testee.triggerTaskExecution();
 
@@ -142,9 +142,9 @@ int ut_LoadAndDischargeBattery(void)
 
     dev::Battery batt;
 
-    app::BatteryObserver testee(batt, [] (app::BatteryObserver::ErrorCode error){
-                                    printf("Error %d\n", error);
-                                });
+    app::BatteryObserver testee(batt, [](app::BatteryObserver::ErrorCode error){
+        printf("Error %d\n", error);
+    });
 
     testee.triggerTaskExecution();
 
@@ -204,10 +204,10 @@ int ut_OvercurrentTest(void)
     dev::Battery batt;
 
     app::BatteryObserver testee(batt, [&](app::BatteryObserver::ErrorCode error) {
-                                    if (error == app::BatteryObserver::ErrorCode::OVERCURRENT) {
-                                        overcurrentDetected = true;
-                                    }
-                                });
+        if (error == app::BatteryObserver::ErrorCode::OVERCURRENT) {
+            overcurrentDetected = true;
+        }
+    });
 
     g_currentCurrent = 0;
     testee.triggerTaskExecution();
@@ -234,10 +234,10 @@ int ut_UndervoltageTest(void)
     dev::Battery batt;
 
     app::BatteryObserver testee(batt, [&](app::BatteryObserver::ErrorCode error) {
-                                    if (error == app::BatteryObserver::ErrorCode::UNDERVOLTAGE) {
-                                        undervoltage = true;
-                                    }
-                                });
+        if (error == app::BatteryObserver::ErrorCode::UNDERVOLTAGE) {
+            undervoltage = true;
+        }
+    });
 
     g_currentVoltage = 1000;
     testee.triggerTaskExecution();
@@ -262,9 +262,9 @@ int ut_DeepSleep(void)
 
     dev::Battery batt;
 
-    app::BatteryObserver testee(batt, [] (app::BatteryObserver::ErrorCode error){
-                                    printf("Error %d\n", error);
-                                });
+    app::BatteryObserver testee(batt, [](app::BatteryObserver::ErrorCode error){
+        printf("Error %d\n", error);
+    });
 
     testee.triggerTaskExecution();
 

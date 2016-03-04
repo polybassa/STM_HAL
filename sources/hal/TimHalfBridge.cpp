@@ -89,12 +89,12 @@ void HalfBridge::setOutputForChannel(const uint16_t channel, const bool highStat
         if (lowState) {
             // High side FET: ON
             TIM_SelectOCxM(
-                mTim.getBasePointer(), channel, TIM_ForcedAction_Active);
+                           mTim.getBasePointer(), channel, TIM_ForcedAction_Active);
             TIM_CCxNCmd(mTim.getBasePointer(), channel, TIM_CCxN_Enable);
         } else {
             // High side FET: OFF
             TIM_SelectOCxM(
-                mTim.getBasePointer(), channel, TIM_ForcedAction_InActive);
+                           mTim.getBasePointer(), channel, TIM_ForcedAction_InActive);
             TIM_CCxNCmd(mTim.getBasePointer(), channel,
                         TIM_CCxN_Enable);
         }

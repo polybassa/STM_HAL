@@ -63,7 +63,7 @@ void Spi::send(const uint8_t data) const
 bool Spi::isReadyToReceive(void) const
 {
     return (bool)SPI_I2S_GetFlagStatus(
-               reinterpret_cast<SPI_TypeDef*>(mPeripherie), SPI_I2S_FLAG_RXNE);
+                                       reinterpret_cast<SPI_TypeDef*>(mPeripherie), SPI_I2S_FLAG_RXNE);
 }
 
 size_t Spi::receive(uint8_t* const data, const size_t length) const
@@ -95,7 +95,7 @@ uint8_t Spi::receive(void) const
 bool Spi::isReadyToSend(void) const
 {
     return (bool)SPI_I2S_GetFlagStatus(
-               reinterpret_cast<SPI_TypeDef*>(mPeripherie), SPI_I2S_FLAG_TXE);
+                                       reinterpret_cast<SPI_TypeDef*>(mPeripherie), SPI_I2S_FLAG_TXE);
 }
 
 std::array<os::Mutex, Spi::Description::__ENUM__SIZE> Spi::InterfaceAvailableMutex;
