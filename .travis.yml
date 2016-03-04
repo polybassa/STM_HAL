@@ -14,7 +14,9 @@ addons:
 
 # We use cpp for unit tests, and c for the main project.
 language: cpp
-compiler: gcc-5
+compiler:
+      - gcc
+      - gcc-5
 
 before_install:
   - curl --retry 10 --retry-max-time 120 -L "https://launchpad.net/gcc-arm-embedded/5.0/5-2015-q4-major/+download/gcc-arm-none-eabi-5_2-2015q4-20151219-linux.tar.bz2" | tar xfj -
@@ -27,6 +29,7 @@ install:
 
 before_script: 
         - arm-none-eabi-gcc --version
+        - gcc --version
 script: 
         - cd project 
         - ./configure
