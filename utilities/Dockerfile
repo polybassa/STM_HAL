@@ -35,6 +35,10 @@ RUN apt-get update && \
   apt-get install -y \
   libssl-dev
 
+RUN apt-get update && \
+  apt-get install -y \
+  libpthread-stubs0-dev
+
 # arm-none-eabi toolchain
 RUN add-apt-repository ppa:terry.guo/gcc-arm-embedded && \
   apt-get update && \
