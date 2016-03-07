@@ -96,6 +96,10 @@ size_t UsartWithDma::send(uint8_t const* const data, const size_t length, const 
     }
 }
 
+void UsartWithDma::receiveTimeoutCallback(void) const {
+	DmaReceiveCompleteSemaphores.at(mUsart.mDescription).giveFromISR();
+}
+
 size_t UsartWithDma::receive(uint8_t* const data, const size_t length, const uint32_t ticksToWait) const
 {
     if (data == nullptr) {
@@ -106,6 +110,8 @@ size_t UsartWithDma::receive(uint8_t* const data, const size_t length, const uin
         mUsart.clearOverRunError();
         //Trace(ZONE_INFO, "OverRun Error detected \r\n");
     }
+
+    mUsart.enableReceiveTimeout([this]{receiveTimeoutCallback();},100);
 
     if ((mRxDma != nullptr) && (mDmaCmd & USART_DMAReq_Rx) && (length > MIN_LENGTH_FOR_DMA_TRANSFER)) {
         // we have DMA support

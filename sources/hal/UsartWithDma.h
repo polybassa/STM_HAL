@@ -70,6 +70,7 @@ private:
 
     void initialize(void) const;
     void registerInterruptSemaphores(void) const;
+    void receiveTimeoutCallback(void) const;
 
     static constexpr const size_t MIN_LENGTH_FOR_DMA_TRANSFER = 0;
     static std::array<os::Semaphore, Usart::__ENUM__SIZE> DmaTransferCompleteSemaphores;
