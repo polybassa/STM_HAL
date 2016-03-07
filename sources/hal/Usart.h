@@ -19,9 +19,18 @@
 #include <cstdint>
 #include <limits>
 #include <array>
+#include <functional>
 #include "stm32f30x_usart.h"
 #include "stm32f30x_rcc.h"
 #include "hal_Factory.h"
+
+extern "C" {
+void USART1_IRQHandler(void);
+void USART2_IRQHandler(void);
+void USART3_IRQHandler(void);
+void UART4_IRQHandler(void);
+void UART5_IRQHandler(void);
+}
 
 namespace hal
 {
@@ -65,8 +74,10 @@ struct Usart {
 
     void setBaudRate(const size_t) const;
 
-    void enableReceiveTimeout(const size_t) const;
+    void enableReceiveTimeout(std::function<void(void)> callback, const size_t) const;
     void disableReceiveTimeout(void) const;
+
+    static void USART_IRQHandler(const Usart& peripherie);
 
 private:
     constexpr Usart(const enum Description&  desc,
@@ -80,6 +91,13 @@ private:
     mutable bool mInitalized = false;
 
     void initialize(void) const;
+    IRQn getIRQn(void) const;
+
+    using CallbackArray = std::array<std::function<void(void)>, Usart::__ENUM__SIZE>;
+
+
+
+    static CallbackArray ReceiveTimeoutInterruptCallbacks;
 
     friend class Factory<Usart>;
     friend struct UsartWithDma;
@@ -119,6 +137,14 @@ class Factory<Usart>
         }
     }
 
+    template<uint32_t peripherieBase, enum Usart::Description index>
+    static constexpr const Usart& getByPeripherie(void)
+    {
+        return (Container[index]).mPeripherie ==
+               peripherieBase ? Container[index] : getByPeripherie<peripherieBase,
+                                                                   static_cast<enum Usart::Description>(index - 1)>();
+    }
+
 public:
     template<enum Usart::Description index>
     static constexpr const Usart& get(void)
@@ -136,6 +162,14 @@ public:
         static_assert(Container[index].mDescription == index, "Wrong mapping between Description and Container");
 
         return Container[index];
+    }
+
+    template<uint32_t peripherieBase>
+    static constexpr const Usart& getByPeripherie(void)
+    {
+        static_assert(IS_USART_ALL_PERIPH_BASE(peripherieBase), "Invalid Peripheries ");
+        return getByPeripherie<peripherieBase,
+                               static_cast<enum Usart::Description>(Usart::Description::__ENUM__SIZE - 1)>();
     }
 
     template<typename U>

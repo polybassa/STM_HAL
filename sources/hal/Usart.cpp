@@ -21,12 +21,71 @@ static const int __attribute__((unused)) g_DebugZones = ZONE_ERROR | ZONE_WARNIN
 using hal::Factory;
 using hal::Usart;
 
+void USART1_IRQHandler(void)
+{
+    Usart::USART_IRQHandler(Factory<Usart>::getByPeripherie<USART1_BASE>());
+}
+
+void USART2_IRQHandler(void)
+{
+    Usart::USART_IRQHandler(Factory<Usart>::getByPeripherie<USART2_BASE>());
+}
+
+void USART3_IRQHandler(void)
+{
+    Usart::USART_IRQHandler(Factory<Usart>::getByPeripherie<USART3_BASE>());
+}
+
+void UART4_IRQHandler(void)
+{
+    Usart::USART_IRQHandler(Factory<Usart>::getByPeripherie<UART4_BASE>());
+}
+
+void UART5_IRQHandler(void)
+{
+    Usart::USART_IRQHandler(Factory<Usart>::getByPeripherie<UART5_BASE>());
+}
+
+void Usart::USART_IRQHandler(const Usart& peripherie) {
+	if(USART_GetITStatus(reinterpret_cast<USART_TypeDef*>(peripherie.mPeripherie), USART_IT_RTO)){
+		if(Usart::ReceiveTimeoutInterruptCallbacks[peripherie.mDescription]){
+			Usart::ReceiveTimeoutInterruptCallbacks[peripherie.mDescription]();
+		}
+		USART_ClearITPendingBit(reinterpret_cast<USART_TypeDef*>(peripherie.mPeripherie), USART_IT_RTO);
+	}
+}
+
 void Usart::initialize() const
 {
     USART_DeInit(reinterpret_cast<USART_TypeDef*>(mPeripherie));
     USART_Init(reinterpret_cast<USART_TypeDef*>(mPeripherie), &mConfiguration);
     USART_Cmd(reinterpret_cast<USART_TypeDef*>(mPeripherie), ENABLE);
     mInitalized = true;
+
+    // Initialize Interrupts
+    NVIC_SetPriority(getIRQn(), 0xf);
+    NVIC_EnableIRQ(getIRQn());
+}
+
+IRQn Usart::getIRQn(void) const
+{
+    switch (mPeripherie) {
+    case USART1_BASE:
+        return IRQn::USART1_IRQn;
+
+    case USART2_BASE:
+        return IRQn::USART2_IRQn;
+
+    case USART3_BASE:
+        return IRQn::USART3_IRQn;
+
+    case UART4_BASE:
+        return IRQn::UART4_IRQn;
+
+    case UART5_BASE:
+        return IRQn::UART5_IRQn;
+    }
+    return IRQn::UsageFault_IRQn;
 }
 
 bool Usart::isInitalized(void) const
@@ -43,15 +102,21 @@ void Usart::setBaudRate(const size_t baudRate) const
     USART_Cmd(reinterpret_cast<USART_TypeDef*>(mPeripherie), ENABLE);
 }
 
-void Usart::enableReceiveTimeout(const size_t bitsUntilTimeout) const
+void Usart::enableReceiveTimeout(std::function<void(void)> callback, const size_t bitsUntilTimeout) const
 {
+    ReceiveTimeoutInterruptCallbacks[mDescription] = callback;
+
     USART_SetReceiverTimeOut(reinterpret_cast<USART_TypeDef*>(mPeripherie), bitsUntilTimeout);
     USART_ReceiverTimeOutCmd(reinterpret_cast<USART_TypeDef*>(mPeripherie), ENABLE);
+    USART_ITConfig(reinterpret_cast<USART_TypeDef*>(mPeripherie), USART_IT_RTO, ENABLE);
 }
 
 void Usart::disableReceiveTimeout(void) const
 {
+    ReceiveTimeoutInterruptCallbacks[mDescription] = nullptr;
+
     USART_ReceiverTimeOutCmd(reinterpret_cast<USART_TypeDef*>(mPeripherie), DISABLE);
+    USART_ITConfig(reinterpret_cast<USART_TypeDef*>(mPeripherie), USART_IT_RTO, DISABLE);
 }
 
 void Usart::send(const uint16_t data) const
@@ -163,6 +228,8 @@ void Usart::clearParityError(void) const
 {
     USART_ClearFlag(reinterpret_cast<USART_TypeDef*>(mPeripherie), USART_FLAG_PE);
 }
+
+Usart::CallbackArray Usart::ReceiveTimeoutInterruptCallbacks;
 
 constexpr const std::array<const Usart, Usart::__ENUM__SIZE + 1> Factory<Usart>::Container;
 constexpr const std::array<const uint32_t, Usart::__ENUM__SIZE> Factory<Usart>::Clocks;
