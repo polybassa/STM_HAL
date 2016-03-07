@@ -43,6 +43,17 @@ void Usart::setBaudRate(const size_t baudRate) const
     USART_Cmd(reinterpret_cast<USART_TypeDef*>(mPeripherie), ENABLE);
 }
 
+void Usart::enableReceiveTimeout(const size_t bitsUntilTimeout) const
+{
+    USART_SetReceiverTimeOut(reinterpret_cast<USART_TypeDef*>(mPeripherie), bitsUntilTimeout);
+    USART_ReceiverTimeOutCmd(reinterpret_cast<USART_TypeDef*>(mPeripherie), ENABLE);
+}
+
+void Usart::disableReceiveTimeout(void) const
+{
+    USART_ReceiverTimeOutCmd(reinterpret_cast<USART_TypeDef*>(mPeripherie), DISABLE);
+}
+
 void Usart::send(const uint16_t data) const
 {
     USART_SendData(reinterpret_cast<USART_TypeDef*>(mPeripherie), data);
@@ -83,7 +94,7 @@ size_t Usart::receive(uint8_t* const data, const size_t length) const
     size_t bytesReceived = 0;
     while (bytesReceived < length) {
         if (this->isReadyToReceive()) {
-            data[bytesReceived] = (uint8_t)this->receive();
+            data[bytesReceived] = (uint8_t) this->receive();
             bytesReceived++;
         }
     }

@@ -38,9 +38,9 @@ class Factory
 
 public:
     Factory(const Factory&) = delete;
-    Factory(Factory&&) = delete;
+    Factory(Factory &&) = delete;
     Factory& operator=(const Factory&) = delete;
-    Factory& operator=(Factory&&) = delete;
+    Factory& operator=(Factory &&) = delete;
 };
 }
 

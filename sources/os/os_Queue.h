@@ -29,9 +29,9 @@ class Queue
 public:
     Queue(void);
     Queue(const Queue&) = delete;
-    Queue(Queue&&);
+    Queue(Queue &&);
     Queue& operator=(const Queue&) = delete;
-    Queue& operator=(Queue&&);
+    Queue& operator=(Queue &&);
     ~Queue(void);
 
     bool sendFront(T message, uint32_t ticksToWait = portMAX_DELAY) const;
@@ -54,9 +54,9 @@ class Queue<T, 1>
 public:
     Queue(void);
     Queue(const Queue&) = delete;
-    Queue(Queue&&);
+    Queue(Queue &&);
     Queue& operator=(const Queue&) = delete;
-    Queue& operator=(Queue&&);
+    Queue& operator=(Queue &&);
     ~Queue(void);
 
     bool peek(T& message, uint32_t ticksToWait = portMAX_DELAY) const;
@@ -68,16 +68,18 @@ public:
 };
 
 template<typename T, size_t n>
-Queue<T, n>::Queue(void) : mQueueHandle(xQueueCreate(n, sizeof(T))) {}
+Queue<T, n>::Queue(void) :
+    mQueueHandle(xQueueCreate(n, sizeof(T))) {}
 
 template<typename T, size_t n>
-Queue<T, n>::Queue(Queue&& rhs) : mQueueHandle(rhs.mQueueHandle)
+Queue<T, n>::Queue(Queue && rhs) :
+    mQueueHandle(rhs.mQueueHandle)
 {
     rhs.mQueueHandle = nullptr;
 }
 
 template<typename T, size_t n>
-Queue<T, n>& Queue<T, n>::operator=(Queue<T, n>&& rhs)
+Queue<T, n>& Queue<T, n>::operator=(Queue<T, n> && rhs)
 {
     mQueueHandle = rhs.mQueueHandle;
     rhs.mQueueHandle = nullptr;
@@ -164,17 +166,19 @@ void Queue<T, n>::reset(void) const
 ///////////////////////////////////////////////////////////
 
 template<typename T>
-Queue<T, 1>::Queue(void) : mQueueHandle(xQueueCreate(1, sizeof(T)))
+Queue<T, 1>::Queue(void) :
+    mQueueHandle(xQueueCreate(1, sizeof(T)))
 {}
 
 template<typename T>
-Queue<T, 1>::Queue(Queue<T, 1>&& rhs) : mQueueHandle(rhs.mQueueHandle)
+Queue<T, 1>::Queue(Queue<T, 1> && rhs) :
+    mQueueHandle(rhs.mQueueHandle)
 {
     rhs.mQueueHandle = nullptr;
 }
 
 template<typename T>
-Queue<T, 1>& Queue<T, 1>::operator=(Queue<T, 1>&& rhs)
+Queue<T, 1>& Queue<T, 1>::operator=(Queue<T, 1> && rhs)
 {
     mQueueHandle = rhs.mQueueHandle;
     rhs.mQueueHandle = nullptr;

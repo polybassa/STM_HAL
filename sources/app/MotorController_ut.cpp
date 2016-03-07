@@ -58,7 +58,8 @@ void os::TaskInterruptable::start(void)
 }
 
 os::TaskInterruptable::TaskInterruptable(char const* name, unsigned short stack, os::Task::Priority prio,
-                                         std::function<void(bool const&)> func) : Task(name, stack, prio, func) {}
+                                         std::function<void(bool const&)> func) :
+    Task(name, stack, prio, func) {}
 
 os::TaskInterruptable::~TaskInterruptable(void) {}
 
@@ -136,7 +137,8 @@ dev::PIDController::PIDController(float&                 input,
                                   const float            kp,
                                   const float            ki,
                                   const float            kd,
-                                  const ControlDirection direction) : mInput(input),
+                                  const ControlDirection direction) :
+    mInput(input),
     mOutput(output),
     mSetPoint(setPoint)
 {

@@ -28,15 +28,16 @@ struct TemperatureSensor_NTC :
     public interface::TemperatureSensor<TemperatureSensor_NTC> {
     TemperatureSensor_NTC() = delete;
     TemperatureSensor_NTC(const TemperatureSensor_NTC&) = delete;
-    TemperatureSensor_NTC(TemperatureSensor_NTC&&) = default;
+    TemperatureSensor_NTC(TemperatureSensor_NTC &&) = default;
     TemperatureSensor_NTC& operator=(const TemperatureSensor_NTC&) = delete;
-    TemperatureSensor_NTC& operator=(TemperatureSensor_NTC&&) = delete;
+    TemperatureSensor_NTC& operator=(TemperatureSensor_NTC &&) = delete;
 
     float getTemperature(void) const;
 
 private:
     constexpr TemperatureSensor_NTC(const enum Description&  desc,
-                                    const hal::Adc::Channel& peripherie) : mDescription(desc),
+                                    const hal::Adc::Channel& peripherie) :
+        mDescription(desc),
         mPeripherie(peripherie) {}
 
     const enum Description mDescription;

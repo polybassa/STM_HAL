@@ -31,9 +31,9 @@ struct Rtc {
 
     Rtc() = delete;
     Rtc(const Rtc&) = delete;
-    Rtc(Rtc&&) = default;
+    Rtc(Rtc &&) = default;
     Rtc& operator=(const Rtc&) = delete;
-    Rtc& operator=(Rtc&&) = delete;
+    Rtc& operator=(Rtc &&) = delete;
 
     /* Definitions for std::chrono::clock */
     typedef std::chrono::seconds duration;
@@ -52,7 +52,8 @@ struct Rtc {
 private:
     constexpr Rtc(const enum Description& desc,
                   const uint32_t          clkSource,
-                  const RTC_InitTypeDef&  conf) : mDescription(desc), mClockSource(clkSource), mConfiguration(conf) {}
+                  const RTC_InitTypeDef&  conf) :
+        mDescription(desc), mClockSource(clkSource), mConfiguration(conf) {}
 
     const enum Description mDescription;
     const uint32_t mClockSource;

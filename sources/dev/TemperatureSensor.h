@@ -27,10 +27,10 @@ namespace dev
 struct TemperatureSensor final :
     public interface::TemperatureSensor<TemperatureSensor> {
     TemperatureSensor() = delete;
-    TemperatureSensor(const TemperatureSensor&) = delete;
-    TemperatureSensor(TemperatureSensor&&) = delete;
+    TemperatureSensor(const TemperatureSensor &) = delete;
+    TemperatureSensor(TemperatureSensor &&) = delete;
     TemperatureSensor& operator=(const TemperatureSensor&) = delete;
-    TemperatureSensor& operator=(TemperatureSensor&&) = delete;
+    TemperatureSensor& operator=(TemperatureSensor &&) = delete;
 };
 
 template<>

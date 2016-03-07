@@ -26,7 +26,8 @@ class LockGuard
 {
 public:
 
-    explicit LockGuard(const T& lock, portTickType ticksToWait = portMAX_DELAY) : mLock(lock)
+    explicit LockGuard(const T& lock, portTickType ticksToWait = portMAX_DELAY) :
+        mLock(lock)
     {
         if (mLock) {
             this->mLockObtained = mLock.take(ticksToWait);

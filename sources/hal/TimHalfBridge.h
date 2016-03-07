@@ -34,9 +34,9 @@ struct HalfBridge {
 
     HalfBridge() = delete;
     HalfBridge(const HalfBridge&) = delete;
-    HalfBridge(HalfBridge&&) = default;
+    HalfBridge(HalfBridge &&) = default;
     HalfBridge& operator=(const HalfBridge&) = delete;
-    HalfBridge& operator=(HalfBridge&&) = delete;
+    HalfBridge& operator=(HalfBridge &&) = delete;
 
     void setPulsWidthPerMill(uint32_t) const;
     uint32_t getPulsWidthPerMill(void) const;
@@ -51,7 +51,8 @@ private:
     constexpr HalfBridge(const enum Description&    desc,
                          const Tim&                 timer,
                          const TIM_OCInitTypeDef&   ocConf,
-                         const TIM_BDTRInitTypeDef& bdtrConf) : mDescription(desc), mTim(timer),
+                         const TIM_BDTRInitTypeDef& bdtrConf) :
+        mDescription(desc), mTim(timer),
         mOcConfiguration(ocConf),
         mBdtrConfiguration(bdtrConf) {}
 

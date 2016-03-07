@@ -17,15 +17,17 @@
 
 using os::Semaphore;
 
-Semaphore::Semaphore(void) : mSemaphoreHandle(xSemaphoreCreateBinary())
+Semaphore::Semaphore(void) :
+    mSemaphoreHandle(xSemaphoreCreateBinary())
 {}
 
-Semaphore::Semaphore(Semaphore&& rhs) : mSemaphoreHandle(rhs.mSemaphoreHandle)
+Semaphore::Semaphore(Semaphore && rhs) :
+    mSemaphoreHandle(rhs.mSemaphoreHandle)
 {
     rhs.mSemaphoreHandle = nullptr;
 }
 
-Semaphore& Semaphore::operator=(Semaphore&& rhs)
+Semaphore& Semaphore::operator=(Semaphore && rhs)
 {
     mSemaphoreHandle = rhs.mSemaphoreHandle;
     rhs.mSemaphoreHandle = nullptr;

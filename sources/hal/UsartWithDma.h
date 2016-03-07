@@ -28,9 +28,9 @@ namespace hal
 struct UsartWithDma {
     UsartWithDma() = delete;
     UsartWithDma(const UsartWithDma&) = delete;
-    UsartWithDma(UsartWithDma&&) = default;
+    UsartWithDma(UsartWithDma &&) = default;
     UsartWithDma& operator=(const UsartWithDma&) = delete;
-    UsartWithDma& operator=(UsartWithDma&&) = delete;
+    UsartWithDma& operator=(UsartWithDma &&) = delete;
 
     template<size_t n>
     size_t send(const std::array<uint8_t, n>&) const;
@@ -54,18 +54,16 @@ struct UsartWithDma {
     void registerTransferCompleteCallback(std::function<void(void)> ) const;
     void registerReceiveCompleteCallback(std::function<void(void)> ) const;
 
-    size_t getNonBlockingSendDataCounter(void) const;
-
-    void setBaudRate(const size_t) const;
+    const Usart& mUsart;
 
 private:
-    constexpr UsartWithDma(Usart const* const usartInterface = nullptr,
-                           const uint16_t&    dmaCmd = 0,
-                           Dma const* const   txDma = nullptr,
-                           Dma const* const   rxDma = nullptr) : mUsart(usartInterface), mDmaCmd(dmaCmd), mTxDma(txDma),
+    constexpr UsartWithDma(const Usart&     usartInterface,
+                           const uint16_t&  dmaCmd = 0,
+                           Dma const* const txDma = nullptr,
+                           Dma const* const rxDma = nullptr) :
+        mUsart(usartInterface), mDmaCmd(dmaCmd), mTxDma(txDma),
         mRxDma(rxDma) {}
 
-    Usart const* const mUsart;
     const uint16_t mDmaCmd;
     Dma const* const mTxDma;
     Dma const* const mRxDma;
@@ -121,14 +119,13 @@ public:
     template<enum Usart::Description index>
     static constexpr const UsartWithDma& get(void)
     {
-        static_assert((Container[index].mUsart != nullptr), "UART Interface not assigned");
         static_assert((Container[index].mDmaCmd != USART_DMAReq_Tx) || (Container[index].mTxDma != nullptr),
                       "Tx Dma not assigned");
         static_assert((Container[index].mDmaCmd != USART_DMAReq_Rx) || (Container[index].mRxDma != nullptr),
                       "Rx Dma not assigned");
 
         static_assert(index != Usart::Description::__ENUM__SIZE, "__ENUM__SIZE is not accessible");
-        static_assert(Container[index].mUsart->mDescription == index,
+        static_assert(Container[index].mUsart.mDescription == index,
                       "Wrong mapping between Description and Container");
 
         return Container[index];

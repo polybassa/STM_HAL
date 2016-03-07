@@ -203,8 +203,8 @@ void SensorBLDC::checkMotor(void) const
 void SensorBLDC::start(void) const
 {
     mHallDecoder.registerCommutationCallback([this] {
-        prepareCommutation(mHallDecoder.getCurrentHallState());
-    });
+                                                 prepareCommutation(mHallDecoder.getCurrentHallState());
+                                             });
 
     mHallDecoder.registerHallEventCheckCallback([this] {return checkHallEvent();
                                                 });

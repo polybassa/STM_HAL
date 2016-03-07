@@ -17,15 +17,17 @@
 
 using os::RecursiveMutex;
 
-RecursiveMutex::RecursiveMutex(void) : mMutexHandle(xSemaphoreCreateRecursiveMutex())
+RecursiveMutex::RecursiveMutex(void) :
+    mMutexHandle(xSemaphoreCreateRecursiveMutex())
 {}
 
-RecursiveMutex::RecursiveMutex(RecursiveMutex&& rhs) : mMutexHandle(rhs.mMutexHandle)
+RecursiveMutex::RecursiveMutex(RecursiveMutex && rhs) :
+    mMutexHandle(rhs.mMutexHandle)
 {
     rhs.mMutexHandle = nullptr;
 }
 
-RecursiveMutex& RecursiveMutex::operator=(RecursiveMutex&& rhs)
+RecursiveMutex& RecursiveMutex::operator=(RecursiveMutex && rhs)
 {
     mMutexHandle = rhs.mMutexHandle;
     rhs.mMutexHandle = nullptr;

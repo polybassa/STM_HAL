@@ -30,9 +30,9 @@ struct Crc {
 
     Crc() = delete;
     Crc(const Crc&) = delete;
-    Crc(Crc&&) = default;
+    Crc(Crc &&) = default;
     Crc& operator=(const Crc&) = delete;
-    Crc& operator=(Crc&&) = delete;
+    Crc& operator=(Crc &&) = delete;
 
     uint8_t getCrc(uint8_t const* const data, const size_t length) const;
 
@@ -42,7 +42,8 @@ private:
                   const uint32_t         reverseInputSelection,
                   const bool             reverseOutputSelection,
                   const uint32_t         initialValue,
-                  const uint32_t         polynomial) : mDescription(std::move(desc)),
+                  const uint32_t         polynomial) :
+        mDescription(std::move(desc)),
         mPolynomialSize(std::move(polynomialSize)),
         mReverseInputSelection(std::move(reverseInputSelection)),
         mReverseOutputSelection(reverseOutputSelection ==

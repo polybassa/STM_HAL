@@ -54,9 +54,9 @@ struct Dma {
 
     Dma() = delete;
     Dma(const Dma&) = delete;
-    Dma(Dma&&) = default;
+    Dma(Dma &&) = default;
     Dma& operator=(const Dma&) = delete;
-    Dma& operator=(Dma&&) = delete;
+    Dma& operator=(Dma &&) = delete;
 
     void setupTransfer(uint8_t const* const data, const size_t length, const bool repeat = false) const;
     void setupSendSingleCharMultipleTimes(uint8_t const* const data, const size_t length) const;
@@ -86,7 +86,8 @@ private:
                   const uint32_t&         peripherie,
                   const DMA_InitTypeDef&  conf,
                   const uint32_t          interrupt = 0,
-                  const IRQn_Type         interruptNumber = IRQn_Type::UsageFault_IRQn) : mDescription(desc),
+                  const IRQn_Type         interruptNumber = IRQn_Type::UsageFault_IRQn) :
+        mDescription(desc),
         mPeripherie(peripherie),
         mConfiguration(conf),
         mDmaInterrupt(interrupt),

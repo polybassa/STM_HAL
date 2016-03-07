@@ -30,16 +30,17 @@ struct SensorBLDC {
         __ENUM__SIZE
     };
 
-    enum class Direction {
+    enum class Direction
+    {
         FORWARD,
         BACKWARD
     };
 
     SensorBLDC() = delete;
     SensorBLDC(const SensorBLDC&) = delete;
-    SensorBLDC(SensorBLDC&&) = default;
+    SensorBLDC(SensorBLDC &&) = default;
     SensorBLDC& operator=(const SensorBLDC&) = delete;
-    SensorBLDC& operator=(SensorBLDC&&) = delete;
+    SensorBLDC& operator=(SensorBLDC &&) = delete;
 
     void incrementCommutationDelay(void) const;
     void decrementCommutationDelay(void) const;
@@ -61,7 +62,8 @@ struct SensorBLDC {
 private:
     constexpr SensorBLDC(const enum Description& desc,
                          const hal::HalfBridge&  hBridge,
-                         const hal::HallDecoder& hallDecoder) : mDescription(desc), mHBridge(hBridge),
+                         const hal::HallDecoder& hallDecoder) :
+        mDescription(desc), mHBridge(hBridge),
         mHallDecoder(hallDecoder) {}
 
     const enum Description mDescription;

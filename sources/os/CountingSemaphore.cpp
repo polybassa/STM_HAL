@@ -18,17 +18,19 @@
 using os::CountingSemaphore;
 
 CountingSemaphore::CountingSemaphore(uint32_t maximalCount,
-                                     uint32_t initalCount) : mSemaphoreHandle(xSemaphoreCreateCounting(
-                                                                                                       maximalCount,
-                                                                                                       initalCount))
+                                     uint32_t initalCount) :
+    mSemaphoreHandle(xSemaphoreCreateCounting(
+                                              maximalCount,
+                                              initalCount))
 {}
 
-CountingSemaphore::CountingSemaphore(CountingSemaphore&& rhs) : mSemaphoreHandle(rhs.mSemaphoreHandle)
+CountingSemaphore::CountingSemaphore(CountingSemaphore && rhs) :
+    mSemaphoreHandle(rhs.mSemaphoreHandle)
 {
     rhs.mSemaphoreHandle = nullptr;
 }
 
-CountingSemaphore& CountingSemaphore::operator=(CountingSemaphore&& rhs)
+CountingSemaphore& CountingSemaphore::operator=(CountingSemaphore && rhs)
 {
     mSemaphoreHandle = rhs.mSemaphoreHandle;
     rhs.mSemaphoreHandle = nullptr;

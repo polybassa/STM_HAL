@@ -28,13 +28,17 @@ std::array<os::Semaphore, Usart::__ENUM__SIZE> UsartWithDma::DmaReceiveCompleteS
 
 void UsartWithDma::initialize() const
 {
-    if (!IS_USART_DMAREQ(mDmaCmd) || (mUsart == nullptr)) {
+    if (mUsart.isInitalized() == false) {
+        Trace(ZONE_ERROR, "Initalize Usart first!");
+    }
+
+    if (!IS_USART_DMAREQ(mDmaCmd)) {
         return;
     }
-    USART_DMACmd(reinterpret_cast<USART_TypeDef*>(mUsart->mPeripherie), mDmaCmd, ENABLE);
+    USART_DMACmd(reinterpret_cast<USART_TypeDef*>(mUsart.mPeripherie), mDmaCmd, ENABLE);
 
-    if (!DmaTransferCompleteSemaphores[static_cast<size_t>(mUsart->mDescription)] ||
-        !DmaReceiveCompleteSemaphores[static_cast<size_t>(mUsart->mDescription)])
+    if (!DmaTransferCompleteSemaphores[static_cast<size_t>(mUsart.mDescription)] ||
+        !DmaReceiveCompleteSemaphores[static_cast<size_t>(mUsart.mDescription)])
     {
         Trace(ZONE_ERROR, "Semaphore allocation failed/r/n");
     } else {
@@ -45,14 +49,12 @@ void UsartWithDma::initialize() const
 void UsartWithDma::registerInterruptSemaphores(void) const
 {
     if ((mTxDma != nullptr)) {
-        mTxDma->registerInterruptSemaphore(&DmaTransferCompleteSemaphores.at(
-                                                                             mUsart->mDescription),
+        mTxDma->registerInterruptSemaphore(&DmaTransferCompleteSemaphores.at(mUsart.mDescription),
                                            Dma::InterruptSource::TC);
     }
 
     if ((mRxDma != nullptr)) {
-        mRxDma->registerInterruptSemaphore(&DmaReceiveCompleteSemaphores.at(
-                                                                            mUsart->mDescription),
+        mRxDma->registerInterruptSemaphore(&DmaReceiveCompleteSemaphores.at(mUsart.mDescription),
                                            Dma::InterruptSource::TC);
     }
 }
@@ -71,21 +73,6 @@ void UsartWithDma::registerReceiveCompleteCallback(std::function<void(void)> f) 
     }
 }
 
-size_t UsartWithDma::getNonBlockingSendDataCounter(void) const
-{
-    if (mTxDma != nullptr) {
-        return mTxDma->getCurrentDataCounter();
-    }
-    return 0;
-}
-
-void UsartWithDma::setBaudRate(const size_t baudRate) const
-{
-    if (mUsart) {
-        mUsart->setBaudRate(baudRate);
-    }
-}
-
 size_t UsartWithDma::send(uint8_t const* const data, const size_t length, const uint32_t ticksToWait) const
 {
     if (data == nullptr) {
@@ -97,7 +84,7 @@ size_t UsartWithDma::send(uint8_t const* const data, const size_t length, const 
         mTxDma->setupTransfer(data, length);
         mTxDma->enable();
 
-        if (DmaTransferCompleteSemaphores.at(mUsart->mDescription).take(ticksToWait)) {
+        if (DmaTransferCompleteSemaphores.at(mUsart.mDescription).take(ticksToWait)) {
             mTxDma->disable();
             return length;
         } else {
@@ -105,7 +92,7 @@ size_t UsartWithDma::send(uint8_t const* const data, const size_t length, const 
             return 0;
         }
     } else {
-        return mUsart->send(data, length);
+        return mUsart.send(data, length);
     }
 }
 
@@ -115,8 +102,8 @@ size_t UsartWithDma::receive(uint8_t* const data, const size_t length, const uin
         return 0;
     }
 
-    if (mUsart->hasOverRunError()) {
-        mUsart->clearOverRunError();
+    if (mUsart.hasOverRunError()) {
+        mUsart.clearOverRunError();
         //Trace(ZONE_INFO, "OverRun Error detected \r\n");
     }
 
@@ -125,7 +112,7 @@ size_t UsartWithDma::receive(uint8_t* const data, const size_t length, const uin
         mRxDma->setupTransfer(data, length);
         mRxDma->enable();
 
-        if (DmaReceiveCompleteSemaphores.at(mUsart->mDescription).take(ticksToWait)) {
+        if (DmaReceiveCompleteSemaphores.at(mUsart.mDescription).take(ticksToWait)) {
             mRxDma->disable();
             return length;
         } else {
@@ -133,7 +120,7 @@ size_t UsartWithDma::receive(uint8_t* const data, const size_t length, const uin
             return 0;
         }
     } else {
-        return mUsart->receive(data, length);
+        return mUsart.receive(data, length);
     }
 }
 
@@ -161,8 +148,8 @@ void UsartWithDma::receiveNonBlocking(uint8_t const* const data, const size_t le
         mRxDma->enable();
     }
 
-    if (mUsart->hasOverRunError()) {
-        mUsart->clearOverRunError();
+    if (mUsart.hasOverRunError()) {
+        mUsart.clearOverRunError();
         Trace(ZONE_INFO, "OverRun Error detected \r\n");
     }
 }

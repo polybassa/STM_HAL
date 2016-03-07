@@ -35,9 +35,9 @@ struct Tim {
 
     Tim() = delete;
     Tim(const Tim&) = delete;
-    Tim(Tim&&) = default;
+    Tim(Tim &&) = default;
     Tim& operator=(const Tim&) = delete;
-    Tim& operator=(Tim&&) = delete;
+    Tim& operator=(Tim &&) = delete;
 
     void setCounterValue(const uint32_t) const;
     void setAutoReloadValue(const uint32_t) const;
@@ -54,7 +54,8 @@ struct Tim {
 private:
     constexpr Tim(const enum Description&        desc,
                   const uint32_t&                peripherie,
-                  const TIM_TimeBaseInitTypeDef& conf) : mDescription(desc), mPeripherie(peripherie),
+                  const TIM_TimeBaseInitTypeDef& conf) :
+        mDescription(desc), mPeripherie(peripherie),
         mConfiguration(conf) {}
 
     const uint32_t mPeripherie;
