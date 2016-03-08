@@ -116,6 +116,7 @@ void UsartWithDma::disableReceiveTimeout(void) const
 
 size_t UsartWithDma::receiveWithTimeout(uint8_t* const data, const size_t length, const uint32_t ticksToWait) const
 {
+	/* Timeout is used to detect the end of a block of data */
     mUsart.enableReceiveTimeoutIT_Flag();
     auto retVal = receive(data, length, ticksToWait);
     mUsart.disableReceiveTimeoutIT_Flag();
@@ -132,7 +133,6 @@ size_t UsartWithDma::receive(uint8_t* const data, const size_t length, const uin
         mUsart.clearOverRunError();
         //Trace(ZONE_INFO, "OverRun Error detected \r\n");
     }
-
 
     if ((mRxDma != nullptr) && (mDmaCmd & USART_DMAReq_Rx) && (length > MIN_LENGTH_FOR_DMA_TRANSFER)) {
         // clear Semaphore
