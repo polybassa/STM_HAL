@@ -27,11 +27,11 @@ VPATH+=${RTOS_SOURCE_DIR}/portable/GCC/ARM_CM4F
 VPATH+=${ROOT}/libraries/CMSIS/Source
 VPATH+=${ROOT}/libraries/STM32F30x_StdPeriph_Driver/src
 VPATH+=${ROOT}/device
-VPATH+=${ROOT}/project
+VPATH+=${PRJ_PATH}
 
 # Where to find header files that do not live in the source directory.
 IPATH=${ROOT}/sources
-IPATH+=${ROOT}/project/config
+IPATH+=${PRJ_PATH}
 IPATH+=${ROOT}/sources/hal
 IPATH+=${ROOT}/sources/os
 IPATH+=${ROOT}/sources/dev

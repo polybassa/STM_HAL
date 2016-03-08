@@ -27,6 +27,7 @@
 PRJ_PREFIX=HAL_
 PRJ_NAME=${PRJ_PREFIX}$(MAKECMDGOALS)
 FLAVOUR=$(MAKECMDGOALS)
+PRJ_PATH=@PROJECT_PATH@
 
 ifneq (,$(filter debug_firmware firmware,$(MAKECMDGOALS)))
 PREFIX=arm-none-eabi-
