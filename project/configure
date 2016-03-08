@@ -622,6 +622,7 @@ ac_includes_default="\
 #endif"
 
 ac_subst_vars='LTLIBOBJS
+PROJECT_PATH
 LIBOBJS
 EGREP
 GREP
@@ -4952,6 +4953,9 @@ _ACEOF
 
 fi
 done
+
+
+PROJECT_PATH="$(pwd)"
 
 
 

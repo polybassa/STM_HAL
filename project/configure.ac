@@ -117,6 +117,9 @@ AC_TYPE_UINT8_T
 AC_FUNC_MALLOC
 AC_CHECK_FUNCS([clock_gettime floor getcwd gettimeofday inet_ntoa localtime_r memset pow select socket sqrt strstr strtoul])
 
+PROJECT_PATH="$(pwd)"
+AC_SUBST(PROJECT_PATH)
+
 
 AC_CONFIG_FILES([Makefile ../utilities/pre-commit.settings])
 AC_OUTPUT
