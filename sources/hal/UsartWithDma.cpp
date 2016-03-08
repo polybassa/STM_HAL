@@ -96,8 +96,30 @@ size_t UsartWithDma::send(uint8_t const* const data, const size_t length, const 
     }
 }
 
-void UsartWithDma::receiveTimeoutCallback(void) const {
-	DmaReceiveCompleteSemaphores.at(mUsart.mDescription).giveFromISR();
+void UsartWithDma::receiveTimeoutCallback(void) const
+{
+    DmaReceiveCompleteSemaphores.at(mUsart.mDescription).giveFromISR();
+}
+
+void UsartWithDma::enableReceiveTimeout(const size_t bitsUntilTimeout) const
+{
+    if (mDmaCmd & USART_DMAReq_Rx) {
+        mUsart.enableReceiveTimeout([this] {receiveTimeoutCallback();
+                                    }, bitsUntilTimeout);
+    }
+}
+
+void UsartWithDma::disableReceiveTimeout(void) const
+{
+    mUsart.disableReceiveTimeout();
+}
+
+size_t UsartWithDma::receiveWithTimeout(uint8_t* const data, const size_t length, const uint32_t ticksToWait) const
+{
+    mUsart.enableReceiveTimeoutIT_Flag();
+    auto retVal = receive(data, length, ticksToWait);
+    mUsart.disableReceiveTimeoutIT_Flag();
+    return retVal;
 }
 
 size_t UsartWithDma::receive(uint8_t* const data, const size_t length, const uint32_t ticksToWait) const
@@ -111,20 +133,18 @@ size_t UsartWithDma::receive(uint8_t* const data, const size_t length, const uin
         //Trace(ZONE_INFO, "OverRun Error detected \r\n");
     }
 
-    mUsart.enableReceiveTimeout([this]{receiveTimeoutCallback();},100);
 
     if ((mRxDma != nullptr) && (mDmaCmd & USART_DMAReq_Rx) && (length > MIN_LENGTH_FOR_DMA_TRANSFER)) {
+        // clear Semaphore
+        DmaReceiveCompleteSemaphores.at(mUsart.mDescription).take(0);
         // we have DMA support
         mRxDma->setupTransfer(data, length);
         mRxDma->enable();
 
-        if (DmaReceiveCompleteSemaphores.at(mUsart.mDescription).take(ticksToWait)) {
-            mRxDma->disable();
-            return length;
-        } else {
-            mRxDma->disable();
-            return 0;
-        }
+        DmaReceiveCompleteSemaphores.at(mUsart.mDescription).take(ticksToWait);
+
+        mRxDma->disable();
+        return length - mRxDma->getCurrentDataCounter();
     } else {
         return mUsart.receive(data, length);
     }

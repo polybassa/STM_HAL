@@ -46,13 +46,14 @@ void UART5_IRQHandler(void)
     Usart::USART_IRQHandler(Factory<Usart>::getByPeripherie<UART5_BASE>());
 }
 
-void Usart::USART_IRQHandler(const Usart& peripherie) {
-	if(USART_GetITStatus(reinterpret_cast<USART_TypeDef*>(peripherie.mPeripherie), USART_IT_RTO)){
-		if(Usart::ReceiveTimeoutInterruptCallbacks[peripherie.mDescription]){
-			Usart::ReceiveTimeoutInterruptCallbacks[peripherie.mDescription]();
-		}
-		USART_ClearITPendingBit(reinterpret_cast<USART_TypeDef*>(peripherie.mPeripherie), USART_IT_RTO);
-	}
+void Usart::USART_IRQHandler(const Usart& peripherie)
+{
+    if (USART_GetITStatus(reinterpret_cast<USART_TypeDef*>(peripherie.mPeripherie), USART_IT_RTO)) {
+        if (Usart::ReceiveTimeoutInterruptCallbacks[peripherie.mDescription]) {
+            Usart::ReceiveTimeoutInterruptCallbacks[peripherie.mDescription]();
+        }
+        USART_ClearITPendingBit(reinterpret_cast<USART_TypeDef*>(peripherie.mPeripherie), USART_IT_RTO);
+    }
 }
 
 void Usart::initialize() const
@@ -85,6 +86,7 @@ IRQn Usart::getIRQn(void) const
     case UART5_BASE:
         return IRQn::UART5_IRQn;
     }
+
     return IRQn::UsageFault_IRQn;
 }
 
@@ -108,7 +110,7 @@ void Usart::enableReceiveTimeout(std::function<void(void)> callback, const size_
 
     USART_SetReceiverTimeOut(reinterpret_cast<USART_TypeDef*>(mPeripherie), bitsUntilTimeout);
     USART_ReceiverTimeOutCmd(reinterpret_cast<USART_TypeDef*>(mPeripherie), ENABLE);
-    USART_ITConfig(reinterpret_cast<USART_TypeDef*>(mPeripherie), USART_IT_RTO, ENABLE);
+    enableReceiveTimeoutIT_Flag();
 }
 
 void Usart::disableReceiveTimeout(void) const
@@ -116,6 +118,16 @@ void Usart::disableReceiveTimeout(void) const
     ReceiveTimeoutInterruptCallbacks[mDescription] = nullptr;
 
     USART_ReceiverTimeOutCmd(reinterpret_cast<USART_TypeDef*>(mPeripherie), DISABLE);
+    disableReceiveTimeoutIT_Flag();
+}
+
+void Usart::enableReceiveTimeoutIT_Flag(void) const
+{
+    USART_ITConfig(reinterpret_cast<USART_TypeDef*>(mPeripherie), USART_IT_RTO, ENABLE);
+}
+
+void Usart::disableReceiveTimeoutIT_Flag(void) const
+{
     USART_ITConfig(reinterpret_cast<USART_TypeDef*>(mPeripherie), USART_IT_RTO, DISABLE);
 }
 

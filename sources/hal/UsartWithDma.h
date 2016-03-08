@@ -40,6 +40,8 @@ struct UsartWithDma {
     size_t receive(std::array<uint8_t, n>&) const;
     size_t receive(uint8_t* const, const size_t, const uint32_t ticksToWait = portMAX_DELAY) const;
 
+    size_t receiveWithTimeout(uint8_t* const data, const size_t length, const uint32_t ticksToWait) const;
+
     template<size_t n>
     void sendNonBlocking(const std::array<uint8_t, n>& rx, const bool repeat) const;
     template<size_t n>
@@ -53,6 +55,9 @@ struct UsartWithDma {
 
     void registerTransferCompleteCallback(std::function<void(void)> ) const;
     void registerReceiveCompleteCallback(std::function<void(void)> ) const;
+
+    void enableReceiveTimeout(const size_t bitsUntilTimeout) const;
+    void disableReceiveTimeout(void) const;
 
     const Usart& mUsart;
 

@@ -76,6 +76,8 @@ struct Usart {
 
     void enableReceiveTimeout(std::function<void(void)> callback, const size_t) const;
     void disableReceiveTimeout(void) const;
+    void enableReceiveTimeoutIT_Flag(void) const;
+    void disableReceiveTimeoutIT_Flag(void) const;
 
     static void USART_IRQHandler(const Usart& peripherie);
 
@@ -94,8 +96,6 @@ private:
     IRQn getIRQn(void) const;
 
     using CallbackArray = std::array<std::function<void(void)>, Usart::__ENUM__SIZE>;
-
-
 
     static CallbackArray ReceiveTimeoutInterruptCallbacks;
 
