@@ -123,7 +123,7 @@ void Usart::disableReceiveTimeout(void) const
 
 void Usart::enableReceiveTimeoutIT_Flag(void) const
 {
-	USART_ClearITPendingBit(reinterpret_cast<USART_TypeDef*>(mPeripherie), USART_IT_RTO);
+    USART_ClearITPendingBit(reinterpret_cast<USART_TypeDef*>(mPeripherie), USART_IT_RTO);
     USART_ITConfig(reinterpret_cast<USART_TypeDef*>(mPeripherie), USART_IT_RTO, ENABLE);
 }
 

@@ -79,6 +79,10 @@ typedef struct
 #define IS_DAC_ALL_PERIPH(PERIPH) (((PERIPH) == DAC1) || \
                                    ((PERIPH) == DAC2))
 
+#define IS_DAC_ALL_PERIPH_BASE(PERIPH) (((PERIPH) == DAC1_BASE) || \
+                                   ((PERIPH) == DAC2_BASE))
+
+
 #define IS_DAC_LIST1_PERIPH(PERIPH) (((PERIPH) == DAC1))
 
 /** @defgroup DAC_trigger_selection 
