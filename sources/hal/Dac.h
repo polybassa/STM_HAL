@@ -36,6 +36,10 @@ struct Dac {
 
     void set(const uint32_t data) const;
     uint16_t get(void) const;
+    void trigger(void) const;
+
+    void enable(void) const;
+    void disable(void) const;
 
 private:
     constexpr Dac(const enum Description& desc,
@@ -72,10 +76,9 @@ class Factory<Dac>
 
     Factory(void)
     {
-        RCC_APB1PeriphClockCmd(RCC_APB1Periph_DAC, ENABLE);
+        RCC_APB1PeriphClockCmd(RCC_APB1Periph_DAC1, ENABLE);
 
         DAC_DeInit(DAC1);
-        DAC_DeInit(DAC2);
 
         for (const auto& dac : Container) {
             dac.initialize();

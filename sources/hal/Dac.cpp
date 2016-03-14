@@ -24,9 +24,7 @@ using hal::Factory;
 
 void Dac::initialize(void) const
 {
-    DAC_Init(reinterpret_cast<DAC_TypeDef*>(mPeripherie), mChannel, &mConfiguration);
-
-    DAC_Cmd(reinterpret_cast<DAC_TypeDef*>(mPeripherie), mChannel, ENABLE);
+    DAC_Init(reinterpret_cast<DAC_TypeDef*>(mPeripherie), mChannel, const_cast<DAC_InitTypeDef*>(&mConfiguration));
 
     if (mConfiguration.DAC_WaveGeneration == DAC_WaveGeneration_Noise) {
         set(0x7ff0, DAC_Align_12b_L);
@@ -42,6 +40,16 @@ void Dac::initialize(void) const
     }
 }
 
+void Dac::enable(void) const
+{
+    DAC_Cmd(reinterpret_cast<DAC_TypeDef*>(mPeripherie), mChannel, ENABLE);
+}
+
+void Dac::disable(void) const
+{
+    DAC_Cmd(reinterpret_cast<DAC_TypeDef*>(mPeripherie), mChannel, DISABLE);
+}
+
 void Dac::set(const uint32_t data) const
 {
     set(data, mAlign);
@@ -49,9 +57,7 @@ void Dac::set(const uint32_t data) const
 
 void Dac::set(const uint32_t data, const uint16_t align) const
 {
-    if (mConfiguration.DAC_Trigger == DAC_Trigger_Software) {
-        DAC_SoftwareTriggerCmd(reinterpret_cast<DAC_TypeDef*>(mPeripherie), mChannel, ENABLE);
-    }
+    trigger();
 
     if (mChannel == DAC_Channel_1) {
         DAC_SetChannel1Data(reinterpret_cast<DAC_TypeDef*>(mPeripherie), align, data);
@@ -67,7 +73,7 @@ uint16_t Dac::get(void) const
 
 void Dac::trigger(void) const
 {
-    DAC_SoftwareTriggerCmd(reinterpret_cast<DAC_TypeDef*>(mPeripherie), mChannel, )
+    DAC_SoftwareTriggerCmd(reinterpret_cast<DAC_TypeDef*>(mPeripherie), mChannel, ENABLE);
 }
 
 constexpr std::array<const Dac, Dac::Description::__ENUM__SIZE> Factory<Dac>::Container;

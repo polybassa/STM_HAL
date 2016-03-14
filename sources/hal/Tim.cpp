@@ -46,6 +46,11 @@ void Tim::disable(void) const
     TIM_Cmd(getBasePointer(), DISABLE);
 }
 
+void Tim::selectOutputTrigger(uint16_t TRGO_Source) const
+{
+    TIM_SelectOutputTrigger(getBasePointer(), TRGO_Source);
+}
+
 void Tim::initialize(void) const
 {
     TIM_DeInit(getBasePointer());

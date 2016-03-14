@@ -44,6 +44,7 @@ struct Tim {
     uint32_t getCounterValue(void) const;
     void enable(void) const;
     void disable(void) const;
+    void selectOutputTrigger(uint16_t TRGO_Source) const;
 
     static const uint32_t HALFBRIDGE_PERIODE = 4000;
     static const uint32_t HALL_SENSOR_PRESCALER = 360;
