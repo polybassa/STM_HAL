@@ -13,6 +13,17 @@
  *  You should have received a copy of the GNU General Public License
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>. */
 
+#ifndef SOURCES_PMD_USART_INTERRUPTS_H_
+#define SOURCES_PMD_USART_INTERRUPTS_H_
+
+#define USART1_INTERRUPT_ENABLED true
+#define USART2_INTERRUPT_ENABLED true
+#define USART3_INTERRUPT_ENABLED false
+#define USART4_INTERRUPT_ENABLED false
+#define USART5_INTERRUPT_ENABLED false
+
+#endif /* SOURCES_PMD_USART_INTERRUPTS_H_ */
+
 #ifndef SOURCES_PMD_USART_CONFIG_DESCRIPTION_H_
 #define SOURCES_PMD_USART_CONFIG_DESCRIPTION_H_
 

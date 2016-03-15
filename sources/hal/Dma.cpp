@@ -67,6 +67,19 @@ void Dma::DMA_TEIRQHandler(const Dma& peripherie)
     DMA_IRQHandlerCallback(peripherie, Dma::TEInterruptCallbacks);
 }
 
+#if DMA1_CHANNEL1_INTERRUPT_ENABLED
+void DMA1_Channel1_IRQHandler(void)
+{
+    const uint32_t base = DMA1_Channel1_BASE;
+    const uint32_t TCFlag = DMA1_IT_TC1;
+    const uint32_t HTFlag = DMA1_IT_HT1;
+    const uint32_t TEFlag = DMA1_IT_TE1;
+    constexpr const auto& dma = Factory<Dma>::getByPeripherie<base>();
+    Dma::DMA_IRQHandler(dma, TCFlag, HTFlag, TEFlag);
+}
+#endif
+
+#if DMA1_CHANNEL2_INTERRUPT_ENABLED
 void DMA1_Channel2_IRQHandler(void)
 {
     const uint32_t base = DMA1_Channel2_BASE;
@@ -76,7 +89,9 @@ void DMA1_Channel2_IRQHandler(void)
     constexpr const auto& dma = Factory<Dma>::getByPeripherie<base>();
     Dma::DMA_IRQHandler(dma, TCFlag, HTFlag, TEFlag);
 }
+#endif
 
+#if DMA1_CHANNEL3_INTERRUPT_ENABLED
 void DMA1_Channel3_IRQHandler(void)
 {
     const uint32_t base = DMA1_Channel3_BASE;
@@ -86,6 +101,21 @@ void DMA1_Channel3_IRQHandler(void)
     constexpr const auto& dma = Factory<Dma>::getByPeripherie<base>();
     Dma::DMA_IRQHandler(dma, TCFlag, HTFlag, TEFlag);
 }
+#endif
+
+#if DMA1_CHANNEL4_INTERRUPT_ENABLED
+void DMA1_Channel4_IRQHandler(void)
+{
+    const uint32_t base = DMA1_Channel4_BASE;
+    const uint32_t TCFlag = DMA1_IT_TC4;
+    const uint32_t HTFlag = DMA1_IT_HT4;
+    const uint32_t TEFlag = DMA1_IT_TE4;
+    constexpr const auto& dma = Factory<Dma>::getByPeripherie<base>();
+    Dma::DMA_IRQHandler(dma, TCFlag, HTFlag, TEFlag);
+}
+#endif
+
+#if DMA1_CHANNEL5_INTERRUPT_ENABLED
 void DMA1_Channel5_IRQHandler(void)
 {
     const uint32_t base = DMA1_Channel5_BASE;
@@ -95,7 +125,9 @@ void DMA1_Channel5_IRQHandler(void)
     constexpr const auto& dma = Factory<Dma>::getByPeripherie<base>();
     Dma::DMA_IRQHandler(dma, TCFlag, HTFlag, TEFlag);
 }
+#endif
 
+#if DMA1_CHANNEL6_INTERRUPT_ENABLED
 void DMA1_Channel6_IRQHandler(void)
 {
     const uint32_t base = DMA1_Channel6_BASE;
@@ -105,7 +137,9 @@ void DMA1_Channel6_IRQHandler(void)
     constexpr const auto& dma = Factory<Dma>::getByPeripherie<base>();
     Dma::DMA_IRQHandler(dma, TCFlag, HTFlag, TEFlag);
 }
+#endif
 
+#if DMA1_CHANNEL7_INTERRUPT_ENABLED
 void DMA1_Channel7_IRQHandler(void)
 {
     const uint32_t base = DMA1_Channel7_BASE;
@@ -115,17 +149,21 @@ void DMA1_Channel7_IRQHandler(void)
     constexpr const auto& dma = Factory<Dma>::getByPeripherie<base>();
     Dma::DMA_IRQHandler(dma, TCFlag, HTFlag, TEFlag);
 }
+#endif
 
+#if DMA2_CHANNEL1_INTERRUPT_ENABLED
 void DMA2_Channel1_IRQHandler(void)
 {
-//    const uint32_t base = DMA2_Channel1_BASE;
-//    const uint32_t TCFlag = DMA2_IT_TC1;
-//    const uint32_t HTFlag = DMA2_IT_HT1;
-//    const uint32_t TEFlag = DMA2_IT_TE1;
-    //constexpr const auto& dma = Factory<Dma>::getByPeripherie<base>();
-    //Dma::DMA_IRQHandler(dma, TCFlag, HTFlag, TEFlag);
+    const uint32_t base = DMA2_Channel1_BASE;
+    const uint32_t TCFlag = DMA2_IT_TC1;
+    const uint32_t HTFlag = DMA2_IT_HT1;
+    const uint32_t TEFlag = DMA2_IT_TE1;
+    constexpr const auto& dma = Factory<Dma>::getByPeripherie<base>();
+    Dma::DMA_IRQHandler(dma, TCFlag, HTFlag, TEFlag);
 }
+#endif
 
+#if DMA2_CHANNEL2_INTERRUPT_ENABLED
 void DMA2_Channel2_IRQHandler(void)
 {
     const uint32_t base = DMA2_Channel2_BASE;
@@ -135,7 +173,21 @@ void DMA2_Channel2_IRQHandler(void)
     constexpr const auto& dma = Factory<Dma>::getByPeripherie<base>();
     Dma::DMA_IRQHandler(dma, TCFlag, HTFlag, TEFlag);
 }
+#endif
 
+#if DMA2_CHANNEL3_INTERRUPT_ENABLED
+void DMA2_Channel3_IRQHandler(void)
+{
+    const uint32_t base = DMA2_Channel3_BASE;
+    const uint32_t TCFlag = DMA2_IT_TC3;
+    const uint32_t HTFlag = DMA2_IT_HT3;
+    const uint32_t TEFlag = DMA2_IT_TE3;
+    constexpr const auto& dma = Factory<Dma>::getByPeripherie<base>();
+    Dma::DMA_IRQHandler(dma, TCFlag, HTFlag, TEFlag);
+}
+#endif
+
+#if DMA2_CHANNEL4_INTERRUPT_ENABLED
 void DMA2_Channel4_IRQHandler(void)
 {
     const uint32_t base = DMA2_Channel4_BASE;
@@ -145,7 +197,9 @@ void DMA2_Channel4_IRQHandler(void)
     constexpr const auto& dma = Factory<Dma>::getByPeripherie<base>();
     Dma::DMA_IRQHandler(dma, TCFlag, HTFlag, TEFlag);
 }
+#endif
 
+#if DMA2_CHANNEL5_INTERRUPT_ENABLED
 void DMA2_Channel5_IRQHandler(void)
 {
     const uint32_t base = DMA2_Channel5_BASE;
@@ -155,6 +209,7 @@ void DMA2_Channel5_IRQHandler(void)
     constexpr const auto& dma = Factory<Dma>::getByPeripherie<base>();
     Dma::DMA_IRQHandler(dma, TCFlag, HTFlag, TEFlag);
 }
+#endif
 
 void Dma::initialize(void) const
 {
