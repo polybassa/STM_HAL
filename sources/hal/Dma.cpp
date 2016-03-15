@@ -73,7 +73,8 @@ void DMA1_Channel2_IRQHandler(void)
     const uint32_t TCFlag = DMA1_IT_TC2;
     const uint32_t HTFlag = DMA1_IT_HT2;
     const uint32_t TEFlag = DMA1_IT_TE2;
-    Dma::DMA_IRQHandler(Factory<Dma>::getByPeripherie<base>(), TCFlag, HTFlag, TEFlag);
+    constexpr const auto& dma = Factory<Dma>::getByPeripherie<base>();
+    Dma::DMA_IRQHandler(dma, TCFlag, HTFlag, TEFlag);
 }
 
 void DMA1_Channel3_IRQHandler(void)
@@ -82,7 +83,8 @@ void DMA1_Channel3_IRQHandler(void)
     const uint32_t TCFlag = DMA1_IT_TC3;
     const uint32_t HTFlag = DMA1_IT_HT3;
     const uint32_t TEFlag = DMA1_IT_TE3;
-    Dma::DMA_IRQHandler(Factory<Dma>::getByPeripherie<base>(), TCFlag, HTFlag, TEFlag);
+    constexpr const auto& dma = Factory<Dma>::getByPeripherie<base>();
+    Dma::DMA_IRQHandler(dma, TCFlag, HTFlag, TEFlag);
 }
 void DMA1_Channel5_IRQHandler(void)
 {
@@ -90,7 +92,8 @@ void DMA1_Channel5_IRQHandler(void)
     const uint32_t TCFlag = DMA1_IT_TC5;
     const uint32_t HTFlag = DMA1_IT_HT5;
     const uint32_t TEFlag = DMA1_IT_TE5;
-    Dma::DMA_IRQHandler(Factory<Dma>::getByPeripherie<base>(), TCFlag, HTFlag, TEFlag);
+    constexpr const auto& dma = Factory<Dma>::getByPeripherie<base>();
+    Dma::DMA_IRQHandler(dma, TCFlag, HTFlag, TEFlag);
 }
 
 void DMA1_Channel6_IRQHandler(void)
@@ -99,7 +102,8 @@ void DMA1_Channel6_IRQHandler(void)
     const uint32_t TCFlag = DMA1_IT_TC6;
     const uint32_t HTFlag = DMA1_IT_HT6;
     const uint32_t TEFlag = DMA1_IT_TE6;
-    Dma::DMA_IRQHandler(Factory<Dma>::getByPeripherie<base>(), TCFlag, HTFlag, TEFlag);
+    constexpr const auto& dma = Factory<Dma>::getByPeripherie<base>();
+    Dma::DMA_IRQHandler(dma, TCFlag, HTFlag, TEFlag);
 }
 
 void DMA1_Channel7_IRQHandler(void)
@@ -108,16 +112,18 @@ void DMA1_Channel7_IRQHandler(void)
     const uint32_t TCFlag = DMA1_IT_TC7;
     const uint32_t HTFlag = DMA1_IT_HT7;
     const uint32_t TEFlag = DMA1_IT_TE7;
-    Dma::DMA_IRQHandler(Factory<Dma>::getByPeripherie<base>(), TCFlag, HTFlag, TEFlag);
+    constexpr const auto& dma = Factory<Dma>::getByPeripherie<base>();
+    Dma::DMA_IRQHandler(dma, TCFlag, HTFlag, TEFlag);
 }
 
 void DMA2_Channel1_IRQHandler(void)
 {
-    const uint32_t base = DMA2_Channel1_BASE;
-    const uint32_t TCFlag = DMA2_IT_TC1;
-    const uint32_t HTFlag = DMA2_IT_HT1;
-    const uint32_t TEFlag = DMA2_IT_TE1;
-    Dma::DMA_IRQHandler(Factory<Dma>::getByPeripherie<base>(), TCFlag, HTFlag, TEFlag);
+//    const uint32_t base = DMA2_Channel1_BASE;
+//    const uint32_t TCFlag = DMA2_IT_TC1;
+//    const uint32_t HTFlag = DMA2_IT_HT1;
+//    const uint32_t TEFlag = DMA2_IT_TE1;
+    //constexpr const auto& dma = Factory<Dma>::getByPeripherie<base>();
+    //Dma::DMA_IRQHandler(dma, TCFlag, HTFlag, TEFlag);
 }
 
 void DMA2_Channel2_IRQHandler(void)
@@ -126,7 +132,8 @@ void DMA2_Channel2_IRQHandler(void)
     const uint32_t TCFlag = DMA2_IT_TC2;
     const uint32_t HTFlag = DMA2_IT_HT2;
     const uint32_t TEFlag = DMA2_IT_TE2;
-    Dma::DMA_IRQHandler(Factory<Dma>::getByPeripherie<base>(), TCFlag, HTFlag, TEFlag);
+    constexpr const auto& dma = Factory<Dma>::getByPeripherie<base>();
+    Dma::DMA_IRQHandler(dma, TCFlag, HTFlag, TEFlag);
 }
 
 void DMA2_Channel4_IRQHandler(void)
@@ -135,7 +142,8 @@ void DMA2_Channel4_IRQHandler(void)
     const uint32_t TCFlag = DMA2_IT_TC4;
     const uint32_t HTFlag = DMA2_IT_HT4;
     const uint32_t TEFlag = DMA2_IT_TE4;
-    Dma::DMA_IRQHandler(Factory<Dma>::getByPeripherie<base>(), TCFlag, HTFlag, TEFlag);
+    constexpr const auto& dma = Factory<Dma>::getByPeripherie<base>();
+    Dma::DMA_IRQHandler(dma, TCFlag, HTFlag, TEFlag);
 }
 
 void DMA2_Channel5_IRQHandler(void)
@@ -144,7 +152,8 @@ void DMA2_Channel5_IRQHandler(void)
     const uint32_t TCFlag = DMA2_IT_TC5;
     const uint32_t HTFlag = DMA2_IT_HT5;
     const uint32_t TEFlag = DMA2_IT_TE5;
-    Dma::DMA_IRQHandler(Factory<Dma>::getByPeripherie<base>(), TCFlag, HTFlag, TEFlag);
+    constexpr const auto& dma = Factory<Dma>::getByPeripherie<base>();
+    Dma::DMA_IRQHandler(dma, TCFlag, HTFlag, TEFlag);
 }
 
 void Dma::initialize(void) const

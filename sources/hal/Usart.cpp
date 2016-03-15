@@ -23,27 +23,32 @@ using hal::Usart;
 
 void USART1_IRQHandler(void)
 {
-    Usart::USART_IRQHandler(Factory<Usart>::getByPeripherie<USART1_BASE>());
+	constexpr const Usart& uart = Factory<Usart>::getByPeripherie<USART1_BASE>();
+    Usart::USART_IRQHandler(uart);
 }
 
 void USART2_IRQHandler(void)
 {
-    Usart::USART_IRQHandler(Factory<Usart>::getByPeripherie<USART2_BASE>());
+	constexpr const Usart& uart = Factory<Usart>::getByPeripherie<USART2_BASE>();
+    Usart::USART_IRQHandler(uart);
 }
 
 void USART3_IRQHandler(void)
 {
-    Usart::USART_IRQHandler(Factory<Usart>::getByPeripherie<USART3_BASE>());
+	constexpr const Usart& uart = Factory<Usart>::getByPeripherie<USART3_BASE>();
+    Usart::USART_IRQHandler(uart);
 }
 
 void UART4_IRQHandler(void)
 {
-    Usart::USART_IRQHandler(Factory<Usart>::getByPeripherie<UART4_BASE>());
+//	constexpr const Usart& uart = Factory<Usart>::getByPeripherie<UART4_BASE>();
+//    Usart::USART_IRQHandler(uart);
 }
 
 void UART5_IRQHandler(void)
 {
-    Usart::USART_IRQHandler(Factory<Usart>::getByPeripherie<UART5_BASE>());
+//	constexpr const Usart& uart = Factory<Usart>::getByPeripherie<UART5_BASE>();
+//    Usart::USART_IRQHandler(uart);
 }
 
 void Usart::USART_IRQHandler(const Usart& peripherie)
