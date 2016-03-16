@@ -13,6 +13,28 @@
  *  You should have received a copy of the GNU General Public License
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>. */
 
+#ifndef SOURCES_PMD_EXTI_INTERRUPTS_H_
+#define SOURCES_PMD_EXTI_INTERRUPTS_H_
+
+#define EXTI0_INTERRUPT_ENABLED true
+#define EXTI1_INTERRUPT_ENABLED true
+#define EXTI2_INTERRUPT_ENABLED false
+#define EXTI3_INTERRUPT_ENABLED false
+#define EXTI4_INTERRUPT_ENABLED false
+#define EXTI5_INTERRUPT_ENABLED false
+#define EXTI6_INTERRUPT_ENABLED false
+#define EXTI7_INTERRUPT_ENABLED false
+#define EXTI8_INTERRUPT_ENABLED false
+#define EXTI9_INTERRUPT_ENABLED false
+#define EXTI10_INTERRUPT_ENABLED false
+#define EXTI11_INTERRUPT_ENABLED false
+#define EXTI12_INTERRUPT_ENABLED false
+#define EXTI13_INTERRUPT_ENABLED false
+#define EXTI14_INTERRUPT_ENABLED false
+#define EXTI15_INTERRUPT_ENABLED false
+
+#endif /* SOURCES_PMD_EXTI_INTERRUPTS_H_ */
+
 #ifndef SOURCES_PMD_EXTI_CONFIG_DESCRIPTION_H_
 #define SOURCES_PMD_EXTI_CONFIG_DESCRIPTION_H_
 

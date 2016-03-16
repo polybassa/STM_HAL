@@ -24,7 +24,7 @@ using hal::Usart;
 #if USART1_INTERRUPT_ENABLED
 void USART1_IRQHandler(void)
 {
-	constexpr const Usart& uart = Factory<Usart>::getByPeripherie<USART1_BASE>();
+    constexpr const Usart& uart = Factory<Usart>::getByPeripherie<USART1_BASE>();
     Usart::USART_IRQHandler(uart);
 }
 #endif
@@ -32,7 +32,7 @@ void USART1_IRQHandler(void)
 #if USART2_INTERRUPT_ENABLED
 void USART2_IRQHandler(void)
 {
-	constexpr const Usart& uart = Factory<Usart>::getByPeripherie<USART2_BASE>();
+    constexpr const Usart& uart = Factory<Usart>::getByPeripherie<USART2_BASE>();
     Usart::USART_IRQHandler(uart);
 }
 #endif
@@ -40,7 +40,7 @@ void USART2_IRQHandler(void)
 #if USART3_INTERRUPT_ENABLED
 void USART3_IRQHandler(void)
 {
-	constexpr const Usart& uart = Factory<Usart>::getByPeripherie<USART3_BASE>();
+    constexpr const Usart& uart = Factory<Usart>::getByPeripherie<USART3_BASE>();
     Usart::USART_IRQHandler(uart);
 }
 #endif
@@ -48,7 +48,7 @@ void USART3_IRQHandler(void)
 #if USART4_INTERRUPT_ENABLED
 void UART4_IRQHandler(void)
 {
-	constexpr const Usart& uart = Factory<Usart>::getByPeripherie<UART4_BASE>();
+    constexpr const Usart& uart = Factory<Usart>::getByPeripherie<UART4_BASE>();
     Usart::USART_IRQHandler(uart);
 }
 #endif
@@ -56,7 +56,7 @@ void UART4_IRQHandler(void)
 #if USART5_INTERRUPT_ENABLED
 void UART5_IRQHandler(void)
 {
-	constexpr const Usart& uart = Factory<Usart>::getByPeripherie<UART5_BASE>();
+    constexpr const Usart& uart = Factory<Usart>::getByPeripherie<UART5_BASE>();
     Usart::USART_IRQHandler(uart);
 }
 #endif
