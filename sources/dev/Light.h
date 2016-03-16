@@ -37,6 +37,9 @@ private:
     constexpr Light(const enum Description& desc, const hal::SpiWithDma& spi) :
         mDescription(desc), mSpi(spi) {}
 
+    uint8_t getBitmask(const uint8_t) const;
+    void convertByteToBitArray(const uint8_t byte, uint8_t* bitArray) const;
+
     const enum Description mDescription;
     const hal::SpiWithDma& mSpi;
 

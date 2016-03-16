@@ -80,6 +80,8 @@ size_t UsartWithDma::send(uint8_t const* const data, const size_t length, const 
     }
 
     if ((mTxDma != nullptr) && (mDmaCmd & USART_DMAReq_Tx) && (length > MIN_LENGTH_FOR_DMA_TRANSFER)) {
+        // clear Semaphore
+        DmaTransferCompleteSemaphores.at(mUsart.mDescription).take(0);
         // we have DMA support
         mTxDma->setupTransfer(data, length);
         mTxDma->enable();
@@ -118,7 +120,7 @@ size_t UsartWithDma::receiveWithTimeout(uint8_t* const data, const size_t length
 {
     /* Timeout is used to detect the end of a block of data */
     mUsart.enableReceiveTimeoutIT_Flag();
-    auto retVal = receive(data, length, ticksToWait);
+    const auto retVal = receive(data, length, ticksToWait);
     mUsart.disableReceiveTimeoutIT_Flag();
     return retVal;
 }

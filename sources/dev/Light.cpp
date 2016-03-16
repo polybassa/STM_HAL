@@ -21,34 +21,32 @@ static const int __attribute__((unused)) g_DebugZones = ZONE_ERROR | ZONE_WARNIN
 
 using dev::Light;
 
-//uint8_t Light::LedBitArrays[__ENUM__SIZE][ARRAY_SIZE];
 std::array<std::array<uint8_t, Light::ARRAY_SIZE>, Light::__ENUM__SIZE> Light::LedBitArrays;
 
-void Light::setColor(const interface::Color& color) const
+uint8_t Light::getBitmask(const uint8_t in) const
 {
-    // Function returns bit code to create an High or Low Sequence for WS2812 with SPI
+    // Function returns bit code to create a high or low sequence for WS2812 with SPI
     // Waveform: |''|.. = High = 0xc = 0b1100
     // Waveform: |'|... = Low  = 0x8 = 0b1000
-    auto getBitmask = [] (const uint8_t in)->uint8_t {
-        switch (in & 0x03) {
-        case 0:
-            return 0x88;
+    switch (in & 0x03) {
+    case 0:
+        return 0x88;
 
-        case 1:
-            return 0x8c;
+    case 1:
+        return 0x8c;
 
-        case 2:
-            return 0xc8;
+    case 2:
+        return 0xc8;
 
-        case 3:
-            return 0xcc;
-        }
+    case 3:
+        return 0xcc;
+    }
 
-        return 0;
-    };
+    return 0;
+}
 
-    uint8_t* pointer = LedBitArrays[mDescription].data();
-
+void Light::convertByteToBitArray(const uint8_t byte, uint8_t* bitArray) const
+{
     // Function has to fill the complete static variable LedBitArrays with the
     // corresponding bit codes for a specific color
     // pointer marks the current byte
@@ -56,23 +54,30 @@ void Light::setColor(const interface::Color& color) const
     // a color contains 8 Bit (WS2812) -> 4 Byte in LedBitArrays
     // This function gets a color byte and converts each two bit from MSB to LSB
     // into 1 Byte for the LedBitArrays which is send over SPI later
-    auto fillBitArrayForColor = [&](const uint8_t color) {
-        uint8_t bitmask = 0xc0;
-        for (size_t i = 0; i < 8; i = i + 2) {
-            // mask 2 Bits and shift to LSB and LSB+1
-            uint8_t value = (color & bitmask) >> (6 - i);
-            // get Byte for 2 bits color code and assign value to LedBitArrays
-            *pointer = getBitmask(value);
-            // prepare for next round
-            pointer++;
-            bitmask = bitmask >> 2;
-        }
-    };
+
+    uint8_t bitmask = 0xc0;
+    for (size_t i = 0; i < 8; i = i + 2) {
+        // mask 2 Bits and shift to LSB and LSB+1
+        uint8_t value = (byte & bitmask) >> (6 - i);
+        // get Byte for 2 bits color code and assign value to LedBitArrays
+        *bitArray = getBitmask(value);
+        // prepare for next round
+        bitArray++;
+        bitmask = bitmask >> 2;
+    }
+}
+
+void Light::setColor(const interface::Color& color) const
+{
+    uint8_t* pointer = LedBitArrays[mDescription].data();
 
     for (size_t i = 0; i < LED_COUNT; i++) {
-        fillBitArrayForColor(color.green);
-        fillBitArrayForColor(color.red);
-        fillBitArrayForColor(color.blue);
+        convertByteToBitArray(color.green, pointer);
+        pointer += 4;
+        convertByteToBitArray(color.red, pointer);
+        pointer += 4;
+        convertByteToBitArray(color.blue, pointer);
+        pointer += 4;
     }
 
     mSpi.send(LedBitArrays[mDescription]);

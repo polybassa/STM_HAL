@@ -40,7 +40,8 @@ struct UsartWithDma {
     size_t receive(std::array<uint8_t, n>&) const;
     size_t receive(uint8_t* const, const size_t, const uint32_t ticksToWait = portMAX_DELAY) const;
 
-    size_t receiveWithTimeout(uint8_t* const data, const size_t length, const uint32_t ticksToWait) const;
+    size_t receiveWithTimeout(uint8_t* const data, const size_t length, const uint32_t ticksToWait =
+                                  portMAX_DELAY) const;
 
     template<size_t n>
     void sendNonBlocking(const std::array<uint8_t, n>& rx, const bool repeat) const;
