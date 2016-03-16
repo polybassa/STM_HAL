@@ -94,7 +94,7 @@ void Light::displayNumber(const uint8_t number, const interface::Color& color) c
 
 void Light::setColor(const interface::Color& color) const
 {
-	displayNumber(LED_COUNT, color);
+    displayNumber(LED_COUNT, color);
 }
 
 constexpr const std::array<const Light, Light::Description::__ENUM__SIZE> dev::Factory<Light>::Container;
