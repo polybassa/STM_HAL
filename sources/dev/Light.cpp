@@ -67,20 +67,34 @@ void Light::convertByteToBitArray(const uint8_t byte, uint8_t* bitArray) const
     }
 }
 
-void Light::setColor(const interface::Color& color) const
+void Light::displayNumber(const uint8_t number, const interface::Color& color) const
 {
     uint8_t* pointer = LedBitArrays[mDescription].data();
 
     for (size_t i = 0; i < LED_COUNT; i++) {
-        convertByteToBitArray(color.green, pointer);
-        pointer += 4;
-        convertByteToBitArray(color.red, pointer);
-        pointer += 4;
-        convertByteToBitArray(color.blue, pointer);
-        pointer += 4;
+        if (i < number) {
+            convertByteToBitArray(color.green, pointer);
+            pointer += 4;
+            convertByteToBitArray(color.red, pointer);
+            pointer += 4;
+            convertByteToBitArray(color.blue, pointer);
+            pointer += 4;
+        } else {
+            convertByteToBitArray(0, pointer);
+            pointer += 4;
+            convertByteToBitArray(0, pointer);
+            pointer += 4;
+            convertByteToBitArray(0, pointer);
+            pointer += 4;
+        }
     }
 
     mSpi.send(LedBitArrays[mDescription]);
+}
+
+void Light::setColor(const interface::Color& color) const
+{
+	displayNumber(LED_COUNT, color);
 }
 
 constexpr const std::array<const Light, Light::Description::__ENUM__SIZE> dev::Factory<Light>::Container;

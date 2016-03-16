@@ -33,6 +33,8 @@ struct Light :
     Light& operator=(Light &&) = delete;
 
     void setColor(const interface::Color& color) const;
+    void displayNumber(const uint8_t number, const interface::Color& color) const;
+
 private:
     constexpr Light(const enum Description& desc, const hal::SpiWithDma& spi) :
         mDescription(desc), mSpi(spi) {}
