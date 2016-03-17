@@ -25,23 +25,23 @@
 namespace dev
 {
 struct Battery :
-    public interface::Battery<Battery> {
+    interface::Battery {
     Battery() = default;
     Battery(const Battery&) = delete;
     Battery(Battery &&) = default;
     Battery& operator=(const Battery&) = delete;
     Battery& operator=(Battery &&) = delete;
 
-    float getTemperature(void) const;
-    float getVoltage(void) const;
-    float getCurrent(void) const;
-    float getPower(void) const;
+    virtual float getTemperature(void) const override;
+    virtual float getVoltage(void) const override;
+    virtual float getCurrent(void) const override;
+    virtual float getPower(void) const override;
 
 private:
     static constexpr auto& voltagePeripherie = hal::Factory<hal::Adc>::get<hal::Adc::Channel::BATTERY_U>();
     static constexpr auto& currentPeripherie = hal::Factory<hal::Adc>::get<hal::Adc::Channel::BATTERY_I>();
     static constexpr auto& temperatureSensor =
-        dev::Factory<dev::TemperatureSensor>::get<dev::TemperatureSensor::BATTERY>();
+        dev::Factory<dev::TemperatureSensor>::get<interface::TemperatureSensor::BATTERY>();
 
     static const uint32_t VALUE_HOLD_TIME_IN_TICKS = 5;
     static constexpr const float VOLTAGE_FACTOR = 15.2;

@@ -36,21 +36,10 @@ inline bool operator!=(const Color& c1, const Color& c2)
     return !(c1 == c2);
 }
 
-template<class T>
 struct Light {
     enum Description {
         HEADLIGHT, BACKLIGHT, __ENUM__SIZE
     };
-
-    Description getDescription(void) const
-    {
-        return static_cast<T const* const>(this)->mDescription;
-    }
-
-    void setColor(const Color& color) const
-    {
-        static_cast<T const* const>(this)->setColor(color);
-    }
 };
 }
 

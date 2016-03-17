@@ -18,17 +18,9 @@
 
 namespace interface
 {
-template<class T>
 struct MotorController {
-    void setTorque(float f) const
-    {
-        static_cast<T const* const>(this)->setTorque(f);
-    }
-
-    float getCurrentRPS(void) const
-    {
-        return static_cast<T const* const>(this)->getCurrentRPS();
-    }
+    virtual void setTorque(float f) = 0;
+    virtual float getCurrentRPS(void) const = 0;
 };
 }
 

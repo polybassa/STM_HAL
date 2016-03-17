@@ -18,21 +18,10 @@
 
 namespace interface
 {
-template<class T>
 struct TemperatureSensor {
     enum Description {
         INTERNAL, BATTERY, MOTOR, FET, __ENUM__SIZE
     };
-
-    Description getDescription(void) const
-    {
-        return static_cast<T const* const>(this)->mDescription;
-    }
-
-    float getTemperature(void) const
-    {
-        return static_cast<T const* const>(this)->getTemperature();
-    }
 };
 }
 

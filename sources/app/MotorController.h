@@ -35,7 +35,7 @@ extern int ut_TestSetTorque(void);
 namespace app
 {
 class MotorController final :
-    private os::DeepSleepModule, public interface::MotorController<MotorController>
+    private os::DeepSleepModule, public interface::MotorController
 {
     virtual void enterDeepSleep(void) override;
     virtual void exitDeepSleep(void) override;
@@ -76,8 +76,8 @@ public:
     MotorController& operator=(const MotorController&) = delete;
     MotorController& operator=(MotorController &&) = delete;
 
-    void setTorque(const float);
-    float getCurrentRPS(void) const;
+    virtual void setTorque(const float) override;
+    virtual float getCurrentRPS(void) const override;
 
 #if defined(DEBUG)
     void setTunings(const float kp, const float ki, const float kd);

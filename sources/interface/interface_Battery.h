@@ -18,27 +18,14 @@
 
 namespace interface
 {
-template<class T>
 struct Battery {
-    float getTemperature(void) const
-    {
-        return static_cast<T const* const>(this)->getTemperature();
-    }
+    virtual float getTemperature(void) const = 0;
 
-    float getVoltage(void) const
-    {
-        return static_cast<T const* const>(this)->getVoltage();
-    }
+    virtual float getVoltage(void) const = 0;
 
-    float getCurrent(void) const
-    {
-        return static_cast<T const* const>(this)->getCurrent();
-    }
+    virtual float getCurrent(void) const = 0;
 
-    float getPower(void) const
-    {
-        return static_cast<T const* const>(this)->getPower();
-    }
+    virtual float getPower(void) const = 0;
 };
 }
 

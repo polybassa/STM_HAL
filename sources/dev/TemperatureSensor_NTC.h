@@ -24,8 +24,7 @@
 
 namespace dev
 {
-struct TemperatureSensor_NTC :
-    public interface::TemperatureSensor<TemperatureSensor_NTC> {
+struct TemperatureSensor_NTC {
     TemperatureSensor_NTC() = delete;
     TemperatureSensor_NTC(const TemperatureSensor_NTC&) = delete;
     TemperatureSensor_NTC(TemperatureSensor_NTC &&) = default;
@@ -35,12 +34,12 @@ struct TemperatureSensor_NTC :
     float getTemperature(void) const;
 
 private:
-    constexpr TemperatureSensor_NTC(const enum Description&  desc,
-                                    const hal::Adc::Channel& peripherie) :
+    constexpr TemperatureSensor_NTC(const enum interface::TemperatureSensor::Description& desc,
+                                    const hal::Adc::Channel&                              peripherie) :
         mDescription(desc),
         mPeripherie(peripherie) {}
 
-    const enum Description mDescription;
+    const enum interface::TemperatureSensor::Description mDescription;
     const hal::Adc::Channel& mPeripherie;
 
     static constexpr uint8_t LookupTableSize = 19;

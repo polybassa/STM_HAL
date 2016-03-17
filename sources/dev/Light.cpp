@@ -21,7 +21,7 @@ static const int __attribute__((unused)) g_DebugZones = ZONE_ERROR | ZONE_WARNIN
 
 using dev::Light;
 
-std::array<std::array<uint8_t, Light::ARRAY_SIZE>, Light::__ENUM__SIZE> Light::LedBitArrays;
+std::array<std::array<uint8_t, Light::ARRAY_SIZE>, interface::Light::__ENUM__SIZE> Light::LedBitArrays;
 
 uint8_t Light::getBitmask(const uint8_t in) const
 {
@@ -97,4 +97,4 @@ void Light::setColor(const interface::Color& color) const
     displayNumber(LED_COUNT, color);
 }
 
-constexpr const std::array<const Light, Light::Description::__ENUM__SIZE> dev::Factory<Light>::Container;
+constexpr const std::array<const Light, interface::Light::Description::__ENUM__SIZE> dev::Factory<Light>::Container;

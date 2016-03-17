@@ -21,8 +21,8 @@
 static const int __attribute__((unused)) g_DebugZones = ZONE_ERROR | ZONE_WARNING | ZONE_VERBOSE | ZONE_INFO;
 
 os::TaskEndless ledTest("LED_Test", 1024, os::Task::Priority::MEDIUM, [] (const bool&){
-                            const dev::Light& headLight = dev::Factory<dev::Light>::get<dev::Light::HEADLIGHT>();
-                            const dev::Light& backLight = dev::Factory<dev::Light>::get<dev::Light::BACKLIGHT>();
+                            const dev::Light& headLight = dev::Factory<dev::Light>::get<interface::Light::HEADLIGHT>();
+                            const dev::Light& backLight = dev::Factory<dev::Light>::get<interface::Light::BACKLIGHT>();
 
                             while (true) {
                                 os::ThisTask::sleep(std::chrono::seconds(2));
