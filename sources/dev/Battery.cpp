@@ -20,6 +20,10 @@ static const int __attribute__((unused)) g_DebugZones = ZONE_ERROR | ZONE_WARNIN
 
 using dev::Battery;
 
+dev::Battery::Battery(){}
+
+dev::Battery::~Battery(){}
+
 float Battery::getTemperature(void) const
 {
     return temperatureSensor.getTemperature();

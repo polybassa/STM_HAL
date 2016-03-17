@@ -68,7 +68,7 @@ int ut_TemperatureNTC_Read(void)
 {
     TestCaseBegin();
 
-    auto& testee = dev::Factory<dev::TemperatureSensor>::get<dev::TemperatureSensor::Description::MOTOR>();
+    auto& testee = dev::Factory<dev::TemperatureSensor>::get<interface::TemperatureSensor::Description::MOTOR>();
 
     std::array<std::pair<float, float>, 40> mVoltages;
     std::array<std::pair<float, float>, 40> mResults;

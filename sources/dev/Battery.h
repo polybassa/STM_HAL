@@ -26,11 +26,12 @@ namespace dev
 {
 struct Battery :
     interface::Battery {
-    Battery() = default;
+    Battery();
     Battery(const Battery&) = delete;
     Battery(Battery &&) = default;
     Battery& operator=(const Battery&) = delete;
     Battery& operator=(Battery &&) = delete;
+    ~Battery();
 
     virtual float getTemperature(void) const override;
     virtual float getVoltage(void) const override;

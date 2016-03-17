@@ -75,6 +75,10 @@ hal::Rtc::time_point hal::Rtc::now(void) noexcept
     return g_systemTimeNow;
 }
 
+dev::Battery::Battery(){}
+
+dev::Battery::~Battery(){}
+
 float dev::Battery::getVoltage(void) const
 {
     return g_currentVoltage;
@@ -88,6 +92,11 @@ float dev::Battery::getCurrent(void) const
 float dev::Battery::getPower(void) const
 {
     return g_currentPower;
+}
+
+float dev::Battery::getTemperature(void) const
+{
+    return 0.0;
 }
 
 hal::Rtc::time_point hal::Rtc::from_time_t(std::time_t __t) noexcept
@@ -105,7 +114,7 @@ int ut_LoadBattery(void)
     g_currentVoltage = 10;
     g_currentTickCount = 0;
 
-    dev::Battery batt;
+    dev::Battery batt = dev::Battery();
 
     app::BatteryObserver testee(batt, [] (app::BatteryObserver::ErrorCode error){
                                     printf("Error %d\n", error);

@@ -125,9 +125,28 @@ void dev::SensorBLDC::stop() const
 }
 
 //****** Battery functions ******
+dev::Battery::Battery(){}
+
+dev::Battery::~Battery(){}
+
 float dev::Battery::getVoltage(void) const
 {
-    return g_batteryVoltage;
+    return 0;
+}
+
+float dev::Battery::getCurrent(void) const
+{
+    return 0;
+}
+
+float dev::Battery::getPower(void) const
+{
+    return 0;
+}
+
+float dev::Battery::getTemperature(void) const
+{
+    return 0.0;
 }
 
 //***** PID Controller *****
