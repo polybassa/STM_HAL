@@ -151,6 +151,16 @@ char* os::ThisTask::getName(void)
     return pcTaskGetTaskName(nullptr);
 }
 
+void os::ThisTask::enterCriticalSection(void)
+{
+    taskENTER_CRITICAL();
+}
+
+void os::ThisTask::exitCriticalSection(void)
+{
+    taskEXIT_CRITICAL();
+}
+
 extern "C" void vApplicationTickHook(void) {}
 
 /*-----------------------------------------------------------*/
