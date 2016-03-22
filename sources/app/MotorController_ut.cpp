@@ -293,7 +293,8 @@ int ut_TestPIDInput(void)
 
         // save output
         torques[counter].first = counter + 1 - 500;
-        torques[counter++].second = testee.mCurrentTorque;
+        torques[counter].second = testee.mCurrentTorque;
+        counter++;
     }
 
     plotLines(omegas, torques);
@@ -386,8 +387,8 @@ int main(int argc, const char* argv[])
     UnitTestMainBegin();
     RunTest(true, ut_TestConstructor);
     RunTest(true, ut_TestSetTorque);
-    RunTest(true, ut_TestPIDInput);
-    RunTest(true, ut_TestPIDOutput);
-    RunTest(true, ut_TestPIDInOut);
+    RunTest(false, ut_TestPIDInput);
+    RunTest(false, ut_TestPIDOutput);
+    RunTest(false, ut_TestPIDInOut);
     UnitTestMainEnd();
 }
