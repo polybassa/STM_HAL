@@ -32,6 +32,7 @@ struct TemperatureSensor_NTC {
     TemperatureSensor_NTC& operator=(TemperatureSensor_NTC &&) = delete;
 
     float getTemperature(void) const;
+    const enum interface::TemperatureSensor::Description mDescription;
 
 private:
     constexpr TemperatureSensor_NTC(const enum interface::TemperatureSensor::Description& desc,
@@ -39,7 +40,6 @@ private:
         mDescription(desc),
         mPeripherie(peripherie) {}
 
-    const enum interface::TemperatureSensor::Description mDescription;
     const hal::Adc::Channel& mPeripherie;
 
     static constexpr uint8_t LookupTableSize = 19;

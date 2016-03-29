@@ -19,13 +19,14 @@
 namespace interface
 {
 struct Battery {
-    virtual float getTemperature(void) const = 0;
+    virtual float getTemperature(void) const {return 0.0; };
 
-    virtual float getVoltage(void) const = 0;
+    virtual float getVoltage(void) const {return 0.0; };
 
-    virtual float getCurrent(void) const = 0;
+    virtual float getCurrent(void) const {return 0.0; };
 
-    virtual float getPower(void) const = 0;
+    virtual float getPower(void) const {return 0.0; };
+    virtual ~Battery(void) {};
 };
 }
 

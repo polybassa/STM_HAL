@@ -17,7 +17,7 @@
 #include "trace.h"
 #include <cmath>
 
-static const int __attribute__((unused)) g_DebugZones = ZONE_ERROR | ZONE_WARNING | ZONE_VERBOSE | ZONE_INFO;
+static const int __attribute__((unused)) g_DebugZones = 0; // ZONE_ERROR | ZONE_WARNING | ZONE_VERBOSE | ZONE_INFO;
 
 float dev::TemperatureSensor_Internal::getTemperature(void) const
 {

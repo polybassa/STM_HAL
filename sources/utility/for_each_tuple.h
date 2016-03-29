@@ -32,35 +32,23 @@ for_each(std::tuple<Tp ...>& t, FuncT f)
     for_each<I + 1, FuncT, Tp ...>(t, f);
 }
 
-template<std::size_t I = 0, typename ... Tp>
-constexpr inline typename std::enable_if<I == sizeof ... (Tp), size_t>::type
-sizeof_tuple_elements(std::tuple<Tp ...>&) // Unused arguments are given no names.
-{ return 0; }
-
-template<std::size_t I = 0, typename ... Tp>
-constexpr inline typename std::enable_if < I<sizeof ... (Tp), size_t>::type
-sizeof_tuple_elements(std::tuple<Tp ...>& t)
-{
-    return sizeof(std::get<I>(t)) + sizeof_tuple_elements<I + 1, Tp ...>(t);
-}
-
 template<size_t index, typename ... args>
 struct pack_size_index;
 
 template<size_t index, typename type_t, typename ... args>
 struct pack_size_index<index, type_t, args ...> {
-    static const size_t value = (index > 0) ?
-                                (sizeof(type_t) + pack_size_index<index - 1, args ...>::value) : 0;
+    static constexpr size_t value = (index > 0) ?
+                                    (sizeof(type_t) + pack_size_index<index - 1, args ...>::value) : 0;
 };
 
 template<size_t index>
 struct pack_size_index<index> {
-    static const size_t value = 0;
+    static constexpr size_t value = 0;
 };
 
 template<typename ... args>
 struct pack_size {
-    static const size_t value = pack_size_index<sizeof ... (args), args ...>::value;
+    static constexpr size_t value = pack_size_index<sizeof ... (args), args ...>::value;
 };
 
 #endif /* SOURCES_UTILITY_FOR_EACH_TUPLE_H_ */

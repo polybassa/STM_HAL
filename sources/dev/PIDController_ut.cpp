@@ -109,7 +109,7 @@ int ut_TestPIDNoChange(void)
     }
 
     for (auto pair : line2) {
-        CHECK(pair.second < 0.01 && pair.second > -0.01 );
+        CHECK(pair.second<0.01 && pair.second> -0.01);
     }
 
     plotLines(line1, line2);

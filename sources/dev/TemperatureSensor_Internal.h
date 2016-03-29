@@ -29,6 +29,7 @@ struct TemperatureSensor_Internal {
     TemperatureSensor_Internal& operator=(TemperatureSensor_Internal &&) = delete;
 
     float getTemperature(void) const;
+    const enum interface::TemperatureSensor::Description mDescription;
 
 private:
 
@@ -40,7 +41,6 @@ private:
         mAvgSlope(avgSlope),
         mVoltageAt25C(voltageAt25C) {}
 
-    const enum interface::TemperatureSensor::Description mDescription;
     const hal::Adc::Channel& mPeripherie;
     const float mAvgSlope;              // [mV / ºC]
     const float mVoltageAt25C;          // [V]

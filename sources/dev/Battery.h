@@ -24,19 +24,19 @@
 
 namespace dev
 {
-struct Battery :
-    interface::Battery {
+struct Battery final :
+    public interface::Battery {
     Battery();
-    Battery(const Battery&) = delete;
+    Battery(const Battery &) = delete;
     Battery(Battery &&) = default;
     Battery& operator=(const Battery&) = delete;
     Battery& operator=(Battery &&) = delete;
-    ~Battery();
+    ~Battery() override;
 
-    virtual float getTemperature(void) const override;
-    virtual float getVoltage(void) const override;
-    virtual float getCurrent(void) const override;
-    virtual float getPower(void) const override;
+    float getTemperature(void) const override;
+    float getVoltage(void) const override;
+    float getCurrent(void) const override;
+    float getPower(void) const override;
 
 private:
     static constexpr auto& voltagePeripherie = hal::Factory<hal::Adc>::get<hal::Adc::Channel::BATTERY_U>();
