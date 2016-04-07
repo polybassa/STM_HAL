@@ -16,7 +16,6 @@
 #include <cmath>
 #include "TimSensorBldc.h"
 #include "trace.h"
-#include "Battery.h"
 
 static const int __attribute__((unused)) g_DebugZones = ZONE_ERROR | ZONE_WARNING | ZONE_VERBOSE | ZONE_INFO;
 
@@ -175,13 +174,11 @@ void SensorBLDC::trigger(void) const
     TIM_GenerateEvent(mHBridge.mTim.getBasePointer(), TIM_EventSource_COM);
 }
 
-void SensorBLDC::checkMotor(void) const
+void SensorBLDC::checkMotor(const dev::Battery& battery) const
 {
-    dev::Battery battery;
-
-    const float blockingCurrent = 1; // [A]
+    const float blockingCurrent = 4; // [A]
     const float minimalRPS = 3.0;
-    const uint32_t minimalPWM = 100;
+    const uint32_t minimalPWMinMill = 100;
 
     const bool motorBlocking = (std::abs(battery.getCurrent()) > blockingCurrent) &&
                                (mHallDecoder.getCurrentRPS() < minimalRPS);
@@ -191,7 +188,7 @@ void SensorBLDC::checkMotor(void) const
     }
 
     const bool motorNotStarting = (mHallDecoder.getCurrentRPS() < minimalRPS) &&
-                                  (minimalPWM < mHBridge.getPulsWidthPerMill());
+                                  (minimalPWMinMill < mHBridge.getPulsWidthPerMill());
 
     if (motorNotStarting) {
         mLastHallPosition = getPreviousHallPosition(mHallDecoder.getCurrentHallState());

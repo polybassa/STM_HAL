@@ -89,7 +89,7 @@ void MotorController::motorControllerTaskFunction(const bool& join)
         updatePwmOutput();
         static constexpr uint32_t waitPeriode = controllerInterval.count() / motorCheckInterval.count();
         for (uint32_t i = 0; i < waitPeriode; i++) {
-            mMotor.checkMotor();
+            mMotor.checkMotor(mBattery);
             os::ThisTask::sleep(motorCheckInterval);
         }
     } while (!join);

@@ -21,6 +21,7 @@
 #include "dev_Factory.h"
 #include "TimHalfBridge.h"
 #include "TimHallDecoder.h"
+#include "Battery.h"
 
 namespace dev
 {
@@ -54,7 +55,7 @@ struct SensorBLDC {
     void setDirection(const Direction) const;
     void trigger(void) const;
 
-    void checkMotor(void) const;
+    void checkMotor(const dev::Battery& battery) const;
 
     void start(void) const;
     void stop(void) const;
