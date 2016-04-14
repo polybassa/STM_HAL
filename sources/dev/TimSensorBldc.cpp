@@ -125,9 +125,7 @@ bool SensorBLDC::checkHallEvent(void) const
     } else {
         // wrong direction
         // force right direction
-        prepareCommutation(getPreviousHallPosition(currentPosition));
-        TIM_GenerateEvent(mHBridge.mTim.getBasePointer(), TIM_EventSource_COM);
-        mLastHallPosition = currentPosition;
+        trigger();
         return false;
     }
 }
@@ -135,19 +133,6 @@ bool SensorBLDC::checkHallEvent(void) const
 void SensorBLDC::prepareCommutation(const size_t hallPosition) const
 {
     static const std::array<std::array<const bool, 6>, 8> BLDC_BRIDGE_STATE_FORWARD = // Motor step
-    {{
-         // A AN  B BN  C CN
-         { 0, 0, 0, 0, 0, 0 }, // 0
-         { 1, 0, 0, 1, 0, 0 }, // 1
-         { 0, 1, 0, 0, 1, 0 }, // 2
-         { 0, 0, 0, 1, 1, 0 }, // 3
-         { 0, 0, 1, 0, 0, 1 }, // 4
-         { 1, 0, 0, 0, 0, 1 }, // 5
-         { 0, 1, 1, 0, 0, 0 }, // 6
-         { 0, 0, 0, 0, 0, 0 }  // 0
-     }};
-
-    static const std::array<std::array<const bool, 6>, 8> BLDC_BRIDGE_STATE_BACKWARD = // Motor step
     {{
          // A AN  B BN  C CN
          { 0, 0, 0, 0, 0, 0 }, // V0
@@ -160,6 +145,19 @@ void SensorBLDC::prepareCommutation(const size_t hallPosition) const
          { 0, 0, 0, 0, 0, 0 } // V0
      }};
 
+    static const std::array<std::array<const bool, 6>, 8> BLDC_BRIDGE_STATE_BACKWARD = // Motor step
+    {{
+         // A AN  B BN  C CN
+         { 0, 0, 0, 0, 0, 0 }, // V0
+         { 0, 1, 0, 0, 1, 0 }, // V3
+         { 0, 0, 1, 0, 0, 1 }, // V5
+         { 0, 1, 1, 0, 0, 0 }, // V4
+         { 1, 0, 0, 1, 0, 0 }, // V1
+         { 0, 0, 0, 1, 1, 0 }, // V2
+         { 1, 0, 0, 0, 0, 1 }, // V6
+         { 0, 0, 0, 0, 0, 0 } // V0
+     }};
+
     if (mDirection == Direction::FORWARD) {
         mHBridge.setBridge(BLDC_BRIDGE_STATE_FORWARD[hallPosition]);
     } else {
@@ -169,7 +167,14 @@ void SensorBLDC::prepareCommutation(const size_t hallPosition) const
 
 void SensorBLDC::trigger(void) const
 {
-    mLastHallPosition = getNextHallPosition(mHallDecoder.getCurrentHallState());
+    mLastHallPosition = mHallDecoder.getCurrentHallState();
+    prepareCommutation(mLastHallPosition);
+    TIM_GenerateEvent(mHBridge.mTim.getBasePointer(), TIM_EventSource_COM);
+}
+
+void SensorBLDC::reverseTrigger(void) const
+{
+    mLastHallPosition = getPreviousHallPosition(mHallDecoder.getCurrentHallState());
     prepareCommutation(mLastHallPosition);
     TIM_GenerateEvent(mHBridge.mTim.getBasePointer(), TIM_EventSource_COM);
 }
@@ -177,23 +182,21 @@ void SensorBLDC::trigger(void) const
 void SensorBLDC::checkMotor(const dev::Battery& battery) const
 {
     const float blockingCurrent = 4; // [A]
-    const float minimalRPS = 3.0;
-    const uint32_t minimalPWMinMill = 100;
+    const float minimalRPS = 0.5;
+    const uint32_t minimalPWMinMill = 80;
 
     const bool motorBlocking = (std::abs(battery.getCurrent()) > blockingCurrent) &&
                                (mHallDecoder.getCurrentRPS() < minimalRPS);
 
     if (motorBlocking) {
-        trigger();
+        reverseTrigger();
     }
 
     const bool motorNotStarting = (mHallDecoder.getCurrentRPS() < minimalRPS) &&
-                                  (minimalPWMinMill < mHBridge.getPulsWidthPerMill());
+                                  (minimalPWMinMill < std::abs(mHBridge.getPulsWidthPerMill()));
 
     if (motorNotStarting) {
-        mLastHallPosition = getPreviousHallPosition(mHallDecoder.getCurrentHallState());
-        prepareCommutation(mLastHallPosition);
-        TIM_GenerateEvent(mHBridge.mTim.getBasePointer(), TIM_EventSource_COM);
+        trigger();
     }
 }
 
@@ -203,7 +206,8 @@ void SensorBLDC::start(void) const
                                                  prepareCommutation(mHallDecoder.getCurrentHallState());
                                              });
 
-    mHallDecoder.registerHallEventCheckCallback([this] {return checkHallEvent();
+    mHallDecoder.registerHallEventCheckCallback([this] {
+                                                    return checkHallEvent();
                                                 });
 
     /* Internal connection from HallDecoder Timer to Motor Timer */
@@ -214,10 +218,9 @@ void SensorBLDC::start(void) const
     mHBridge.mTim.enable();
     mHallDecoder.mTim.enable();
 
-    TIM_CtrlPWMOutputs(mHBridge.mTim.getBasePointer(), ENABLE);
+    setPulsWidthInMill(1);
 
-    mHBridge.setPulsWidthPerMill(0);
-    mLastHallPosition = mHallDecoder.getCurrentHallState();
+    TIM_CtrlPWMOutputs(mHBridge.mTim.getBasePointer(), ENABLE);
 
     trigger();
 }

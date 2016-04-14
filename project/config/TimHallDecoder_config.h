@@ -22,7 +22,7 @@ enum Description {
 };
 
 static constexpr uint32_t SYSTEMCLOCK = 36000000;
-static constexpr uint32_t POLE_PAIRS = 4;
+static constexpr uint32_t POLE_PAIRS = 7;
 
 #else
 #ifndef SOURCES_PMD_TIMHALLDECODER_CONFIG_CONTAINER_H_
