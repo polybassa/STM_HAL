@@ -60,6 +60,7 @@ struct SensorBLDC {
 
     void start(void) const;
     void stop(void) const;
+    uint32_t getNumberOfPolePairs(void) const;
 
 private:
     constexpr SensorBLDC(const enum Description& desc,

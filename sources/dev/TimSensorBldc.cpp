@@ -237,5 +237,10 @@ void SensorBLDC::stop(void) const
     mHallDecoder.unregisterCommutationCallback();
 }
 
+uint32_t SensorBLDC::getNumberOfPolePairs(void) const
+{
+    return mHallDecoder.POLE_PAIRS;
+}
+
 constexpr std::array<const dev::SensorBLDC,
                      dev::SensorBLDC::Description::__ENUM__SIZE> dev::Factory<dev::SensorBLDC>::Container;
