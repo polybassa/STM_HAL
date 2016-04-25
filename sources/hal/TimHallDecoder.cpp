@@ -108,7 +108,7 @@ uint32_t HallDecoder::getCommutationDelay(void) const
 
 float HallDecoder::getCurrentRPS(void) const
 {
-    static constexpr float HALL_EVENTS_PER_ROTATION = 3;
+    static constexpr float HALL_EVENTS_PER_ROTATION = 6;
     // increment begin iterator to skip first value which is invalid
     auto begin = mTimestamps.begin();
     begin++;

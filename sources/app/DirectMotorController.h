@@ -24,10 +24,6 @@
 #include "os_Queue.h"
 #include <limits>
 
-#ifdef UNITTEST
-extern int ut_TestSetTorque(void);
-#endif
-
 namespace app
 {
 class DirectMotorController final :
@@ -49,7 +45,7 @@ class DirectMotorController final :
     os::Queue<float, 1> mSetTorqueQueue;
 
     static constexpr std::chrono::milliseconds motorCheckInterval = std::chrono::milliseconds(1);
-    static constexpr std::chrono::milliseconds controllerInterval = std::chrono::milliseconds(2);
+    static constexpr std::chrono::milliseconds controllerInterval = std::chrono::milliseconds(5);
 
     void motorControllerTaskFunction(const bool&);
     void updatePwmOutput(void);
@@ -72,7 +68,6 @@ public:
 
 #ifdef UNITTEST
     void triggerTaskExecution(void) { this->motorControllerTaskFunction(true); }
-    friend int ::ut_TestSetTorque(void);
 #endif
 };
 }

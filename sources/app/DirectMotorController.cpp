@@ -70,11 +70,6 @@ void DirectMotorController::motorControllerTaskFunction(const bool& join)
         if (mSetTorqueQueue.receive(newSetTorque, 0)) {
             mSetTorque = newSetTorque;
         }
-
-#ifdef DEBUG
-        terminal.print("%f;\t", mSetTorque);
-        terminal.print("\r\n");
-#endif
         updatePwmOutput();
         static constexpr uint32_t waitPeriode = controllerInterval.count() / motorCheckInterval.count();
         for (uint32_t i = 0; i < waitPeriode; i++) {
@@ -83,13 +78,6 @@ void DirectMotorController::motorControllerTaskFunction(const bool& join)
         }
     } while (!join);
 }
-
-#if defined(DEBUG)
-void DirectMotorController::setTunings(const float kp, const float ki, const float kd)
-{
-    mController.setTunings(kp, ki, kd);
-}
-#endif
 
 void DirectMotorController::updatePwmOutput(void)
 {
@@ -118,7 +106,12 @@ void DirectMotorController::updatePwmOutput(void)
                                               2 * mMotorCoilResistance * mSetTorque * omega);
 
     const int32_t pulswidth = static_cast<int32_t>((voltageInputMotor / mBattery.getVoltage()) * 1000.0);
-    mMotor.setPulsWidthInMill(pulswidth);
+
+    if (mSetTorque > 0.0) {
+        mMotor.setPulsWidthInMill(pulswidth);
+    } else {
+        mMotor.setPulsWidthInMill(0.0 - pulswidth);
+    }
 }
 
 void DirectMotorController::setTorque(const float setValue)
