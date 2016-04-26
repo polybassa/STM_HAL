@@ -29,7 +29,6 @@ static constexpr uint32_t POLE_PAIRS = 4;
 #else
 #error "NO MOTOR DEFINED"
 #endif
-#error "TEST"
 
 #else
 #ifndef SOURCES_PMD_TIMHALLDECODER_CONFIG_CONTAINER_H_
