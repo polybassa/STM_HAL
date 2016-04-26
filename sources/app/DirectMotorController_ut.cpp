@@ -18,6 +18,7 @@
 #include "TaskInterruptable.h"
 #include <cmath>
 #include <cstdlib>
+#include <cstring>
 
 #define NUM_TEST_LOOPS 255
 
@@ -174,7 +175,7 @@ BaseType_t xQueueGenericReceive(QueueHandle_t    xQueue,
                                 const BaseType_t xJustPeek)
 {
     if (queueBuffer == nullptr) {return 0; }
-    memcpy(pvBuffer, queueBuffer, queueElementSize);
+    std::memcpy(pvBuffer, queueBuffer, queueElementSize);
     return 1;
 }
 
@@ -184,7 +185,7 @@ BaseType_t xQueueGenericSend(QueueHandle_t     xQueue,
                              const BaseType_t  xCopyPosition)
 {
     if (queueBuffer == nullptr) {return 0; }
-    memcpy(queueBuffer, pvItemToQueue, queueElementSize);
+    std::memcpy(queueBuffer, pvItemToQueue, queueElementSize);
     return 1;
 }
 
@@ -192,7 +193,7 @@ BaseType_t xQueueGenericSend(QueueHandle_t     xQueue,
 template<size_t n>
 void plotLines(std::array<std::pair<float, float>, n> line1, std::array<std::pair<float, float>, n> line2)
 {
-#if 1
+#if 0
     FILE* gnuplotPipe = popen("gnuplot -persistent", "w");
 
     fprintf(gnuplotPipe, "set style line 1 lc rgb '#0060ad' lt 1 lw 2 pt 0 ps 1 \n");
