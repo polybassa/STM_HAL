@@ -132,6 +132,7 @@ bool SensorBLDC::checkHallEvent(void) const
 
 void SensorBLDC::prepareCommutation(const size_t hallPosition) const
 {
+#ifdef MAXON_MOTOR
     static const std::array<std::array<const bool, 6>, 8> BLDC_BRIDGE_STATE_FORWARD = // Motor step
     {{
          // A AN  B BN  C CN
@@ -157,7 +158,35 @@ void SensorBLDC::prepareCommutation(const size_t hallPosition) const
          { 1, 0, 0, 0, 0, 1 }, // V6
          { 0, 0, 0, 0, 0, 0 } // V0
      }};
+#elif CHINA_MOTOR
+    static const std::array<std::array<const bool, 6>, 8> BLDC_BRIDGE_STATE_FORWARD = // Motor step
+    {{
+         { 0, 0, 0, 0, 0, 0 }, // 0
+         { 1, 0, 0, 1, 0, 0 }, // 1
+         { 0, 1, 0, 0, 1, 0 }, // 2
+         { 0, 0, 0, 1, 1, 0 }, // 3
+         { 0, 0, 1, 0, 0, 1 }, // 4
+         { 1, 0, 0, 0, 0, 1 }, // 5
+         { 0, 1, 1, 0, 0, 0 }, // 6
+         { 0, 0, 0, 0, 0, 0 }  // 0
+     }};
 
+    static const std::array<std::array<const bool, 6>, 8> BLDC_BRIDGE_STATE_BACKWARD = // Motor step
+    {{
+         // A AN  B BN  C CN
+         { 0, 0, 0, 0, 0, 0 }, // V0
+         { 0, 0, 0, 1, 1, 0 }, // V2
+         { 0, 1, 1, 0, 0, 0 }, // V4
+         { 0, 1, 0, 0, 1, 0 }, // V3
+         { 1, 0, 0, 0, 0, 1 }, // V6
+         { 1, 0, 0, 1, 0, 0 }, // V1
+         { 0, 0, 1, 0, 0, 1 }, // V5
+         { 0, 0, 0, 0, 0, 0 } // V0
+     }};
+
+#else
+#error "NO MOTOR DEFINED"
+#endif
     if (mDirection == Direction::FORWARD) {
         mHBridge.setBridge(BLDC_BRIDGE_STATE_FORWARD[hallPosition]);
     } else {
