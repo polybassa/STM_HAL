@@ -53,12 +53,14 @@ struct SensorBLDC {
     int32_t getPulsWidthPerMill(void) const;
     void setPulsWidthInMill(int32_t) const;
     void setDirection(const Direction) const;
+    void reverseTrigger(void) const;
     void trigger(void) const;
 
     void checkMotor(const dev::Battery& battery) const;
 
     void start(void) const;
     void stop(void) const;
+    uint32_t getNumberOfPolePairs(void) const;
 
 private:
     constexpr SensorBLDC(const enum Description& desc,

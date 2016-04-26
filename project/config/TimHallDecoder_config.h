@@ -22,7 +22,13 @@ enum Description {
 };
 
 static constexpr uint32_t SYSTEMCLOCK = 36000000;
+#ifdef MAXON_MOTOR
+static constexpr uint32_t POLE_PAIRS = 7;
+#elif CHINA_MOTOR
 static constexpr uint32_t POLE_PAIRS = 4;
+#else
+#error "NO MOTOR DEFINED"
+#endif
 
 #else
 #ifndef SOURCES_PMD_TIMHALLDECODER_CONFIG_CONTAINER_H_

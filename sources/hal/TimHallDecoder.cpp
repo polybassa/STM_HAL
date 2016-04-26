@@ -108,20 +108,19 @@ uint32_t HallDecoder::getCommutationDelay(void) const
 
 float HallDecoder::getCurrentRPS(void) const
 {
+    static constexpr float HALL_EVENTS_PER_ROTATION = 6;
     // increment begin iterator to skip first value which is invalid
     auto begin = mTimestamps.begin();
     begin++;
 
     const uint32_t avgTicksBetweenHallSignals =
-        std::accumulate(
-                        begin,
-                        mTimestamps.end(), 0) / (NUMBER_OF_TIMESTAMPS - 1);
+        std::accumulate(begin, mTimestamps.end(), 0) / (NUMBER_OF_TIMESTAMPS - 1);
 
     const float timerFrequency = SYSTEMCLOCK / (mTim.mConfiguration.TIM_Prescaler + 1);
     const float hallSignalFrequency = timerFrequency / avgTicksBetweenHallSignals;
-    const float electricalRotationFrequency = hallSignalFrequency / 6; /* 6 hall events per rotation */
+    const float electricalRotationFrequency = hallSignalFrequency / HALL_EVENTS_PER_ROTATION;
     const float motorRotationFrequency = electricalRotationFrequency / POLE_PAIRS;
-    return motorRotationFrequency * 2; // TODO Find reason why factor 2
+    return motorRotationFrequency;
 }
 
 float HallDecoder::getCurrentOmega(void) const

@@ -1,4 +1,4 @@
-/* Copyright (C) 2015  Nils Weiss, Alexander Strobl
+/* Copyright (C) 2016  Nils Weiss
  *
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -14,10 +14,10 @@
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>. */
 
 #include "unittest.h"
-#include "MotorController.h"
+#include "DirectMotorController.h"
 #include "TaskInterruptable.h"
-#include "PIDController.h"
 #include <cmath>
+#include <cstdlib>
 
 #define NUM_TEST_LOOPS 255
 
@@ -30,9 +30,7 @@ static uint32_t g_currentTickCount;
 static float g_currentOmega;
 static float g_batteryVoltage;
 
-static float g_PID_P;
-static float g_PID_I;
-static float g_PID_D;
+constexpr const uint32_t POLE_PAIRS = 7;
 
 //--------------------------MOCKING--------------------------
 
@@ -124,6 +122,11 @@ void dev::SensorBLDC::stop() const
     //TODO Test ME
 }
 
+uint32_t dev::SensorBLDC::getNumberOfPolePairs() const
+{
+    return POLE_PAIRS;
+}
+
 //****** Battery functions ******
 dev::Battery::Battery(){}
 
@@ -131,7 +134,7 @@ dev::Battery::~Battery(){}
 
 float dev::Battery::getVoltage(void) const
 {
-    return 0;
+    return g_batteryVoltage;
 }
 
 float dev::Battery::getCurrent(void) const
@@ -149,45 +152,20 @@ float dev::Battery::getTemperature(void) const
     return 0.0;
 }
 
-//***** PID Controller *****
-dev::PIDController::PIDController(float&                 input,
-                                  float&                 output,
-                                  float&                 setPoint,
-                                  const float            kp,
-                                  const float            ki,
-                                  const float            kd,
-                                  const ControlDirection direction) :
-    mInput(input),
-    mOutput(output),
-    mSetPoint(setPoint)
-{
-    g_PID_D = kd;
-    g_PID_I = ki;
-    g_PID_P = kp;
-}
-
-bool dev::PIDController::compute(void)
-{
-//    mOutput = 1;
-    return true;
-}
-
-void dev::PIDController::setSampleTime(const std::chrono::milliseconds newSampleTime)
-{}
-
-void dev::PIDController::setOutputLimits(const float min, const float max)
-{}
-
-void dev::PIDController::setMode(const ControlMode newMode)
-{}
-
 void vQueueDelete(QueueHandle_t xQueue) {}
+
+void* queueBuffer = nullptr;
+size_t queueElementSize = 0;
+size_t queueBufferSize = 0;
 
 QueueHandle_t xQueueGenericCreate(const UBaseType_t uxQueueLength,
                                   const UBaseType_t uxItemSize,
                                   const uint8_t     ucQueueType)
 {
-    return 0;
+    queueBuffer = std::malloc(uxItemSize * uxQueueLength);
+    queueBufferSize = uxItemSize * uxQueueLength;
+    queueElementSize = uxItemSize;
+    return queueBuffer;
 }
 
 BaseType_t xQueueGenericReceive(QueueHandle_t    xQueue,
@@ -195,7 +173,9 @@ BaseType_t xQueueGenericReceive(QueueHandle_t    xQueue,
                                 TickType_t       xTicksToWait,
                                 const BaseType_t xJustPeek)
 {
-    return 0;
+    if (queueBuffer == nullptr) {return 0; }
+    memcpy(pvBuffer, queueBuffer, queueElementSize);
+    return 1;
 }
 
 BaseType_t xQueueGenericSend(QueueHandle_t     xQueue,
@@ -203,14 +183,16 @@ BaseType_t xQueueGenericSend(QueueHandle_t     xQueue,
                              TickType_t        xTicksToWait,
                              const BaseType_t  xCopyPosition)
 {
-    return 0;
+    if (queueBuffer == nullptr) {return 0; }
+    memcpy(queueBuffer, pvItemToQueue, queueElementSize);
+    return 1;
 }
 
 //-------------------------HELPERS-------------------------
 template<size_t n>
 void plotLines(std::array<std::pair<float, float>, n> line1, std::array<std::pair<float, float>, n> line2)
 {
-#if 0
+#if 1
     FILE* gnuplotPipe = popen("gnuplot -persistent", "w");
 
     fprintf(gnuplotPipe, "set style line 1 lc rgb '#0060ad' lt 1 lw 2 pt 0 ps 1 \n");
@@ -238,26 +220,12 @@ void plotLines(std::array<std::pair<float, float>, n> line1, std::array<std::pai
 
 //-------------------------TESTCASES-------------------------
 
-int ut_TestConstructor(void)
-{
-    TestCaseBegin();
-
-    app::MotorController testee(dev::Factory<dev::SensorBLDC>::get<dev::SensorBLDC::BLDC>(),
-                                dev::Battery(), 0.00768, 0.8, 0.6, 0.1);
-
-    CHECK(g_PID_D == 0);
-    CHECK(g_PID_P <= 0.601 && g_PID_P >= 0.599);
-    CHECK(g_PID_I <= 0.101 && g_PID_I >= 0.099);
-
-    TestCaseEnd();
-}
-
 int ut_TestSetTorque(void)
 {
     TestCaseBegin();
 
-    app::MotorController testee(dev::Factory<dev::SensorBLDC>::get<dev::SensorBLDC::BLDC>(),
-                                dev::Battery(), 0.00768, 0.8, 0.6, 0.1);
+    app::DirectMotorController testee(dev::Factory<dev::SensorBLDC>::get<dev::SensorBLDC::BLDC>(),
+                                      dev::Battery(), 1.0, 1.0, 1.0);
     testee.setTorque(1);
 
     CHECK(true);
@@ -265,119 +233,43 @@ int ut_TestSetTorque(void)
     TestCaseEnd();
 }
 
-int ut_TestPIDInput(void)
+int ut_TestOmegaRamp(void)
 {
     TestCaseBegin();
 
-    app::MotorController testee(dev::Factory<dev::SensorBLDC>::get<dev::SensorBLDC::BLDC>(),
-                                dev::Battery(), 0.00768, 0.8, 0.6, 0.1);
+    static constexpr const auto NUMBER_OF_VALUES = 500;
 
-    std::array<std::pair<float, float>, 1000> omegas;
-    std::array<std::pair<float, float>, 1000> torques;
+    std::array<std::pair<float, float>, NUMBER_OF_VALUES> omega;
+    std::array<std::pair<float, float>, NUMBER_OF_VALUES> pwm;
 
-    auto counter = 1;
-    for (auto& pair : omegas) {
-        pair.first = counter - 500;
-        pair.second = counter++ - 500;
+    size_t counter = 0;
+    for (auto& pair : omega) {
+        pair.first = counter;
+        pair.second = counter++;
     }
 
     counter = 0;
-    for (const auto& pair : omegas) {
-        // set input values
-        g_batteryVoltage = 36;
-        g_currentPWM = 1000;
-        g_currentOmega = pair.second;
+    for (auto& pair : pwm) {
+        pair.first = counter++;
+        pair.second = 0;
+    }
 
-        // execute Task
+    app::DirectMotorController testee(dev::Factory<dev::SensorBLDC>::get<dev::SensorBLDC::BLDC>(),
+                                      dev::Battery(), 0.0749, 0.795, 0.000261);
+    testee.setTorque(0.5);
+    g_batteryVoltage = 40.0;
+
+    for (int i = 0; i < NUMBER_OF_VALUES; i++) {
+        g_currentOmega = omega[i].second;
         testee.triggerTaskExecution();
-
-        // save output
-        torques[counter].first = counter + 1 - 500;
-        torques[counter].second = testee.mCurrentTorque;
-        counter++;
+        pwm[i].second = g_currentPWM;
     }
 
-    plotLines(omegas, torques);
-    CHECK(true);
+//    for (auto pair : pwm) {
+//        CHECK(pair.second<0.01 && pair.second> -0.01);
+//    }
 
-    TestCaseEnd();
-}
-
-int ut_TestPIDOutput(void)
-{
-    TestCaseBegin();
-
-    app::MotorController testee(dev::Factory<dev::SensorBLDC>::get<dev::SensorBLDC::BLDC>(),
-                                dev::Battery(), 0.00768, 0.8, 0.6, 0.1);
-
-    std::array<std::pair<float, float>, 1000> torque;
-    std::array<std::pair<float, float>, 1000> pwms;
-
-    auto counter = 1;
-    for (auto& pair : torque) {
-        pair.first = counter - 500;
-        pair.second = (counter++ - 500) * 0.0001;
-    }
-
-    counter = 0;
-    for (const auto& pair : torque) {
-        // set input values
-        g_batteryVoltage = 36;
-        g_currentOmega = 500;
-        g_currentPWM = 1000;
-        testee.mOutputTorque = pair.second;
-
-        // execute Task
-        testee.triggerTaskExecution();
-
-        // save output
-        pwms[counter].first = counter + 1 - 500;
-        pwms[counter++].second = g_currentPWM;
-    }
-
-    plotLines(torque, pwms);
-    CHECK(true);
-
-    TestCaseEnd();
-}
-
-int ut_TestPIDInOut(void)
-{
-    TestCaseBegin();
-
-    app::MotorController testee(dev::Factory<dev::SensorBLDC>::get<dev::SensorBLDC::BLDC>(),
-                                dev::Battery(), 0.00768, 0.8, 0.6, 0.1);
-
-    std::array<std::pair<float, float>, 1000> omegas;
-    std::array<std::pair<float, float>, 1000> pwms;
-
-    auto offset = -500;
-
-    auto counter = 1;
-    for (auto& pair : omegas) {
-        pair.first = counter + offset;
-        pair.second = (counter++ + offset);
-    }
-
-    counter = 0;
-    for (const auto& pair : omegas) {
-        // set input values
-        g_batteryVoltage = 36;
-        g_currentPWM = 100;
-        g_currentOmega = pair.second;
-
-        testee.mOutputTorque = 0.01;
-
-        // execute Task
-        testee.triggerTaskExecution();
-
-        // save output
-        pwms[counter].first = counter + 1 + offset;
-        pwms[counter++].second = g_currentPWM;
-    }
-
-    plotLines(omegas, pwms);
-    CHECK(true);
+    plotLines(omega, pwm);
 
     TestCaseEnd();
 }
@@ -385,10 +277,7 @@ int ut_TestPIDInOut(void)
 int main(int argc, const char* argv[])
 {
     UnitTestMainBegin();
-    RunTest(true, ut_TestConstructor);
     RunTest(true, ut_TestSetTorque);
-    RunTest(false, ut_TestPIDInput);
-    RunTest(false, ut_TestPIDOutput);
-    RunTest(false, ut_TestPIDInOut);
+    RunTest(true, ut_TestOmegaRamp);
     UnitTestMainEnd();
 }
