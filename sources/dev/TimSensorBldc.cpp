@@ -252,7 +252,7 @@ void SensorBLDC::start(void) const
     TIM_CtrlPWMOutputs(mHBridge.mTim.getBasePointer(), ENABLE);
 
     trigger();
-    os::ThisTask::sleep(std::chrono::milliseconds(50));
+    os::ThisTask::sleep(std::chrono::milliseconds(250));
 }
 
 void SensorBLDC::stop(void) const

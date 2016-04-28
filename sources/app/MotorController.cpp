@@ -85,15 +85,15 @@ void MotorController::motorControllerTaskFunction(const bool& join)
         }
         mCurrentOmega = mMotor.getCurrentOmega();
         updateCurrentTorque();
-#ifdef DEBUG
-        terminal.print("%f;\t", mSetTorque);
-        terminal.print("%f;\t", mCurrentTorque);
-#endif
+//#ifdef DEBUG
+//        terminal.print("%f;\t", mSetTorque);
+//        terminal.print("%f;\t", mCurrentTorque);
+//#endif
         mController.compute();
-#ifdef DEBUG
-        terminal.print("%d;\t", mOutputTorque);
-        terminal.print("\r\n");
-#endif
+//#ifdef DEBUG
+//        terminal.print("%d;\t", mOutputTorque);
+//        terminal.print("\r\n");
+//#endif
         updatePwmOutput();
         static constexpr uint32_t waitPeriode = controllerInterval.count() / motorCheckInterval.count();
         for (uint32_t i = 0; i < waitPeriode; i++) {

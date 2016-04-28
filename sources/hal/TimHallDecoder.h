@@ -74,7 +74,7 @@ private:
     void interruptHandler(void) const;
     void saveTimestamp(const uint32_t) const;
 
-    static const size_t NUMBER_OF_TIMESTAMPS = 7;
+    static const size_t NUMBER_OF_TIMESTAMPS = 10;
 
     mutable std::array<uint32_t, NUMBER_OF_TIMESTAMPS> mTimestamps = {};
 
