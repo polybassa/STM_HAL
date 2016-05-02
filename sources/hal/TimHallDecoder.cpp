@@ -32,6 +32,24 @@ using hal::Tim;
 static constexpr float M_PI = 3.14159265358979323846f;
 #endif
 
+static constexpr size_t countValues = 1000;
+
+std::array<uint16_t, countValues> g_debugTicks;
+std::array<float, countValues> g_debugTimes;
+size_t g_debugTickCount = 0;
+
+void printTicks(void) {
+	terminal.print("Ticks \r\n");
+
+	for(int i = 0; i<countValues; i++){
+		terminal.print("%d; ", g_debugTicks[i]);
+	}
+
+	for(int i = 0; i<countValues; i++){
+			terminal.print("%f; ", g_debugTimes[i]);
+		}
+}
+
 extern "C" void TIM3_IRQHandler(void)
 {
     constexpr auto& hallDecoder = Factory<HallDecoder>::get<HallDecoder::BLDC_DECODER>();
@@ -47,11 +65,8 @@ void HallDecoder::interruptHandler(void) const
         const uint32_t eventTimestamp = TIM_GetCapture1(mTim.getBasePointer());
         if (HallEventCallbacks[mDescription]()) {
             hallEventDetected = true;
-            // calculate motor speed or else with CCR1 values
-            saveTimestamp(eventTimestamp);
-        } else {
-            TIM_SetCounter(mTim.getBasePointer(), eventTimestamp);
         }
+        saveTimestamp(eventTimestamp);
     } else if (TIM_GetITStatus(mTim.getBasePointer(), TIM_IT_CC2)) {
         TIM_ClearITPendingBit(mTim.getBasePointer(), TIM_IT_CC2);
         if (hallEventDetected) {
@@ -69,19 +84,18 @@ void HallDecoder::interruptHandler(void) const
 
 void HallDecoder::saveTimestamp(const uint32_t timestamp) const
 {
-    if (std::numeric_limits<uint32_t>::max() == timestamp) {
-        mTimestamps.fill(std::numeric_limits<uint32_t>::max());
-    }
+    mTimestamps[mTimestampPosition] = timestamp;
+    mTimestampPosition = (mTimestampPosition + 1) % NUMBER_OF_TIMESTAMPS;
 
-    // move all values one step forward in array
-    // to make space for next timestamp
-    mTimestamps[NUMBER_OF_TIMESTAMPS - 1] = timestamp;
-    uint32_t* dataPointer = mTimestamps.data();
 
-    constexpr auto& dma = Factory<hal::Dma>::get<hal::Dma::MEMORY>();
-    dma.memcpy(dataPointer,
-               dataPointer + 1,
-               (HallDecoder::NUMBER_OF_TIMESTAMPS - 1) * sizeof(uint32_t));
+    const float timerFrequency = SYSTEMCLOCK / (mTim.mConfiguration.TIM_Prescaler + 1);
+    const float hallSignalFrequency = timerFrequency / timestamp;
+
+    g_debugTimes[g_debugTickCount] = 1000 / hallSignalFrequency;
+
+    g_debugTicks[g_debugTickCount++] = timestamp;
+
+    g_debugTickCount = g_debugTickCount % countValues;
 }
 
 void HallDecoder::incrementCommutationDelay(void) const
@@ -109,12 +123,9 @@ uint32_t HallDecoder::getCommutationDelay(void) const
 float HallDecoder::getCurrentRPS(void) const
 {
     static constexpr float HALL_EVENTS_PER_ROTATION = 6;
-    // increment begin iterator to skip first value which is invalid
-    auto begin = mTimestamps.begin();
-    begin++;
 
     const uint32_t avgTicksBetweenHallSignals =
-        std::accumulate(begin, mTimestamps.end(), 0) / (NUMBER_OF_TIMESTAMPS - 1);
+        std::accumulate(mTimestamps.begin(), mTimestamps.end(), 0) / NUMBER_OF_TIMESTAMPS;
 
     const float timerFrequency = SYSTEMCLOCK / (mTim.mConfiguration.TIM_Prescaler + 1);
     const float hallSignalFrequency = timerFrequency / avgTicksBetweenHallSignals;

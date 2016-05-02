@@ -107,12 +107,12 @@ void DirectMotorController::updatePwmOutput(void)
 
     const int32_t pulswidth = static_cast<int32_t>((voltageInputMotor / mBattery.getVoltage()) * 1000.0);
 
-    terminal.print("sqrt(");
-    terminal.print("%f * (%f * %f + %f", omega*omega, A, mSetTorque* mSetTorque, cphi2);
-    terminal.print(") + %f * %f +", B, mSetTorque * mSetTorque);
-    terminal.print("2 * %f * %f * %f)", mMotorCoilResistance, std::abs(mSetTorque), omega);
-    terminal.print(" = %f => %d pwm", voltageInputMotor, pulswidth / 10);
-    terminal.print("\r\n");
+//    terminal.print("sqrt(");
+//    terminal.print("%f * (%f * %f + %f", omega*omega, A, mSetTorque* mSetTorque, cphi2);
+//    terminal.print(") + %f * %f +", B, mSetTorque * mSetTorque);
+//    terminal.print("2 * %f * %f * %f)", mMotorCoilResistance, std::abs(mSetTorque), omega);
+//    terminal.print(" = %f => %d pwm", voltageInputMotor, pulswidth / 10);
+//    terminal.print("\r\n");
 
     if (mSetTorque > 0.0) {
         mMotor.setPulsWidthInMill(pulswidth);

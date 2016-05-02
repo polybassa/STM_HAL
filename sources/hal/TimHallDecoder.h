@@ -77,6 +77,7 @@ private:
     static const size_t NUMBER_OF_TIMESTAMPS = 10;
 
     mutable std::array<uint32_t, NUMBER_OF_TIMESTAMPS> mTimestamps = {};
+    mutable size_t mTimestampPosition = 0;
 
     static std::array<std::function<void(void)>, Description::__ENUM__SIZE> CommutationCallbacks;
     static std::array<std::function<bool(void)>, Description::__ENUM__SIZE> HallEventCallbacks;
