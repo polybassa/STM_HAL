@@ -32,8 +32,8 @@ using hal::Tim;
 static constexpr float M_PI = 3.14159265358979323846f;
 #endif
 
+#ifdef DEBUG_HALL
 static constexpr size_t countValues = 1000;
-
 std::array<uint16_t, countValues> g_debugTicks;
 std::array<float, countValues> g_debugTimes;
 size_t g_debugTickCount = 0;
@@ -49,6 +49,8 @@ void printTicks(void) {
 			terminal.print("%f; ", g_debugTimes[i]);
 		}
 }
+#endif
+
 
 extern "C" void TIM3_IRQHandler(void)
 {
@@ -87,7 +89,7 @@ void HallDecoder::saveTimestamp(const uint32_t timestamp) const
     mTimestamps[mTimestampPosition] = timestamp;
     mTimestampPosition = (mTimestampPosition + 1) % NUMBER_OF_TIMESTAMPS;
 
-
+#ifdef DEBUG_HALL
     const float timerFrequency = SYSTEMCLOCK / (mTim.mConfiguration.TIM_Prescaler + 1);
     const float hallSignalFrequency = timerFrequency / timestamp;
 
@@ -96,6 +98,7 @@ void HallDecoder::saveTimestamp(const uint32_t timestamp) const
     g_debugTicks[g_debugTickCount++] = timestamp;
 
     g_debugTickCount = g_debugTickCount % countValues;
+#endif
 }
 
 void HallDecoder::incrementCommutationDelay(void) const
@@ -124,8 +127,15 @@ float HallDecoder::getCurrentRPS(void) const
 {
     static constexpr float HALL_EVENTS_PER_ROTATION = 6;
 
-    const uint32_t avgTicksBetweenHallSignals =
-        std::accumulate(mTimestamps.begin(), mTimestamps.end(), 0) / NUMBER_OF_TIMESTAMPS;
+    uint32_t sumTicksBetweenHallSignals =
+        std::accumulate(mTimestamps.begin(), mTimestamps.end(), 0);
+
+    auto minmaxTickBetweenHallSignals = std::minmax_element(mTimestamps.begin(), mTimestamps.end());
+
+    sumTicksBetweenHallSignals -= *minmaxTickBetweenHallSignals.first;
+    sumTicksBetweenHallSignals -= *minmaxTickBetweenHallSignals.second;
+
+    const uint32_t avgTicksBetweenHallSignals = sumTicksBetweenHallSignals / (NUMBER_OF_TIMESTAMPS - 1); // is wrong
 
     const float timerFrequency = SYSTEMCLOCK / (mTim.mConfiguration.TIM_Prescaler + 1);
     const float hallSignalFrequency = timerFrequency / avgTicksBetweenHallSignals;

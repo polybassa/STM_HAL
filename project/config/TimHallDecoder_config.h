@@ -27,7 +27,7 @@ static constexpr uint32_t POLE_PAIRS = 7;
 #elif CHINA_MOTOR
 static constexpr uint32_t POLE_PAIRS = 4;
 #else
-#error "NO MOTOR DEFINED"
+#error "MOTOR NOT DEFINED"
 #endif
 
 #else
