@@ -38,19 +38,19 @@ std::array<uint16_t, countValues> g_debugTicks;
 std::array<float, countValues> g_debugTimes;
 size_t g_debugTickCount = 0;
 
-void printTicks(void) {
-	terminal.print("Ticks \r\n");
+void printTicks(void)
+{
+    terminal.print("Ticks \r\n");
 
-	for(int i = 0; i<countValues; i++){
-		terminal.print("%d; ", g_debugTicks[i]);
-	}
+    for (int i = 0; i < countValues; i++) {
+        terminal.print("%d; ", g_debugTicks[i]);
+    }
 
-	for(int i = 0; i<countValues; i++){
-			terminal.print("%f; ", g_debugTimes[i]);
-		}
+    for (int i = 0; i < countValues; i++) {
+        terminal.print("%f; ", g_debugTimes[i]);
+    }
 }
 #endif
-
 
 extern "C" void TIM3_IRQHandler(void)
 {
