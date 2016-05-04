@@ -15,10 +15,8 @@
 
 #include <limits>
 #include <algorithm>
-#include <cstring>
 #include <cmath>
 #include "Gpio.h"
-#include "Dma.h"
 #include "TimHallDecoder.h"
 #include "trace.h"
 
@@ -30,26 +28,6 @@ using hal::Tim;
 
 #ifndef M_PI
 static constexpr float M_PI = 3.14159265358979323846f;
-#endif
-
-#ifdef DEBUG_HALL
-static constexpr size_t countValues = 1000;
-std::array<uint16_t, countValues> g_debugTicks;
-std::array<float, countValues> g_debugTimes;
-size_t g_debugTickCount = 0;
-
-void printTicks(void)
-{
-    terminal.print("Ticks \r\n");
-
-    for (int i = 0; i < countValues; i++) {
-        terminal.print("%d; ", g_debugTicks[i]);
-    }
-
-    for (int i = 0; i < countValues; i++) {
-        terminal.print("%f; ", g_debugTimes[i]);
-    }
-}
 #endif
 
 extern "C" void TIM3_IRQHandler(void)
@@ -88,17 +66,6 @@ void HallDecoder::saveTimestamp(const uint32_t timestamp) const
 {
     mTimestamps[mTimestampPosition] = timestamp;
     mTimestampPosition = (mTimestampPosition + 1) % NUMBER_OF_TIMESTAMPS;
-
-#ifdef DEBUG_HALL
-    const float timerFrequency = SYSTEMCLOCK / (mTim.mConfiguration.TIM_Prescaler + 1);
-    const float hallSignalFrequency = timerFrequency / timestamp;
-
-    g_debugTimes[g_debugTickCount] = 1000 / hallSignalFrequency;
-
-    g_debugTicks[g_debugTickCount++] = timestamp;
-
-    g_debugTickCount = g_debugTickCount % countValues;
-#endif
 }
 
 void HallDecoder::incrementCommutationDelay(void) const
