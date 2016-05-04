@@ -187,6 +187,7 @@ void SensorBLDC::prepareCommutation(const size_t hallPosition) const
 #else
 #error "NO MOTOR DEFINED"
 #endif
+
     if (mDirection == Direction::FORWARD) {
         mHBridge.setBridge(BLDC_BRIDGE_STATE_FORWARD[hallPosition]);
     } else {

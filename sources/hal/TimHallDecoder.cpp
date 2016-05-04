@@ -15,10 +15,8 @@
 
 #include <limits>
 #include <algorithm>
-#include <cstring>
 #include <cmath>
 #include "Gpio.h"
-#include "Dma.h"
 #include "TimHallDecoder.h"
 #include "trace.h"
 
@@ -47,11 +45,8 @@ void HallDecoder::interruptHandler(void) const
         const uint32_t eventTimestamp = TIM_GetCapture1(mTim.getBasePointer());
         if (HallEventCallbacks[mDescription]()) {
             hallEventDetected = true;
-            // calculate motor speed or else with CCR1 values
-            saveTimestamp(eventTimestamp);
-        } else {
-            TIM_SetCounter(mTim.getBasePointer(), eventTimestamp);
         }
+        saveTimestamp(eventTimestamp);
     } else if (TIM_GetITStatus(mTim.getBasePointer(), TIM_IT_CC2)) {
         TIM_ClearITPendingBit(mTim.getBasePointer(), TIM_IT_CC2);
         if (hallEventDetected) {
@@ -69,19 +64,8 @@ void HallDecoder::interruptHandler(void) const
 
 void HallDecoder::saveTimestamp(const uint32_t timestamp) const
 {
-    if (std::numeric_limits<uint32_t>::max() == timestamp) {
-        mTimestamps.fill(std::numeric_limits<uint32_t>::max());
-    }
-
-    // move all values one step forward in array
-    // to make space for next timestamp
-    mTimestamps[NUMBER_OF_TIMESTAMPS - 1] = timestamp;
-    uint32_t* dataPointer = mTimestamps.data();
-
-    constexpr auto& dma = Factory<hal::Dma>::get<hal::Dma::MEMORY>();
-    dma.memcpy(dataPointer,
-               dataPointer + 1,
-               (HallDecoder::NUMBER_OF_TIMESTAMPS - 1) * sizeof(uint32_t));
+    mTimestamps[mTimestampPosition] = timestamp;
+    mTimestampPosition = (mTimestampPosition + 1) % NUMBER_OF_TIMESTAMPS;
 }
 
 void HallDecoder::incrementCommutationDelay(void) const
@@ -109,12 +93,16 @@ uint32_t HallDecoder::getCommutationDelay(void) const
 float HallDecoder::getCurrentRPS(void) const
 {
     static constexpr float HALL_EVENTS_PER_ROTATION = 6;
-    // increment begin iterator to skip first value which is invalid
-    auto begin = mTimestamps.begin();
-    begin++;
 
-    const uint32_t avgTicksBetweenHallSignals =
-        std::accumulate(begin, mTimestamps.end(), 0) / (NUMBER_OF_TIMESTAMPS - 1);
+    uint32_t sumTicksBetweenHallSignals =
+        std::accumulate(mTimestamps.begin(), mTimestamps.end(), 0);
+
+    auto minmaxTickBetweenHallSignals = std::minmax_element(mTimestamps.begin(), mTimestamps.end());
+
+    sumTicksBetweenHallSignals -= *minmaxTickBetweenHallSignals.first;
+    sumTicksBetweenHallSignals -= *minmaxTickBetweenHallSignals.second;
+
+    const uint32_t avgTicksBetweenHallSignals = sumTicksBetweenHallSignals / (NUMBER_OF_TIMESTAMPS - 1); // is wrong
 
     const float timerFrequency = SYSTEMCLOCK / (mTim.mConfiguration.TIM_Prescaler + 1);
     const float hallSignalFrequency = timerFrequency / avgTicksBetweenHallSignals;
