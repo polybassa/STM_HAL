@@ -79,10 +79,14 @@ void HalfBridge::setOutputForChannel(const uint16_t channel, const bool highStat
         // of dead time otherwise we have shoot-through problems
         TIM_SelectOCxM(mTim.getBasePointer(), channel, TIM_OCMode_PWM1);
         TIM_CCxCmd(mTim.getBasePointer(), channel, TIM_CCx_Enable);
+#ifdef ACTIVE_FREEWHEELING
         // active freewheeling
-        TIM_CCxNCmd(mTim.getBasePointer(), channel, TIM_CCxN_Enable);
-        // uncomment to disable active freewheeling
-        //TIM_CCxNCmd(mTim.getBasePointer(), channel, TIM_CCxN_Disable);
+        //TIM_CCxNCmd(mTim.getBasePointer(), channel, TIM_CCxN_Enable);
+#else
+        // disable active freewheeling
+        TIM_CCxNCmd(mTim.getBasePointer(), channel, TIM_CCxN_Disable);
+#endif
+
     } else {
         // Low side FET: OFF
         TIM_CCxCmd(mTim.getBasePointer(), channel, TIM_CCx_Disable);
