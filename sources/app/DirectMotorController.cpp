@@ -47,6 +47,7 @@ DirectMotorController::DirectMotorController(
     mMotorCoilInductance(motorInductance),
     mSetTorqueQueue()
 {
+	setTorque(0.00001);
     mSetTorque = 0.00001;
     mMotor.start();
 }
@@ -95,7 +96,9 @@ void DirectMotorController::updatePwmOutput(void)
      */
 
     const float omega = std::abs(mMotor.getCurrentOmega());
-    static const float polePairs = mMotor.getNumberOfPolePairs();
+//    static const float polePairs = mMotor.getNumberOfPolePairs();
+    static const float polePairs = 42;
+
     static const float cphi2 = (mMotorConstant * mMotorConstant);
     static const float A = (mMotorCoilInductance * mMotorCoilInductance * polePairs * polePairs) / cphi2;
     static const float B = (mMotorCoilResistance * mMotorCoilResistance) / cphi2;
