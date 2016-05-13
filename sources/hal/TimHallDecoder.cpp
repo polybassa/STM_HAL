@@ -104,7 +104,7 @@ float HallDecoder::getCurrentRPS(void) const
 
     const uint32_t avgTicksBetweenHallSignals = sumTicksBetweenHallSignals / (NUMBER_OF_TIMESTAMPS - 1); // is wrong
 
-    const float timerFrequency = SYSTEMCLOCK / (mTim.mConfiguration.TIM_Prescaler + 1);
+    const float timerFrequency = mTim.getTimerFrequency();
     const float hallSignalFrequency = timerFrequency / avgTicksBetweenHallSignals;
     const float electricalRotationFrequency = hallSignalFrequency / HALL_EVENTS_PER_ROTATION;
     const float motorRotationFrequency = electricalRotationFrequency / POLE_PAIRS;
