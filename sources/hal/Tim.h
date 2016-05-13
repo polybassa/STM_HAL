@@ -69,6 +69,7 @@ private:
     friend struct Pwm;
     friend struct HallDecoder;
     friend struct HalfBridge;
+    friend struct HallMeter;
     friend struct dev::SensorBLDC;
 };
 

@@ -20,6 +20,7 @@ enum Description {
     HBRIDGE,
     BUZZER,
     HALL_DECODER,
+    HALL_METER,
     __ENUM__SIZE
 };
 
@@ -38,6 +39,10 @@ static constexpr const std::array<const Tim, Tim::__ENUM__SIZE + 1> Container =
       Tim(Tim::HALL_DECODER,
           TIM3_BASE,
           TIM_TimeBaseInitTypeDef {Tim::HALL_SENSOR_PRESCALER, TIM_CounterMode_Up, 0xffff, TIM_CKD_DIV1, 0}),
+      Tim(Tim::HALL_METER,
+          TIM8_BASE,
+          TIM_TimeBaseInitTypeDef {0, TIM_CounterMode_Up, 0xffff, TIM_CKD_DIV1, 0}),
+
       Tim(Tim::__ENUM__SIZE,
           0xffffffff,
           TIM_TimeBaseInitTypeDef {0, TIM_CounterMode_Up, 0, TIM_CKD_DIV1, 0})
@@ -47,7 +52,8 @@ static constexpr const std::array<const uint32_t, Tim::__ENUM__SIZE> Clocks =
 { {
       RCC_APB2Periph_TIM1,
       RCC_APB1Periph_TIM2,
-      RCC_APB1Periph_TIM3
+      RCC_APB1Periph_TIM3,
+      RCC_APB2Periph_TIM8
   } };
 
 #endif /* SOURCES_PMD_TIM_CONFIG_CONTAINER_H_ */
