@@ -266,14 +266,14 @@ void SensorBLDC::trigger(void) const
 {
     mLastHallPosition = mHallDecoder.getCurrentHallState();
     prepareCommutation(mLastHallPosition);
-    TIM_GenerateEvent(mHBridge.mTim.getBasePointer(), TIM_EventSource_COM);
+    mHBridge.triggerCommutationEvent();
 }
 
 void SensorBLDC::reverseTrigger(void) const
 {
     mLastHallPosition = getPreviousHallPosition(mHallDecoder.getCurrentHallState());
     prepareCommutation(mLastHallPosition);
-    TIM_GenerateEvent(mHBridge.mTim.getBasePointer(), TIM_EventSource_COM);
+    mHBridge.triggerCommutationEvent();
 }
 
 void SensorBLDC::checkMotor(const dev::Battery& battery) const
@@ -307,12 +307,11 @@ void SensorBLDC::start(void) const
                                                     return checkHallEvent();
                                                 });
 
-    mHBridge.mTim.enable();
     mHallDecoder.mTim.enable();
 
     setPulsWidthInMill(1);
 
-    TIM_CtrlPWMOutputs(mHBridge.mTim.getBasePointer(), ENABLE);
+    mHBridge.enableOutput();
 
     trigger();
     os::ThisTask::sleep(std::chrono::milliseconds(250));
@@ -320,9 +319,9 @@ void SensorBLDC::start(void) const
 
 void SensorBLDC::stop(void) const
 {
-    TIM_CtrlPWMOutputs(mHBridge.mTim.getBasePointer(), DISABLE);
+    mHBridge.disableOutput();
+
     mHallDecoder.mTim.disable();
-    mHBridge.mTim.disable();
 
     mHallDecoder.unregisterHallEventCheckCallback();
     mHallDecoder.unregisterCommutationCallback();

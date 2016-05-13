@@ -24,13 +24,13 @@ using hal::Tim;
 
 void HalfBridge::setPulsWidthPerMill(uint32_t value) const
 {
-    static constexpr float maxValue = 1000;
+    static constexpr uint32_t maxValue = 1000;
     if (value > maxValue) {
         value = maxValue;
     }
     mPulsWidth = value;
 
-    static const float scale = mTim.mConfiguration.TIM_Period / maxValue;
+    static const float scale = mTim.mConfiguration.TIM_Period / static_cast<float>(maxValue);
     value = value * scale;
 
     TIM_SetCompare1(mTim.getBasePointer(), value);
@@ -104,6 +104,21 @@ void HalfBridge::setOutputForChannel(const uint16_t channel, const bool highStat
     }
 }
 
+void HalfBridge::disableOutput(void) const
+{
+    TIM_CtrlPWMOutputs(mTim.getBasePointer(), DISABLE);
+}
+
+void HalfBridge::enableOutput(void) const
+{
+    TIM_CtrlPWMOutputs(mTim.getBasePointer(), ENABLE);
+}
+
+void HalfBridge::triggerCommutationEvent(void) const
+{
+    TIM_GenerateEvent(mTim.getBasePointer(), TIM_EventSource_COM);
+}
+
 void HalfBridge::initialize(void) const
 {
     /* Channel 1, 2, 3 are set to PWM mode */
@@ -120,10 +135,12 @@ void HalfBridge::initialize(void) const
     TIM_CCPreloadControl(mTim.getBasePointer(), ENABLE);
 
     /* Internal connection from HallDecoder Timer to Motor Timer */
-    TIM_SelectInputTrigger(mTim.getBasePointer(), TIM_TS_ITR2);
+    TIM_SelectInputTrigger(mTim.getBasePointer(), mInputTrigger);
 
     /* Enable connection between HallDecoder Timer and Motor Timer */
     TIM_SelectCOM(mTim.getBasePointer(), ENABLE);
+
+    mTim.enable();
 }
 
 constexpr const std::array<const HalfBridge, HalfBridge::Description::__ENUM__SIZE> Factory<HalfBridge>::Container;
