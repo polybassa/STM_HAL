@@ -86,7 +86,6 @@ void HalfBridge::setOutputForChannel(const uint16_t channel, const bool highStat
         // disable active freewheeling
         TIM_CCxNCmd(mTim.getBasePointer(), channel, TIM_CCxN_Disable);
 #endif
-
     } else {
         // Low side FET: OFF
         TIM_CCxCmd(mTim.getBasePointer(), channel, TIM_CCx_Disable);
@@ -119,6 +118,12 @@ void HalfBridge::initialize(void) const
     TIM_BDTRConfig(mTim.getBasePointer(), &mBdtrConfiguration);
 
     TIM_CCPreloadControl(mTim.getBasePointer(), ENABLE);
+
+    /* Internal connection from HallDecoder Timer to Motor Timer */
+    TIM_SelectInputTrigger(mTim.getBasePointer(), TIM_TS_ITR2);
+
+    /* Enable connection between HallDecoder Timer and Motor Timer */
+    TIM_SelectCOM(mTim.getBasePointer(), ENABLE);
 }
 
 constexpr const std::array<const HalfBridge, HalfBridge::Description::__ENUM__SIZE> Factory<HalfBridge>::Container;

@@ -36,6 +36,22 @@ struct SensorBLDC {
         FORWARD,
         BACKWARD
     };
+    enum class Mode
+    {
+        ACCELERATE,
+        BRAKE
+    };
+
+    /*
+     * 4Q Control
+     *
+     *  BRAKE      Q4| ACCELERATE Q1
+     *  FORWARD      | FORWARD
+     *  -------------+-------------
+     *  ACCELERATE Q3| BRAKE      Q2
+     *  BACKWARD     | BACKWARD
+     *
+     */
 
     SensorBLDC() = delete;
     SensorBLDC(const SensorBLDC&) = delete;
@@ -53,6 +69,7 @@ struct SensorBLDC {
     int32_t getPulsWidthPerMill(void) const;
     void setPulsWidthInMill(int32_t) const;
     void setDirection(const Direction) const;
+    void setMode(const Mode) const;
     void reverseTrigger(void) const;
     void trigger(void) const;
 
@@ -74,6 +91,7 @@ private:
     const hal::HallDecoder& mHallDecoder;
 
     mutable Direction mDirection = Direction::FORWARD;
+    mutable Mode mMode = Mode::ACCELERATE;
     mutable size_t mLastHallPosition = 0;
 
     bool checkHallEvent(void) const;

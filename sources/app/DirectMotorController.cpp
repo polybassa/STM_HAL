@@ -47,7 +47,7 @@ DirectMotorController::DirectMotorController(
     mMotorCoilInductance(motorInductance),
     mSetTorqueQueue()
 {
-	setTorque(0.00001);
+    setTorque(0.00001);
     mSetTorque = 0.00001;
     mMotor.start();
 }
@@ -71,6 +71,7 @@ void DirectMotorController::motorControllerTaskFunction(const bool& join)
         if (mSetTorqueQueue.receive(newSetTorque, 0)) {
             mSetTorque = newSetTorque;
         }
+        updateQuadrant();
         updatePwmOutput();
         static constexpr uint32_t waitPeriode = controllerInterval.count() / motorCheckInterval.count();
         for (uint32_t i = 0; i < waitPeriode; i++) {
@@ -78,6 +79,33 @@ void DirectMotorController::motorControllerTaskFunction(const bool& join)
             os::ThisTask::sleep(motorCheckInterval);
         }
     } while (!join);
+}
+
+void DirectMotorController::updateQuadrant(void)
+{
+    const float omega = mMotor.getCurrentOmega();
+    if (std::abs(omega) <= 30.0) {
+        mMotor.setMode(dev::SensorBLDC::Mode::ACCELERATE);
+        if (mSetTorque > 0) {
+            mMotor.setDirection(dev::SensorBLDC::Direction::FORWARD);
+        } else {
+            mMotor.setDirection(dev::SensorBLDC::Direction::BACKWARD);
+        }
+    } else {
+        if (omega > 0) {
+            if (mSetTorque > 0) {
+                mMotor.setMode(dev::SensorBLDC::Mode::ACCELERATE);
+            } else {
+                mMotor.setMode(dev::SensorBLDC::Mode::BRAKE);
+            }
+        } else {
+            if (mSetTorque > 0) {
+                mMotor.setMode(dev::SensorBLDC::Mode::BRAKE);
+            } else {
+                mMotor.setMode(dev::SensorBLDC::Mode::ACCELERATE);
+            }
+        }
+    }
 }
 
 void DirectMotorController::updatePwmOutput(void)
@@ -117,11 +145,7 @@ void DirectMotorController::updatePwmOutput(void)
 //    terminal.print(" = %f => %d pwm", voltageInputMotor, pulswidth / 10);
 //    terminal.print("\r\n");
 
-    if (mSetTorque > 0.0) {
-        mMotor.setPulsWidthInMill(pulswidth);
-    } else {
-        mMotor.setPulsWidthInMill(0.0 - pulswidth);
-    }
+    mMotor.setPulsWidthInMill(pulswidth);
 }
 
 void DirectMotorController::setTorque(const float setValue)
