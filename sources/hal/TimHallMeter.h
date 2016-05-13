@@ -19,11 +19,11 @@
 #include <cstdint>
 #include <array>
 #include "hal_Factory.h"
-#include "dev_Factory.h"
 #include "Tim.h"
 #include <functional>
 
 extern "C" {
+void TIM2_IRQHandler(void);
 void TIM8_CC_IRQHandler(void);
 void TIM8_UP_IRQHandler(void);
 }
@@ -43,15 +43,15 @@ struct HallMeter {
     float getCurrentOmega(void) const;
 
     const enum Description mDescription;
-
     const Tim& mTim;
-    const TIM_ICInitTypeDef mIc1Configuration;
 
 private:
     constexpr HallMeter(const enum Description&  desc,
                         const Tim&               timer,
+                        const uint16_t           inputTrigger,
                         const TIM_ICInitTypeDef& ic1Conf) :
         mDescription(desc), mTim(timer),
+        mInputTrigger(inputTrigger),
         mIc1Configuration(ic1Conf) {}
 
     void initialize(void) const;
@@ -63,7 +63,11 @@ private:
     mutable std::array<uint32_t, NUMBER_OF_TIMESTAMPS> mTimestamps = {};
     mutable size_t mTimestampPosition = 0;
 
+    const uint16_t mInputTrigger;
+    const TIM_ICInitTypeDef mIc1Configuration;
+
     friend class Factory<HallMeter>;
+    friend void ::TIM2_IRQHandler(void);
     friend void ::TIM8_CC_IRQHandler(void);
     friend void ::TIM8_UP_IRQHandler(void);
 };
@@ -89,6 +93,8 @@ public:
         static_assert(IS_TIM_IC_SELECTION(Container[index].mIc1Configuration.TIM_ICSelection), "Invalid Parameter ");
         static_assert(IS_TIM_IC_PRESCALER(Container[index].mIc1Configuration.TIM_ICPrescaler), "Invalid Parameter ");
         static_assert(IS_TIM_IC_FILTER(Container[index].mIc1Configuration.TIM_ICFilter), "Invalid Parameter ");
+
+        static_assert(IS_TIM_INTERNAL_TRIGGER_SELECTION(Container[index].mInputTrigger), "Invalid Parameter ");
 
         static_assert(Container[index].mTim.mDescription != Tim::Description::__ENUM__SIZE, "Invalid Tim Object");
         static_assert(index != HallMeter::Description::__ENUM__SIZE, "__ENUM__SIZE is not accessible");

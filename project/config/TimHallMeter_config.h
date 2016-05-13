@@ -13,6 +13,14 @@
  *  You should have received a copy of the GNU General Public License
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>. */
 
+#ifndef SOURCES_PMD_TIMHALLMETER_INTERRUPTS_H_
+#define SOURCES_PMD_TIMHALLMETER_INTERRUPTS_H_
+
+#define TIM2_HALLMETER_INTERRUPT_ENABLED false
+#define TIM8_HALLMETER_INTERRUPT_ENABLED true
+
+#endif /* SOURCES_PMD_TIMHALLMETER_INTERRUPTS_H_ */
+
 #ifndef SOURCES_PMD_TIMHALLMETER_CONFIG_DESCRIPTION_H_
 #define SOURCES_PMD_TIMHALLMETER_CONFIG_DESCRIPTION_H_
 
@@ -21,7 +29,6 @@ enum Description {
     __ENUM__SIZE
 };
 
-static constexpr uint32_t SYSTEMCLOCK = 72000000;
 static constexpr uint32_t POLE_PAIRS = 7;
 
 #else
@@ -32,6 +39,7 @@ static constexpr const std::array<const HallMeter, HallMeter::__ENUM__SIZE> Cont
 { {
       HallMeter(HallMeter::BLDC_METER,
                 Factory<Tim>::get<Tim::HALL_METER>(),
+                TIM_TS_ITR3,
                 TIM_ICInitTypeDef { TIM_Channel_1, TIM_ICPolarity_Rising, TIM_ICSelection_TRC, TIM_ICPSC_DIV1, 0x00}
                 )
   } };
