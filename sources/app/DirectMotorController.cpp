@@ -84,26 +84,17 @@ void DirectMotorController::motorControllerTaskFunction(const bool& join)
 void DirectMotorController::updateQuadrant(void)
 {
     const float omega = mMotor.getCurrentOmega();
-    if (std::abs(omega) <= 30.0) {
-        mMotor.setMode(dev::SensorBLDC::Mode::ACCELERATE);
+    if (omega > 0) {
         if (mSetTorque > 0) {
-            mMotor.setDirection(dev::SensorBLDC::Direction::FORWARD);
+            mMotor.setMode(dev::SensorBLDC::Mode::ACCELERATE);
         } else {
-            mMotor.setDirection(dev::SensorBLDC::Direction::BACKWARD);
+            mMotor.setMode(dev::SensorBLDC::Mode::BRAKE);
         }
     } else {
-        if (omega > 0) {
-            if (mSetTorque > 0) {
-                mMotor.setMode(dev::SensorBLDC::Mode::ACCELERATE);
-            } else {
-                mMotor.setMode(dev::SensorBLDC::Mode::BRAKE);
-            }
+        if (mSetTorque > 0) {
+            mMotor.setMode(dev::SensorBLDC::Mode::BRAKE);
         } else {
-            if (mSetTorque > 0) {
-                mMotor.setMode(dev::SensorBLDC::Mode::BRAKE);
-            } else {
-                mMotor.setMode(dev::SensorBLDC::Mode::ACCELERATE);
-            }
+            mMotor.setMode(dev::SensorBLDC::Mode::ACCELERATE);
         }
     }
 }

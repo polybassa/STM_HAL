@@ -55,11 +55,12 @@ void HallMeter::interruptHandler(void) const
 {
     if (TIM_GetITStatus(mTim.getBasePointer(), TIM_IT_CC1)) {
         TIM_ClearITPendingBit(mTim.getBasePointer(), TIM_IT_CC1);
+        TIM_ClearITPendingBit(mTim.getBasePointer(), TIM_IT_Update);
         const uint32_t eventTimestamp = TIM_GetCapture1(mTim.getBasePointer());
         saveTimestamp(eventTimestamp);
     } else if (TIM_GetITStatus(mTim.getBasePointer(), TIM_IT_Update)) {
         TIM_ClearITPendingBit(mTim.getBasePointer(), TIM_IT_Update);
-        //saveTimestamp(std::numeric_limits<uint32_t>::max());
+        reset();
     } else {
         // this should not happen
     }
@@ -71,6 +72,11 @@ void HallMeter::saveTimestamp(const uint32_t timestamp) const
     mTimestampPosition = (mTimestampPosition + 1) % NUMBER_OF_TIMESTAMPS;
 }
 
+void HallMeter::reset(void) const
+{
+    mTimestamps.fill(std::numeric_limits<uint32_t>::max());
+}
+
 float HallMeter::getCurrentRPS(void) const
 {
     static constexpr float HALL_EVENTS_PER_ROTATION = 6;
@@ -78,12 +84,7 @@ float HallMeter::getCurrentRPS(void) const
     uint32_t sumTicksBetweenHallSignals =
         std::accumulate(mTimestamps.begin(), mTimestamps.end(), 0);
 
-    auto minmaxTickBetweenHallSignals = std::minmax_element(mTimestamps.begin(), mTimestamps.end());
-
-    sumTicksBetweenHallSignals -= *minmaxTickBetweenHallSignals.first;
-    sumTicksBetweenHallSignals -= *minmaxTickBetweenHallSignals.second;
-
-    const uint32_t avgTicksBetweenHallSignals = sumTicksBetweenHallSignals / (NUMBER_OF_TIMESTAMPS - 2); // is wrong
+    const uint32_t avgTicksBetweenHallSignals = sumTicksBetweenHallSignals / NUMBER_OF_TIMESTAMPS;
 
     const float timerFrequency = mTim.getTimerFrequency();
     const float hallSignalFrequency = timerFrequency / avgTicksBetweenHallSignals;
@@ -120,11 +121,13 @@ void HallMeter::initialize(void) const
 #if TIM8_HALLMETER_INTERRUPT_ENABLED
     NVIC_SetPriority(IRQn_Type::TIM8_CC_IRQn, 0x9);
     NVIC_EnableIRQ(IRQn_Type::TIM8_CC_IRQn);
+    NVIC_SetPriority(IRQn_Type::TIM8_UP_IRQn, 0x9);
+    NVIC_EnableIRQ(IRQn_Type::TIM8_UP_IRQn);
 #endif
 
 #if TIM2_HALLMETER_INTERRUPT_ENABLED
-    NVIC_SetPriority(IRQn_Type::TIM8_UP_IRQn, 0x9);
-    NVIC_EnableIRQ(IRQn_Type::TIM8_UP_IRQn);
+    NVIC_SetPriority(IRQn_Type::TIM2_IRQn, 0x9);
+    NVIC_EnableIRQ(IRQn_Type::TIM2_IRQn);
 #endif
 }
 

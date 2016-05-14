@@ -42,6 +42,8 @@ struct HallMeter {
     float getCurrentRPS(void) const;
     float getCurrentOmega(void) const;
 
+    void reset(void) const;
+
     const enum Description mDescription;
     const Tim& mTim;
 
@@ -58,7 +60,7 @@ private:
     void interruptHandler(void) const;
     void saveTimestamp(const uint32_t) const;
 
-    static const size_t NUMBER_OF_TIMESTAMPS = 10;
+    static const size_t NUMBER_OF_TIMESTAMPS = 3;
 
     mutable std::array<uint32_t, NUMBER_OF_TIMESTAMPS> mTimestamps = {};
     mutable size_t mTimestampPosition = 0;

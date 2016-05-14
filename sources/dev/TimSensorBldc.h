@@ -95,6 +95,7 @@ private:
     mutable size_t mLastHallPosition = 0;
 
     bool checkHallEvent(void) const;
+    void computeDirection(void) const;
     void prepareCommutation(const size_t hallPosition) const;
     size_t getNextHallPosition(const size_t position) const;
     size_t getPreviousHallPosition(const size_t position) const;

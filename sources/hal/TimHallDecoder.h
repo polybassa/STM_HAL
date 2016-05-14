@@ -45,6 +45,7 @@ struct HallDecoder {
     float getCurrentRPS(void) const;
     uint32_t getCurrentHallState(void) const;
     float getCurrentOmega(void) const;
+    void reset(void) const;
 
     const enum Description mDescription;
 

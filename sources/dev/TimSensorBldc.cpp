@@ -69,11 +69,7 @@ SensorBLDC::Direction SensorBLDC::getDirection(void) const
 
 int32_t SensorBLDC::getPulsWidthPerMill(void) const
 {
-    if (mDirection == Direction::BACKWARD) {
-        return 0 - mHBridge.getPulsWidthPerMill();
-    } else {
-        return mHBridge.getPulsWidthPerMill();
-    }
+    return mHBridge.getPulsWidthPerMill();
 }
 
 void SensorBLDC::setPulsWidthInMill(int32_t value) const
@@ -113,21 +109,20 @@ size_t SensorBLDC::getPreviousHallPosition(const size_t position) const
     }
 }
 
-bool SensorBLDC::checkHallEvent(void) const
+void SensorBLDC::computeDirection(void) const
 {
-    const size_t currentPosition = mHallDecoder.getCurrentHallState();
+    const uint32_t currentPosition = mHallDecoder.getCurrentHallState();
 
-    if ((mLastHallPosition == 0) || (currentPosition == getNextHallPosition(mLastHallPosition))) {
-        mLastHallPosition = currentPosition;
-        return true;
-    } else if (mLastHallPosition == currentPosition) {
-        return false;
-    } else {
-        // wrong direction
-        // force right direction
-        trigger();
-        return false;
+    if (currentPosition == getPreviousHallPosition(mLastHallPosition)) {
+        if (mDirection == Direction::FORWARD) {
+            mDirection = Direction::BACKWARD;
+        } else {
+            mDirection = Direction::FORWARD;
+        }
+        mHallDecoder.reset();
     }
+
+    mLastHallPosition = currentPosition;
 }
 
 void SensorBLDC::prepareCommutation(const size_t hallPosition) const
@@ -269,13 +264,6 @@ void SensorBLDC::trigger(void) const
     mHBridge.triggerCommutationEvent();
 }
 
-void SensorBLDC::reverseTrigger(void) const
-{
-    mLastHallPosition = getPreviousHallPosition(mHallDecoder.getCurrentHallState());
-    prepareCommutation(mLastHallPosition);
-    mHBridge.triggerCommutationEvent();
-}
-
 void SensorBLDC::checkMotor(const dev::Battery& battery) const
 {
     const float blockingCurrent = 4; // [A]
@@ -286,10 +274,10 @@ void SensorBLDC::checkMotor(const dev::Battery& battery) const
                                (mHallDecoder.getCurrentRPS() < minimalRPS);
 
     if (motorBlocking) {
-        reverseTrigger();
+        //reverseTrigger();
     }
 
-    const bool motorNotStarting = (mHallDecoder.getCurrentRPS() < minimalRPS) &&
+    const bool motorNotStarting = (std::abs(mHallDecoder.getCurrentRPS()) < minimalRPS) &&
                                   (minimalPWMinMill < std::abs(mHBridge.getPulsWidthPerMill()));
 
     if (motorNotStarting) {
@@ -304,7 +292,8 @@ void SensorBLDC::start(void) const
                                              });
 
     mHallDecoder.registerHallEventCheckCallback([this] {
-                                                    return checkHallEvent();
+                                                    computeDirection();
+                                                    return true;
                                                 });
 
     mHallDecoder.mTim.enable();
