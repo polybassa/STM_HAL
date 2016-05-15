@@ -36,6 +36,7 @@ struct SensorBLDC {
         FORWARD,
         BACKWARD
     };
+
     enum class Mode
     {
         ACCELERATE,
@@ -59,25 +60,20 @@ struct SensorBLDC {
     SensorBLDC& operator=(const SensorBLDC&) = delete;
     SensorBLDC& operator=(SensorBLDC &&) = delete;
 
-    void incrementCommutationDelay(void) const;
-    void decrementCommutationDelay(void) const;
-    void setCommutationDelay(const uint32_t) const;
-    uint32_t getCommutationDelay(void) const;
+    const hal::HalfBridge& mHBridge;
+    const hal::HallDecoder& mHallDecoder;
+
     float getCurrentRPS(void) const;
     float getCurrentOmega(void) const;
     Direction getDirection(void) const;
     int32_t getPulsWidthPerMill(void) const;
+    uint32_t getNumberOfPolePairs(void) const;
     void setPulsWidthInMill(int32_t) const;
-    void setDirection(const Direction) const;
     void setMode(const Mode) const;
-    void reverseTrigger(void) const;
     void trigger(void) const;
-
     void checkMotor(const dev::Battery& battery) const;
-
     void start(void) const;
     void stop(void) const;
-    uint32_t getNumberOfPolePairs(void) const;
 
 private:
     constexpr SensorBLDC(const enum Description& desc,
@@ -87,14 +83,11 @@ private:
         mHallDecoder(hallDecoder) {}
 
     const enum Description mDescription;
-    const hal::HalfBridge& mHBridge;
-    const hal::HallDecoder& mHallDecoder;
 
     mutable Direction mDirection = Direction::FORWARD;
     mutable Mode mMode = Mode::ACCELERATE;
     mutable size_t mLastHallPosition = 0;
 
-    bool checkHallEvent(void) const;
     void computeDirection(void) const;
     void prepareCommutation(const size_t hallPosition) const;
     size_t getNextHallPosition(const size_t position) const;

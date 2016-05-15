@@ -24,26 +24,6 @@ using hal::HalfBridge;
 using hal::HallDecoder;
 using hal::Tim;
 
-void SensorBLDC::incrementCommutationDelay(void) const
-{
-    mHallDecoder.incrementCommutationDelay();
-}
-
-void SensorBLDC::decrementCommutationDelay(void) const
-{
-    mHallDecoder.decrementCommutationDelay();
-}
-
-void SensorBLDC::setCommutationDelay(const uint32_t value) const
-{
-    mHallDecoder.setCommutationDelay(value);
-}
-
-uint32_t SensorBLDC::getCommutationDelay(void) const
-{
-    return mHallDecoder.getCommutationDelay();
-}
-
 float SensorBLDC::getCurrentRPS(void) const
 {
     if (mDirection == Direction::BACKWARD) {
@@ -75,11 +55,6 @@ int32_t SensorBLDC::getPulsWidthPerMill(void) const
 void SensorBLDC::setPulsWidthInMill(int32_t value) const
 {
     mHBridge.setPulsWidthPerMill(std::abs(value));
-}
-
-void SensorBLDC::setDirection(const Direction dir) const
-{
-    mDirection = dir;
 }
 
 void SensorBLDC::setMode(const Mode mode) const
@@ -266,16 +241,8 @@ void SensorBLDC::trigger(void) const
 
 void SensorBLDC::checkMotor(const dev::Battery& battery) const
 {
-    const float blockingCurrent = 4; // [A]
     const float minimalRPS = 0.5;
     const uint32_t minimalPWMinMill = 80;
-
-    const bool motorBlocking = (std::abs(battery.getCurrent()) > blockingCurrent) &&
-                               (mHallDecoder.getCurrentRPS() < minimalRPS);
-
-    if (motorBlocking) {
-        //reverseTrigger();
-    }
 
     const bool motorNotStarting = (std::abs(mHallDecoder.getCurrentRPS()) < minimalRPS) &&
                                   (minimalPWMinMill < std::abs(mHBridge.getPulsWidthPerMill()));
