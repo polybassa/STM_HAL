@@ -60,9 +60,6 @@ struct SensorBLDC {
     SensorBLDC& operator=(const SensorBLDC&) = delete;
     SensorBLDC& operator=(SensorBLDC &&) = delete;
 
-    const hal::HalfBridge& mHBridge;
-    const hal::HallDecoder& mHallDecoder;
-
     float getCurrentRPS(void) const;
     float getCurrentOmega(void) const;
     Direction getDirection(void) const;
@@ -75,14 +72,16 @@ struct SensorBLDC {
     void start(void) const;
     void stop(void) const;
 
+    const enum Description mDescription;
+    const hal::HalfBridge& mHBridge;
+    const hal::HallDecoder& mHallDecoder;
+
 private:
     constexpr SensorBLDC(const enum Description& desc,
                          const hal::HalfBridge&  hBridge,
                          const hal::HallDecoder& hallDecoder) :
         mDescription(desc), mHBridge(hBridge),
         mHallDecoder(hallDecoder) {}
-
-    const enum Description mDescription;
 
     mutable Direction mDirection = Direction::FORWARD;
     mutable Mode mMode = Mode::ACCELERATE;

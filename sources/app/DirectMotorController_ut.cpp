@@ -30,6 +30,7 @@ static bool g_taskStarted;
 static uint32_t g_currentTickCount;
 static float g_currentOmega;
 static float g_batteryVoltage;
+static dev::SensorBLDC::Mode g_currentMode;
 
 constexpr const uint32_t POLE_PAIRS = 7;
 
@@ -92,6 +93,11 @@ float dev::SensorBLDC::getCurrentOmega(void) const
 void dev::SensorBLDC::setPulsWidthInMill(const int32_t value) const
 {
     g_currentPWM = value;
+}
+
+void dev::SensorBLDC::setMode(dev::SensorBLDC::Mode mode) const
+{
+    g_currentMode = mode;
 }
 
 int32_t dev::SensorBLDC::getPulsWidthPerMill(void) const
