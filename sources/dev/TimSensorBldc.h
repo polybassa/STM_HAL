@@ -43,17 +43,6 @@ struct SensorBLDC {
         BRAKE
     };
 
-    /*
-     * 4Q Control
-     *
-     *  BRAKE      Q4| ACCELERATE Q1
-     *  FORWARD      | FORWARD
-     *  -------------+-------------
-     *  ACCELERATE Q3| BRAKE      Q2
-     *  BACKWARD     | BACKWARD
-     *
-     */
-
     SensorBLDC() = delete;
     SensorBLDC(const SensorBLDC&) = delete;
     SensorBLDC(SensorBLDC &&) = default;
@@ -65,6 +54,7 @@ struct SensorBLDC {
     Direction getDirection(void) const;
     int32_t getPulsWidthPerMill(void) const;
     uint32_t getNumberOfPolePairs(void) const;
+    Mode getMode(void) const;
     void setPulsWidthInMill(int32_t) const;
     void setMode(const Mode) const;
     void trigger(void) const;

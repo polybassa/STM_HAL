@@ -62,6 +62,11 @@ void SensorBLDC::setMode(const Mode mode) const
     mMode = mode;
 }
 
+SensorBLDC::Mode SensorBLDC::getMode(void) const
+{
+    return mMode;
+}
+
 size_t SensorBLDC::getNextHallPosition(const size_t position) const
 {
     if (mDirection == Direction::BACKWARD) {
@@ -105,10 +110,10 @@ void SensorBLDC::prepareCommutation(const size_t hallPosition) const
     /*
      * 4Q Control
      *
-     *  BRAKE      Q4| ACCELERATE Q1
+     *  BRAKE      Q2| ACCELERATE Q1
      *  FORWARD      | FORWARD
      *  -------------+-------------
-     *  ACCELERATE Q3| BRAKE      Q2
+     *  ACCELERATE Q3| BRAKE      Q4
      *  BACKWARD     | BACKWARD
      *
      */
