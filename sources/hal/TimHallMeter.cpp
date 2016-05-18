@@ -119,14 +119,14 @@ void HallMeter::initialize(void) const
     TIM_SelectCOM(mTim.getBasePointer(), ENABLE);
 
 #if TIM8_HALLMETER_INTERRUPT_ENABLED
-    NVIC_SetPriority(IRQn_Type::TIM8_CC_IRQn, 0x9);
+    NVIC_SetPriority(IRQn_Type::TIM8_CC_IRQn, 0xa);
     NVIC_EnableIRQ(IRQn_Type::TIM8_CC_IRQn);
-    NVIC_SetPriority(IRQn_Type::TIM8_UP_IRQn, 0x9);
+    NVIC_SetPriority(IRQn_Type::TIM8_UP_IRQn, 0xa);
     NVIC_EnableIRQ(IRQn_Type::TIM8_UP_IRQn);
 #endif
 
 #if TIM2_HALLMETER_INTERRUPT_ENABLED
-    NVIC_SetPriority(IRQn_Type::TIM2_IRQn, 0x9);
+    NVIC_SetPriority(IRQn_Type::TIM2_IRQn, 0xa);
     NVIC_EnableIRQ(IRQn_Type::TIM2_IRQn);
 #endif
 }

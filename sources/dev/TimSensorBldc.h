@@ -21,6 +21,7 @@
 #include "dev_Factory.h"
 #include "TimHalfBridge.h"
 #include "TimHallDecoder.h"
+#include "TimHallMeter.h"
 #include "Battery.h"
 
 namespace dev
@@ -65,13 +66,19 @@ struct SensorBLDC {
     const enum Description mDescription;
     const hal::HalfBridge& mHBridge;
     const hal::HallDecoder& mHallDecoder;
+    const hal::HallMeter& mHallMeter1;
+    const hal::HallMeter& mHallMeter2;
 
 private:
     constexpr SensorBLDC(const enum Description& desc,
                          const hal::HalfBridge&  hBridge,
-                         const hal::HallDecoder& hallDecoder) :
+                         const hal::HallDecoder& hallDecoder,
+                         const hal::HallMeter&   hallMeter1,
+                         const hal::HallMeter&   hallMeter2) :
         mDescription(desc), mHBridge(hBridge),
-        mHallDecoder(hallDecoder) {}
+        mHallDecoder(hallDecoder),
+        mHallMeter1(hallMeter1),
+        mHallMeter2(hallMeter2) {}
 
     mutable Direction mDirection = Direction::FORWARD;
     mutable Mode mMode = Mode::ACCELERATE;
@@ -93,7 +100,9 @@ class Factory<SensorBLDC>
           SensorBLDC(
                      SensorBLDC::BLDC,
                      hal::Factory<hal::HalfBridge>::get<hal::HalfBridge::BLDC_PWM>(),
-                     hal::Factory<hal::HallDecoder>::get<hal::HallDecoder::BLDC_DECODER>()
+                     hal::Factory<hal::HallDecoder>::get<hal::HallDecoder::BLDC_DECODER>(),
+                     hal::Factory<hal::HallMeter>::get<hal::HallMeter::BLDC_METER_32BIT>(),
+                     hal::Factory<hal::HallMeter>::get<hal::HallMeter::BLDC_METER>()
                      )
       } };
 
