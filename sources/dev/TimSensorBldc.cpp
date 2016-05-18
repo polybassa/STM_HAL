@@ -38,8 +38,8 @@ float SensorBLDC::getCurrentRPS(void) const
         (mHallDecoder.getCurrentRPS() * factorLowSpeedResolution + mHallMeter1.getCurrentRPS() *
          factorHighSpeedResolution +
          mHallMeter2.getCurrentRPS() * factorHighSpeedResolution) / (
-                                                                     factorHighSpeedResolution
-                                                                     + factorHighSpeedResolution +
+                                                                     factorHighSpeedResolution +
+                                                                     factorHighSpeedResolution +
                                                                      factorLowSpeedResolution);
 
     if (mDirection == Direction::BACKWARD) {

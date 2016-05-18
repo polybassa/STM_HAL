@@ -18,9 +18,11 @@
 
 enum Description {
     HBRIDGE,
-    BUZZER,
+    HALL_METER_32BIT,
     HALL_DECODER,
+    DAC_TEST,
     HALL_METER,
+    BUZZER,
     __ENUM__SIZE
 };
 
@@ -37,19 +39,24 @@ static constexpr const std::array<const Tim, Tim::__ENUM__SIZE + 1> Container =
       Tim(Tim::HBRIDGE,
           TIM1_BASE,
           TIM_TimeBaseInitTypeDef {0, TIM_CounterMode_Up, Tim::HALFBRIDGE_PERIODE, TIM_CKD_DIV1, 0}),
-      Tim(Tim::BUZZER,
+      Tim(Tim::HALL_METER_32BIT,
           TIM2_BASE,
-          TIM_TimeBaseInitTypeDef {0, TIM_CounterMode_Up, Tim::BUZZER_PWM_PERIODE, TIM_CKD_DIV1, 0}),
+          TIM_TimeBaseInitTypeDef {0, TIM_CounterMode_Up, 0xffffffff, TIM_CKD_DIV1, 0}),
       Tim(Tim::HALL_DECODER,
           TIM3_BASE,
           TIM_TimeBaseInitTypeDef {Tim::HALL_SENSOR_PRESCALER, TIM_CounterMode_Up, 0xffff, TIM_CKD_DIV1, 0}),
+      Tim(Tim::DAC_TEST,
+          TIM4_BASE,
+          TIM_TimeBaseInitTypeDef {0, TIM_CounterMode_Up, 0xfff, TIM_CKD_DIV1, 0}),
       Tim(Tim::HALL_METER,
           TIM8_BASE,
-          TIM_TimeBaseInitTypeDef {0, TIM_CounterMode_Up, 0xffff, TIM_CKD_DIV1, 0}),
-
+          TIM_TimeBaseInitTypeDef {Tim::HALL_SENSOR_PRESCALER, TIM_CounterMode_Up, 0xffff, TIM_CKD_DIV1, 0}),
+      Tim(Tim::BUZZER,
+          TIM15_BASE,
+          TIM_TimeBaseInitTypeDef {0, TIM_CounterMode_Up, Tim::BUZZER_PWM_PERIODE, TIM_CKD_DIV1, 0}),
       Tim(Tim::__ENUM__SIZE,
           0xffffffff,
-          TIM_TimeBaseInitTypeDef {0, TIM_CounterMode_Up, 0, TIM_CKD_DIV1, 0})
+          TIM_TimeBaseInitTypeDef {0, TIM_CounterMode_Up, 0, TIM_CKD_DIV1, 0}),
   } };
 
 static constexpr const std::array<const uint32_t, Tim::__ENUM__SIZE> Clocks =
@@ -57,7 +64,9 @@ static constexpr const std::array<const uint32_t, Tim::__ENUM__SIZE> Clocks =
       RCC_APB2Periph_TIM1,
       RCC_APB1Periph_TIM2,
       RCC_APB1Periph_TIM3,
-      RCC_APB2Periph_TIM8
+      RCC_APB1Periph_TIM4,
+      RCC_APB2Periph_TIM8,
+      RCC_APB2Periph_TIM15
   } };
 
 #endif /* SOURCES_PMD_TIM_CONFIG_CONTAINER_H_ */

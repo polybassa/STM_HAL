@@ -16,7 +16,7 @@
 #ifndef SOURCES_PMD_TIMHALLMETER_INTERRUPTS_H_
 #define SOURCES_PMD_TIMHALLMETER_INTERRUPTS_H_
 
-#define TIM2_HALLMETER_INTERRUPT_ENABLED false
+#define TIM2_HALLMETER_INTERRUPT_ENABLED true
 #define TIM8_HALLMETER_INTERRUPT_ENABLED true
 
 #endif /* SOURCES_PMD_TIMHALLMETER_INTERRUPTS_H_ */
@@ -26,6 +26,7 @@
 
 enum Description {
     BLDC_METER,
+    BLDC_METER_32BIT,
     __ENUM__SIZE
 };
 
@@ -40,6 +41,11 @@ static constexpr const std::array<const HallMeter, HallMeter::__ENUM__SIZE> Cont
       HallMeter(HallMeter::BLDC_METER,
                 Factory<Tim>::get<Tim::HALL_METER>(),
                 TIM_TS_ITR3,
+                TIM_ICInitTypeDef { TIM_Channel_1, TIM_ICPolarity_Rising, TIM_ICSelection_TRC, TIM_ICPSC_DIV1, 0x00}
+                ),
+      HallMeter(HallMeter::BLDC_METER_32BIT,
+                Factory<Tim>::get<Tim::HALL_METER_32BIT>(),
+                TIM_TS_ITR2,
                 TIM_ICInitTypeDef { TIM_Channel_1, TIM_ICPolarity_Rising, TIM_ICSelection_TRC, TIM_ICPSC_DIV1, 0x00}
                 )
   } };
