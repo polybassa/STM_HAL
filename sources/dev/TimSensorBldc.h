@@ -41,7 +41,8 @@ struct SensorBLDC {
     enum class Mode
     {
         ACCELERATE,
-        BRAKE
+        BRAKE,
+        ACTIVE_BRAKE
     };
 
     SensorBLDC() = delete;

@@ -88,11 +88,19 @@ void DirectMotorController::updateQuadrant(void)
         if (mSetTorque > 0) {
             mMotor.setMode(dev::SensorBLDC::Mode::ACCELERATE);
         } else {
-            mMotor.setMode(dev::SensorBLDC::Mode::BRAKE);
+            if (mSetPwm > 0) {
+                mMotor.setMode(dev::SensorBLDC::Mode::BRAKE);
+            } else {
+                mMotor.setMode(dev::SensorBLDC::Mode::ACTIVE_BRAKE);
+            }
         }
     } else {
         if (mSetTorque > 0) {
-            mMotor.setMode(dev::SensorBLDC::Mode::BRAKE);
+            if (mSetPwm > 0) {
+                mMotor.setMode(dev::SensorBLDC::Mode::ACTIVE_BRAKE);
+            } else {
+                mMotor.setMode(dev::SensorBLDC::Mode::BRAKE);
+            }
         } else {
             mMotor.setMode(dev::SensorBLDC::Mode::ACCELERATE);
         }
@@ -142,6 +150,11 @@ void DirectMotorController::updatePwmOutput(void)
 void DirectMotorController::setTorque(const float setValue)
 {
     mSetTorqueQueue.overwrite(setValue);
+}
+
+void DirectMotorController::setPwm(const float value)
+{
+    mSetPwmQueue.overwrite(value);
 }
 
 float DirectMotorController::getCurrentRPS(void) const

@@ -41,8 +41,10 @@ class DirectMotorController final :
     const float mMotorCoilResistance = 0.795; // [Ohm]
     const float mMotorCoilInductance = 0.000261; // [H]
     float mSetTorque = std::numeric_limits<float>::epsilon();
+    float mSetPwm = std::numeric_limits<float>::epsilon();
 
     os::Queue<float, 1> mSetTorqueQueue;
+    os::Queue<float, 1> mSetPwmQueue;
 
     static constexpr std::chrono::milliseconds motorCheckInterval = std::chrono::milliseconds(1);
     static constexpr std::chrono::milliseconds controllerInterval = std::chrono::milliseconds(2);
@@ -65,6 +67,7 @@ public:
     DirectMotorController& operator=(DirectMotorController &&) = delete;
 
     virtual void setTorque(const float) override;
+    void setPwm(const float);
     virtual float getCurrentRPS(void) const override;
 
 #ifdef UNITTEST
