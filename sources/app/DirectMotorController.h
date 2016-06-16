@@ -52,6 +52,7 @@ class DirectMotorController final :
     void motorControllerTaskFunction(const bool&);
     void updatePwmOutput(void);
     void updateQuadrant(void);
+    void updatePwm(void);
 
 public:
     DirectMotorController(

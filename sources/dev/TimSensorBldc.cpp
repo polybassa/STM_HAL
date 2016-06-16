@@ -225,9 +225,13 @@ void SensorBLDC::prepareCommutation(const size_t hallPosition) const
     } else if ((mDirection == Direction::BACKWARD) && (mMode == Mode::BRAKE)) {
         mHBridge.setBridge(BLDC_BRIDGE_STATE_BACKWARD_BRAKE[hallPosition]);
     } else if ((mDirection == Direction::FORWARD) && (mMode == Mode::ACTIVE_BRAKE)) {
-        mHBridge.setBridge(BLDC_BRIDGE_STATE_BACKWARD_ACCELERATE[hallPosition]);
+        mHBridge.setBridge(BLDC_BRIDGE_STATE_FORWARD_ACCELERATE[getPreviousHallPosition(getPreviousHallPosition(
+                                                                                                                hallPosition))
+                           ]);
     } else if ((mDirection == Direction::BACKWARD) && (mMode == Mode::ACTIVE_BRAKE)) {
-        mHBridge.setBridge(BLDC_BRIDGE_STATE_FORWARD_ACCELERATE[hallPosition]);
+        mHBridge.setBridge(BLDC_BRIDGE_STATE_BACKWARD_ACCELERATE[getPreviousHallPosition(getPreviousHallPosition(
+                                                                                                                 hallPosition))
+                           ]);
     } else {
         mHBridge.setBridge(BLDC_BRIDGE_STATE_BACKWARD_ACCELERATE[hallPosition]);
     }
