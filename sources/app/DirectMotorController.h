@@ -38,7 +38,7 @@ class DirectMotorController final :
     const dev::SensorBLDC& mMotor;
     const dev::Battery& mBattery;
     const float mMotorConstant = 0.0749; // [Nm/A]
-    const float mMotorCoilResistance = 0.795; // [Ohm]
+    const float mMotorCoilResistance = 0.853; // [Ohm]
     const float mMotorCoilInductance = 0.000261; // [H]
     float mSetTorque = std::numeric_limits<float>::epsilon();
     float mSetPwm = std::numeric_limits<float>::epsilon();

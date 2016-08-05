@@ -41,7 +41,7 @@ struct SensorBLDC {
     enum class Mode
     {
         ACCELERATE,
-        BRAKE,
+        REGEN_BRAKE,
         ACTIVE_BRAKE
     };
 

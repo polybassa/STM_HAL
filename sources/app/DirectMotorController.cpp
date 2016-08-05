@@ -91,7 +91,7 @@ void DirectMotorController::updateQuadrant(void)
             mMotor.setMode(dev::SensorBLDC::Mode::ACCELERATE);
         } else {
             if (mSetPwm > 0) {
-                mMotor.setMode(dev::SensorBLDC::Mode::BRAKE);
+                mMotor.setMode(dev::SensorBLDC::Mode::REGEN_BRAKE);
             } else {
                 mMotor.setMode(dev::SensorBLDC::Mode::ACTIVE_BRAKE);
             }
@@ -101,7 +101,7 @@ void DirectMotorController::updateQuadrant(void)
             if (mSetPwm > 0) {
                 mMotor.setMode(dev::SensorBLDC::Mode::ACTIVE_BRAKE);
             } else {
-                mMotor.setMode(dev::SensorBLDC::Mode::BRAKE);
+                mMotor.setMode(dev::SensorBLDC::Mode::REGEN_BRAKE);
             }
         } else {
             mMotor.setMode(dev::SensorBLDC::Mode::ACCELERATE);
@@ -114,8 +114,10 @@ void DirectMotorController::updatePwm(void)
     const float omega = mMotor.getCurrentOmega();
     static const float cphi = mMotorConstant;
     static const float R = mMotorCoilResistance;
+    float voltageInputMotor = 0.0;
 
-    const float voltageInputMotor = (mSetTorque / cphi) * R + omega * cphi;
+    voltageInputMotor = (mSetTorque / cphi) * R + omega * cphi;
+
     mSetPwm = static_cast<int32_t>((voltageInputMotor / mBattery.getVoltage()) * 1000.0);
 
 //    terminal.print("sqrt(");
@@ -128,6 +130,16 @@ void DirectMotorController::updatePwm(void)
 
 void DirectMotorController::updatePwmOutput(void)
 {
+    if (mMotor.getMode() == dev::SensorBLDC::Mode::REGEN_BRAKE) {
+        const float omega = mMotor.getCurrentOmega();
+        static const float cphi = mMotorConstant;
+        static const float R = mMotorCoilResistance;
+        float voltageInputMotor = 0.0;
+
+        voltageInputMotor = ((mSetTorque * R)/(omega * cphi* cphi));
+        mSetPwm = static_cast<int32_t>((voltageInputMotor) * 1000.0);
+    }
+
     mMotor.setPulsWidthInMill(static_cast<int32_t>(std::abs(mSetPwm)));
 }
 

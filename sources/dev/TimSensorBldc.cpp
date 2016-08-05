@@ -150,6 +150,19 @@ void SensorBLDC::prepareCommutation(const size_t hallPosition) const
          { 0, 0, 0, 0, 0, 0 } // V0
      }};
 
+    static const std::array<std::array<const bool, 6>, 8> BLDC_BRIDGE_STATE_FORWARD_REGEN_BRAKE = // Motor step
+    {{
+         // A AN  B BN  C CN
+         { 0, 0, 0, 0, 0, 0 }, // V0
+         { 0, 0, 0, 0, 0, 1}, // V2
+         { 0, 0, 0, 1, 0, 0 }, // V4
+         { 0, 0, 0, 0, 0, 1 }, // V3
+         { 0, 1, 0, 0, 0, 0 }, // V6
+         { 0, 1, 0, 0, 0, 0 }, // V1
+         { 0, 0, 0, 1, 0, 0 }, // V5
+         { 0, 0, 0, 0, 0, 0 } // V0
+     }};
+
     static const std::array<std::array<const bool, 6>, 8> BLDC_BRIDGE_STATE_BACKWARD_ACCELERATE = // Motor step
     {{
          // A AN  B BN  C CN
@@ -160,6 +173,19 @@ void SensorBLDC::prepareCommutation(const size_t hallPosition) const
          { 1, 0, 0, 1, 0, 0 }, // V1
          { 0, 0, 0, 1, 1, 0 }, // V2
          { 1, 0, 0, 0, 0, 1 }, // V6
+         { 0, 0, 0, 0, 0, 0 } // V0
+     }};
+
+    static const std::array<std::array<const bool, 6>, 8> BLDC_BRIDGE_STATE_BACKWARD_REGEN_BRAKE = // Motor step
+    {{
+         // A AN  B BN  C CN
+         { 0, 0, 0, 0, 0, 0 }, // V0
+         { 0, 0, 0, 0, 0, 1 }, // V3
+         { 0, 0, 0, 1, 0, 0 }, // V5
+         { 0, 0, 0, 1, 0, 0 }, // V4
+         { 0, 1, 0, 0, 0, 0 }, // V1
+         { 0, 0, 0, 0, 0, 1 }, // V2
+         { 0, 1, 0, 0, 0, 0 }, // V6
          { 0, 0, 0, 0, 0, 0 } // V0
      }};
 
@@ -220,10 +246,10 @@ void SensorBLDC::prepareCommutation(const size_t hallPosition) const
 
     if ((mDirection == Direction::FORWARD) && (mMode == Mode::ACCELERATE)) {
         mHBridge.setBridge(BLDC_BRIDGE_STATE_FORWARD_ACCELERATE[hallPosition]);
-    } else if ((mDirection == Direction::FORWARD) && (mMode == Mode::BRAKE)) {
-        mHBridge.setBridge(BLDC_BRIDGE_STATE_FORWARD_BRAKE[hallPosition]);
-    } else if ((mDirection == Direction::BACKWARD) && (mMode == Mode::BRAKE)) {
-        mHBridge.setBridge(BLDC_BRIDGE_STATE_BACKWARD_BRAKE[hallPosition]);
+    } else if ((mDirection == Direction::FORWARD) && (mMode == Mode::REGEN_BRAKE)) {
+        mHBridge.setBridge(BLDC_BRIDGE_STATE_FORWARD_REGEN_BRAKE[(hallPosition)]);
+    } else if ((mDirection == Direction::BACKWARD) && (mMode == Mode::REGEN_BRAKE)) {
+        mHBridge.setBridge(BLDC_BRIDGE_STATE_BACKWARD_REGEN_BRAKE[(hallPosition)]);
     } else if ((mDirection == Direction::FORWARD) && (mMode == Mode::ACTIVE_BRAKE)) {
         mHBridge.setBridge(BLDC_BRIDGE_STATE_FORWARD_ACCELERATE[getPreviousHallPosition(getPreviousHallPosition(
                                                                                                                 hallPosition))
