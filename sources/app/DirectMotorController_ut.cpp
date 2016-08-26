@@ -107,6 +107,10 @@ int32_t dev::SensorBLDC::getPulsWidthPerMill(void) const
     return g_currentPWM;
 }
 
+dev::SensorBLDC::Mode dev::SensorBLDC::getMode(void) const {
+	return g_currentMode;
+}
+
 dev::SensorBLDC::Direction dev::SensorBLDC::getDirection() const
 {
     if (g_currentOmega > 0) {
