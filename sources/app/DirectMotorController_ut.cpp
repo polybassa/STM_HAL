@@ -30,6 +30,7 @@ static bool g_taskStarted;
 static uint32_t g_currentTickCount;
 static float g_currentOmega;
 static float g_batteryVoltage;
+static dev::SensorBLDC::Mode g_currentMode;
 
 constexpr const uint32_t POLE_PAIRS = 7;
 
@@ -44,6 +45,8 @@ constexpr const std::array<const hal::HalfBridge,
 constexpr const std::array<const hal::HallDecoder,
                            hal::HallDecoder::Description::__ENUM__SIZE> hal::Factory<hal::HallDecoder>::Container;
 constexpr const std::array<const hal::Tim, hal::Tim::Description::__ENUM__SIZE + 1> hal::Factory<hal::Tim>::Container;
+constexpr const std::array<const hal::HallMeter,
+                           hal::HallMeter::Description::__ENUM__SIZE> hal::Factory<hal::HallMeter>::Container;
 
 //****** Task functions ******
 void os::TaskInterruptable::join(void)
@@ -94,9 +97,18 @@ void dev::SensorBLDC::setPulsWidthInMill(const int32_t value) const
     g_currentPWM = value;
 }
 
+void dev::SensorBLDC::setMode(dev::SensorBLDC::Mode mode) const
+{
+    g_currentMode = mode;
+}
+
 int32_t dev::SensorBLDC::getPulsWidthPerMill(void) const
 {
     return g_currentPWM;
+}
+
+dev::SensorBLDC::Mode dev::SensorBLDC::getMode(void) const {
+	return g_currentMode;
 }
 
 dev::SensorBLDC::Direction dev::SensorBLDC::getDirection() const

@@ -47,17 +47,26 @@ struct HalfBridge {
 
     void setBridge(const std::array<const bool, 6>& states) const;
 
-private:
-    constexpr HalfBridge(const enum Description&    desc,
-                         const Tim&                 timer,
-                         const TIM_OCInitTypeDef&   ocConf,
-                         const TIM_BDTRInitTypeDef& bdtrConf) :
-        mDescription(desc), mTim(timer),
-        mOcConfiguration(ocConf),
-        mBdtrConfiguration(bdtrConf) {}
+    void enableOutput(void) const;
+    void disableOutput(void) const;
+
+    void triggerCommutationEvent(void) const;
 
     const enum Description mDescription;
     const Tim& mTim;
+
+private:
+    constexpr HalfBridge(const enum Description&    desc,
+                         const Tim&                 timer,
+                         const uint16_t             inputTrigger,
+                         const TIM_OCInitTypeDef&   ocConf,
+                         const TIM_BDTRInitTypeDef& bdtrConf) :
+        mDescription(desc), mTim(timer),
+        mInputTrigger(inputTrigger),
+        mOcConfiguration(ocConf),
+        mBdtrConfiguration(bdtrConf) {}
+
+    const uint16_t mInputTrigger;
     const TIM_OCInitTypeDef mOcConfiguration;
     const TIM_BDTRInitTypeDef mBdtrConfiguration;
 
@@ -67,8 +76,6 @@ private:
     void setOutputForChannel(const uint16_t channel, const bool highState, const bool lowState) const;
 
     friend class Factory<HalfBridge>;
-    friend class dev::Factory<dev::SensorBLDC>;
-    friend struct dev::SensorBLDC;
 };
 
 template<>
@@ -96,6 +103,8 @@ public:
         static_assert(IS_TIM_OCN_POLARITY(Container[index].mOcConfiguration.TIM_OCNPolarity), "Invalid Parameter ");
         static_assert(IS_TIM_OCIDLE_STATE(Container[index].mOcConfiguration.TIM_OCIdleState), "Invalid Parameter ");
         static_assert(IS_TIM_OCNIDLE_STATE(Container[index].mOcConfiguration.TIM_OCNIdleState), "Invalid Parameter ");
+
+        static_assert(IS_TIM_TRIGGER_SELECTION(Container[index].mInputTrigger), "Invalid Parameter ");
 
         static_assert(IS_TIM_OSSR_STATE(Container[index].mBdtrConfiguration.TIM_OSSRState), "Invalid Parameter ");
         static_assert(IS_TIM_OSSI_STATE(Container[index].mBdtrConfiguration.TIM_OSSIState), "Invalid Parameter ");

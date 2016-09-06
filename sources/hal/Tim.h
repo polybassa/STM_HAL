@@ -42,13 +42,13 @@ struct Tim {
     void setCounterValue(const uint32_t) const;
     void setAutoReloadValue(const uint32_t) const;
     uint32_t getCounterValue(void) const;
+    uint32_t getTimerFrequency(void) const;
+    uint32_t getPeriode(void) const;
     void enable(void) const;
     void disable(void) const;
     void selectOutputTrigger(uint16_t TRGO_Source) const;
-
-    static const uint32_t HALFBRIDGE_PERIODE = 4000;
-    static const uint32_t HALL_SENSOR_PRESCALER = 179;
-    static const uint32_t BUZZER_PWM_PERIODE = 1000;
+    ITStatus getInterruptStatus(const uint16_t interruptFlag) const;
+    void clearPendingInterruptFlag(const uint16_t interruptFlag) const;
 
     const enum Description mDescription;
 
@@ -61,6 +61,7 @@ private:
 
     const uint32_t mPeripherie;
     const TIM_TimeBaseInitTypeDef mConfiguration;
+    mutable uint32_t mClockFrequency = 0;
 
     void initialize(void) const;
     TIM_TypeDef* getBasePointer(void) const;
@@ -69,6 +70,7 @@ private:
     friend struct Pwm;
     friend struct HallDecoder;
     friend struct HalfBridge;
+    friend struct HallMeter;
     friend struct dev::SensorBLDC;
 };
 
@@ -97,9 +99,62 @@ class Factory<Tim>
                 RCC_APB2PeriphClockCmd(clock, ENABLE);
             }
         }
+
+        RCC_ClocksTypeDef clocks;
+        RCC_GetClocksFreq(&clocks);
+
         for (const auto& tim : Container) {
             if (tim.mDescription != Tim::__ENUM__SIZE) {
                 tim.initialize();
+
+                switch (tim.mPeripherie) {
+                case TIM1_BASE:
+                    tim.mClockFrequency = clocks.TIM1CLK_Frequency;
+                    break;
+
+                case TIM2_BASE:
+                    tim.mClockFrequency = clocks.TIM2CLK_Frequency;
+                    break;
+
+                case TIM3_BASE:
+                    tim.mClockFrequency = clocks.TIM3CLK_Frequency;
+                    break;
+
+                case TIM4_BASE: // TODO validate frequency
+                    tim.mClockFrequency = clocks.TIM3CLK_Frequency;
+                    break;
+
+                case TIM6_BASE: // TODO validate frequency
+                    tim.mClockFrequency = clocks.TIM3CLK_Frequency;
+                    break;
+
+                case TIM7_BASE: // TODO validate frequency
+                    tim.mClockFrequency = clocks.TIM3CLK_Frequency;
+                    break;
+
+                case TIM8_BASE:
+                    tim.mClockFrequency = clocks.TIM8CLK_Frequency;
+                    break;
+
+                case TIM15_BASE:
+                    tim.mClockFrequency = clocks.TIM15CLK_Frequency;
+                    break;
+
+                case TIM16_BASE:
+                    tim.mClockFrequency = clocks.TIM16CLK_Frequency;
+                    break;
+
+                case TIM17_BASE:
+                    tim.mClockFrequency = clocks.TIM17CLK_Frequency;
+                    break;
+
+                case TIM20_BASE:
+                    tim.mClockFrequency = clocks.TIM20CLK_Frequency;
+                    break;
+
+                default:
+                    tim.mClockFrequency = 0;
+                }
             }
         }
     }

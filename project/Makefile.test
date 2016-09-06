@@ -49,6 +49,14 @@ ${BINDIR}/PIDController_ut.bin: DEFINES+=-DUNITTEST
 ${BINDIR}/PIDController_ut.bin: ${OBJDIR}/PIDController.o
 ${BINDIR}/PIDController_ut.bin: ${OBJDIR}/PIDController_ut.o
 
+####################################DirectMotorController############################################
+
+${BINDIR}/DirectMotorController_ut.bin: DEFINES+=-DUNITTEST
+${BINDIR}/DirectMotorController_ut.bin: DEFINES+=-DMAXON_MOTOR
+${BINDIR}/DirectMotorController_ut.bin: ${OBJDIR}/DirectMotorController.o
+${BINDIR}/DirectMotorController_ut.bin: ${OBJDIR}/DeepSleepInterface.o 
+${BINDIR}/DirectMotorController_ut.bin: ${OBJDIR}/DirectMotorController_ut.o
+
 ################################################################################
 
 test: clean-all ${BINDIR} ${OBJDIR} test_binarys
@@ -60,6 +68,7 @@ TESTS=${BINDIR}/DebugInterface_ut.bin
 TESTS+=${BINDIR}/BatteryObserver_ut.bin
 TESTS+=${BINDIR}/TemperatureSensor_ut.bin	
 TESTS+=${BINDIR}/PIDController_ut.bin
+TESTS+=${BINDIR}/DirectMotorController_ut.bin
 
 test_binarys: ${TESTS}  
 	@echo "-------------------------------------------------------------"
