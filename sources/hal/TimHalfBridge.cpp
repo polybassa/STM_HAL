@@ -86,7 +86,6 @@ void HalfBridge::setOutputForChannel(const uint16_t channel, const bool highStat
         // disable active freewheeling
         TIM_CCxNCmd(mTim.getBasePointer(), channel, TIM_CCxN_Disable);
 #endif
-
     } else {
         // Low side FET: OFF
         TIM_CCxCmd(mTim.getBasePointer(), channel, TIM_CCx_Disable);

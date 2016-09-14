@@ -75,7 +75,7 @@ int main(void)
     hal::initFactory<hal::Factory<hal::Spi> >();
     hal::initFactory<hal::Factory<hal::SpiWithDma> >();
     hal::initFactory<hal::Factory<hal::Rtc> >();
-    hal::initFactory<hal::Factory<hal::Adc> >();
+//    hal::initFactory<hal::Factory<hal::Adc> >(); Don't USE ADC on STM32F303VC
     hal::initFactory<hal::Factory<hal::Crc> >();
     hal::initFactory<hal::Factory<hal::I2c> >();
 
@@ -85,11 +85,6 @@ int main(void)
     Trace(ZONE_INFO, "Version: %c \r\n", &_version_start);
 
     os::ThisTask::sleep(std::chrono::milliseconds(10));
-
-    dev::Battery* battery = new dev::Battery();
-
-    auto motor = new app::MotorController(
-        dev::Factory<dev::SensorBLDC>::get<dev::SensorBLDC::BLDC>(), *battery, 0.00768, 0.844, 0.8, 0.5);
 
     os::Task::startScheduler();
 

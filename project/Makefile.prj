@@ -52,7 +52,7 @@ ${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/main.o
 ${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/versionfile.o
 
 # HAL Layer
-${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/Adc.o
+#${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/Adc.o
 ${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/CRC.o
 ${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/Dma.o
 ${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/Exti.o
@@ -69,7 +69,7 @@ ${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/Usart.o
 ${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/UsartWithDma.o
 
 # DEV Layer
-${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/Battery.o
+#${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/Battery.o
 ${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/DebugInterface.o
 ${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/Light.o
 ${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/PIDController.o
@@ -90,7 +90,7 @@ ${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/TaskInterruptable.o
 
 # App Layer
 #${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/BatteryObserver.o
-${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/MotorController.o
+#${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/MotorController.o
 
 #PMD TestApps
 #${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/TestLed.o
