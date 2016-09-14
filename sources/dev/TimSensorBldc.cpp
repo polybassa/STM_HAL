@@ -274,12 +274,21 @@ void SensorBLDC::checkMotor(const dev::Battery& battery) const
 {
     const float minimalRPS = 0.5;
     const uint32_t minimalPWMinMill = 80;
+    const float maximalCurrent = 0.8;
 
     const bool motorNotStarting = (std::abs(mHallDecoder.getCurrentRPS()) < minimalRPS) &&
                                   (minimalPWMinMill < std::abs(mHBridge.getPulsWidthPerMill()));
 
+    const bool motorBlocking = (std::abs(battery.getCurrent()) > maximalCurrent && (std::abs(mHallDecoder.getCurrentRPS()) < minimalRPS));
+
     if (motorNotStarting) {
         trigger();
+    }
+
+    if (motorBlocking){
+    	 mLastHallPosition = getPreviousHallPosition(mHallDecoder.getCurrentHallState());
+    	    prepareCommutation(mLastHallPosition);
+    	    mHBridge.triggerCommutationEvent();
     }
 }
 
