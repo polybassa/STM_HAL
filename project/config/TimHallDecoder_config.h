@@ -21,7 +21,6 @@ enum Description {
     __ENUM__SIZE
 };
 
-static constexpr uint32_t SYSTEMCLOCK = 36000000;
 #ifdef MAXON_MOTOR
 static constexpr uint32_t POLE_PAIRS = 7;
 #elif CHINA_MOTOR

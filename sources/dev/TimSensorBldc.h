@@ -21,6 +21,7 @@
 #include "dev_Factory.h"
 #include "TimHalfBridge.h"
 #include "TimHallDecoder.h"
+#include "TimHallMeter.h"
 #include "Battery.h"
 
 namespace dev
@@ -37,46 +38,54 @@ struct SensorBLDC {
         BACKWARD
     };
 
+    enum class Mode
+    {
+        ACCELERATE,
+        REGEN_BRAKE,
+        ACTIVE_BRAKE
+    };
+
     SensorBLDC() = delete;
     SensorBLDC(const SensorBLDC&) = delete;
     SensorBLDC(SensorBLDC &&) = default;
     SensorBLDC& operator=(const SensorBLDC&) = delete;
     SensorBLDC& operator=(SensorBLDC &&) = delete;
 
-    void incrementCommutationDelay(void) const;
-    void decrementCommutationDelay(void) const;
-    void setCommutationDelay(const uint32_t) const;
-    uint32_t getCommutationDelay(void) const;
     float getCurrentRPS(void) const;
     float getCurrentOmega(void) const;
     Direction getDirection(void) const;
     int32_t getPulsWidthPerMill(void) const;
+    uint32_t getNumberOfPolePairs(void) const;
+    Mode getMode(void) const;
     void setPulsWidthInMill(int32_t) const;
-    void setDirection(const Direction) const;
-    void reverseTrigger(void) const;
+    void setMode(const Mode) const;
     void trigger(void) const;
-
     void checkMotor(const dev::Battery& battery) const;
-
     void start(void) const;
     void stop(void) const;
-    uint32_t getNumberOfPolePairs(void) const;
-
-private:
-    constexpr SensorBLDC(const enum Description& desc,
-                         const hal::HalfBridge&  hBridge,
-                         const hal::HallDecoder& hallDecoder) :
-        mDescription(desc), mHBridge(hBridge),
-        mHallDecoder(hallDecoder) {}
 
     const enum Description mDescription;
     const hal::HalfBridge& mHBridge;
     const hal::HallDecoder& mHallDecoder;
+    const hal::HallMeter& mHallMeter1;
+    const hal::HallMeter& mHallMeter2;
+
+private:
+    constexpr SensorBLDC(const enum Description& desc,
+                         const hal::HalfBridge&  hBridge,
+                         const hal::HallDecoder& hallDecoder,
+                         const hal::HallMeter&   hallMeter1,
+                         const hal::HallMeter&   hallMeter2) :
+        mDescription(desc), mHBridge(hBridge),
+        mHallDecoder(hallDecoder),
+        mHallMeter1(hallMeter1),
+        mHallMeter2(hallMeter2) {}
 
     mutable Direction mDirection = Direction::FORWARD;
+    mutable Mode mMode = Mode::ACCELERATE;
     mutable size_t mLastHallPosition = 0;
 
-    bool checkHallEvent(void) const;
+    void computeDirection(void) const;
     void prepareCommutation(const size_t hallPosition) const;
     size_t getNextHallPosition(const size_t position) const;
     size_t getPreviousHallPosition(const size_t position) const;
@@ -92,7 +101,9 @@ class Factory<SensorBLDC>
           SensorBLDC(
                      SensorBLDC::BLDC,
                      hal::Factory<hal::HalfBridge>::get<hal::HalfBridge::BLDC_PWM>(),
-                     hal::Factory<hal::HallDecoder>::get<hal::HallDecoder::BLDC_DECODER>()
+                     hal::Factory<hal::HallDecoder>::get<hal::HallDecoder::BLDC_DECODER>(),
+                     hal::Factory<hal::HallMeter>::get<hal::HallMeter::BLDC_METER_32BIT>(),
+                     hal::Factory<hal::HallMeter>::get<hal::HallMeter::BLDC_METER>()
                      )
       } };
 

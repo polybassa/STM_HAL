@@ -64,6 +64,7 @@ ${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/SpiWithDma.o
 ${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/Tim.o
 ${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/TimHalfBridge.o
 ${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/TimHallDecoder.o
+${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/TimHallMeter.o
 ${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/TimPwm.o
 ${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/Usart.o
 ${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/UsartWithDma.o

@@ -45,6 +45,8 @@ constexpr const std::array<const hal::HalfBridge,
 constexpr const std::array<const hal::HallDecoder,
                            hal::HallDecoder::Description::__ENUM__SIZE> hal::Factory<hal::HallDecoder>::Container;
 constexpr const std::array<const hal::Tim, hal::Tim::Description::__ENUM__SIZE + 1> hal::Factory<hal::Tim>::Container;
+constexpr const std::array<const hal::HallMeter,
+                           hal::HallMeter::Description::__ENUM__SIZE> hal::Factory<hal::HallMeter>::Container;
 
 //****** Task functions ******
 void os::TaskInterruptable::join(void)

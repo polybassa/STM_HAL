@@ -47,6 +47,7 @@ DirectMotorController::DirectMotorController(
     mMotorCoilInductance(motorInductance),
     mSetTorqueQueue()
 {
+    setTorque(0.00001);
     mSetTorque = 0.00001;
     mMotor.start();
 }
@@ -70,7 +71,10 @@ void DirectMotorController::motorControllerTaskFunction(const bool& join)
         if (mSetTorqueQueue.receive(newSetTorque, 0)) {
             mSetTorque = newSetTorque;
         }
+        updatePwm();
+        updateQuadrant();
         updatePwmOutput();
+
         static constexpr uint32_t waitPeriode = controllerInterval.count() / motorCheckInterval.count();
         for (uint32_t i = 0; i < waitPeriode; i++) {
             mMotor.checkMotor(mBattery);
@@ -79,33 +83,42 @@ void DirectMotorController::motorControllerTaskFunction(const bool& join)
     } while (!join);
 }
 
-void DirectMotorController::updatePwmOutput(void)
+void DirectMotorController::updateQuadrant(void)
 {
-    /*
-     * U_pwm = sqrt(omega^2 ( ((L^2 * p^2) / cphi^2) M^2 + cphi^2) + (R^2 / cphi^2) M^2 + 2 R omega M)
-     * L = inductance
-     * M = torque
-     * p = number of pole pairs
-     *
-     * Substitution
-     * A = ((L^2 * p^2) / cphi^2)
-     * B = (R^2 / cphi^2)
-     * U_pwm = sqrt(omega^2 (A M^2 + cphi^2) + B M^2 + 2 R omega M)
-     *
-     */
+    const float omega = mMotor.getCurrentOmega();
+    if (omega > 0) {
+        if (mSetTorque > 0) {
+            mMotor.setMode(dev::SensorBLDC::Mode::ACCELERATE);
+        } else {
+            if (mSetPwm > 0) {
+                mMotor.setMode(dev::SensorBLDC::Mode::REGEN_BRAKE);
+            } else {
+                mMotor.setMode(dev::SensorBLDC::Mode::ACTIVE_BRAKE);
+            }
+        }
+    } else {
+        if (mSetTorque > 0) {
+            if (mSetPwm > 0) {
+                mMotor.setMode(dev::SensorBLDC::Mode::ACTIVE_BRAKE);
+            } else {
+                mMotor.setMode(dev::SensorBLDC::Mode::REGEN_BRAKE);
+            }
+        } else {
+            mMotor.setMode(dev::SensorBLDC::Mode::ACCELERATE);
+        }
+    }
+}
 
-    const float omega = std::abs(mMotor.getCurrentOmega());
-    static const float polePairs = mMotor.getNumberOfPolePairs();
-    static const float cphi2 = (mMotorConstant * mMotorConstant);
-    static const float A = (mMotorCoilInductance * mMotorCoilInductance * polePairs * polePairs) / cphi2;
-    static const float B = (mMotorCoilResistance * mMotorCoilResistance) / cphi2;
+void DirectMotorController::updatePwm(void)
+{
+    const float omega = mMotor.getCurrentOmega();
+    static const float cphi = mMotorConstant;
+    static const float R = mMotorCoilResistance;
+    float voltageInputMotor = 0.0;
 
-    const float voltageInputMotor = std::sqrt(
-                                              omega * omega * (A * mSetTorque * mSetTorque + cphi2) +
-                                              B * mSetTorque * mSetTorque +
-                                              2 * mMotorCoilResistance * std::abs(mSetTorque) * omega);
+    voltageInputMotor = (mSetTorque / cphi) * R + omega * cphi;
 
-    const int32_t pulswidth = static_cast<int32_t>((voltageInputMotor / mBattery.getVoltage()) * 1000.0);
+    mSetPwm = static_cast<int32_t>((voltageInputMotor / mBattery.getVoltage()) * 1000.0);
 
 //    terminal.print("sqrt(");
 //    terminal.print("%f * (%f * %f + %f", omega*omega, A, mSetTorque* mSetTorque, cphi2);
@@ -113,17 +126,31 @@ void DirectMotorController::updatePwmOutput(void)
 //    terminal.print("2 * %f * %f * %f)", mMotorCoilResistance, std::abs(mSetTorque), omega);
 //    terminal.print(" = %f => %d pwm", voltageInputMotor, pulswidth / 10);
 //    terminal.print("\r\n");
+}
 
-    if (mSetTorque > 0.0) {
-        mMotor.setPulsWidthInMill(pulswidth);
-    } else {
-        mMotor.setPulsWidthInMill(0.0 - pulswidth);
+void DirectMotorController::updatePwmOutput(void)
+{
+    if (mMotor.getMode() == dev::SensorBLDC::Mode::REGEN_BRAKE) {
+        const float omega = mMotor.getCurrentOmega();
+        static const float cphi = mMotorConstant;
+        static const float R = mMotorCoilResistance;
+        float voltageInputMotor = 0.0;
+
+        voltageInputMotor = ((mSetTorque * R)/(omega * cphi* cphi));
+        mSetPwm = static_cast<int32_t>((voltageInputMotor) * 1000.0);
     }
+
+    mMotor.setPulsWidthInMill(static_cast<int32_t>(std::abs(mSetPwm)));
 }
 
 void DirectMotorController::setTorque(const float setValue)
 {
     mSetTorqueQueue.overwrite(setValue);
+}
+
+void DirectMotorController::setPwm(const float value)
+{
+    mSetPwmQueue.overwrite(value);
 }
 
 float DirectMotorController::getCurrentRPS(void) const

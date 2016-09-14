@@ -24,13 +24,13 @@ using hal::Tim;
 
 void HalfBridge::setPulsWidthPerMill(uint32_t value) const
 {
-    static constexpr float maxValue = 1000;
+    static constexpr uint32_t maxValue = 1000;
     if (value > maxValue) {
         value = maxValue;
     }
     mPulsWidth = value;
 
-    static const float scale = mTim.mConfiguration.TIM_Period / maxValue;
+    static const float scale = mTim.mConfiguration.TIM_Period / static_cast<float>(maxValue);
     value = value * scale;
 
     TIM_SetCompare1(mTim.getBasePointer(), value);
@@ -77,7 +77,7 @@ void HalfBridge::setOutputForChannel(const uint16_t channel, const bool highStat
         // if low side FET is in PWM off mode then the hide side FET
         // is ON for active freewheeling. This mode needs correct definition
         // of dead time otherwise we have shoot-through problems
-        TIM_SelectOCxM(mTim.getBasePointer(), channel, TIM_OCMode_PWM1);
+        TIM_SelectOCxM(mTim.getBasePointer(), channel, TIM_ForcedAction_Active);
         TIM_CCxCmd(mTim.getBasePointer(), channel, TIM_CCx_Enable);
 #ifdef ACTIVE_FREEWHEELING
         // active freewheeling
@@ -87,21 +87,36 @@ void HalfBridge::setOutputForChannel(const uint16_t channel, const bool highStat
         TIM_CCxNCmd(mTim.getBasePointer(), channel, TIM_CCxN_Disable);
 #endif
     } else {
-        // Low side FET: OFF
+        // High side FET: OFF
         TIM_CCxCmd(mTim.getBasePointer(), channel, TIM_CCx_Disable);
         if (lowState) {
-            // High side FET: ON
+            // LOW side FET: ON/PWM
             TIM_SelectOCxM(
-                           mTim.getBasePointer(), channel, TIM_ForcedAction_Active);
+                           mTim.getBasePointer(), channel, TIM_OCMode_PWM1);
             TIM_CCxNCmd(mTim.getBasePointer(), channel, TIM_CCxN_Enable);
         } else {
-            // High side FET: OFF
+            // LOW side FET: OFF
             TIM_SelectOCxM(
                            mTim.getBasePointer(), channel, TIM_ForcedAction_InActive);
             TIM_CCxNCmd(mTim.getBasePointer(), channel,
                         TIM_CCxN_Enable);
         }
     }
+}
+
+void HalfBridge::disableOutput(void) const
+{
+    TIM_CtrlPWMOutputs(mTim.getBasePointer(), DISABLE);
+}
+
+void HalfBridge::enableOutput(void) const
+{
+    TIM_CtrlPWMOutputs(mTim.getBasePointer(), ENABLE);
+}
+
+void HalfBridge::triggerCommutationEvent(void) const
+{
+    TIM_GenerateEvent(mTim.getBasePointer(), TIM_EventSource_COM);
 }
 
 void HalfBridge::initialize(void) const
@@ -118,6 +133,14 @@ void HalfBridge::initialize(void) const
     TIM_BDTRConfig(mTim.getBasePointer(), &mBdtrConfiguration);
 
     TIM_CCPreloadControl(mTim.getBasePointer(), ENABLE);
+
+    /* Internal connection from HallDecoder Timer to Motor Timer */
+    TIM_SelectInputTrigger(mTim.getBasePointer(), mInputTrigger);
+
+    /* Enable connection between HallDecoder Timer and Motor Timer */
+    TIM_SelectCOM(mTim.getBasePointer(), ENABLE);
+
+    mTim.enable();
 }
 
 constexpr const std::array<const HalfBridge, HalfBridge::Description::__ENUM__SIZE> Factory<HalfBridge>::Container;

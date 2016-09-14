@@ -36,6 +36,22 @@ uint32_t Tim::getCounterValue(void) const
     return TIM_GetCounter(getBasePointer());
 }
 
+uint32_t Tim::getTimerFrequency(void) const
+{
+    if (mConfiguration.TIM_ClockDivision == TIM_CKD_DIV1) {
+        return mClockFrequency / (mConfiguration.TIM_Prescaler + 1);
+    } else if (mConfiguration.TIM_ClockDivision == TIM_CKD_DIV2) {
+        return (mClockFrequency / 2) / (mConfiguration.TIM_Prescaler + 1);
+    } else {
+        return (mClockFrequency / 4) / (mConfiguration.TIM_Prescaler + 1);
+    }
+}
+
+uint32_t Tim::getPeriode(void) const
+{
+    return mConfiguration.TIM_Period;
+}
+
 void Tim::enable(void) const
 {
     TIM_Cmd(getBasePointer(), ENABLE);
@@ -49,6 +65,16 @@ void Tim::disable(void) const
 void Tim::selectOutputTrigger(uint16_t TRGO_Source) const
 {
     TIM_SelectOutputTrigger(getBasePointer(), TRGO_Source);
+}
+
+ITStatus Tim::getInterruptStatus(const uint16_t interruptFlag) const
+{
+    return TIM_GetITStatus(getBasePointer(), interruptFlag);
+}
+
+void Tim::clearPendingInterruptFlag(const uint16_t interruptFlag) const
+{
+    TIM_ClearITPendingBit(getBasePointer(), interruptFlag);
 }
 
 void Tim::initialize(void) const

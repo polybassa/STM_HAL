@@ -38,25 +38,21 @@ extern "C" void TIM3_IRQHandler(void)
 
 void HallDecoder::interruptHandler(void) const
 {
-    static bool hallEventDetected = false;
-
     if (TIM_GetITStatus(mTim.getBasePointer(), TIM_IT_CC1)) {
         TIM_ClearITPendingBit(mTim.getBasePointer(), TIM_IT_CC1);
+
         const uint32_t eventTimestamp = TIM_GetCapture1(mTim.getBasePointer());
-        if (HallEventCallbacks[mDescription]()) {
-            hallEventDetected = true;
-        }
         saveTimestamp(eventTimestamp);
+
+        HallEventCallbacks[mDescription]();
     } else if (TIM_GetITStatus(mTim.getBasePointer(), TIM_IT_CC2)) {
         TIM_ClearITPendingBit(mTim.getBasePointer(), TIM_IT_CC2);
-        if (hallEventDetected) {
-            HallDecoder::CommutationCallbacks[mDescription]();
-            hallEventDetected = false;
-        }
+
+        HallDecoder::CommutationCallbacks[mDescription]();
     } else if (TIM_GetITStatus(mTim.getBasePointer(), TIM_IT_CC3)) {
         TIM_ClearITPendingBit(mTim.getBasePointer(), TIM_IT_CC3);
         // no hall interrupt, overflow occurred because of stall motor
-        saveTimestamp(std::numeric_limits<uint32_t>::max());
+        reset();
     } else {
         // this should not happen
     }
@@ -97,14 +93,9 @@ float HallDecoder::getCurrentRPS(void) const
     uint32_t sumTicksBetweenHallSignals =
         std::accumulate(mTimestamps.begin(), mTimestamps.end(), 0);
 
-    auto minmaxTickBetweenHallSignals = std::minmax_element(mTimestamps.begin(), mTimestamps.end());
+    const uint32_t avgTicksBetweenHallSignals = sumTicksBetweenHallSignals / NUMBER_OF_TIMESTAMPS; // is wrong
 
-    sumTicksBetweenHallSignals -= *minmaxTickBetweenHallSignals.first;
-    sumTicksBetweenHallSignals -= *minmaxTickBetweenHallSignals.second;
-
-    const uint32_t avgTicksBetweenHallSignals = sumTicksBetweenHallSignals / (NUMBER_OF_TIMESTAMPS - 1); // is wrong
-
-    const float timerFrequency = SYSTEMCLOCK / (mTim.mConfiguration.TIM_Prescaler + 1);
+    const float timerFrequency = mTim.getTimerFrequency();
     const float hallSignalFrequency = timerFrequency / avgTicksBetweenHallSignals;
     const float electricalRotationFrequency = hallSignalFrequency / HALL_EVENTS_PER_ROTATION;
     const float motorRotationFrequency = electricalRotationFrequency / POLE_PAIRS;
@@ -114,6 +105,11 @@ float HallDecoder::getCurrentRPS(void) const
 float HallDecoder::getCurrentOmega(void) const
 {
     return getCurrentRPS() * M_PI * 2;
+}
+
+void HallDecoder::reset(void) const
+{
+    mTimestamps.fill(std::numeric_limits<uint32_t>::max());
 }
 
 uint32_t HallDecoder::getCurrentHallState(void) const
@@ -152,7 +148,7 @@ void HallDecoder::unregisterHallEventCheckCallback(void) const
 
 void HallDecoder::initialize(void) const
 {
-    mTimestamps.fill(std::numeric_limits<uint32_t>::max());
+    reset();
 
     /* T1F_ED will be connected to HallSensor inputs */
     TIM_SelectHallSensor(mTim.getBasePointer(), ENABLE);
@@ -177,7 +173,7 @@ void HallDecoder::initialize(void) const
 
     /* Channel 2 output compare signal is connected to TRIGO */
     // Uncomment for automatic trigger of commutation
-    TIM_SelectOutputTrigger(mTim.getBasePointer(), (uint16_t)TIM_TRGO2Source_OC2Ref);
+    TIM_SelectOutputTrigger(mTim.getBasePointer(), (uint16_t)TIM_TRGOSource_OC2Ref);
 
     unregisterHallEventCheckCallback();
     unregisterCommutationCallback();

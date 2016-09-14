@@ -25,6 +25,7 @@
 #include "Gpio.h"
 #include "Tim.h"
 #include "TimHallDecoder.h"
+#include "TimHallMeter.h"
 #include "TimHalfBridge.h"
 #include "TimPwm.h"
 #include "Dma.h"
@@ -66,6 +67,7 @@ int main(void)
     hal::initFactory<hal::Factory<hal::Gpio> >();
     hal::initFactory<hal::Factory<hal::Tim> >();
     hal::initFactory<hal::Factory<hal::HallDecoder> >();
+    hal::initFactory<hal::Factory<hal::HallMeter> >();
     hal::initFactory<hal::Factory<hal::HalfBridge> >();
     hal::initFactory<hal::Factory<hal::Pwm> >();
     hal::initFactory<hal::Factory<hal::Exti> >();
