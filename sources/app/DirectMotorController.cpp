@@ -130,8 +130,9 @@ void DirectMotorController::updatePwm(void)
 
 void DirectMotorController::updatePwmOutput(void)
 {
+    const float omega = mMotor.getCurrentOmega();
+
     if (mMotor.getMode() == dev::SensorBLDC::Mode::REGEN_BRAKE) {
-        const float omega = mMotor.getCurrentOmega();
         static const float cphi = mMotorConstant;
         static const float R = mMotorCoilResistance;
         float voltageInputMotor = 0.0;
@@ -139,6 +140,16 @@ void DirectMotorController::updatePwmOutput(void)
         voltageInputMotor = ((mSetTorque * R)/(omega * cphi* cphi));
         mSetPwm = static_cast<int32_t>((voltageInputMotor) * 1000.0);
     }
+
+    if (omega > -0.1 && omega < 0.1){
+
+        	if (omega < 0 && mSetTorque > 0) {
+        		mSetPwm *= -1;
+        	} else if (omega > 0 && mSetTorque < 0) {
+        		mSetPwm *= -1;
+        	}
+        }
+
 
     mMotor.setPulsWidthInMill(static_cast<int32_t>(std::abs(mSetPwm)));
 }
