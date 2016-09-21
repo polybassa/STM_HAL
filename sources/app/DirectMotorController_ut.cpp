@@ -141,6 +141,11 @@ uint32_t dev::SensorBLDC::getNumberOfPolePairs() const
     return POLE_PAIRS;
 }
 
+void dev::SensorBLDC::setDirection(const dev::SensorBLDC::Direction) const
+{
+    //TODO Test Me
+}
+
 //****** Battery functions ******
 dev::Battery::Battery(){}
 
