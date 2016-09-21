@@ -73,6 +73,11 @@ void SensorBLDC::setPulsWidthInMill(int32_t value) const
     mHBridge.setPulsWidthPerMill(std::abs(value));
 }
 
+void SensorBLDC::setDirection(const Direction dir) const
+{
+    mDirection = dir;
+}
+
 void SensorBLDC::setMode(const Mode mode) const
 {
     mMode = mode;
@@ -109,18 +114,93 @@ void SensorBLDC::computeDirection(void) const
 {
     const uint32_t currentPosition = mHallDecoder.getCurrentHallState();
 
-    if (currentPosition == getPreviousHallPosition(mLastHallPosition)) {
-        if (mDirection == Direction::FORWARD) {
-            mDirection = Direction::BACKWARD;
-        } else {
-            mDirection = Direction::FORWARD;
-        }
+    const bool directionChanged = currentPosition == getPreviousHallPosition(mLastHallPosition);
+
+    if (directionChanged) {
+//        if (mDirection == Direction::FORWARD) {
+//            mDirection = Direction::BACKWARD;
+//        } else {
+//            mDirection = Direction::FORWARD;
+//        }
+
         mHallDecoder.reset();
         mHallMeter1.reset();
         mHallMeter2.reset();
     }
 
     mLastHallPosition = currentPosition;
+}
+
+void SensorBLDC::commutate(const size_t hallPosition) const
+{
+    static bool manualCommutationActive = false;
+
+    if ((manualCommutationActive == true) && (std::abs(mHallDecoder.getCurrentRPS()) > 15)) {
+        manualCommutationActive = false;
+        manualCommutation(hallPosition);
+        mHBridge.enableTimerCommunication();
+        prepareCommutation(hallPosition);
+        return;
+    }
+
+    if ((manualCommutationActive == false) && (std::abs(mHallDecoder.getCurrentRPS()) < 10)) {
+        mHBridge.disableTimerCommunication();
+        manualCommutationActive = true;
+        return;
+    }
+
+    if (manualCommutationActive == true) {
+        manualCommutation(hallPosition);
+    } else {
+        prepareCommutation(hallPosition);
+    }
+}
+
+void SensorBLDC::manualCommutation(const size_t hallPosition) const
+{
+    /*
+     * 4Q Control
+     *
+     *  BRAKE      Q2| ACCELERATE Q1
+     *  FORWARD      | FORWARD
+     *  -------------+-------------
+     *  ACCELERATE Q3| BRAKE      Q4
+     *  BACKWARD     | BACKWARD
+     *
+     */
+
+    static const std::array<std::array<const bool, 6>, 8> BLDC_BRIDGE_STATE_FORWARD_ACCELERATE = // Motor step
+    {{
+         // A AN  B BN  C CN
+         { 0, 0, 0, 0, 0, 0 }, // V0
+         { 0, 1, 0, 0, 1, 0 }, // V3
+         { 0, 0, 1, 0, 0, 1 }, // V1
+         { 0, 1, 1, 0, 0, 0 }, // V2
+         { 1, 0, 0, 1, 0, 0 }, // V5
+         { 0, 0, 0, 1, 1, 0 }, // V4
+         { 1, 0, 0, 0, 0, 1 }, // V6
+         { 0, 0, 0, 0, 0, 0 } // V0
+     }};
+
+    static const std::array<std::array<const bool, 6>, 8> BLDC_BRIDGE_STATE_BACKWARD_ACCELERATE = // Motor step
+    {{
+         // A AN  B BN  C CN
+         { 0, 0, 0, 0, 0, 0 }, // V0
+         { 0, 0, 1, 0, 0, 1 }, // V1
+         { 1, 0, 0, 1, 0, 0 }, // V5
+         { 1, 0, 0, 0, 0, 1 }, // V6
+         { 0, 1, 0, 0, 1, 0 }, // V3
+         { 0, 1, 1, 0, 0, 0 }, // V2
+         { 0, 0, 0, 1, 1, 0 }, // V4
+         { 0, 0, 0, 0, 0, 0 } // V0
+     }};
+
+    if ((mDirection == Direction::FORWARD)) {
+        mHBridge.setBridge(BLDC_BRIDGE_STATE_FORWARD_ACCELERATE[hallPosition]);
+    } else {
+        mHBridge.setBridge(BLDC_BRIDGE_STATE_BACKWARD_ACCELERATE[hallPosition]);
+    }
+    mHBridge.triggerCommutationEvent();
 }
 
 void SensorBLDC::prepareCommutation(const size_t hallPosition) const
@@ -136,166 +216,42 @@ void SensorBLDC::prepareCommutation(const size_t hallPosition) const
      *
      */
 
-#ifdef MAXON_MOTOR
-    static const std::array<std::array<const bool, 6>, 8> BLDC_BRIDGE_STATE_FORWARD_ACCELERATE = // Motor step
+    static const std::array<std::array<const bool, 6>, 8> BLDC_BRIDGE_STATE_ACCELERATE = // Motor step
     {{
          // A AN  B BN  C CN
          { 0, 0, 0, 0, 0, 0 }, // V0
-         { 0, 0, 0, 1, 1, 0 }, // V2
-         { 0, 1, 1, 0, 0, 0 }, // V4
-         { 0, 1, 0, 0, 1, 0 }, // V3
+         { 0, 1, 1, 0, 0, 0 }, // V2
          { 1, 0, 0, 0, 0, 1 }, // V6
-         { 1, 0, 0, 1, 0, 0 }, // V1
-         { 0, 0, 1, 0, 0, 1 }, // V5
-         { 0, 0, 0, 0, 0, 0 } // V0
-     }};
-
-    static const std::array<std::array<const bool, 6>, 8> BLDC_BRIDGE_STATE_FORWARD_REGEN_BRAKE = // Motor step
-    {{
-         // A AN  B BN  C CN
-         { 0, 0, 0, 0, 0, 0 }, // V0
-         { 0, 0, 0, 0, 0, 1}, // V2
-         { 0, 0, 0, 1, 0, 0 }, // V4
-         { 0, 0, 0, 0, 0, 1 }, // V3
-         { 0, 1, 0, 0, 0, 0 }, // V6
-         { 0, 1, 0, 0, 0, 0 }, // V1
-         { 0, 0, 0, 1, 0, 0 }, // V5
-         { 0, 0, 0, 0, 0, 0 } // V0
-     }};
-
-    static const std::array<std::array<const bool, 6>, 8> BLDC_BRIDGE_STATE_BACKWARD_ACCELERATE = // Motor step
-    {{
-         // A AN  B BN  C CN
-         { 0, 0, 0, 0, 0, 0 }, // V0
+         { 0, 0, 1, 0, 0, 1 }, // V1
+         { 0, 0, 0, 1, 1, 0 }, // V4
          { 0, 1, 0, 0, 1, 0 }, // V3
-         { 0, 0, 1, 0, 0, 1 }, // V5
-         { 0, 1, 1, 0, 0, 0 }, // V4
-         { 1, 0, 0, 1, 0, 0 }, // V1
-         { 0, 0, 0, 1, 1, 0 }, // V2
-         { 1, 0, 0, 0, 0, 1 }, // V6
+         { 1, 0, 0, 1, 0, 0 }, // V5
          { 0, 0, 0, 0, 0, 0 } // V0
      }};
 
-    static const std::array<std::array<const bool, 6>, 8> BLDC_BRIDGE_STATE_BACKWARD_REGEN_BRAKE = // Motor step
-    {{
-         // A AN  B BN  C CN
-         { 0, 0, 0, 0, 0, 0 }, // V0
-         { 0, 0, 0, 0, 0, 1 }, // V3
-         { 0, 0, 0, 1, 0, 0 }, // V5
-         { 0, 0, 0, 1, 0, 0 }, // V4
-         { 0, 1, 0, 0, 0, 0 }, // V1
-         { 0, 0, 0, 0, 0, 1 }, // V2
-         { 0, 1, 0, 0, 0, 0 }, // V6
-         { 0, 0, 0, 0, 0, 0 } // V0
-     }};
-
-    static const std::array<std::array<const bool, 6>, 8> BLDC_BRIDGE_STATE_FORWARD_BRAKE = // Motor step
-    {{
-         // A AN  B BN  C CN
-         { 0, 0, 0, 0, 0, 0 }, // V0
-         { 0, 0, 0, 1, 0, 0 }, // V2
-         { 0, 1, 0, 0, 0, 0 }, // V4
-         { 0, 1, 0, 0, 0, 0 }, // V3
-         { 0, 0, 0, 0, 0, 1 }, // V6
-         { 0, 0, 0, 1, 0, 0 }, // V1
-         { 0, 0, 0, 0, 0, 1 }, // V5
-         { 0, 0, 0, 0, 0, 0 } // V0
-     }};
-
-    static const std::array<std::array<const bool, 6>, 8> BLDC_BRIDGE_STATE_BACKWARD_BRAKE = // Motor step
-    {{
-         // A AN  B BN  C CN
-         { 0, 0, 0, 0, 0, 0 }, // V0
-         { 0, 1, 0, 0, 0, 0 }, // V3
-         { 0, 0, 0, 0, 0, 1 }, // V5
-         { 0, 1, 0, 0, 0, 0 }, // V4
-         { 0, 0, 0, 1, 0, 0 }, // V1
-         { 0, 0, 0, 1, 0, 0 }, // V2
-         { 0, 0, 0, 0, 0, 1 }, // V6
-         { 0, 0, 0, 0, 0, 0 } // V0
-     }};
-
-#elif CHINA_MOTOR
-    static const std::array<std::array<const bool, 6>, 8> BLDC_BRIDGE_STATE_FORWARD_ACCELERATE = // Motor step
-    {{
-         { 0, 0, 0, 0, 0, 0 }, // 0
-         { 1, 0, 0, 1, 0, 0 }, // 1
-         { 0, 1, 0, 0, 1, 0 }, // 2
-         { 0, 0, 0, 1, 1, 0 }, // 3
-         { 0, 0, 1, 0, 0, 1 }, // 4
-         { 1, 0, 0, 0, 0, 1 }, // 5
-         { 0, 1, 1, 0, 0, 0 }, // 6
-         { 0, 0, 0, 0, 0, 0 }  // 0
-     }};
-
-    static const std::array<std::array<const bool, 6>, 8> BLDC_BRIDGE_STATE_BACKWARD_ACCELERATE = // Motor step
-    {{
-         // A AN  B BN  C CN
-         { 0, 0, 0, 0, 0, 0 }, // V0
-         { 0, 0, 0, 1, 1, 0 }, // V2
-         { 0, 1, 1, 0, 0, 0 }, // V4
-         { 0, 1, 0, 0, 1, 0 }, // V3
-         { 1, 0, 0, 0, 0, 1 }, // V6
-         { 1, 0, 0, 1, 0, 0 }, // V1
-         { 0, 0, 1, 0, 0, 1 }, // V5
-         { 0, 0, 0, 0, 0, 0 } // V0
-     }};
-#else
-#error "NO MOTOR DEFINED"
-#endif
-
-    if ((mDirection == Direction::FORWARD) && (mMode == Mode::ACCELERATE)) {
-        mHBridge.setBridge(BLDC_BRIDGE_STATE_FORWARD_ACCELERATE[hallPosition]);
-    } else if ((mDirection == Direction::FORWARD) && (mMode == Mode::REGEN_BRAKE)) {
-        mHBridge.setBridge(BLDC_BRIDGE_STATE_FORWARD_REGEN_BRAKE[(hallPosition)]);
-    } else if ((mDirection == Direction::BACKWARD) && (mMode == Mode::REGEN_BRAKE)) {
-        mHBridge.setBridge(BLDC_BRIDGE_STATE_BACKWARD_REGEN_BRAKE[(hallPosition)]);
-    } else if ((mDirection == Direction::FORWARD) && (mMode == Mode::ACTIVE_BRAKE)) {
-        mHBridge.setBridge(BLDC_BRIDGE_STATE_FORWARD_ACCELERATE[getPreviousHallPosition(getPreviousHallPosition(
-                                                                                                                hallPosition))
-                           ]);
-    } else if ((mDirection == Direction::BACKWARD) && (mMode == Mode::ACTIVE_BRAKE)) {
-        mHBridge.setBridge(BLDC_BRIDGE_STATE_BACKWARD_ACCELERATE[getPreviousHallPosition(getPreviousHallPosition(
-                                                                                                                 hallPosition))
-                           ]);
-    } else {
-        mHBridge.setBridge(BLDC_BRIDGE_STATE_BACKWARD_ACCELERATE[hallPosition]);
-    }
-}
-
-void SensorBLDC::trigger(void) const
-{
-    mLastHallPosition = mHallDecoder.getCurrentHallState();
-    prepareCommutation(mLastHallPosition);
-    mHBridge.triggerCommutationEvent();
+    mHBridge.setBridge(BLDC_BRIDGE_STATE_ACCELERATE[hallPosition]);
 }
 
 void SensorBLDC::checkMotor(const dev::Battery& battery) const
 {
     const float minimalRPS = 0.5;
-    const uint32_t minimalPWMinMill = 80;
     const float maximalCurrent = 0.8;
 
-    const bool motorNotStarting = (std::abs(mHallDecoder.getCurrentRPS()) < minimalRPS) &&
-                                  (minimalPWMinMill < std::abs(mHBridge.getPulsWidthPerMill()));
+    const bool motorBlocking =
+        (std::abs(battery.getCurrent()) > maximalCurrent &&
+         (std::abs(mHallDecoder.getCurrentRPS()) < minimalRPS));
 
-    const bool motorBlocking = (std::abs(battery.getCurrent()) > maximalCurrent && (std::abs(mHallDecoder.getCurrentRPS()) < minimalRPS));
-
-    if (motorNotStarting) {
-        trigger();
-    }
-
-    if (motorBlocking){
-    	 mLastHallPosition = getPreviousHallPosition(mHallDecoder.getCurrentHallState());
-    	    prepareCommutation(mLastHallPosition);
-    	    mHBridge.triggerCommutationEvent();
+    if (motorBlocking) {
+        mLastHallPosition = getPreviousHallPosition(mHallDecoder.getCurrentHallState());
+        prepareCommutation(mLastHallPosition);
+        mHBridge.triggerCommutationEvent();
     }
 }
 
 void SensorBLDC::start(void) const
 {
     mHallDecoder.registerCommutationCallback([this] {
-                                                 prepareCommutation(mHallDecoder.getCurrentHallState());
+                                                 commutate(mHallDecoder.getCurrentHallState());
                                              });
 
     mHallDecoder.registerHallEventCheckCallback([this] {
@@ -307,12 +263,9 @@ void SensorBLDC::start(void) const
     mHallMeter1.mTim.enable();
     mHallMeter2.mTim.enable();
 
-    setPulsWidthInMill(1);
+    setPulsWidthInMill(0);
 
     mHBridge.enableOutput();
-
-    trigger();
-    os::ThisTask::sleep(std::chrono::milliseconds(250));
 }
 
 void SensorBLDC::stop(void) const
@@ -320,6 +273,8 @@ void SensorBLDC::stop(void) const
     mHBridge.disableOutput();
 
     mHallDecoder.mTim.disable();
+    mHallMeter1.mTim.disable();
+    mHallMeter2.mTim.disable();
 
     mHallDecoder.unregisterHallEventCheckCallback();
     mHallDecoder.unregisterCommutationCallback();

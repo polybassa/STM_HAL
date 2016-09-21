@@ -50,6 +50,9 @@ struct HalfBridge {
     void enableOutput(void) const;
     void disableOutput(void) const;
 
+    void enableTimerCommunication(void) const;
+    void disableTimerCommunication(void) const;
+
     void triggerCommutationEvent(void) const;
 
     const enum Description mDescription;

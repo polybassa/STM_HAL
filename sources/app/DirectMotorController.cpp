@@ -85,72 +85,24 @@ void DirectMotorController::motorControllerTaskFunction(const bool& join)
 
 void DirectMotorController::updateQuadrant(void)
 {
-    const float omega = mMotor.getCurrentOmega();
-    if (omega > 0) {
-        if (mSetTorque > 0) {
-            mMotor.setMode(dev::SensorBLDC::Mode::ACCELERATE);
-        } else {
-            if (mSetPwm > 0) {
-                mMotor.setMode(dev::SensorBLDC::Mode::REGEN_BRAKE);
-            } else {
-                mMotor.setMode(dev::SensorBLDC::Mode::ACTIVE_BRAKE);
-            }
-        }
+    if (mSetTorque > 0) {
+        mMotor.setDirection(dev::SensorBLDC::Direction::FORWARD);
     } else {
-        if (mSetTorque > 0) {
-            if (mSetPwm > 0) {
-                mMotor.setMode(dev::SensorBLDC::Mode::ACTIVE_BRAKE);
-            } else {
-                mMotor.setMode(dev::SensorBLDC::Mode::REGEN_BRAKE);
-            }
-        } else {
-            mMotor.setMode(dev::SensorBLDC::Mode::ACCELERATE);
-        }
+        mMotor.setDirection(dev::SensorBLDC::Direction::BACKWARD);
     }
 }
 
 void DirectMotorController::updatePwm(void)
 {
-    const float omega = mMotor.getCurrentOmega();
-    static const float cphi = mMotorConstant;
-    static const float R = mMotorCoilResistance;
-    float voltageInputMotor = 0.0;
+    mSetPwm = static_cast<int32_t>(mSetTorque * 1000);
 
-    voltageInputMotor = (mSetTorque / cphi) * R + omega * cphi;
-
-    mSetPwm = static_cast<int32_t>((voltageInputMotor / mBattery.getVoltage()) * 1000.0);
-
-//    terminal.print("sqrt(");
-//    terminal.print("%f * (%f * %f + %f", omega*omega, A, mSetTorque* mSetTorque, cphi2);
-//    terminal.print(") + %f * %f +", B, mSetTorque * mSetTorque);
-//    terminal.print("2 * %f * %f * %f)", mMotorCoilResistance, std::abs(mSetTorque), omega);
-//    terminal.print(" = %f => %d pwm", voltageInputMotor, pulswidth / 10);
-//    terminal.print("\r\n");
+    if (std::abs(mSetTorque) < 0.1) {
+        mSetPwm = 0;
+    }
 }
 
 void DirectMotorController::updatePwmOutput(void)
 {
-    const float omega = mMotor.getCurrentOmega();
-
-    if (mMotor.getMode() == dev::SensorBLDC::Mode::REGEN_BRAKE) {
-        static const float cphi = mMotorConstant;
-        static const float R = mMotorCoilResistance;
-        float voltageInputMotor = 0.0;
-
-        voltageInputMotor = ((mSetTorque * R)/(omega * cphi* cphi));
-        mSetPwm = static_cast<int32_t>((voltageInputMotor) * 1000.0);
-    }
-
-    if (omega > -0.1 && omega < 0.1){
-
-        	if (omega < 0 && mSetTorque > 0) {
-        		mSetPwm *= -1;
-        	} else if (omega > 0 && mSetTorque < 0) {
-        		mSetPwm *= -1;
-        	}
-        }
-
-
     mMotor.setPulsWidthInMill(static_cast<int32_t>(std::abs(mSetPwm)));
 }
 

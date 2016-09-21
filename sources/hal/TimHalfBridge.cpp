@@ -72,20 +72,9 @@ void HalfBridge::setOutputForChannel(const uint16_t channel, const bool highStat
         return;
     }
     if (highState) {
-        // PWM at low side FET of bridge U
-        // active freewheeling at high side FET of bridge U
-        // if low side FET is in PWM off mode then the hide side FET
-        // is ON for active freewheeling. This mode needs correct definition
-        // of dead time otherwise we have shoot-through problems
         TIM_SelectOCxM(mTim.getBasePointer(), channel, TIM_ForcedAction_Active);
         TIM_CCxCmd(mTim.getBasePointer(), channel, TIM_CCx_Enable);
-#ifdef ACTIVE_FREEWHEELING
-        // active freewheeling
-        //TIM_CCxNCmd(mTim.getBasePointer(), channel, TIM_CCxN_Enable);
-#else
-        // disable active freewheeling
         TIM_CCxNCmd(mTim.getBasePointer(), channel, TIM_CCxN_Disable);
-#endif
     } else {
         // High side FET: OFF
         TIM_CCxCmd(mTim.getBasePointer(), channel, TIM_CCx_Disable);
@@ -119,9 +108,18 @@ void HalfBridge::triggerCommutationEvent(void) const
     TIM_GenerateEvent(mTim.getBasePointer(), TIM_EventSource_COM);
 }
 
+void HalfBridge::enableTimerCommunication(void) const
+{
+    TIM_SelectCOM(mTim.getBasePointer(), ENABLE);
+}
+
+void HalfBridge::disableTimerCommunication(void) const
+{
+    TIM_SelectCOM(mTim.getBasePointer(), DISABLE);
+}
+
 void HalfBridge::initialize(void) const
 {
-    /* Channel 1, 2, 3 are set to PWM mode */
     TIM_OC1Init(mTim.getBasePointer(), &mOcConfiguration);
     TIM_OC2Init(mTim.getBasePointer(), &mOcConfiguration);
     TIM_OC3Init(mTim.getBasePointer(), &mOcConfiguration);

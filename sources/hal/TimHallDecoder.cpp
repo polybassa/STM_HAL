@@ -172,7 +172,6 @@ void HallDecoder::initialize(void) const
     TIM_SelectMasterSlaveMode(mTim.getBasePointer(), TIM_MasterSlaveMode_Enable);
 
     /* Channel 2 output compare signal is connected to TRIGO */
-    // Uncomment for automatic trigger of commutation
     TIM_SelectOutputTrigger(mTim.getBasePointer(), (uint16_t)TIM_TRGOSource_OC2Ref);
 
     unregisterHallEventCheckCallback();
