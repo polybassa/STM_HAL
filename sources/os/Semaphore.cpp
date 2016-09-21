@@ -14,6 +14,7 @@
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>. */
 
 #include "Semaphore.h"
+#include "trace.h"
 
 using os::Semaphore;
 
@@ -54,6 +55,7 @@ bool Semaphore::giveFromISR(void) const
     BaseType_t highPriorityTaskWoken = 0;
     bool retVal = *this ? xSemaphoreGiveFromISR(mSemaphoreHandle, &highPriorityTaskWoken) : false;
     if (highPriorityTaskWoken) {
+    	SEGGER_SYSVIEW_RecordExitISRToScheduler();
         ThisTask::yield();
     }
     return retVal;
@@ -64,6 +66,7 @@ bool Semaphore::takeFromISR(void) const
     BaseType_t highPriorityTaskWoken = 0;
     bool retVal = *this ? xSemaphoreTakeFromISR(mSemaphoreHandle, &highPriorityTaskWoken) : false;
     if (highPriorityTaskWoken) {
+    	SEGGER_SYSVIEW_RecordExitISRToScheduler();
         ThisTask::yield();
     }
     return retVal;

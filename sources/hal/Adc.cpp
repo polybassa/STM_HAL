@@ -27,6 +27,7 @@ using hal::Factory;
 
 extern "C" void ADC1_2_IRQHandler(void)
 {
+	SEGGER_SYSVIEW_RecordEnterISR();
     constexpr auto& adc1 = Factory<Adc>::get<Adc::Description::PMD_ADC1>();
 
     if (ADC_GetITStatus(adc1.getBasePointer(), ADC_FLAG_EOC) == SET) {
@@ -40,6 +41,7 @@ extern "C" void ADC1_2_IRQHandler(void)
         Adc::ConversionCompleteSemaphores[static_cast<size_t>(adc2.mDescription)].giveFromISR();
         ADC_ClearITPendingBit(adc2.getBasePointer(), ADC_FLAG_EOC);
     }
+    SEGGER_SYSVIEW_RecordExitISR();
 }
 
 ADC_TypeDef* Adc::getBasePointer(void) const

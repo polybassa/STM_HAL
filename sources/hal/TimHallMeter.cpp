@@ -32,22 +32,28 @@ static constexpr float M_PI = 3.14159265358979323846f;
 #if TIM8_HALLMETER_INTERRUPT_ENABLED
 extern "C" void TIM8_CC_IRQHandler(void)
 {
+	SEGGER_SYSVIEW_RecordEnterISR();
     constexpr auto& hallMeter = Factory<HallMeter>::get<HallMeter::BLDC_METER>();
     hallMeter.interruptHandler();
+    SEGGER_SYSVIEW_RecordExitISR();
 }
 
 extern "C" void TIM8_UP_IRQHandler(void)
 {
+	SEGGER_SYSVIEW_RecordEnterISR();
     constexpr auto& hallMeter = Factory<HallMeter>::get<HallMeter::BLDC_METER>();
     hallMeter.interruptHandler();
+    SEGGER_SYSVIEW_RecordExitISR();
 }
 #endif
 
 #if TIM2_HALLMETER_INTERRUPT_ENABLED
 extern "C" void TIM2_IRQHandler(void)
 {
+	SEGGER_SYSVIEW_RecordEnterISR();
     constexpr auto& hallMeter = Factory<HallMeter>::get<HallMeter::BLDC_METER_32BIT>();
     hallMeter.interruptHandler();
+    SEGGER_SYSVIEW_RecordExitISR();
 }
 #endif
 

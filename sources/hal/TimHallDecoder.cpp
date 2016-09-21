@@ -32,8 +32,11 @@ static constexpr float M_PI = 3.14159265358979323846f;
 
 extern "C" void TIM3_IRQHandler(void)
 {
+    SEGGER_SYSVIEW_RecordEnterISR();
+    SEGGER_SYSVIEW_Print("Hall");
     constexpr auto& hallDecoder = Factory<HallDecoder>::get<HallDecoder::BLDC_DECODER>();
     hallDecoder.interruptHandler();
+    SEGGER_SYSVIEW_RecordExitISR();
 }
 
 void HallDecoder::interruptHandler(void) const

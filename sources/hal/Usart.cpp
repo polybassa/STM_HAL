@@ -24,40 +24,53 @@ using hal::Usart;
 #if USART1_INTERRUPT_ENABLED
 void USART1_IRQHandler(void)
 {
+    SEGGER_SYSVIEW_RecordEnterISR();
     constexpr const Usart& uart = Factory<Usart>::getByPeripherie<USART1_BASE>();
     Usart::USART_IRQHandler(uart);
+    SEGGER_SYSVIEW_RecordExitISR();
 }
 #endif
 
 #if USART2_INTERRUPT_ENABLED
 void USART2_IRQHandler(void)
-{
+{    SEGGER_SYSVIEW_RecordEnterISR();
+
     constexpr const Usart& uart = Factory<Usart>::getByPeripherie<USART2_BASE>();
     Usart::USART_IRQHandler(uart);
+    SEGGER_SYSVIEW_RecordExitISR();
 }
 #endif
 
 #if USART3_INTERRUPT_ENABLED
 void USART3_IRQHandler(void)
-{
+{    SEGGER_SYSVIEW_RecordEnterISR();
+
     constexpr const Usart& uart = Factory<Usart>::getByPeripherie<USART3_BASE>();
     Usart::USART_IRQHandler(uart);
+    SEGGER_SYSVIEW_RecordExitISR();
+
 }
 #endif
 
 #if USART4_INTERRUPT_ENABLED
 void UART4_IRQHandler(void)
-{
+{    SEGGER_SYSVIEW_RecordEnterISR();
+
     constexpr const Usart& uart = Factory<Usart>::getByPeripherie<UART4_BASE>();
     Usart::USART_IRQHandler(uart);
+    SEGGER_SYSVIEW_RecordExitISR();
+
 }
 #endif
 
 #if USART5_INTERRUPT_ENABLED
 void UART5_IRQHandler(void)
-{
+{    SEGGER_SYSVIEW_RecordEnterISR();
+
     constexpr const Usart& uart = Factory<Usart>::getByPeripherie<UART5_BASE>();
     Usart::USART_IRQHandler(uart);
+    SEGGER_SYSVIEW_RecordExitISR();
+
 }
 #endif
 
