@@ -138,4 +138,10 @@ ${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/port.o
 ${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/heap_3.o
 ${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/event_groups.o
 
+# SEGGER_SYSVIEW
+${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/SEGGER_SYSVIEW_Config_FreeRTOS.o
+${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/SEGGER_SYSVIEW.o
+${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/SEGGER_RTT.o
+${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/SEGGER_SYSVIEW_FreeRTOS.o
+
 endif

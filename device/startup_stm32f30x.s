@@ -127,6 +127,11 @@ LoopFillHeap:
 
 /* Call the clock system initialization function.*/
   bl  SystemInit   
+
+/* INIT SEGGER SYSTEMVIEW */
+  bl  SEGGER_SYSVIEW_Conf
+  bl  SEGGER_SYSVIEW_Start
+
 /* Call static constructors */
   bl __libc_init_array
 /* Call the application's entry point.*/
