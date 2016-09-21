@@ -54,6 +54,7 @@ struct SensorBLDC {
     float getCurrentRPS(void) const;
     float getCurrentOmega(void) const;
     Direction getDirection(void) const;
+    void setDirection(const Direction) const;
     int32_t getPulsWidthPerMill(void) const;
     uint32_t getNumberOfPolePairs(void) const;
     Mode getMode(void) const;
@@ -87,6 +88,9 @@ private:
 
     void computeDirection(void) const;
     void prepareCommutation(const size_t hallPosition) const;
+    void manualCommutation(const size_t hallPosition) const;
+    void commutate(const size_t hallPosition) const;
+
     size_t getNextHallPosition(const size_t position) const;
     size_t getPreviousHallPosition(const size_t position) const;
 
