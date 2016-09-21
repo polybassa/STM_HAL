@@ -1,5 +1,5 @@
 /*
-    FreeRTOS V8.2.1 - Copyright (C) 2015 Real Time Engineers Ltd.
+    FreeRTOS V8.2.3 - Copyright (C) 2015 Real Time Engineers Ltd.
     All rights reserved
 
     VISIT http://www.FreeRTOS.org TO ENSURE YOU ARE USING THE LATEST VERSION.
@@ -8,7 +8,7 @@
 
     FreeRTOS is free software; you can redistribute it and/or modify it under
     the terms of the GNU General Public License (version 2) as published by the
-    Free Software Foundation >>!AND MODIFIED BY!<< the FreeRTOS exception.
+    Free Software Foundation >>>> AND MODIFIED BY <<<< the FreeRTOS exception.
 
     ***************************************************************************
     >>!   NOTE: The modification to the GPL is included to allow you to     !<<
@@ -99,8 +99,8 @@ functions but without including stdio.h here. */
 #endif /* configUSE_STATS_FORMATTING_FUNCTIONS == 1 ) */
 
 /* Sanity check the configuration. */
-#if configUSE_TICKLESS_IDLE != 0
-	#if INCLUDE_vTaskSuspend != 1
+#if( configUSE_TICKLESS_IDLE != 0 )
+	#if( INCLUDE_vTaskSuspend != 1 )
 		#error INCLUDE_vTaskSuspend must be set to 1 if configUSE_TICKLESS_IDLE is not set to 0
 	#endif /* INCLUDE_vTaskSuspend */
 #endif /* configUSE_TICKLESS_IDLE */
@@ -247,7 +247,7 @@ PRIVILEGED_DATA static volatile UBaseType_t uxPendedTicks 			= ( UBaseType_t ) 0
 PRIVILEGED_DATA static volatile BaseType_t xYieldPending 			= pdFALSE;
 PRIVILEGED_DATA static volatile BaseType_t xNumOfOverflows 			= ( BaseType_t ) 0;
 PRIVILEGED_DATA static UBaseType_t uxTaskNumber 					= ( UBaseType_t ) 0U;
-PRIVILEGED_DATA static volatile TickType_t xNextTaskUnblockTime		= portMAX_DELAY;
+PRIVILEGED_DATA static volatile TickType_t xNextTaskUnblockTime		= ( TickType_t ) 0U; /* Initialised to portMAX_DELAY before the scheduler starts. */
 
 /* Context switches are held pending while the scheduler is suspended.  Also,
 interrupts must not manipulate the xGenericListItem of a TCB, or any of the
@@ -388,6 +388,16 @@ count overflows. */
  */
 #define prvAddTaskToReadyList( pxTCB )																\
 	traceMOVED_TASK_TO_READY_STATE( pxTCB );														\
+	taskRECORD_READY_PRIORITY( ( pxTCB )->uxPriority );												\
+	vListInsertEnd( &( pxReadyTasksLists[ ( pxTCB )->uxPriority ] ), &( ( pxTCB )->xGenericListItem ) )
+
+/*
+ * Place the task represented by pxTCB which has been in a ready list before
+ * into the appropriate ready list for the task.
+ * It is inserted at the end of the list.
+ */
+#define prvReaddTaskToReadyList( pxTCB )																\
+	traceREADDED_TASK_TO_READY_STATE( pxTCB );														\
 	taskRECORD_READY_PRIORITY( ( pxTCB )->uxPriority );												\
 	vListInsertEnd( &( pxReadyTasksLists[ ( pxTCB )->uxPriority ] ), &( ( pxTCB )->xGenericListItem ) )
 /*-----------------------------------------------------------*/
@@ -1062,8 +1072,8 @@ StackType_t *pxTopOfStack;
 
 		taskENTER_CRITICAL();
 		{
-			/* If null is passed in here then we are changing the
-			priority of the calling function. */
+			/* If null is passed in here then it is the priority of the that
+			called uxTaskPriorityGet() that is being queried. */
 			pxTCB = prvGetTCBFromHandle( xTask );
 			uxReturn = pxTCB->uxPriority;
 		}
@@ -1252,7 +1262,7 @@ StackType_t *pxTopOfStack;
 					{
 						mtCOVERAGE_TEST_MARKER();
 					}
-					prvAddTaskToReadyList( pxTCB );
+					prvReaddTaskToReadyList( pxTCB );
 				}
 				else
 				{
@@ -1313,7 +1323,7 @@ StackType_t *pxTopOfStack;
 			{
 				mtCOVERAGE_TEST_MARKER();
 			}
-
+			traceMOVED_TASK_TO_SUSPENDED_LIST(pxTCB);
 			vListInsertEnd( &xSuspendedTaskList, &( pxTCB->xGenericListItem ) );
 		}
 		taskEXIT_CRITICAL();
@@ -1549,12 +1559,12 @@ BaseType_t xReturn;
 	{
 		/* Create the idle task, storing its handle in xIdleTaskHandle so it can
 		be returned by the xTaskGetIdleTaskHandle() function. */
-		xReturn = xTaskCreate( prvIdleTask, "0IDLE", tskIDLE_STACK_SIZE, ( void * ) NULL, ( tskIDLE_PRIORITY | portPRIVILEGE_BIT ), &xIdleTaskHandle ); /*lint !e961 MISRA exception, justified as it is not a redundant explicit cast to all supported compilers. */
+		xReturn = xTaskCreate( prvIdleTask, "IDLE", tskIDLE_STACK_SIZE, ( void * ) NULL, ( tskIDLE_PRIORITY | portPRIVILEGE_BIT ), &xIdleTaskHandle ); /*lint !e961 MISRA exception, justified as it is not a redundant explicit cast to all supported compilers. */
 	}
 	#else
 	{
 		/* Create the idle task without storing its handle. */
-		xReturn = xTaskCreate( prvIdleTask, "0IDLE", tskIDLE_STACK_SIZE, ( void * ) NULL, ( tskIDLE_PRIORITY | portPRIVILEGE_BIT ), NULL );  /*lint !e961 MISRA exception, justified as it is not a redundant explicit cast to all supported compilers. */
+		xReturn = xTaskCreate( prvIdleTask, "IDLE", tskIDLE_STACK_SIZE, ( void * ) NULL, ( tskIDLE_PRIORITY | portPRIVILEGE_BIT ), NULL );  /*lint !e961 MISRA exception, justified as it is not a redundant explicit cast to all supported compilers. */
 	}
 	#endif /* INCLUDE_xTaskGetIdleTaskHandle */
 
@@ -1588,6 +1598,7 @@ BaseType_t xReturn;
 		}
 		#endif /* configUSE_NEWLIB_REENTRANT */
 
+		xNextTaskUnblockTime = portMAX_DELAY;
 		xSchedulerRunning = pdTRUE;
 		xTickCount = ( TickType_t ) 0U;
 
@@ -2240,8 +2251,7 @@ void vTaskSwitchContext( void )
 		#endif /* configGENERATE_RUN_TIME_STATS */
 
 		/* Check for stack overflow, if configured. */
-		taskFIRST_CHECK_FOR_STACK_OVERFLOW();
-		taskSECOND_CHECK_FOR_STACK_OVERFLOW();
+		taskCHECK_FOR_STACK_OVERFLOW();
 
 		/* Select a new task to run using either the generic C or port
 		optimised asm code. */
@@ -2295,6 +2305,7 @@ TickType_t xTimeToWake;
 			/* Add the task to the suspended task list instead of a delayed task
 			list to ensure the task is not woken by a timing event.  It will
 			block indefinitely. */
+			traceMOVED_TASK_TO_SUSPENDED_LIST(pxCurrentTCB);
 			vListInsertEnd( &xSuspendedTaskList, &( pxCurrentTCB->xGenericListItem ) );
 		}
 		else
@@ -2361,6 +2372,7 @@ TickType_t xTimeToWake;
 			/* Add the task to the suspended task list instead of a delayed task
 			list to ensure it is not woken by a timing event.  It will block
 			indefinitely. */
+			traceMOVED_TASK_TO_SUSPENDED_LIST(pxCurrentTCB);
 			vListInsertEnd( &xSuspendedTaskList, &( pxCurrentTCB->xGenericListItem ) );
 		}
 		else
@@ -2386,7 +2398,7 @@ TickType_t xTimeToWake;
 
 #if configUSE_TIMERS == 1
 
-	void vTaskPlaceOnEventListRestricted( List_t * const pxEventList, const TickType_t xTicksToWait )
+	void vTaskPlaceOnEventListRestricted( List_t * const pxEventList, const TickType_t xTicksToWait, const BaseType_t xWaitIndefinitely )
 	{
 	TickType_t xTimeToWake;
 
@@ -2419,12 +2431,45 @@ TickType_t xTimeToWake;
 			mtCOVERAGE_TEST_MARKER();
 		}
 
-		/* Calculate the time at which the task should be woken if the event does
-		not occur.  This may overflow but this doesn't matter. */
-		xTimeToWake = xTickCount + xTicksToWait;
+		/* If vTaskSuspend() is available then the suspended task list is also
+		available and a task that is blocking indefinitely can enter the
+		suspended state (it is not really suspended as it will re-enter the
+		Ready state when the event it is waiting indefinitely for occurs).
+		Blocking indefinitely is useful when using tickless idle mode as when
+		all tasks are blocked indefinitely all timers can be turned off. */
+		#if( INCLUDE_vTaskSuspend == 1 )
+		{
+			if( xWaitIndefinitely == pdTRUE )
+			{
+				/* Add the task to the suspended task list instead of a delayed
+				task list to ensure the task is not woken by a timing event.  It
+				will block indefinitely. */
+				traceMOVED_TASK_TO_SUSPENDED_LIST(pxCurrentTCB);
+				vListInsertEnd( &xSuspendedTaskList, &( pxCurrentTCB->xGenericListItem ) );
+			}
+			else
+			{
+				/* Calculate the time at which the task should be woken if the
+				event does not occur.  This may overflow but this doesn't
+				matter. */
+				xTimeToWake = xTickCount + xTicksToWait;
+				traceTASK_DELAY_UNTIL();
+				prvAddCurrentTaskToDelayedList( xTimeToWake );
+			}
+		}
+		#else
+		{
+			/* Calculate the time at which the task should be woken if the event
+			does not occur.  This may overflow but this doesn't matter. */
+			xTimeToWake = xTickCount + xTicksToWait;
+			traceTASK_DELAY_UNTIL();
+			prvAddCurrentTaskToDelayedList( xTimeToWake );
 
-		traceTASK_DELAY_UNTIL();
-		prvAddCurrentTaskToDelayedList( xTimeToWake );
+			/* Remove compiler warnings when INCLUDE_vTaskSuspend() is not
+			defined. */
+			( void ) xWaitIndefinitely;
+		}
+		#endif
 	}
 
 #endif /* configUSE_TIMERS */
@@ -2480,12 +2525,12 @@ BaseType_t xReturn;
 		xReturn = pdFALSE;
 	}
 
-	#if( configUSE_TICKLESS_IDLE == 1 )
+	#if( configUSE_TICKLESS_IDLE != 0 )
 	{
 		/* If a task is blocked on a kernel object then xNextTaskUnblockTime
 		might be set to the blocked task's time out time.  If the task is
 		unblocked for a reason other than a timeout xNextTaskUnblockTime is
-		normally left unchanged, because it is automatically get reset to a new
+		normally left unchanged, because it is automatically reset to a new
 		value when the tick count equals xNextTaskUnblockTime.  However if
 		tickless idling is used it might be more important to enter sleep mode
 		at the earliest possible time - so reset xNextTaskUnblockTime here to
@@ -2758,10 +2803,12 @@ static portTASK_FUNCTION( prvIdleTask, pvParameters )
 }
 /*-----------------------------------------------------------*/
 
-#if configUSE_TICKLESS_IDLE != 0
+#if( configUSE_TICKLESS_IDLE != 0 )
 
 	eSleepModeStatus eTaskConfirmSleepModeStatus( void )
 	{
+	/* The idle task exists in addition to the application tasks. */
+	const UBaseType_t uxNonApplicationTasks = 1;
 	eSleepModeStatus eReturn = eStandardSleep;
 
 		if( listCURRENT_LIST_LENGTH( &xPendingReadyList ) != 0 )
@@ -2776,29 +2823,23 @@ static portTASK_FUNCTION( prvIdleTask, pvParameters )
 		}
 		else
 		{
-			#if configUSE_TIMERS == 0
+			/* If all the tasks are in the suspended list (which might mean they
+			have an infinite block time rather than actually being suspended)
+			then it is safe to turn all clocks off and just wait for external
+			interrupts. */
+			if( listCURRENT_LIST_LENGTH( &xSuspendedTaskList ) == ( uxCurrentNumberOfTasks - uxNonApplicationTasks ) )
 			{
-				/* The idle task exists in addition to the application tasks. */
-				const UBaseType_t uxNonApplicationTasks = 1;
-
-				/* If timers are not being used and all the tasks are in the
-				suspended list (which might mean they have an infinite block
-				time rather than actually being suspended) then it is safe to
-				turn all clocks off and just wait for external interrupts. */
-				if( listCURRENT_LIST_LENGTH( &xSuspendedTaskList ) == ( uxCurrentNumberOfTasks - uxNonApplicationTasks ) )
-				{
-					eReturn = eNoTasksWaitingTimeout;
-				}
-				else
-				{
-					mtCOVERAGE_TEST_MARKER();
-				}
+				eReturn = eNoTasksWaitingTimeout;
 			}
-			#endif /* configUSE_TIMERS */
+			else
+			{
+				mtCOVERAGE_TEST_MARKER();
+			}
 		}
 
 		return eReturn;
 	}
+
 #endif /* configUSE_TICKLESS_IDLE */
 /*-----------------------------------------------------------*/
 
@@ -2957,7 +2998,8 @@ UBaseType_t x;
 	{
 	TCB_t *pxTCB;
 
-		/* If null is passed in here then we are deleting ourselves. */
+		/* If null is passed in here then we are modifying the MPU settings of
+		the calling task. */
 		pxTCB = prvGetTCBFromHandle( xTaskToModify );
 
         vPortStoreTaskMPUSettings( &( pxTCB->xMPUSettings ), xRegions, NULL, 0 );
@@ -3046,11 +3088,13 @@ static void prvAddCurrentTaskToDelayedList( const TickType_t xTimeToWake )
 
 	if( xTimeToWake < xTickCount )
 	{
+		traceMOVED_TASK_TO_OVERFLOW_DELAYED_LIST();
 		/* Wake time has overflowed.  Place this item in the overflow list. */
 		vListInsert( pxOverflowDelayedTaskList, &( pxCurrentTCB->xGenericListItem ) );
 	}
 	else
 	{
+		traceMOVED_TASK_TO_DELAYED_LIST();
 		/* The wake time has not overflowed, so the current block list is used. */
 		vListInsert( pxDelayedTaskList, &( pxCurrentTCB->xGenericListItem ) );
 
@@ -3277,6 +3321,19 @@ TCB_t *pxNewTCB;
 #endif /* INCLUDE_uxTaskGetStackHighWaterMark */
 /*-----------------------------------------------------------*/
 
+#if (INCLUDE_pxTaskGetStackStart == 1)
+	uint8_t* pxTaskGetStackStart( TaskHandle_t xTask)
+	{
+	TCB_t *pxTCB;
+	UBaseType_t uxReturn;
+
+		pxTCB = prvGetTCBFromHandle( xTask );
+		return ( uint8_t * ) pxTCB->pxStack;
+	}
+
+#endif /* INCLUDE_pxTaskGetStackStart */
+/*-----------------------------------------------------------*/
+
 #if ( INCLUDE_vTaskDelete == 1 )
 
 	static void prvDeleteTCB( TCB_t *pxTCB )
@@ -3426,7 +3483,7 @@ TCB_t *pxTCB;
 
 					/* Inherit the priority before being moved into the new list. */
 					pxTCB->uxPriority = pxCurrentTCB->uxPriority;
-					prvAddTaskToReadyList( pxTCB );
+					prvReaddTaskToReadyList( pxTCB );
 				}
 				else
 				{
@@ -3498,7 +3555,7 @@ TCB_t *pxTCB;
 					any other purpose if this task is running, and it must be
 					running to give back the mutex. */
 					listSET_LIST_ITEM_VALUE( &( pxTCB->xEventListItem ), ( TickType_t ) configMAX_PRIORITIES - ( TickType_t ) pxTCB->uxPriority ); /*lint !e961 MISRA exception as the casts are only redundant for some ports. */
-					prvAddTaskToReadyList( pxTCB );
+					prvReaddTaskToReadyList( pxTCB );
 
 					/* Return true to indicate that a context switch is required.
 					This is only actually required in the corner case whereby
@@ -3551,7 +3608,6 @@ TCB_t *pxTCB;
 			{
 				portASSERT_IF_IN_ISR();
 			}
-
 		}
 		else
 		{
@@ -3599,14 +3655,14 @@ TCB_t *pxTCB;
 
 	static char *prvWriteNameToBuffer( char *pcBuffer, const char *pcTaskName )
 	{
-	BaseType_t x;
+	size_t x;
 
 		/* Start by copying the entire string. */
 		strcpy( pcBuffer, pcTaskName );
 
 		/* Pad the end of the string with spaces to ensure columns line up when
 		printed out. */
-		for( x = strlen( pcBuffer ); x < ( configMAX_TASK_NAME_LEN - 1 ); x++ )
+		for( x = strlen( pcBuffer ); x < ( size_t ) ( configMAX_TASK_NAME_LEN - 1 ); x++ )
 		{
 			pcBuffer[ x ] = ' ';
 		}
@@ -3907,6 +3963,7 @@ TickType_t uxReturn;
 							of a delayed task list to ensure the task is not
 							woken by a timing event.  It will block
 							indefinitely. */
+							traceMOVED_TASK_TO_SUSPENDED_LIST(pxCurrentTCB);
 							vListInsertEnd( &xSuspendedTaskList, &( pxCurrentTCB->xGenericListItem ) );
 						}
 						else
@@ -3930,6 +3987,8 @@ TickType_t uxReturn;
 					}
 					#endif /* INCLUDE_vTaskSuspend */
 
+					traceTASK_NOTIFY_TAKE_BLOCK();
+
 					/* All ports are written to allow a yield in a critical
 					section (some will yield immediately, others wait until the
 					critical section exits) - but it is not something that
@@ -3950,6 +4009,7 @@ TickType_t uxReturn;
 
 		taskENTER_CRITICAL();
 		{
+			traceTASK_NOTIFY_TAKE();
 			ulReturn = pxCurrentTCB->ulNotifiedValue;
 
 			if( ulReturn != 0UL )
@@ -4022,6 +4082,7 @@ TickType_t uxReturn;
 							of a delayed task list to ensure the task is not
 							woken by a timing event.  It will block
 							indefinitely. */
+							traceMOVED_TASK_TO_SUSPENDED_LIST(pxCurrentTCB);
 							vListInsertEnd( &xSuspendedTaskList, &( pxCurrentTCB->xGenericListItem ) );
 						}
 						else
@@ -4045,6 +4106,8 @@ TickType_t uxReturn;
 					}
 					#endif /* INCLUDE_vTaskSuspend */
 
+					traceTASK_NOTIFY_WAIT_BLOCK();
+
 					/* All ports are written to allow a yield in a critical
 					section (some will yield immediately, others wait until the
 					critical section exits) - but it is not something that
@@ -4065,6 +4128,8 @@ TickType_t uxReturn;
 
 		taskENTER_CRITICAL();
 		{
+			traceTASK_NOTIFY_WAIT();
+
 			if( pulNotificationValue != NULL )
 			{
 				/* Output the current notification value, which may or may not
@@ -4153,6 +4218,7 @@ TickType_t uxReturn;
 					break;
 			}
 
+			traceTASK_NOTIFY();
 
 			/* If the task is in the blocked state specifically to wait for a
 			notification then unblock it now. */
@@ -4163,6 +4229,22 @@ TickType_t uxReturn;
 
 				/* The task should not have been on an event list. */
 				configASSERT( listLIST_ITEM_CONTAINER( &( pxTCB->xEventListItem ) ) == NULL );
+
+				#if( configUSE_TICKLESS_IDLE != 0 )
+				{
+					/* If a task is blocked waiting for a notification then
+					xNextTaskUnblockTime might be set to the blocked task's time
+					out time.  If the task is unblocked for a reason other than
+					a timeout xNextTaskUnblockTime is normally left unchanged,
+					because it will automatically get reset to a new value when
+					the tick count equals xNextTaskUnblockTime.  However if
+					tickless idling is used it might be more important to enter
+					sleep mode at the earliest possible time - so reset
+					xNextTaskUnblockTime here to ensure it is updated at the
+					earliest possible time. */
+					prvResetNextTaskUnblockTime();
+				}
+				#endif
 
 				if( pxTCB->uxPriority > pxCurrentTCB->uxPriority )
 				{
@@ -4190,7 +4272,7 @@ TickType_t uxReturn;
 
 #if( configUSE_TASK_NOTIFICATIONS == 1 )
 
-	BaseType_t xTaskNotifyFromISR( TaskHandle_t xTaskToNotify, uint32_t ulValue, eNotifyAction eAction, BaseType_t *pxHigherPriorityTaskWoken )
+	BaseType_t xTaskGenericNotifyFromISR( TaskHandle_t xTaskToNotify, uint32_t ulValue, eNotifyAction eAction, uint32_t *pulPreviousNotificationValue, BaseType_t *pxHigherPriorityTaskWoken )
 	{
 	TCB_t * pxTCB;
 	eNotifyValue eOriginalNotifyState;
@@ -4221,8 +4303,12 @@ TickType_t uxReturn;
 
 		uxSavedInterruptStatus = portSET_INTERRUPT_MASK_FROM_ISR();
 		{
-			eOriginalNotifyState = pxTCB->eNotifyState;
+			if( pulPreviousNotificationValue != NULL )
+			{
+				*pulPreviousNotificationValue = pxTCB->ulNotifiedValue;
+			}
 
+			eOriginalNotifyState = pxTCB->eNotifyState;
 			pxTCB->eNotifyState = eNotified;
 
 			switch( eAction )
@@ -4257,6 +4343,7 @@ TickType_t uxReturn;
 					break;
 			}
 
+			traceTASK_NOTIFY_FROM_ISR();
 
 			/* If the task is in the blocked state specifically to wait for a
 			notification then unblock it now. */
@@ -4339,6 +4426,8 @@ TickType_t uxReturn;
 			semaphore. */
 			( pxTCB->ulNotifiedValue )++;
 
+			traceTASK_NOTIFY_GIVE_FROM_ISR();
+
 			/* If the task is in the blocked state specifically to wait for a
 			notification then unblock it now. */
 			if( eOriginalNotifyState == eWaitingNotification )
@@ -4380,6 +4469,37 @@ TickType_t uxReturn;
 
 /*-----------------------------------------------------------*/
 
+#if( configUSE_TASK_NOTIFICATIONS == 1 )
+
+	BaseType_t xTaskNotifyStateClear( TaskHandle_t xTask )
+	{
+	TCB_t *pxTCB;
+	BaseType_t xReturn;
+
+		pxTCB = ( TCB_t * ) xTask;
+
+		/* If null is passed in here then it is the calling task that is having
+		its notification state cleared. */
+		pxTCB = prvGetTCBFromHandle( pxTCB );
+
+		taskENTER_CRITICAL();
+		{
+			if( pxTCB->eNotifyState == eNotified )
+			{
+				pxTCB->eNotifyState = eNotWaitingNotification;
+				xReturn = pdPASS;
+			}
+			else
+			{
+				xReturn = pdFAIL;
+			}
+		}
+		taskEXIT_CRITICAL();
+
+		return xReturn;
+	}
+
+#endif /* configUSE_TASK_NOTIFICATIONS */
 
 #ifdef FREERTOS_MODULE_TEST
 	#include "tasks_test_access_functions.h"

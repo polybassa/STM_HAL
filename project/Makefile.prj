@@ -27,6 +27,11 @@ VPATH+=${RTOS_SOURCE_DIR}/portable/MemMang
 VPATH+=${RTOS_SOURCE_DIR}/portable/GCC/ARM_CM4F
 VPATH+=${ROOT}/libraries/CMSIS/Source
 VPATH+=${ROOT}/libraries/STM32F30x_StdPeriph_Driver/src
+
+VPATH+=${ROOT}/libraries/SystemView_Src_V240a/SEGGER
+VPATH+=${ROOT}/libraries/SystemView_Src_V240a/OS
+VPATH+=${ROOT}/libraries/SystemView_Src_V240a/Config
+
 VPATH+=${ROOT}/device
 VPATH+=${PRJ_PATH}
 
@@ -46,6 +51,10 @@ IPATH+=${RTOS_SOURCE_DIR}/portable/GCC/ARM_CM4F
 IPATH+=${ROOT}/libraries/CMSIS/Include
 IPATH+=${ROOT}/libraries/STM32F30x_StdPeriph_Driver/inc
 IPATH+=${ROOT}/libraries
+
+IPATH+=${ROOT}/libraries/SystemView_Src_V240a/SEGGER
+IPATH+=${ROOT}/libraries/SystemView_Src_V240a/OS
+IPATH+=${ROOT}/libraries/SystemView_Src_V240a/Config
 
 # PMD firmware
 ${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/main.o
