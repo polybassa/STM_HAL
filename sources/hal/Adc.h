@@ -128,6 +128,8 @@ class Factory<Adc>
         // INFO: To speedup ADC Conversion, choose a smaller divider e.g. 6
 
         RCC_AHBPeriphClockCmd(RCC_AHBPeriph_ADC12, ENABLE);
+        RCC_AHBPeriphClockCmd(RCC_AHBPeriph_ADC34, ENABLE);
+
 
         ADC_DeInit(ADC1);
         ADC_DeInit(ADC2);
