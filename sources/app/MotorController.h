@@ -79,9 +79,7 @@ public:
     virtual void setTorque(const float) override;
     virtual float getCurrentRPS(void) const override;
 
-#if defined(DEBUG)
     void setTunings(const float kp, const float ki, const float kd);
-#endif
 
 #ifdef UNITTEST
     void triggerTaskExecution(void) { this->motorControllerTaskFunction(true); }
