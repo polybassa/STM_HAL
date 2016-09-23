@@ -16,8 +16,6 @@
 #ifndef _TRACE_H_
 #define _TRACE_H_
 
-#include "SEGGER_SYSVIEW.h"
-
 #define ZONE_ERROR 0x00000001
 #define ZONE_WARNING 0x00000002
 #define ZONE_INFO 0x00000004

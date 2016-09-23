@@ -111,7 +111,6 @@ bool Queue<T, n>::sendFrontFromISR(T message) const
 
     bool retValue = xQueueSendToFrontFromISR(mQueueHandle, &message, &highPriorityTaskWoken);
     if (highPriorityTaskWoken) {
-        SEGGER_SYSVIEW_RecordExitISRToScheduler();
         ThisTask::yield();
     }
     return retValue;
@@ -124,7 +123,6 @@ bool Queue<T, n>::sendBackFromISR(T message) const
 
     bool retValue = xQueueSendToBackFromISR(mQueueHandle, &message, &highPriorityTaskWoken);
     if (highPriorityTaskWoken) {
-        SEGGER_SYSVIEW_RecordExitISRToScheduler();
         ThisTask::yield();
     }
     return retValue;
@@ -218,7 +216,6 @@ bool Queue<T, 1>::overwriteFromISR(T message)
 
     bool retValue = xQueueOverwriteFromISR(mQueueHandle, &message, &highPriorityTaskWoken);
     if (highPriorityTaskWoken) {
-        SEGGER_SYSVIEW_RecordExitISRToScheduler();
         ThisTask::yield();
     }
     return retValue;

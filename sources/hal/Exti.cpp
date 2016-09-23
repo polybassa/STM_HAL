@@ -29,56 +29,45 @@ extern "C" {
 void EXTI0_IRQHandler(void)
 {
 #if EXTI0_INTERRUPT_ENABLED
-    SEGGER_SYSVIEW_RecordEnterISR();
     constexpr const Exti& exti = hal::Factory<Exti>::getByExtiLine<EXTI_Line0>();
     exti.handleInterrupt();
-    SEGGER_SYSVIEW_RecordExitISR();
 #endif
 }
 
 void EXTI1_IRQHandler(void)
 {
 #if EXTI1_INTERRUPT_ENABLED
-    SEGGER_SYSVIEW_RecordEnterISR();
     constexpr const Exti& exti = hal::Factory<Exti>::getByExtiLine<EXTI_Line1>();
     exti.handleInterrupt();
-    SEGGER_SYSVIEW_RecordExitISR();
 #endif
 }
 
 void EXTI2_TSC_IRQHandler(void)
 {
 #if EXTI2_INTERRUPT_ENABLED
-    SEGGER_SYSVIEW_RecordEnterISR();
     constexpr const Exti& exti = hal::Factory<Exti>::getByExtiLine<EXTI_Line2>();
     exti.handleInterrupt();
-    SEGGER_SYSVIEW_RecordExitISR();
 #endif
 }
 
 void EXTI3_IRQHandler(void)
 {
 #if EXTI3_INTERRUPT_ENABLED
-    SEGGER_SYSVIEW_RecordEnterISR();
     constexpr const Exti& exti = hal::Factory<Exti>::getByExtiLine<EXTI_Line3>();
     exti.handleInterrupt();
-    SEGGER_SYSVIEW_RecordExitISR();
 #endif
 }
 
 void EXTI4_IRQHandler(void)
 {
 #if EXTI4_INTERRUPT_ENABLED
-    SEGGER_SYSVIEW_RecordEnterISR();
     constexpr const Exti& exti = hal::Factory<Exti>::getByExtiLine<EXTI_Line4>();
     exti.handleInterrupt();
-    SEGGER_SYSVIEW_RecordExitISR();
 #endif
 }
 
 void EXTI9_5_IRQHandler(void)
 {
-    SEGGER_SYSVIEW_RecordEnterISR();
 #if EXTI5_INTERRUPT_ENABLED
     constexpr const Exti& exti5 = hal::Factory<Exti>::getByExtiLine<EXTI_Line5>();
     exti5.handleInterrupt();
@@ -99,12 +88,10 @@ void EXTI9_5_IRQHandler(void)
     constexpr const Exti& exti9 = hal::Factory<Exti>::getByExtiLine<EXTI_Line9>();
     exti9.handleInterrupt();
 #endif
-    SEGGER_SYSVIEW_RecordExitISR();
 }
 
 void EXTI15_10_IRQHandler(void)
 {
-    SEGGER_SYSVIEW_RecordEnterISR();
 #if EXTI10_INTERRUPT_ENABLED
     constexpr const Exti& exti10 = hal::Factory<Exti>::getByExtiLine<EXTI_Line10>();
     exti10.handleInterrupt();
@@ -129,7 +116,6 @@ void EXTI15_10_IRQHandler(void)
     constexpr const Exti& exti15 = hal::Factory<Exti>::getByExtiLine<EXTI_Line15>();
     exti15.handleInterrupt();
 #endif
-    SEGGER_SYSVIEW_RecordExitISR();
 }
 }
 

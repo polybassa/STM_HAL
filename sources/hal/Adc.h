@@ -125,6 +125,7 @@ class Factory<Adc>
     Factory(void)
     {
         RCC_ADCCLKConfig(RCC_ADC12PLLCLK_Div128); // 72MHz / 128
+        RCC_ADCCLKConfig(RCC_ADC34PLLCLK_Div128);
         // INFO: To speedup ADC Conversion, choose a smaller divider e.g. 6
 
         RCC_AHBPeriphClockCmd(RCC_AHBPeriph_ADC12, ENABLE);
@@ -135,8 +136,11 @@ class Factory<Adc>
         ADC_DeInit(ADC2);
 
         for (const auto& adc : Container) {
-            adc.initialize();
+        	adc.calibrate();
         }
+        for (const auto& adc : Container) {
+                    adc.initialize();
+       }
     }
 public:
 

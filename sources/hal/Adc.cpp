@@ -27,7 +27,6 @@ using hal::Factory;
 
 extern "C" void ADC1_2_IRQHandler(void)
 {
-	SEGGER_SYSVIEW_RecordEnterISR();
     constexpr auto& adc1 = Factory<Adc>::get<Adc::Description::PMD_ADC1>();
 
     if (ADC_GetITStatus(adc1.getBasePointer(), ADC_FLAG_EOC) == SET) {
@@ -41,7 +40,6 @@ extern "C" void ADC1_2_IRQHandler(void)
         Adc::ConversionCompleteSemaphores[static_cast<size_t>(adc2.mDescription)].giveFromISR();
         ADC_ClearITPendingBit(adc2.getBasePointer(), ADC_FLAG_EOC);
     }
-    SEGGER_SYSVIEW_RecordExitISR();
 }
 
 ADC_TypeDef* Adc::getBasePointer(void) const
@@ -56,26 +54,19 @@ void Adc::initialize(void) const
     ADC_CommonInit(ADCx, &mCommonConfiguration);
     ADC_Init(ADCx, &mConfiguration);
 
-    this->calibrate();
-
     if (mDescription == PMD_ADC1) {
         ADC_TempSensorCmd(ADCx, ENABLE);
     }
 
-    ADC_ITConfig(ADCx, ADC_IT_RDY | ADC_IT_EOC, ENABLE);
+    ADC_ITConfig(ADCx, ADC_IT_EOC, ENABLE);
 
     ADC_Cmd(ADCx, ENABLE);
-
-    while (ADC_GetITStatus(ADCx, ADC_IT_RDY) == RESET) {
-            __NOP();
-        }
 
     while (ADC_GetFlagStatus(ADCx, ADC_FLAG_RDY) == RESET) {
         __NOP();
     }
 
     ADC_ClearITPendingBit(ADCx, ADC_IT_RDY | ADC_IT_EOC);
-    ADC_ITConfig(ADCx, ADC_IT_RDY, DISABLE);
 
     NVIC_SetPriority(mIRQn, Adc::INTERRUPT_PRIORITY);
     NVIC_EnableIRQ(mIRQn);
