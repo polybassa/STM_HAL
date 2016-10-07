@@ -46,8 +46,8 @@ class DirectMotorController final :
     os::Queue<float, 1> mSetTorqueQueue;
     os::Queue<float, 1> mSetPwmQueue;
 
-    static constexpr std::chrono::milliseconds motorCheckInterval = std::chrono::milliseconds(1);
-    static constexpr std::chrono::milliseconds controllerInterval = std::chrono::milliseconds(2);
+    static constexpr std::chrono::milliseconds motorCheckInterval = std::chrono::milliseconds(2);
+    static constexpr std::chrono::milliseconds controllerInterval = std::chrono::milliseconds(10);
 
     void motorControllerTaskFunction(const bool&);
     void updatePwmOutput(void);

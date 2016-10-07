@@ -21,13 +21,7 @@ enum Description {
     __ENUM__SIZE
 };
 
-#ifdef MAXON_MOTOR
 static constexpr uint32_t POLE_PAIRS = 7;
-#elif CHINA_MOTOR
-static constexpr uint32_t POLE_PAIRS = 4;
-#else
-#error "MOTOR NOT DEFINED"
-#endif
 
 #else
 #ifndef SOURCES_PMD_TIMHALLDECODER_CONFIG_CONTAINER_H_

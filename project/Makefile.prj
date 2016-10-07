@@ -2,6 +2,7 @@ ifeq ($(MAKECMDGOALS),debug_firmware)
 DEFINES+=-DDEBUG
 DEFINES+=-g
 DEFINES+=-O0
+DEFINES+=-DSYSVIEW
 LDFLAGS+=-O0
 endif
 
@@ -13,7 +14,6 @@ endif
 ifneq (,$(filter debug_firmware firmware,$(MAKECMDGOALS)))
 
 DEFINES+=-DUSE_FREERTOS
-DEFINES+=-DMAXON_MOTOR
 
 # Where to find source files that do not live in this directory.
 VPATH+=${ROOT}/sources
@@ -27,12 +27,18 @@ VPATH+=${RTOS_SOURCE_DIR}/portable/MemMang
 VPATH+=${RTOS_SOURCE_DIR}/portable/GCC/ARM_CM4F
 VPATH+=${ROOT}/libraries/CMSIS/Source
 VPATH+=${ROOT}/libraries/STM32F30x_StdPeriph_Driver/src
+
+VPATH+=${ROOT}/libraries/SystemView_Src_V240a/SEGGER
+VPATH+=${ROOT}/libraries/SystemView_Src_V240a/OS
+VPATH+=${ROOT}/libraries/SystemView_Src_V240a/Config
+
 VPATH+=${ROOT}/device
 VPATH+=${PRJ_PATH}
 
 # Where to find header files that do not live in the source directory.
 IPATH=${ROOT}/sources
 IPATH+=${PRJ_PATH}
+IPATH+=${PRJ_PATH}/config
 IPATH+=${ROOT}/sources/hal
 IPATH+=${ROOT}/sources/os
 IPATH+=${ROOT}/sources/dev
@@ -46,6 +52,10 @@ IPATH+=${RTOS_SOURCE_DIR}/portable/GCC/ARM_CM4F
 IPATH+=${ROOT}/libraries/CMSIS/Include
 IPATH+=${ROOT}/libraries/STM32F30x_StdPeriph_Driver/inc
 IPATH+=${ROOT}/libraries
+
+IPATH+=${ROOT}/libraries/SystemView_Src_V240a/SEGGER
+IPATH+=${ROOT}/libraries/SystemView_Src_V240a/OS
+IPATH+=${ROOT}/libraries/SystemView_Src_V240a/Config
 
 # PMD firmware
 ${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/main.o
@@ -128,5 +138,11 @@ ${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/tasks.o
 ${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/port.o
 ${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/heap_3.o
 ${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/event_groups.o
+
+# SEGGER_SYSVIEW
+${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/SEGGER_SYSVIEW_Config_FreeRTOS.o
+${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/SEGGER_SYSVIEW.o
+${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/SEGGER_RTT.o
+${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/SEGGER_SYSVIEW_FreeRTOS.o
 
 endif

@@ -95,12 +95,10 @@ void MotorController::motorControllerTaskFunction(const bool& join)
     } while (!join);
 }
 
-#if defined(DEBUG)
 void MotorController::setTunings(const float kp, const float ki, const float kd)
 {
     mController.setTunings(kp, ki, kd);
 }
-#endif
 
 void MotorController::updateCurrentTorque(void)
 {

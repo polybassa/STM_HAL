@@ -19,6 +19,7 @@
 #include "os_Task.h"
 #include "cpp_overrides.h"
 #include "trace.h"
+#include "SEGGER_SYSVIEW.h"
 
 /* OS LAYER INCLUDES */
 #include "hal_Factory.h"

@@ -13,6 +13,10 @@ IPATH+=${ROOT}/libraries/CMSIS/Include
 IPATH+=${ROOT}/libraries
 IPATH+=${ROOT}/project/config
 
+IPATH+=${ROOT}/libraries/SystemView_Src_V240a/SEGGER
+IPATH+=${ROOT}/libraries/SystemView_Src_V240a/OS
+IPATH+=${ROOT}/libraries/SystemView_Src_V240a/Config
+
 VPATH+=${ROOT}/sources
 VPATH+=${ROOT}/sources/dev
 VPATH+=${ROOT}/sources/os

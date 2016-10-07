@@ -33,7 +33,7 @@ DirectMotorController::DirectMotorController(
                                              const float       motorResistance,
                                              const float       motorInductance) :
     os::DeepSleepModule(),
-    mMotorControllerTask("1DirectMotorControl",
+    mMotorControllerTask("DirectMotorControl",
                          DirectMotorController::STACKSIZE,
                          os::Task::Priority::HIGH,
                          [this](const bool& join)

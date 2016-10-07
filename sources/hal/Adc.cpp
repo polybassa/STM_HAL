@@ -51,8 +51,6 @@ void Adc::initialize(void) const
 {
     auto ADCx = this->getBasePointer();
 
-    this->calibrate();
-
     ADC_CommonInit(ADCx, &mCommonConfiguration);
     ADC_Init(ADCx, &mConfiguration);
 
@@ -62,14 +60,16 @@ void Adc::initialize(void) const
 
     ADC_ITConfig(ADCx, ADC_IT_EOC, ENABLE);
 
-    NVIC_SetPriority(mIRQn, Adc::INTERRUPT_PRIORITY);
-    NVIC_EnableIRQ(mIRQn);
-
     ADC_Cmd(ADCx, ENABLE);
 
     while (ADC_GetFlagStatus(ADCx, ADC_FLAG_RDY) == RESET) {
         __NOP();
     }
+
+    ADC_ClearITPendingBit(ADCx, ADC_IT_RDY | ADC_IT_EOC);
+
+    NVIC_SetPriority(mIRQn, Adc::INTERRUPT_PRIORITY);
+    NVIC_EnableIRQ(mIRQn);
 }
 
 void Adc::calibrate(void) const
@@ -78,7 +78,7 @@ void Adc::calibrate(void) const
     ADC_VoltageRegulatorCmd(ADCx, ENABLE);
 
     /* If ADC does not work proper, wait here for some milliseconds */
-    constexpr uint32_t calibrationDelayInCpuCycles = 72000;
+    constexpr uint32_t calibrationDelayInCpuCycles = 720000;
     for (uint32_t i = 0; i < calibrationDelayInCpuCycles; i++) {
         __NOP();
     }
