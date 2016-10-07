@@ -107,6 +107,11 @@ ${OBJDIR}:
 ${BINDIR}:
 	@mkdir -p ${BINDIR}
 
+ifneq (,$(filter debug_firmware firmware,$(MAKECMDGOALS)))
 include Makefile.prj
+endif
+
+ifneq (,$(filter test,$(MAKECMDGOALS)))
 include Makefile.test
+endif
 

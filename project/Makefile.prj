@@ -13,7 +13,7 @@ endif
 ifneq (,$(filter debug_firmware firmware,$(MAKECMDGOALS)))
 
 DEFINES+=-DUSE_FREERTOS
-DEFINES+=-DMAXON_MOTOR
+DEFINES+=-DSYSVIEW
 
 # Where to find source files that do not live in this directory.
 VPATH+=${ROOT}/sources
@@ -38,6 +38,7 @@ VPATH+=${PRJ_PATH}
 # Where to find header files that do not live in the source directory.
 IPATH=${ROOT}/sources
 IPATH+=${PRJ_PATH}
+IPATH+=${PRJ_PATH}/config
 IPATH+=${ROOT}/sources/hal
 IPATH+=${ROOT}/sources/os
 IPATH+=${ROOT}/sources/dev
