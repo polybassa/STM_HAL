@@ -62,7 +62,7 @@ size_t SpiWithDma::send(uint8_t const* const data, const size_t length) const
         && (length > MIN_LENGTH_FOR_DMA_TRANSFER))
     {
         // clear Semaphore
-        DmaTransferCompleteSemaphores.at(mSpi->mDescription).take(0);
+        DmaTransferCompleteSemaphores.at(mSpi->mDescription).take(std::chrono::microseconds(1));
         // we have DMA support
         mTxDma->setupTransfer((uint8_t* const)data, length);
         mTxDma->enable();

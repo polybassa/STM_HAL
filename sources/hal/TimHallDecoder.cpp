@@ -32,7 +32,7 @@ static constexpr float M_PI = 3.14159265358979323846f;
 
 extern "C" void TIM3_IRQHandler(void)
 {
-    constexpr auto& hallDecoder = Factory<HallDecoder>::get<HallDecoder::BLDC_DECODER>();
+    constexpr const auto& hallDecoder = Factory<HallDecoder>::get<HallDecoder::BLDC_DECODER>();
     hallDecoder.interruptHandler();
 }
 
@@ -45,16 +45,18 @@ void HallDecoder::interruptHandler(void) const
         saveTimestamp(eventTimestamp);
 
         HallEventCallbacks[mDescription]();
-    } else if (TIM_GetITStatus(mTim.getBasePointer(), TIM_IT_CC2)) {
+    }
+
+    if (TIM_GetITStatus(mTim.getBasePointer(), TIM_IT_CC2)) {
         TIM_ClearITPendingBit(mTim.getBasePointer(), TIM_IT_CC2);
 
         HallDecoder::CommutationCallbacks[mDescription]();
-    } else if (TIM_GetITStatus(mTim.getBasePointer(), TIM_IT_CC3)) {
+    }
+
+    if (TIM_GetITStatus(mTim.getBasePointer(), TIM_IT_CC3)) {
         TIM_ClearITPendingBit(mTim.getBasePointer(), TIM_IT_CC3);
         // no hall interrupt, overflow occurred because of stall motor
         reset();
-    } else {
-        // this should not happen
     }
 }
 
@@ -180,7 +182,7 @@ void HallDecoder::initialize(void) const
     TIM_ClearFlag(mTim.getBasePointer(), TIM_IT_CC1 | TIM_IT_CC2 | TIM_IT_CC3);
     TIM_ITConfig(mTim.getBasePointer(), TIM_IT_CC1 | TIM_IT_CC2 | TIM_IT_CC3, ENABLE);
 
-    NVIC_SetPriority(IRQn_Type::TIM3_IRQn, 0x9);
+    NVIC_SetPriority(IRQn_Type::TIM3_IRQn, 6);
     NVIC_EnableIRQ(IRQn_Type::TIM3_IRQn);
 }
 

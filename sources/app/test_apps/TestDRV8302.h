@@ -13,12 +13,14 @@
  *  You should have received a copy of the GNU General Public License
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>. */
 
-#ifndef SOURCES_PMD_SPIWITHDMA_CONFIG_CONTAINER_H_
-#define SOURCES_PMD_SPIWITHDMA_CONFIG_CONTAINER_H_
+#ifndef SOURCES_PMD_TEST_DRV8302_H_
+#define SOURCES_PMD_TEST_DRV8302_H_
 
-static constexpr const std::array<const SpiWithDma, Spi::__ENUM__SIZE> Container =
-{ {
-      SpiWithDma(&Factory<Spi>::get<Spi::BACKLIGHT>(), SPI_I2S_DMAReq_Tx, &Factory<Dma>::get<Dma::SPI2_TX>()),
-      SpiWithDma(&Factory<Spi>::get<Spi::HEADLIGHT>(), SPI_I2S_DMAReq_Tx, &Factory<Dma>::get<Dma::SPI3_TX>())
-  } };
-#endif /* SOURCES_PMD_SPI_CONFIG_CONTAINER_H_ */
+#include "TaskEndless.h"
+
+namespace app
+{
+extern const os::TaskEndless drv8302Test;
+}
+
+#endif /* SOURCES_PMD_TEST_LED_H_ */

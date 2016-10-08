@@ -27,51 +27,14 @@
 #include "hal_Factory.h"
 
 extern "C" void ADC1_2_IRQHandler(void);
+extern "C" void ADC3_IRQHandler(void);
+extern "C" void ADC4_IRQHandler(void);
 
 namespace hal
 {
 struct Adc {
 #include "Adc_config.h"
-    struct Channel {
-#include "Adc_Channel_config.h"
-
-        Channel() = delete;
-        Channel(const Channel&) = delete;
-        Channel(Channel &&) = default;
-        Channel& operator=(const Channel&) = delete;
-        Channel& operator=(Channel &&) = delete;
-
-        uint32_t getValue(void) const;
-        uint32_t getCalibrationValue(void) const;
-        float getVoltage(void) const;
-
-private:
-        constexpr Channel(
-                          const enum Description          desc,
-                          const enum Adc::Description     baseDesc,
-                          const uint8_t                   channel,
-                          const uint8_t                   sampleTime,
-                          const std::chrono::milliseconds cacheTime = std::chrono::milliseconds(1),
-                          const float                     maxVoltage = 3.3,
-                          const uint8_t                   rank = 1) :
-            mDescription(desc), mBaseDescription(baseDesc),
-            mChannel(channel), mSampleTime(sampleTime),
-            mCacheTimeInTicks(cacheTime.count() / portTICK_PERIOD_MS),
-            mMaxVoltage(maxVoltage), mRank(rank) {}
-
-        const enum Description mDescription;
-        const enum Adc::Description mBaseDescription;
-        const uint8_t mChannel;
-        const uint8_t mSampleTime;
-        const uint32_t mCacheTimeInTicks;
-        const float mMaxVoltage;
-        const uint8_t mRank;
-        mutable uint32_t mLastUpdateTicks = 0;
-        mutable float mCacheValue = 0.0;
-
-        friend struct Adc;
-        friend class Factory<Adc>;
-    };
+    struct Channel;
 
     Adc() = delete;
     Adc(const Adc&) = delete;
@@ -81,19 +44,20 @@ private:
 
     uint32_t getCalibrationValue(void) const;
 
+    const enum Description mDescription;
+
 private:
     constexpr Adc(const enum Description&      desc,
                   const uint32_t&              peripherie,
                   const ADC_InitTypeDef&       conf,
                   const ADC_CommonInitTypeDef& commonConf,
-                  const enum IRQn&             irqn,
+                  const enum IRQn              irqn,
                   const uint8_t                resolutionBits = 12) :
         mDescription(desc), mPeripherie(peripherie),
         mConfiguration(conf),
         mCommonConfiguration(commonConf),
         mIRQn(irqn), mResolutionBits(resolutionBits) {}
 
-    const enum Description mDescription;
     const uint32_t mPeripherie;
     const ADC_InitTypeDef mConfiguration;
     const ADC_CommonInitTypeDef mCommonConfiguration;
@@ -105,48 +69,55 @@ private:
     void calibrate(void) const;
     uint32_t getValue(const Adc::Channel&) const;
     float getVoltage(const Adc::Channel&) const;
+    void startConversion(const Adc::Channel&) const;
+    void stopConversion(void) const;
 
     static std::array<uint32_t, Description::__ENUM__SIZE> CalibrationValues;
     static std::array<os::Semaphore, Description::__ENUM__SIZE> ConversionCompleteSemaphores;
     static std::array<os::Mutex, Description::__ENUM__SIZE> ConverterAvailableMutex;
     static constexpr uint8_t TWO_CONVERSION_SAMPLE_DELAY = 0;
-    static constexpr uint32_t INTERRUPT_PRIORITY = 0xf;
+    static constexpr uint32_t INTERRUPT_PRIORITY = 0xa;
 
     friend class Factory<Adc>;
+    friend class Factory<Adc::Channel>;
+    friend struct AdcWithDma;
     friend void ::ADC1_2_IRQHandler(void);
+    friend void ::ADC3_IRQHandler(void);
+    friend void ::ADC4_IRQHandler(void);
 };
 
 template<>
 class Factory<Adc>
 {
 #include "Adc_config.h"
-#include "Adc_Channel_config.h"
 
     Factory(void)
     {
-        RCC_ADCCLKConfig(RCC_ADC12PLLCLK_Div128); // 72MHz / 128
-        RCC_ADCCLKConfig(RCC_ADC34PLLCLK_Div128);
+        RCC_ADCCLKConfig(RCC_ADC12PLLCLK_Div1); // 72MHz
+        RCC_ADCCLKConfig(RCC_ADC34PLLCLK_Div1);
         // INFO: To speedup ADC Conversion, choose a smaller divider e.g. 6
 
         RCC_AHBPeriphClockCmd(RCC_AHBPeriph_ADC12, ENABLE);
         RCC_AHBPeriphClockCmd(RCC_AHBPeriph_ADC34, ENABLE);
 
-
         ADC_DeInit(ADC1);
         ADC_DeInit(ADC2);
+        ADC_DeInit(ADC3);
+        ADC_DeInit(ADC4);
 
         for (const auto& adc : Container) {
-        	adc.calibrate();
+            adc.calibrate();
         }
         for (const auto& adc : Container) {
-                    adc.initialize();
-       }
+            adc.initialize();
+        }
     }
 public:
 
     template<enum Adc::Description index>
     static constexpr const Adc& get(void)
     {
+        static_assert(index < Container.size(), "Index out of bounds ");
         static_assert(IS_ADC_ALL_PERIPH_BASE(Container[index].mPeripherie), "Invalid Peripheries ");
         static_assert(Container[index].mDescription < Adc::Description::__ENUM__SIZE, "Invalid Parameter");
         static_assert(IS_ADC_AUTOINJECMODE(Container[index].mConfiguration.ADC_AutoInjMode), "Invalid Parameter");
@@ -172,23 +143,6 @@ public:
         static_assert(Container[index].mDescription == index, "Wrong mapping between Description and Container");
 
         return Container[index];
-    }
-
-    template<enum Adc::Channel::Description index>
-    static constexpr const Adc::Channel& get(void)
-    {
-        static_assert(IS_ADC_CHANNEL(ChannelContainer[index].mChannel), "Invalid Parameter");
-        static_assert(IS_ADC_SAMPLE_TIME(ChannelContainer[index].mSampleTime), "Invalid Parameter");
-        static_assert(IS_ADC_CHANNEL(ChannelContainer[index].mRank), "Invalid Parameter");
-        static_assert(ChannelContainer[index].mBaseDescription < Adc::Description::__ENUM__SIZE, "Invalid Parameter");
-        static_assert(ChannelContainer[index].mDescription < Adc::Channel::Description::__ENUM__SIZE,
-                      "Invalid Parameter");
-        static_assert(index != Adc::Channel::Description::__ENUM__SIZE, "__ENUM__SIZE is not accessible");
-        static_assert(ChannelContainer[index].mDescription == index, "Wrong mapping between Description and Container");
-
-        static_assert(portTICK_PERIOD_MS == 1, "Wrong OS tick rate configuration. 1 ms per tick required");
-
-        return ChannelContainer[index];
     }
 
     template<typename U>

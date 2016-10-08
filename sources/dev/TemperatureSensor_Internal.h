@@ -17,6 +17,7 @@
 #define SOURCES_PMD_TEMPERATURESENSOR_INTERNAL_H_
 
 #include "Adc.h"
+#include "AdcChannel.h"
 #include "interface_TemperatureSensor.h"
 
 namespace dev

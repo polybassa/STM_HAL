@@ -40,15 +40,15 @@ class Factory<TemperatureSensor>
                                 const TemperatureSensor_NTC,
                                 const TemperatureSensor_NTC> Container {
         TemperatureSensor_Internal(interface::TemperatureSensor::INTERNAL,
-                                   hal::Factory<hal::Adc>::get<hal::Adc::Channel::INTERNAL_TEMP>(),
+                                   hal::Factory<hal::Adc::Channel>::get<hal::Adc::Channel::INTERNAL_TEMP>(),
                                    4.3,
                                    1.43),
         TemperatureSensor_NTC(interface::TemperatureSensor::BATTERY,
-                              hal::Factory<hal::Adc>::get<hal::Adc::Channel::NTC_BATTERY>()),
+                              hal::Factory<hal::Adc::Channel>::get<hal::Adc::Channel::NTC_BATTERY>()),
         TemperatureSensor_NTC(interface::TemperatureSensor::MOTOR,
-                              hal::Factory<hal::Adc>::get<hal::Adc::Channel::NTC_MOTOR>()),
+                              hal::Factory<hal::Adc::Channel>::get<hal::Adc::Channel::NTC_MOTOR>()),
         TemperatureSensor_NTC(interface::TemperatureSensor::FET,
-                              hal::Factory<hal::Adc>::get<hal::Adc::Channel::NTC_FET>())
+                              hal::Factory<hal::Adc::Channel>::get<hal::Adc::Channel::NTC_FET>())
     };
 
 public:

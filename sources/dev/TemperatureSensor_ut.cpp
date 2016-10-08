@@ -29,8 +29,10 @@ float hal::Adc::Channel::getVoltage(void) const
     return gCurrentVoltage;
 }
 
-constexpr const std::array<const hal:: Adc::Channel,
-                           hal::Adc::Channel::__ENUM__SIZE> hal::Factory<hal::Adc>::ChannelContainer;
+constexpr const std::array<const hal::Adc::Channel,
+                           hal::Adc::Channel::__ENUM__SIZE> hal::Factory<hal::Adc::Channel>::Container;
+constexpr const std::array<const hal::Adc,
+                           hal::Adc::__ENUM__SIZE> hal::Factory<hal::Adc>::Container;
 
 //-------------------------HELPERFUNCTIONS-------------------
 template<size_t n>

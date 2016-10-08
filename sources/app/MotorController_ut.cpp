@@ -185,7 +185,6 @@ void dev::PIDController::setMode(const ControlMode newMode)
 
 void dev::PIDController::setTunings(const float kp, const float ki, const float kd){}
 
-
 void vQueueDelete(QueueHandle_t xQueue) {}
 
 QueueHandle_t xQueueGenericCreate(const UBaseType_t uxQueueLength,

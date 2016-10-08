@@ -56,7 +56,6 @@ ${BINDIR}/PIDController_ut.bin: ${OBJDIR}/PIDController_ut.o
 ####################################DirectMotorController############################################
 
 ${BINDIR}/DirectMotorController_ut.bin: DEFINES+=-DUNITTEST
-${BINDIR}/DirectMotorController_ut.bin: DEFINES+=-DMAXON_MOTOR
 ${BINDIR}/DirectMotorController_ut.bin: ${OBJDIR}/DirectMotorController.o
 ${BINDIR}/DirectMotorController_ut.bin: ${OBJDIR}/DeepSleepInterface.o 
 ${BINDIR}/DirectMotorController_ut.bin: ${OBJDIR}/DirectMotorController_ut.o

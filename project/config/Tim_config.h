@@ -26,9 +26,9 @@ enum Description {
     __ENUM__SIZE
 };
 
-static const uint32_t HALFBRIDGE_PERIODE = 4000;
-static const uint32_t HALL_SENSOR_PRESCALER = 179;
-static const uint32_t BUZZER_PWM_PERIODE = 1000;
+static constexpr const uint32_t HALFBRIDGE_PERIODE = 2000;
+static constexpr const uint32_t HALL_SENSOR_PRESCALER = 179;
+static constexpr const uint32_t BUZZER_PWM_PERIODE = 1000;
 
 #else
 #ifndef SOURCES_PMD_TIM_CONFIG_CONTAINER_H_
