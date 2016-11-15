@@ -30,7 +30,6 @@ static bool g_taskStarted;
 static uint32_t g_currentTickCount;
 static float g_currentOmega;
 static float g_batteryVoltage;
-static dev::SensorBLDC::Mode g_currentMode;
 
 constexpr const uint32_t POLE_PAIRS = 7;
 
@@ -106,22 +105,12 @@ void dev::SensorBLDC::setPulsWidthInMill(const int32_t value) const
     g_currentPWM = value;
 }
 
-void dev::SensorBLDC::setMode(dev::SensorBLDC::Mode mode) const
-{
-    g_currentMode = mode;
-}
-
 int32_t dev::SensorBLDC::getPulsWidthPerMill(void) const
 {
     return g_currentPWM;
 }
 
-dev::SensorBLDC::Mode dev::SensorBLDC::getMode(void) const
-{
-    return g_currentMode;
-}
-
-dev::SensorBLDC::Direction dev::SensorBLDC::getDirection() const
+dev::SensorBLDC::Direction dev::SensorBLDC::getCurrentDirection() const
 {
     if (g_currentOmega > 0) {
         return dev::SensorBLDC::Direction::BACKWARD;
