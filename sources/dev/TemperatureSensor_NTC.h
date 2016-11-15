@@ -18,6 +18,7 @@
 
 #include <cstdint>
 #include "Adc.h"
+#include "AdcChannel.h"
 #include "interface_TemperatureSensor.h"
 #include <array>
 #include <utility>

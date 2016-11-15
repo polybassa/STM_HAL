@@ -30,14 +30,15 @@ static bool g_taskStarted;
 static uint32_t g_currentTickCount;
 static float g_currentOmega;
 static float g_batteryVoltage;
-static dev::SensorBLDC::Mode g_currentMode;
 
 constexpr const uint32_t POLE_PAIRS = 7;
 
 //--------------------------MOCKING--------------------------
 
-constexpr const std::array<const hal:: Adc::Channel,
-                           hal::Adc::Channel::__ENUM__SIZE> hal::Factory<hal::Adc>::ChannelContainer;
+constexpr const std::array<const hal::Adc::Channel,
+                           hal::Adc::Channel::__ENUM__SIZE> hal::Factory<hal::Adc::Channel>::Container;
+constexpr const std::array<const hal::Adc,
+                           hal::Adc::__ENUM__SIZE> hal::Factory<hal::Adc>::Container;
 constexpr const std::array<const dev::SensorBLDC,
                            dev::SensorBLDC::Description::__ENUM__SIZE> dev::Factory<dev::SensorBLDC>::Container;
 constexpr const std::array<const hal::HalfBridge,
@@ -47,6 +48,13 @@ constexpr const std::array<const hal::HallDecoder,
 constexpr const std::array<const hal::Tim, hal::Tim::Description::__ENUM__SIZE + 1> hal::Factory<hal::Tim>::Container;
 constexpr const std::array<const hal::HallMeter,
                            hal::HallMeter::Description::__ENUM__SIZE> hal::Factory<hal::HallMeter>::Container;
+constexpr const std::array<const hal::AdcWithDma,
+                           hal::Factory<hal::AdcWithDma>::NUMBER_OF_ADC_WITH_DMA> hal::Factory<hal::AdcWithDma>::
+Container;
+constexpr const std::array<const hal::PhaseCurrentSensor,
+                           hal::PhaseCurrentSensor::Description::__ENUM__SIZE> hal::Factory<hal::PhaseCurrentSensor>::
+Container;
+constexpr const std::array<const hal::Dma, hal::Dma::Description::__ENUM__SIZE + 1> hal::Factory<hal::Dma>::Container;
 
 //****** Task functions ******
 void os::TaskInterruptable::join(void)
@@ -97,22 +105,12 @@ void dev::SensorBLDC::setPulsWidthInMill(const int32_t value) const
     g_currentPWM = value;
 }
 
-void dev::SensorBLDC::setMode(dev::SensorBLDC::Mode mode) const
-{
-    g_currentMode = mode;
-}
-
 int32_t dev::SensorBLDC::getPulsWidthPerMill(void) const
 {
     return g_currentPWM;
 }
 
-dev::SensorBLDC::Mode dev::SensorBLDC::getMode(void) const
-{
-    return g_currentMode;
-}
-
-dev::SensorBLDC::Direction dev::SensorBLDC::getDirection() const
+dev::SensorBLDC::Direction dev::SensorBLDC::getCurrentDirection() const
 {
     if (g_currentOmega > 0) {
         return dev::SensorBLDC::Direction::BACKWARD;
@@ -121,7 +119,7 @@ dev::SensorBLDC::Direction dev::SensorBLDC::getDirection() const
     }
 }
 
-void dev::SensorBLDC::checkMotor(const dev::Battery&) const
+void dev::SensorBLDC::checkMotor(void) const
 {
     //TODO Test ME
 }

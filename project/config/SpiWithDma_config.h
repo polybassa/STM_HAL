@@ -19,9 +19,6 @@
 static constexpr const std::array<const SpiWithDma, Spi::__ENUM__SIZE> Container =
 { {
       SpiWithDma(&Factory<Spi>::get<Spi::BACKLIGHT>(), SPI_I2S_DMAReq_Tx, &Factory<Dma>::get<Dma::SPI2_TX>()),
-      SpiWithDma(&Factory<Spi>::get<Spi::HEADLIGHT>(), SPI_I2S_DMAReq_Tx, &Factory<Dma>::get<Dma::SPI3_TX>()),
-      SpiWithDma(&Factory<Spi>::get<Spi::NWP_SPI>(), (SPI_I2S_DMAReq_Rx | SPI_I2S_DMAReq_Tx),
-                 &Factory<Dma>::get<Dma::SPI4_TX>(),
-                 &Factory<Dma>::get<Dma::SPI4_RX>())
+      SpiWithDma(&Factory<Spi>::get<Spi::HEADLIGHT>(), SPI_I2S_DMAReq_Tx, &Factory<Dma>::get<Dma::SPI3_TX>())
   } };
 #endif /* SOURCES_PMD_SPI_CONFIG_CONTAINER_H_ */

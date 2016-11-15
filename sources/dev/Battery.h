@@ -39,8 +39,8 @@ struct Battery final :
     float getPower(void) const override;
 
 private:
-    static constexpr auto& voltagePeripherie = hal::Factory<hal::Adc>::get<hal::Adc::Channel::BATTERY_U>();
-    static constexpr auto& currentPeripherie = hal::Factory<hal::Adc>::get<hal::Adc::Channel::BATTERY_I>();
+    static constexpr auto& voltagePeripherie = hal::Factory<hal::Adc::Channel>::get<hal::Adc::Channel::BATTERY_U>();
+    static constexpr auto& currentPeripherie = hal::Factory<hal::Adc::Channel>::get<hal::Adc::Channel::BATTERY_I>();
     static constexpr auto& temperatureSensor =
         dev::Factory<dev::TemperatureSensor>::get<interface::TemperatureSensor::BATTERY>();
 

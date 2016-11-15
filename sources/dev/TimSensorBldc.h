@@ -1,4 +1,4 @@
-/* Copyright (C) 2015  Nils Weiss, Alexander Strobl
+/* Copyright (C) 2015  Nils Weiss
  *
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -22,7 +22,12 @@
 #include "TimHalfBridge.h"
 #include "TimHallDecoder.h"
 #include "TimHallMeter.h"
-#include "Battery.h"
+#include "PhaseCurrentSensor.h"
+
+namespace app
+{
+class DRV8302MotorController; //TODO REMOVE only for DEBUG!!!!!!!!
+}
 
 namespace dev
 {
@@ -38,13 +43,6 @@ struct SensorBLDC {
         BACKWARD
     };
 
-    enum class Mode
-    {
-        ACCELERATE,
-        REGEN_BRAKE,
-        ACTIVE_BRAKE
-    };
-
     SensorBLDC() = delete;
     SensorBLDC(const SensorBLDC&) = delete;
     SensorBLDC(SensorBLDC &&) = default;
@@ -53,48 +51,66 @@ struct SensorBLDC {
 
     float getCurrentRPS(void) const;
     float getCurrentOmega(void) const;
-    Direction getDirection(void) const;
+    Direction getCurrentDirection(void) const;
+    Direction getSetDirection(void) const;
     void setDirection(const Direction) const;
     int32_t getPulsWidthPerMill(void) const;
     uint32_t getNumberOfPolePairs(void) const;
-    Mode getMode(void) const;
     void setPulsWidthInMill(int32_t) const;
-    void setMode(const Mode) const;
-    void trigger(void) const;
-    void checkMotor(const dev::Battery& battery) const;
     void start(void) const;
     void stop(void) const;
+    void checkMotor(void) const;
+    float getPhaseCurrent(void) const;
 
     const enum Description mDescription;
+
+    const float mMotorConstant = 0.0;
+    const float mMotorCoilResistance = 0.0;
+
+    const hal::PhaseCurrentSensor& mPhaseCurrentSensor;
+
+private:
+    constexpr SensorBLDC(const enum Description&        desc,
+                         const float                    motorConstant,
+                         const float                    motorCoilResistance,
+                         const hal::PhaseCurrentSensor& currentSensor,
+                         const hal::HalfBridge&         hBridge,
+                         const hal::HallDecoder&        hallDecoder,
+                         const hal::HallMeter&          hallMeter1,
+                         const hal::HallMeter&          hallMeter2) :
+        mDescription(desc),
+        mMotorConstant(motorConstant),
+        mMotorCoilResistance(motorCoilResistance),
+        mPhaseCurrentSensor(currentSensor),
+        mHBridge(hBridge),
+        mHallDecoder(hallDecoder),
+        mHallMeter1(hallMeter1),
+        mHallMeter2(hallMeter2)
+    {}
+
     const hal::HalfBridge& mHBridge;
     const hal::HallDecoder& mHallDecoder;
     const hal::HallMeter& mHallMeter1;
     const hal::HallMeter& mHallMeter2;
 
-private:
-    constexpr SensorBLDC(const enum Description& desc,
-                         const hal::HalfBridge&  hBridge,
-                         const hal::HallDecoder& hallDecoder,
-                         const hal::HallMeter&   hallMeter1,
-                         const hal::HallMeter&   hallMeter2) :
-        mDescription(desc), mHBridge(hBridge),
-        mHallDecoder(hallDecoder),
-        mHallMeter1(hallMeter1),
-        mHallMeter2(hallMeter2) {}
-
-    mutable Direction mDirection = Direction::FORWARD;
-    mutable Mode mMode = Mode::ACCELERATE;
+    mutable Direction mSetDirection = Direction::FORWARD;
+    mutable Direction mCurrentDirection = Direction::FORWARD;
     mutable size_t mLastHallPosition = 0;
+    mutable bool mManualCommutationActive = true;
 
+    Direction getCurrentDirection(const size_t lastHallPosition, const size_t currentHallPosition) const;
     void computeDirection(void) const;
     void prepareCommutation(const size_t hallPosition) const;
     void manualCommutation(const size_t hallPosition) const;
     void commutate(const size_t hallPosition) const;
+    void disableManualCommutation(const size_t hallPosition) const;
+    void enableManualCommutation(void) const;
 
     size_t getNextHallPosition(const size_t position) const;
     size_t getPreviousHallPosition(const size_t position) const;
 
     friend class Factory<SensorBLDC>;
+    friend class app::DRV8302MotorController;
 };
 
 template<>
@@ -104,11 +120,13 @@ class Factory<SensorBLDC>
     { {
           SensorBLDC(
                      SensorBLDC::BLDC,
+                     0.065,
+                     0.33,
+                     hal::Factory<hal::PhaseCurrentSensor>::get<hal::PhaseCurrentSensor::I_TOTAL_FB>(),
                      hal::Factory<hal::HalfBridge>::get<hal::HalfBridge::BLDC_PWM>(),
                      hal::Factory<hal::HallDecoder>::get<hal::HallDecoder::BLDC_DECODER>(),
                      hal::Factory<hal::HallMeter>::get<hal::HallMeter::BLDC_METER_32BIT>(),
-                     hal::Factory<hal::HallMeter>::get<hal::HallMeter::BLDC_METER>()
-                     )
+                     hal::Factory<hal::HallMeter>::get<hal::HallMeter::BLDC_METER>())
       } };
 
 public:

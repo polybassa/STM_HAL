@@ -21,6 +21,8 @@ enum Description {
     __ENUM__SIZE
 };
 
+#define ACTIVEFREEWHEELING 1
+
 static constexpr uint32_t DEFAULT_DEADTIME = 50;
 
 #else

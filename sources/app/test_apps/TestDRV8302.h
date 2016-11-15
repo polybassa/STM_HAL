@@ -13,21 +13,14 @@
  *  You should have received a copy of the GNU General Public License
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>. */
 
-#ifndef SOURCES_PMD_RTC_CONFIG_DESCRIPTION_H_
-#define SOURCES_PMD_RTC_CONFIG_DESCRIPTION_H_
+#ifndef SOURCES_PMD_TEST_DRV8302_H_
+#define SOURCES_PMD_TEST_DRV8302_H_
 
-enum Description {
-    SYSTEM_RTC, __ENUM__SIZE
-};
+#include "TaskEndless.h"
 
-#else
-#ifndef SOURCES_PMD_RTC_CONFIG_CONTAINER_H_
-#define SOURCES_PMD_RTC_CONFIG_CONTAINER_H_
+namespace app
+{
+extern const os::TaskEndless drv8302Test;
+}
 
-static constexpr const std::array<const Rtc, Rtc::__ENUM__SIZE> Container =
-{ {
-      Rtc(Rtc::SYSTEM_RTC, RCC_RTCCLKSource_LSE, RTC_InitTypeDef {RTC_HourFormat_24, 88, 470})
-  } };
-
-#endif /* SOURCES_PMD_RTC_CONFIG_CONTAINER_H_ */
-#endif /* SOURCES_PMD_RTC_CONFIG_DESCRIPTION_H_ */
+#endif /* SOURCES_PMD_TEST_LED_H_ */

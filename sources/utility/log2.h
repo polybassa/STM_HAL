@@ -13,14 +13,13 @@
  *  You should have received a copy of the GNU General Public License
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>. */
 
-#ifndef SOURCES_PMD_USARTWITHDMA_CONFIG_CONTAINER_H_
-#define SOURCES_PMD_USARTWITHDMA_CONFIG_CONTAINER_H_
+#ifndef SOURCES_UTILITY_LOG2_H_
+#define SOURCES_UTILITY_LOG2_H_
 
-static constexpr const std::array<const UsartWithDma, Usart::__ENUM__SIZE> Container =
-{ {
-      UsartWithDma(Factory<Usart>::get<Usart::DEBUG_IF>()),
-      UsartWithDma(Factory<Usart>::get<Usart::MSCOM_IF>(), USART_DMAReq_Rx | USART_DMAReq_Tx,
-                   &Factory<Dma>::get<Dma::USART2_TX>(), &Factory<Dma>::get<Dma::USART2_RX>())
-  } };
-
-#endif /* SOURCES_PMD_USART_CONFIG_CONTAINER_H_ */
+template<size_t n>
+constexpr size_t constexpr_log2(void)
+{
+    static_assert(n % 2 == 0 || n < 2, "Can not apply compile time log2");
+    return (n < 2) ? 0 : 1 + constexpr_log2<n / 2>();
+}
+#endif /* SOURCES_UTILITY_LOG2_H_ */

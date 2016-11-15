@@ -35,7 +35,9 @@ static bool g_taskJoined, g_taskStarted;
 //--------------------------MOCKING--------------------------
 
 constexpr const std::array<const hal::Adc::Channel,
-                           hal::Adc::Channel::__ENUM__SIZE> hal::Factory<hal::Adc>::ChannelContainer;
+                           hal::Adc::Channel::__ENUM__SIZE> hal::Factory<hal::Adc::Channel>::Container;
+constexpr const std::array<const hal::Adc,
+                           hal::Adc::__ENUM__SIZE> hal::Factory<hal::Adc>::Container;
 
 // Task functions
 void os::TaskInterruptable::join(void)
