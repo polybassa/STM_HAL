@@ -71,7 +71,7 @@ private:
     void registerCommutationCallback(std::function<void(void)> ) const;
     void unregisterCommutationCallback(void) const;
 
-    void registerHallEventCheckCallback(std::function<bool(void)> ) const;
+    void registerHallEventCheckCallback(std::function<void(void)> ) const;
     void unregisterHallEventCheckCallback(void) const;
 
     static const size_t NUMBER_OF_TIMESTAMPS = 10;
@@ -80,7 +80,7 @@ private:
     mutable size_t mTimestampPosition = 0;
 
     static std::array<std::function<void(void)>, Description::__ENUM__SIZE> CommutationCallbacks;
-    static std::array<std::function<bool(void)>, Description::__ENUM__SIZE> HallEventCallbacks;
+    static std::array<std::function<void(void)>, Description::__ENUM__SIZE> HallEventCallbacks;
 
     friend class Factory<HallDecoder>;
     friend struct dev::SensorBLDC;

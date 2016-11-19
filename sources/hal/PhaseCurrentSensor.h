@@ -27,11 +27,6 @@ namespace dev
 struct SensorBLDC;
 }
 
-namespace app
-{
-class DRV8302MotorController; // TODO REMOVE
-}
-
 namespace hal
 {
 struct PhaseCurrentSensor {
@@ -44,9 +39,10 @@ struct PhaseCurrentSensor {
     PhaseCurrentSensor& operator=(PhaseCurrentSensor &&) = delete;
 
     float getPhaseCurrent(void) const;
-    void setOffset(const float) const;
     void registerValueAvailableSemaphore(os::Semaphore* valueAvailable) const;
     void unregisterValueAvailableSemaphore(void) const;
+    void calibrate(void) const;
+    void reset(void) const;
 
 private:
     constexpr PhaseCurrentSensor(const enum Description&  desc,
@@ -72,8 +68,6 @@ private:
 
     friend class Factory<PhaseCurrentSensor>;
     friend struct dev::SensorBLDC;
-
-    friend class app::DRV8302MotorController; //TODO REMOVE only for DEBUG
 
     static std::array<
                       std::array<uint16_t, NUMBER_OF_MEASUREMENTS_FOR_AVG>,

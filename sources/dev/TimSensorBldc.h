@@ -24,11 +24,6 @@
 #include "TimHallMeter.h"
 #include "PhaseCurrentSensor.h"
 
-namespace app
-{
-class DRV8302MotorController; //TODO REMOVE only for DEBUG!!!!!!!!
-}
-
 namespace dev
 {
 struct SensorBLDC {
@@ -94,6 +89,7 @@ private:
     const hal::HallMeter& mHallMeter2;
 
     mutable Direction mSetDirection = Direction::FORWARD;
+    mutable Direction mUpdateSetDirection = Direction::FORWARD;
     mutable Direction mCurrentDirection = Direction::FORWARD;
     mutable size_t mLastHallPosition = 0;
     mutable bool mManualCommutationActive = true;
@@ -110,7 +106,6 @@ private:
     size_t getPreviousHallPosition(const size_t position) const;
 
     friend class Factory<SensorBLDC>;
-    friend class app::DRV8302MotorController;
 };
 
 template<>

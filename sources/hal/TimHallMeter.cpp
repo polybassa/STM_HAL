@@ -14,7 +14,6 @@
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>. */
 
 #include <limits>
-#include <algorithm>
 #include <cmath>
 #include "TimHallMeter.h"
 #include "trace.h"
@@ -81,12 +80,14 @@ float HallMeter::getCurrentRPS(void) const
 {
     static constexpr float HALL_EVENTS_PER_ROTATION = 6;
 
-    uint32_t sumTicksBetweenHallSignals =
-        std::accumulate(mTimestamps.begin(), mTimestamps.end(), 0);
-
-    const uint32_t avgTicksBetweenHallSignals = sumTicksBetweenHallSignals / NUMBER_OF_TIMESTAMPS;
-
     const float timerFrequency = mTim.getTimerFrequency();
+
+    uint32_t sumTicksBetweenHallSignals = 0;
+    for (size_t i = 0; i < mTimestamps.size(); i++) {
+        sumTicksBetweenHallSignals += mTimestamps[i];
+    }
+
+    const uint32_t avgTicksBetweenHallSignals = sumTicksBetweenHallSignals / mTimestamps.size();
     const float hallSignalFrequency = timerFrequency / avgTicksBetweenHallSignals;
     const float electricalRotationFrequency = hallSignalFrequency / HALL_EVENTS_PER_ROTATION;
     const float motorRotationFrequency = electricalRotationFrequency / POLE_PAIRS;

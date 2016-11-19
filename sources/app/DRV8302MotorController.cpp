@@ -72,46 +72,34 @@ void DRV8302MotorController::exitDeepSleep(void)
 
 void DRV8302MotorController::motorControllerTaskFunction(const bool& join)
 {
-	// TODO MOVE CALIBRATION TO DIFFERENT PLACE
     mMotor.setPulsWidthInMill(0);
-    os::ThisTask::sleep(controllerInterval);
-    os::ThisTask::sleep(controllerInterval);
-    auto offset1 = mMotor.mPhaseCurrentSensor.mAdcWithDma.getVoltage(mMotor.mPhaseCurrentSensor.mPhaseCurrentValue);
-    os::ThisTask::sleep(controllerInterval);
-    os::ThisTask::sleep(controllerInterval);
-    auto offset2 = mMotor.mPhaseCurrentSensor.mAdcWithDma.getVoltage(mMotor.mPhaseCurrentSensor.mPhaseCurrentValue);
-    os::ThisTask::sleep(controllerInterval);
-    os::ThisTask::sleep(controllerInterval);
-    auto offset3 = mMotor.mPhaseCurrentSensor.mAdcWithDma.getVoltage(mMotor.mPhaseCurrentSensor.mPhaseCurrentValue);
-    mMotor.mPhaseCurrentSensor.setOffset((offset1 + offset2 + offset3) / 3.0);
+    mMotor.mPhaseCurrentSensor.calibrate();
+
     do {
         float newSetTorque;
         if (mSetTorqueQueue.receive(newSetTorque, 0)) {
             mSetTorque = newSetTorque;
         }
-        auto phaseCurrent = mMotor.getPhaseCurrent();
+        const auto phaseCurrent = mMotor.getPhaseCurrent();
 
-        mCurrentTorque = phaseCurrent * mMotor.mMotorConstant;
+        mCurrentTorque = phaseCurrent * mMotor.mMotorConstant * 3;
         mController.compute();
 
         updatePwmOutput();
         updateQuadrant();
 
-        g_RTTerminal->printf("Soll: %d\tIst: %d\tOutput: %d\tPWM: %d\tRPM: %d\tDIR: %s\tMode: %s\r\n",
-                             static_cast<int32_t>(mSetTorque * 1000),
-                             static_cast<int32_t>(mCurrentTorque * 1000),
-                             static_cast<int32_t>(mOutputTorque * 1000),
-                             mMotor.getPulsWidthPerMill(),
-                             static_cast<int32_t>(mMotor.getCurrentRPS() * 60.0),
-                             mMotor.getCurrentDirection() == SensorBLDC::Direction::FORWARD ? "FORWARD" : "BACKWARD",
-                             mMotor.mManualCommutationActive ? "Manual" : "Automatic");
+//        g_RTTerminal->printf("%10d\tSoll: %5d\tIst: %5d\tOutput: %5d\tPWM: %5d\tRPM: %5d\tCDIR: %s\tSDIR: %s\r\n",
+//                             os::Task::getTickCount(),
+//                             static_cast<int32_t>(mSetTorque * 1000),
+//                             static_cast<int32_t>(mCurrentTorque * 1000),
+//                             static_cast<int32_t>(mOutputTorque * 1000),
+//                             mMotor.getPulsWidthPerMill(),
+//                             static_cast<int32_t>(mMotor.getCurrentRPS() * 60.0),
+//                             mMotor.getCurrentDirection() == SensorBLDC::Direction::FORWARD ? "F" : "B",
+//                             mMotor.getSetDirection() == SensorBLDC::Direction::FORWARD ? "F" : "B");
 
         mMotor.checkMotor();
-
         mPhaseCurrentValueAvailable.take(controllerInterval);
-        os::ThisTask::sleep(controllerInterval);
-        os::ThisTask::sleep(controllerInterval);
-        os::ThisTask::sleep(controllerInterval);
     } while (!join);
 }
 

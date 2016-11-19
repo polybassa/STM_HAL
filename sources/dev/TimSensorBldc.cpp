@@ -1,4 +1,4 @@
-/* Copyright (C) 2015  Nils Weiss, Alexander Strobl
+/* Copyright (C) 2015  Nils Weiss
  *
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -31,19 +31,21 @@ float SensorBLDC::getCurrentRPS(void) const
 {
     const float maximumRPS = 70;
 
-    const float rpsMean =
-        (mHallDecoder.getCurrentRPS() + mHallMeter1.getCurrentRPS() + mHallMeter2.getCurrentRPS()) / 3;
+    const float rpsHallDecoder = mHallDecoder.getCurrentRPS();
+    const float rpsHallMeter1 = mHallMeter1.getCurrentRPS();
+    const float rpsHallMeter2 = mHallMeter2.getCurrentRPS();
+
+    const float rpsMean = (rpsHallDecoder + rpsHallMeter1 + rpsHallMeter2) / 3.0;
 
     const float factorHighSpeedResolution = rpsMean / 100;
     const float factorLowSpeedResolution = (maximumRPS - rpsMean) / 100;
 
     const float rps =
-        (mHallDecoder.getCurrentRPS() * factorLowSpeedResolution + mHallMeter1.getCurrentRPS() *
+        (rpsHallDecoder * factorLowSpeedResolution + rpsHallMeter1 *
          factorHighSpeedResolution +
-         mHallMeter2.getCurrentRPS() * factorHighSpeedResolution) / (
-                                                                     factorHighSpeedResolution +
-                                                                     factorHighSpeedResolution +
-                                                                     factorLowSpeedResolution);
+         rpsHallMeter2 * factorHighSpeedResolution) / (factorHighSpeedResolution +
+                                                       factorHighSpeedResolution +
+                                                       factorLowSpeedResolution);
 
     if (mCurrentDirection == Direction::BACKWARD) {
         return 0.0 - rps;
@@ -84,7 +86,9 @@ void SensorBLDC::setPulsWidthInMill(int32_t value) const
 
 void SensorBLDC::setDirection(const Direction dir) const
 {
-    mSetDirection = dir;
+    if (mSetDirection != dir) {
+        mUpdateSetDirection = dir;
+    }
 }
 
 size_t SensorBLDC::getNextHallPosition(const size_t position) const
@@ -134,10 +138,6 @@ void SensorBLDC::computeDirection(void) const
     const bool directionChanged = getPreviousHallPosition(currentPosition) != mLastHallPosition;
 
     if (directionChanged) {
-        mHallDecoder.reset();
-        mHallMeter1.reset();
-        mHallMeter2.reset();
-        g_RTTerminal->printf("DIRECTION CHANGED\r\n");
         mCurrentDirection = getCurrentDirection(mLastHallPosition, currentPosition);
     }
 
@@ -160,6 +160,11 @@ void SensorBLDC::disableManualCommutation(const size_t hallPosition) const
 
 void SensorBLDC::commutate(const size_t hallPosition) const
 {
+    if (mUpdateSetDirection != mSetDirection) {
+        mPhaseCurrentSensor.reset();
+        mSetDirection = mUpdateSetDirection;
+    }
+
     if ((mManualCommutationActive == true) && (mSetDirection == mCurrentDirection) &&
         (std::abs(mHallDecoder.getCurrentRPS()) > 15.0))
     {
@@ -269,7 +274,6 @@ void SensorBLDC::start(void) const
 
     mHallDecoder.registerHallEventCheckCallback([&] {
                                                     this->computeDirection();
-                                                    return true;
                                                 });
 
     mHallDecoder.mTim.enable();

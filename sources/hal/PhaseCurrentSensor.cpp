@@ -15,9 +15,10 @@
 
 #include "PhaseCurrentSensor.h"
 #include "trace.h"
-#include "log2.h"
-#include "medianFilter.h"
 #include <algorithm>
+#include "RealTimeDebugInterface.h"
+
+extern dev::RealTimeDebugInterface* g_RTTerminal;
 
 static const int __attribute__((unused)) g_DebugZones = ZONE_ERROR | ZONE_WARNING | ZONE_VERBOSE | ZONE_INFO;
 
@@ -29,33 +30,43 @@ using hal::Tim;
 
 void PhaseCurrentSensor::setPulsWidthForTriggerPerMill(uint32_t value) const
 {
-    static constexpr uint32_t maxValue = 1000;
+    static constexpr const uint32_t maxValue = 1000;
+    static constexpr const uint32_t minValue = 50;
     if (value > maxValue) {
         value = maxValue;
+    }
+
+    if (value < minValue) {
+        value = minValue;
     }
 
     static const float scale = static_cast<float>(mHBridge.mTim.mConfiguration.TIM_Period) /
                                static_cast<float>(maxValue);
 
-    value = static_cast<uint32_t>(static_cast<float>(value) * scale);
+    value = static_cast<uint32_t>(static_cast<float>(value) * scale) >> 1;
 
-    const uint32_t sampleTime = mAdcWithDma.mAdcChannel.mSampleTime; // TODO prepare Value that it is correct
+    const uint32_t sampleTime = 2 << mAdcWithDma.mAdcChannel.mSampleTime;
 
     TIM_SetCompare4(mHBridge.mTim.getBasePointer(),
                     static_cast<uint32_t>(std::max(
-                                                   static_cast<int32_t>((value >> 1) - sampleTime),
+                                                   static_cast<int32_t>(value - sampleTime),
                                                    static_cast<int32_t>(1))));
 }
 
 void PhaseCurrentSensor::updateCurrentValue(void) const
 {
-    const auto& array = MeasurementValueBuffer[mDescription];
+    auto& array = MeasurementValueBuffer[mDescription];
+
+    std::sort(array.begin(), array.end());
 
     uint32_t sum = 0;
-    for (size_t i = 0; i < array.size(); i++) {
+    size_t valueWindowStart = array.size() >> 3;
+    size_t valueWindowEnd = array.size() - (array.size() >> 3);
+    for (size_t i = valueWindowStart; i < valueWindowEnd; i++) {
         sum += array[i];
     }
-    mPhaseCurrentValue = static_cast<float>(sum) / static_cast<float>(array.size());
+
+    mPhaseCurrentValue = static_cast<float>(sum) / static_cast<float>(valueWindowEnd - valueWindowStart);
 }
 
 void PhaseCurrentSensor::registerValueAvailableSemaphore(os::Semaphore* valueAvailable) const
@@ -79,9 +90,22 @@ void PhaseCurrentSensor::disable(void) const
     mAdcWithDma.stopConversion();
 }
 
-void PhaseCurrentSensor::setOffset(const float offset) const
+void PhaseCurrentSensor::reset(void) const
 {
-    this->mOffsetVoltage = offset;
+    mAdcWithDma.mDma.disable();
+    mAdcWithDma.mDma.setCurrentDataCounter(NUMBER_OF_MEASUREMENTS_FOR_AVG);
+    mAdcWithDma.mDma.enable();
+}
+
+void PhaseCurrentSensor::calibrate(void) const
+{
+    os::ThisTask::sleep(std::chrono::milliseconds(5));
+    auto offset1 = mAdcWithDma.getVoltage(mPhaseCurrentValue);
+    os::ThisTask::sleep(std::chrono::milliseconds(5));
+    auto offset2 = mAdcWithDma.getVoltage(mPhaseCurrentValue);
+    os::ThisTask::sleep(std::chrono::milliseconds(5));
+    auto offset3 = mAdcWithDma.getVoltage(mPhaseCurrentValue);
+    mOffsetVoltage = std::max(std::min(offset1, offset2), std::min(std::max(offset1, offset2), offset3));
 }
 
 float PhaseCurrentSensor::getPhaseCurrent(void) const

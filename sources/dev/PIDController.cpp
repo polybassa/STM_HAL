@@ -39,20 +39,20 @@ bool PIDController::compute(void)
 {
     if (mMode == ControlMode::MANUAL) {return false; }
 
-    auto now = os::Task::getTickCount();
-    auto timeChange = now - mLastTime;
+    const auto now = os::Task::getTickCount();
+    const auto timeChange = now - mLastTime;
 
     if (timeChange < mSampleTime.count()) {
         return false;
     }
 
-    float input = mInput;
-    float error = mSetPoint - input;
+    const float input = mInput;
+    const float error = mSetPoint - input;
 
     mITerm += (mKi * error);
     checkLimits(mITerm);
 
-    float dInput = (input - mLastInput);
+    const float dInput = (input - mLastInput);
 
     float output = mKp * error + mITerm - mKd * dInput;
     checkLimits(output);
@@ -74,7 +74,7 @@ void PIDController::setTunings(const float kp, const float ki, const float kd)
     mDispKi = ki;
     mDispKd = kd;
 
-    auto sampleTimeInSec = ((float)mSampleTime.count()) / 1000;
+    const auto sampleTimeInSec = ((float)mSampleTime.count()) / 1000;
 
     mKp = kp;
     mKi = ki * sampleTimeInSec;
@@ -93,7 +93,7 @@ void PIDController::setSampleTime(const std::chrono::milliseconds newSampleTime)
         return;
     }
 
-    auto ratio = (float)newSampleTime.count() / mSampleTime.count();
+    const float ratio = static_cast<float>(newSampleTime.count()) / static_cast<float>(mSampleTime.count());
 
     mKi *= ratio;
     mKd /= ratio;

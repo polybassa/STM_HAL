@@ -14,7 +14,6 @@
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>. */
 
 #include <limits>
-#include <algorithm>
 #include <cmath>
 #include "Gpio.h"
 #include "TimHallDecoder.h"
@@ -91,13 +90,15 @@ uint32_t HallDecoder::getCommutationDelay(void) const
 float HallDecoder::getCurrentRPS(void) const
 {
     static constexpr float HALL_EVENTS_PER_ROTATION = 6;
+    static const float timerFrequency = mTim.getTimerFrequency();
 
-    uint32_t sumTicksBetweenHallSignals =
-        std::accumulate(mTimestamps.begin(), mTimestamps.end(), 0);
+    uint32_t sumTicksBetweenHallSignals = 0;
+    for (size_t i = 0; i < mTimestamps.size(); i++) {
+        sumTicksBetweenHallSignals += mTimestamps[i];
+    }
 
-    const uint32_t avgTicksBetweenHallSignals = sumTicksBetweenHallSignals / NUMBER_OF_TIMESTAMPS; // is wrong
+    const uint32_t avgTicksBetweenHallSignals = sumTicksBetweenHallSignals / mTimestamps.size();
 
-    const float timerFrequency = mTim.getTimerFrequency();
     const float hallSignalFrequency = timerFrequency / avgTicksBetweenHallSignals;
     const float electricalRotationFrequency = hallSignalFrequency / HALL_EVENTS_PER_ROTATION;
     const float motorRotationFrequency = electricalRotationFrequency / POLE_PAIRS;
@@ -137,14 +138,14 @@ void HallDecoder::unregisterCommutationCallback(void) const
     registerCommutationCallback([] {});
 }
 
-void HallDecoder::registerHallEventCheckCallback(std::function<bool(void)> callback) const
+void HallDecoder::registerHallEventCheckCallback(std::function<void(void)> callback) const
 {
     HallEventCallbacks[mDescription] = callback;
 }
 
 void HallDecoder::unregisterHallEventCheckCallback(void) const
 {
-    registerHallEventCheckCallback([] { return false;
+    registerHallEventCheckCallback([] { return;
                                    });
 }
 
@@ -189,4 +190,4 @@ void HallDecoder::initialize(void) const
 constexpr const std::array<const HallDecoder,
                            HallDecoder::Description::__ENUM__SIZE> Factory<HallDecoder>::Container;
 std::array<std::function<void(void)>, HallDecoder::Description::__ENUM__SIZE> HallDecoder::CommutationCallbacks;
-std::array<std::function<bool(void)>, HallDecoder::Description::__ENUM__SIZE> HallDecoder::HallEventCallbacks;
+std::array<std::function<void(void)>, HallDecoder::Description::__ENUM__SIZE> HallDecoder::HallEventCallbacks;
