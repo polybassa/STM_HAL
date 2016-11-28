@@ -16,18 +16,23 @@
 #include "os_Task.h"
 #include "stm32f30x_it.h"
 #include "stm32f30x_misc.h"
+#include "system_stm32f30x.h"
 
 using os::Task;
 
 bool Task::schedulerRunning = false;
 
-Task::Task(const char* name, uint16_t stackSize, os::Task::Priority priority,
+Task::Task(const char*                      name,
+           uint16_t                         stackSize,
+           os::Task::Priority               priority,
            std::function<void(const bool&)> function) :
-    mTaskFunction(
-                  function)
+    mTaskFunction(function)
 {
-    xTaskCreate(Task::task, name, Task::STACKSIZE_IN_BYTE(
-                                                          stackSize), this, static_cast<uint16_t>(priority),
+    xTaskCreate(Task::task,
+                name,
+                Task::STACKSIZE_IN_BYTE(stackSize),
+                this,
+                static_cast<uint16_t>(priority),
                 &this->mHandle);
 }
 
@@ -135,7 +140,7 @@ void os::ThisTask::sleep(const std::chrono::milliseconds ms)
     if (os::Task::isSchedulerRunning()) {
         vTaskDelay(ms.count() / portTICK_RATE_MS);
     } else {
-        for (size_t i = 0; i < ms.count() * 1200; i++) {
+        for (size_t i = 0; i < ms.count() * (SystemCoreClock / 1000); i++) {
             __NOP();
         }
     }

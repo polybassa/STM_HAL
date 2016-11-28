@@ -81,12 +81,12 @@ size_t UsartWithDma::send(uint8_t const* const data, const size_t length, const 
 
     if ((mTxDma != nullptr) && (mDmaCmd & USART_DMAReq_Tx) && (length > MIN_LENGTH_FOR_DMA_TRANSFER)) {
         // clear Semaphore
-        DmaTransferCompleteSemaphores.at(mUsart.mDescription).take(0);
+        DmaTransferCompleteSemaphores.at(mUsart.mDescription).take(std::chrono::milliseconds(0));
         // we have DMA support
         mTxDma->setupTransfer(data, length);
         mTxDma->enable();
 
-        if (DmaTransferCompleteSemaphores.at(mUsart.mDescription).take(ticksToWait)) {
+        if (DmaTransferCompleteSemaphores.at(mUsart.mDescription).take(std::chrono::milliseconds(ticksToWait))) {
             mTxDma->disable();
             return length;
         } else {
@@ -138,12 +138,12 @@ size_t UsartWithDma::receive(uint8_t* const data, const size_t length, const uin
 
     if ((mRxDma != nullptr) && (mDmaCmd & USART_DMAReq_Rx) && (length > MIN_LENGTH_FOR_DMA_TRANSFER)) {
         // clear Semaphore
-        DmaReceiveCompleteSemaphores.at(mUsart.mDescription).take(0);
+        DmaReceiveCompleteSemaphores.at(mUsart.mDescription).take(std::chrono::milliseconds(0));
         // we have DMA support
         mRxDma->setupTransfer(data, length);
         mRxDma->enable();
 
-        DmaReceiveCompleteSemaphores.at(mUsart.mDescription).take(ticksToWait);
+        DmaReceiveCompleteSemaphores.at(mUsart.mDescription).take(std::chrono::milliseconds(ticksToWait));
 
         mRxDma->disable();
         return length - mRxDma->getCurrentDataCounter();

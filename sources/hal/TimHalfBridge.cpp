@@ -30,8 +30,9 @@ void HalfBridge::setPulsWidthPerMill(uint32_t value) const
     }
     mPulsWidth = value;
 
-    static const float scale = mTim.mConfiguration.TIM_Period / static_cast<float>(maxValue);
-    value = value * scale;
+    static const float scale = static_cast<float>(mTim.mConfiguration.TIM_Period) / static_cast<float>(maxValue);
+
+    value = static_cast<uint32_t>(static_cast<float>(value) * scale);
 
     TIM_SetCompare1(mTim.getBasePointer(), value);
     TIM_SetCompare2(mTim.getBasePointer(), value);
@@ -71,6 +72,38 @@ void HalfBridge::setOutputForChannel(const uint16_t channel, const bool highStat
         // ERROR
         return;
     }
+
+#if ACTIVEFREEWHEELING
+
+    // Bridge FETs for Motor Phase U
+    if (highState) {
+        // PWM at low side FET of bridge U
+        // active freewheeling at high side FET of bridge U
+        // if low side FET is in PWM off mode then the hide side FET
+        // is ON for active freewheeling. This mode needs correct definition
+        // of dead time otherwise we have shoot-through problems
+
+        TIM_SelectOCxM(mTim.getBasePointer(), channel, TIM_OCMode_PWM1);
+
+        TIM_CCxCmd(mTim.getBasePointer(), channel, TIM_CCx_Enable);
+
+        TIM_CCxNCmd(mTim.getBasePointer(), channel, TIM_CCxN_Enable);
+    } else {
+        TIM_CCxNCmd(mTim.getBasePointer(), channel, TIM_CCxN_Disable);
+        TIM_CCxCmd(mTim.getBasePointer(), channel, TIM_CCx_Disable);
+
+        TIM_SelectOCxM(mTim.getBasePointer(), channel, TIM_ForcedAction_InActive);
+
+        // Low side FET: OFF
+        TIM_CCxCmd(mTim.getBasePointer(), channel, TIM_CCx_Enable);
+
+        if (lowState) {
+            // High side FET: ON
+            TIM_CCxNCmd(mTim.getBasePointer(), channel, TIM_CCxN_Enable);
+        }
+    }
+
+#else
     if (highState) {
         TIM_SelectOCxM(mTim.getBasePointer(), channel, TIM_ForcedAction_Active);
         TIM_CCxCmd(mTim.getBasePointer(), channel, TIM_CCx_Enable);
@@ -91,6 +124,7 @@ void HalfBridge::setOutputForChannel(const uint16_t channel, const bool highStat
                         TIM_CCxN_Enable);
         }
     }
+#endif
 }
 
 void HalfBridge::disableOutput(void) const

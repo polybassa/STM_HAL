@@ -38,6 +38,12 @@ uint32_t Tim::getCounterValue(void) const
 
 uint32_t Tim::getTimerFrequency(void) const
 {
+#ifdef STM32F303xC
+    if ((this->mPeripherie == TIM2_BASE) || (this->mPeripherie == TIM3_BASE)) {
+        mClockFrequency = 72000000;
+    }
+#endif
+
     if (mConfiguration.TIM_ClockDivision == TIM_CKD_DIV1) {
         return mClockFrequency / (mConfiguration.TIM_Prescaler + 1);
     } else if (mConfiguration.TIM_ClockDivision == TIM_CKD_DIV2) {

@@ -77,7 +77,7 @@ void DirectMotorController::motorControllerTaskFunction(const bool& join)
 
         static constexpr uint32_t waitPeriode = controllerInterval.count() / motorCheckInterval.count();
         for (uint32_t i = 0; i < waitPeriode; i++) {
-            mMotor.checkMotor(mBattery);
+            mMotor.checkMotor();
             os::ThisTask::sleep(motorCheckInterval);
         }
     } while (!join);

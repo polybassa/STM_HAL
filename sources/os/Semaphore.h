@@ -25,6 +25,7 @@ namespace os
 class Semaphore
 {
     SemaphoreHandle_t mSemaphoreHandle = nullptr;
+    bool take(uint32_t ticksToWait) const;
 
 public:
     Semaphore(void);
@@ -34,7 +35,12 @@ public:
     Semaphore& operator=(Semaphore &&);
     ~Semaphore(void);
 
-    bool take(uint32_t ticksToWait = portMAX_DELAY) const;
+    bool take(void) const {return this->take(portMAX_DELAY); }
+    template<class rep, class period>
+    bool take(const std::chrono::duration<rep, period>& d)
+    {
+        return take(std::chrono::duration_cast<std::chrono::milliseconds>(d).count() / portTICK_RATE_MS);
+    }
     bool give(void) const;
     bool giveFromISR(void) const;
     bool takeFromISR(void) const;

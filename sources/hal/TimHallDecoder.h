@@ -57,8 +57,7 @@ private:
                           const TIM_OCInitTypeDef& oc3Conf) :
         mDescription(desc), mTim(timer),
         mIc1Configuration(ic1Conf), mOc2Configuration(oc2Conf),
-        mOc3Configuration(
-                          oc3Conf) {}
+        mOc3Configuration(oc3Conf) {}
 
     const Tim& mTim;
     const TIM_ICInitTypeDef mIc1Configuration;

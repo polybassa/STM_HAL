@@ -16,6 +16,9 @@
 #include <cmath>
 #include "TimSensorBldc.h"
 #include "trace.h"
+#include "RealTimeDebugInterface.h"
+
+extern dev::RealTimeDebugInterface* g_RTTerminal;
 
 static const int __attribute__((unused)) g_DebugZones = ZONE_ERROR | ZONE_WARNING | ZONE_VERBOSE | ZONE_INFO;
 
@@ -42,7 +45,7 @@ float SensorBLDC::getCurrentRPS(void) const
                                                                      factorHighSpeedResolution +
                                                                      factorLowSpeedResolution);
 
-    if (mDirection == Direction::BACKWARD) {
+    if (mCurrentDirection == Direction::BACKWARD) {
         return 0.0 - rps;
     } else {
         return rps;
@@ -58,9 +61,14 @@ float SensorBLDC::getCurrentOmega(void) const
     return getCurrentRPS() * 2 * M_PI;
 }
 
-SensorBLDC::Direction SensorBLDC::getDirection(void) const
+SensorBLDC::Direction SensorBLDC::getSetDirection(void) const
 {
-    return mDirection;
+    return mSetDirection;
+}
+
+SensorBLDC::Direction SensorBLDC::getCurrentDirection(void) const
+{
+    return mCurrentDirection;
 }
 
 int32_t SensorBLDC::getPulsWidthPerMill(void) const
@@ -71,26 +79,17 @@ int32_t SensorBLDC::getPulsWidthPerMill(void) const
 void SensorBLDC::setPulsWidthInMill(int32_t value) const
 {
     mHBridge.setPulsWidthPerMill(std::abs(value));
+    mPhaseCurrentSensor.setPulsWidthForTriggerPerMill(std::abs(value));
 }
 
 void SensorBLDC::setDirection(const Direction dir) const
 {
-    mDirection = dir;
-}
-
-void SensorBLDC::setMode(const Mode mode) const
-{
-    mMode = mode;
-}
-
-SensorBLDC::Mode SensorBLDC::getMode(void) const
-{
-    return mMode;
+    mSetDirection = dir;
 }
 
 size_t SensorBLDC::getNextHallPosition(const size_t position) const
 {
-    if (mDirection == Direction::BACKWARD) {
+    if (mCurrentDirection == Direction::BACKWARD) {
         static const size_t positions[] = {0, 5, 3, 1, 6, 4, 2, 0};
         return positions[position];
     } else {
@@ -99,9 +98,27 @@ size_t SensorBLDC::getNextHallPosition(const size_t position) const
     }
 }
 
+SensorBLDC::Direction SensorBLDC::getCurrentDirection(const size_t lastPosition, const size_t currentPosition) const
+{
+    static const size_t nextBackwardPositions[] = {0, 5, 3, 1, 6, 4, 2, 0};
+    static const size_t nextForwardPositions[] = {0, 3, 6, 2, 5, 1, 4, 0};
+
+    if (nextBackwardPositions[lastPosition] == currentPosition) {
+        return Direction::BACKWARD;
+    } else if (nextForwardPositions[lastPosition] == currentPosition) {
+        return Direction::FORWARD;
+    }
+
+    // This should never happen
+    //Trace(ZONE_ERROR, "Invalid current motor direction!!");
+    g_RTTerminal->printf("ERROR IN GET DIRECTION\r\n");
+
+    return Direction::FORWARD;
+}
+
 size_t SensorBLDC::getPreviousHallPosition(const size_t position) const
 {
-    if (mDirection == Direction::FORWARD) {
+    if (mCurrentDirection == Direction::FORWARD) {
         static const size_t positions[] = {0, 5, 3, 1, 6, 4, 2, 0};
         return positions[position];
     } else {
@@ -114,46 +131,57 @@ void SensorBLDC::computeDirection(void) const
 {
     const uint32_t currentPosition = mHallDecoder.getCurrentHallState();
 
-    const bool directionChanged = currentPosition == getPreviousHallPosition(mLastHallPosition);
+    const bool directionChanged = getPreviousHallPosition(currentPosition) != mLastHallPosition;
 
     if (directionChanged) {
-//        if (mDirection == Direction::FORWARD) {
-//            mDirection = Direction::BACKWARD;
-//        } else {
-//            mDirection = Direction::FORWARD;
-//        }
-
         mHallDecoder.reset();
         mHallMeter1.reset();
         mHallMeter2.reset();
+        g_RTTerminal->printf("DIRECTION CHANGED\r\n");
+        mCurrentDirection = getCurrentDirection(mLastHallPosition, currentPosition);
     }
 
     mLastHallPosition = currentPosition;
 }
 
+void SensorBLDC::enableManualCommutation(void) const
+{
+    mHBridge.disableTimerCommunication();
+    mManualCommutationActive = true;
+}
+
+void SensorBLDC::disableManualCommutation(const size_t hallPosition) const
+{
+    manualCommutation(hallPosition);
+    mHBridge.enableTimerCommunication();
+    prepareCommutation(hallPosition);
+    mManualCommutationActive = false;
+}
+
 void SensorBLDC::commutate(const size_t hallPosition) const
 {
-    static bool manualCommutationActive = false;
-
-    if ((manualCommutationActive == true) && (std::abs(mHallDecoder.getCurrentRPS()) > 15)) {
-        manualCommutationActive = false;
-        manualCommutation(hallPosition);
-        mHBridge.enableTimerCommunication();
-        prepareCommutation(hallPosition);
+    if ((mManualCommutationActive == true) && (mSetDirection == mCurrentDirection) &&
+        (std::abs(mHallDecoder.getCurrentRPS()) > 15.0))
+    {
+        disableManualCommutation(hallPosition);
         return;
     }
 
-    if ((manualCommutationActive == false) && (std::abs(mHallDecoder.getCurrentRPS()) < 10)) {
-        mHBridge.disableTimerCommunication();
-        manualCommutationActive = true;
-        return;
+    if ((mManualCommutationActive == false) && (mSetDirection != mCurrentDirection)) {
+        enableManualCommutation();
     }
 
-    if (manualCommutationActive == true) {
+    if (mManualCommutationActive == true) {
         manualCommutation(hallPosition);
     } else {
         prepareCommutation(hallPosition);
     }
+}
+
+float SensorBLDC::getPhaseCurrent(void) const
+{
+    return mSetDirection == Direction::FORWARD ? 0.0 -
+           mPhaseCurrentSensor.getPhaseCurrent() : mPhaseCurrentSensor.getPhaseCurrent();
 }
 
 void SensorBLDC::manualCommutation(const size_t hallPosition) const
@@ -195,12 +223,13 @@ void SensorBLDC::manualCommutation(const size_t hallPosition) const
          { 0, 0, 0, 0, 0, 0 } // V0
      }};
 
-    if ((mDirection == Direction::FORWARD)) {
+    if (mSetDirection == Direction::FORWARD) {
         mHBridge.setBridge(BLDC_BRIDGE_STATE_FORWARD_ACCELERATE[hallPosition]);
+        mHBridge.triggerCommutationEvent();
     } else {
         mHBridge.setBridge(BLDC_BRIDGE_STATE_BACKWARD_ACCELERATE[hallPosition]);
+        mHBridge.triggerCommutationEvent();
     }
-    mHBridge.triggerCommutationEvent();
 }
 
 void SensorBLDC::prepareCommutation(const size_t hallPosition) const
@@ -232,38 +261,31 @@ void SensorBLDC::prepareCommutation(const size_t hallPosition) const
     mHBridge.setBridge(BLDC_BRIDGE_STATE_ACCELERATE[hallPosition]);
 }
 
-void SensorBLDC::checkMotor(const dev::Battery& battery) const
-{
-    const float minimalRPS = 0.5;
-    const float maximalCurrent = 0.8;
-
-    const bool motorBlocking =
-        (std::abs(battery.getCurrent()) > maximalCurrent &&
-         (std::abs(mHallDecoder.getCurrentRPS()) < minimalRPS));
-
-    if (motorBlocking) {
-        mLastHallPosition = getPreviousHallPosition(mHallDecoder.getCurrentHallState());
-        prepareCommutation(mLastHallPosition);
-        mHBridge.triggerCommutationEvent();
-    }
-}
-
 void SensorBLDC::start(void) const
 {
-    mHallDecoder.registerCommutationCallback([this] {
-                                                 commutate(mHallDecoder.getCurrentHallState());
+    mHallDecoder.registerCommutationCallback([&] {
+                                                 this->commutate(this->mHallDecoder.getCurrentHallState());
                                              });
 
-    mHallDecoder.registerHallEventCheckCallback([this] {
-                                                    computeDirection();
+    mHallDecoder.registerHallEventCheckCallback([&] {
+                                                    this->computeDirection();
                                                     return true;
                                                 });
 
     mHallDecoder.mTim.enable();
     mHallMeter1.mTim.enable();
     mHallMeter2.mTim.enable();
+    mPhaseCurrentSensor.enable();
 
     setPulsWidthInMill(0);
+
+    mHallDecoder.reset();
+    mHallMeter1.reset();
+    mHallMeter2.reset();
+
+    mLastHallPosition = mHallDecoder.getCurrentHallState();
+    enableManualCommutation();
+    commutate(mLastHallPosition);
 
     mHBridge.enableOutput();
 }
@@ -271,7 +293,7 @@ void SensorBLDC::start(void) const
 void SensorBLDC::stop(void) const
 {
     mHBridge.disableOutput();
-
+    mPhaseCurrentSensor.disable();
     mHallDecoder.mTim.disable();
     mHallMeter1.mTim.disable();
     mHallMeter2.mTim.disable();
@@ -279,6 +301,9 @@ void SensorBLDC::stop(void) const
     mHallDecoder.unregisterHallEventCheckCallback();
     mHallDecoder.unregisterCommutationCallback();
 }
+
+void SensorBLDC::checkMotor(void) const
+{}
 
 uint32_t SensorBLDC::getNumberOfPolePairs(void) const
 {

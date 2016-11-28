@@ -20,6 +20,7 @@
 #include "cpp_overrides.h"
 #include "trace.h"
 #include "SEGGER_SYSVIEW.h"
+#include "RealTimeDebugInterface.h"
 
 /* OS LAYER INCLUDES */
 #include "hal_Factory.h"
@@ -37,6 +38,7 @@
 #include "Exti.h"
 #include "Rtc.h"
 #include "Adc.h"
+#include "AdcWithDma.h"
 #include "CRC.h"
 #include "I2c.h"
 
@@ -46,13 +48,16 @@
 
 /* APP LAYER INLCUDES */
 #include "BatteryObserver.h"
-#include "MotorController.h"
+#include "DRV8302MotorController.h"
 
 /* GLOBAL VARIABLES */
 static const int __attribute__((used)) g_DebugZones = ZONE_ERROR | ZONE_WARNING | ZONE_VERBOSE | ZONE_INFO;
 extern char _version_start;
 extern char _version_end;
 const std::string VERSION(&_version_start, ( &_version_end   -   & _version_start));
+
+app::DRV8302MotorController* g_motorCtrl = nullptr;
+dev::RealTimeDebugInterface* g_RTTerminal;
 
 void initializePowerSupply(void)
 {
@@ -64,7 +69,8 @@ void initializePowerSupply(void)
 }
 
 int main(void)
-{
+{	g_RTTerminal = new dev::RealTimeDebugInterface();
+
     hal::initFactory<hal::Factory<hal::Gpio> >();
     hal::initFactory<hal::Factory<hal::Tim> >();
     hal::initFactory<hal::Factory<hal::HallDecoder> >();
@@ -78,7 +84,10 @@ int main(void)
     hal::initFactory<hal::Factory<hal::Spi> >();
     hal::initFactory<hal::Factory<hal::SpiWithDma> >();
     hal::initFactory<hal::Factory<hal::Rtc> >();
-//    hal::initFactory<hal::Factory<hal::Adc> >(); Don't USE ADC on STM32F303VC
+    hal::initFactory<hal::Factory<hal::Adc> >();
+    hal::initFactory<hal::Factory<hal::Adc::Channel> >();
+    hal::initFactory<hal::Factory<hal::AdcWithDma> >();
+    hal::initFactory<hal::Factory<hal::PhaseCurrentSensor>> ();
     hal::initFactory<hal::Factory<hal::Crc> >();
     hal::initFactory<hal::Factory<hal::I2c> >();
 
@@ -88,6 +97,8 @@ int main(void)
     Trace(ZONE_INFO, "Version: %c \r\n", &_version_start);
 
     os::ThisTask::sleep(std::chrono::milliseconds(10));
+
+    g_motorCtrl = new app::DRV8302MotorController( dev::Factory<dev::SensorBLDC>::get<dev::SensorBLDC::BLDC>(), 0.5, 0.2);
 
     os::Task::startScheduler();
 

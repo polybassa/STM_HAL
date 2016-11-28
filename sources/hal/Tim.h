@@ -72,6 +72,7 @@ private:
     friend struct HalfBridge;
     friend struct HallMeter;
     friend struct dev::SensorBLDC;
+    friend struct PhaseCurrentSensor;
 };
 
 template<>
