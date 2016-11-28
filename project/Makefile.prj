@@ -15,6 +15,11 @@ endif
 ifneq (,$(filter debug_firmware firmware,$(MAKECMDGOALS)))
 
 DEFINES+=-DUSE_FREERTOS
+DEFINES+=-DMPU6050
+DEFINES+=-DEMPL_TARGET_PMD
+DEFINES+=-DEMPL
+DEFINES+=-DUSE_DMP
+DEFINES+=-DMPL_LOG_NDEBUG=1
 
 # Where to find source files that do not live in this directory.
 VPATH+=${ROOT}/sources
@@ -34,6 +39,13 @@ VPATH+=${ROOT}/libraries/SystemView_Src_V240a/OS
 VPATH+=${ROOT}/libraries/SystemView_Src_V240a/Config
 
 VPATH+=${ROOT}/device
+
+VPATH+=${ROOT}/libraries/eMD6/driver/eMPL
+VPATH+=${ROOT}/libraries/eMD6/driver/stm32L
+VPATH+=${ROOT}/libraries/eMD6/eMPL-hal
+VPATH+=${ROOT}/libraries/eMD6/mllite
+VPATH+=${ROOT}/libraries/eMD6/mpl
+
 VPATH+=${PRJ_PATH}
 
 # Where to find header files that do not live in the source directory.
@@ -57,6 +69,13 @@ IPATH+=${ROOT}/libraries
 IPATH+=${ROOT}/libraries/SystemView_Src_V240a/SEGGER
 IPATH+=${ROOT}/libraries/SystemView_Src_V240a/OS
 IPATH+=${ROOT}/libraries/SystemView_Src_V240a/Config
+
+IPATH+=${ROOT}/libraries/eMD6/driver/eMPL
+IPATH+=${ROOT}/libraries/eMD6/driver/stm32L
+IPATH+=${ROOT}/libraries/eMD6/eMPL-hal
+IPATH+=${ROOT}/libraries/eMD6/driver/include
+IPATH+=${ROOT}/libraries/eMD6/mllite
+IPATH+=${ROOT}/libraries/eMD6/mpl
 
 # PMD firmware
 ${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/main.o
@@ -107,6 +126,23 @@ ${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/TaskInterruptable.o
 #${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/BatteryObserver.o
 #${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/MotorController.o
 ${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/DRV8302MotorController.o
+${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/Mpu.o 
+
+# eMPL Driver
+${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/inv_mpu_dmp_motion_driver.o
+${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/inv_mpu.o
+${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/pmd_empl.o
+${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/data_builder.o
+${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/hal_outputs.o
+${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/message_layer.o
+${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/ml_math_func.o
+${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/mlmath.o
+${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/mpl.o
+${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/results_holder.o
+${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/start_manager.o
+${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/storage_manager.o
+${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/eMPL_outputs.o
+${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/log_stm32.o ## Remove from build only for logging or Test
 
 #PMD TestApps
 #${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/TestLed.o
