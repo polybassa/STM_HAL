@@ -125,7 +125,7 @@ ${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/TaskInterruptable.o
 # App Layer
 #${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/BatteryObserver.o
 #${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/MotorController.o
-${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/DRV8302MotorController.o
+#${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/DRV8302MotorController.o
 ${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/Mpu.o 
 
 # eMPL Driver
@@ -148,7 +148,8 @@ ${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/log_stm32.o ## Remove from build only for l
 #${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/TestLed.o
 #${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/TestRtc.o
 #${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/TestSleep.o
-${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/TestDRV8302.o
+#${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/TestDRV8302.o
+${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/Test_BALANCE.o
 
 # device
 ${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/startup_stm32f30x.o

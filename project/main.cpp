@@ -49,6 +49,7 @@
 /* APP LAYER INLCUDES */
 #include "BatteryObserver.h"
 #include "DRV8302MotorController.h"
+#include "Mpu.h"
 
 /* GLOBAL VARIABLES */
 static const int __attribute__((used)) g_DebugZones = ZONE_ERROR | ZONE_WARNING | ZONE_VERBOSE | ZONE_INFO;
@@ -57,7 +58,9 @@ extern char _version_end;
 const std::string VERSION(&_version_start, ( &_version_end   -   & _version_start));
 
 app::DRV8302MotorController* g_motorCtrl = nullptr;
+app::Mpu* g_mpu = nullptr;
 dev::RealTimeDebugInterface* g_RTTerminal;
+
 
 void initializePowerSupply(void)
 {
@@ -98,7 +101,9 @@ int main(void)
 
     os::ThisTask::sleep(std::chrono::milliseconds(10));
 
-    g_motorCtrl = new app::DRV8302MotorController( dev::Factory<dev::SensorBLDC>::get<dev::SensorBLDC::BLDC>(), 0.5, 0.2);
+    //g_motorCtrl = new app::DRV8302MotorController( dev::Factory<dev::SensorBLDC>::get<dev::SensorBLDC::BLDC>(), 0.5, 0.2);
+
+    g_mpu = new app::Mpu();
 
     os::Task::startScheduler();
 
