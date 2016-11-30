@@ -72,7 +72,7 @@ void DRV8302MotorController::exitDeepSleep(void)
 
 void DRV8302MotorController::motorControllerTaskFunction(const bool& join)
 {
-	// TODO MOVE CALIBRATION TO DIFFERENT PLACE
+    // TODO MOVE CALIBRATION TO DIFFERENT PLACE
     mMotor.setPulsWidthInMill(0);
     os::ThisTask::sleep(controllerInterval);
     os::ThisTask::sleep(controllerInterval);
