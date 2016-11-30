@@ -88,15 +88,15 @@ void DRV8302MotorController::motorControllerTaskFunction(const bool& join)
         updatePwmOutput();
         updateQuadrant();
 
-//        g_RTTerminal->printf("%10d\tSoll: %5d\tIst: %5d\tOutput: %5d\tPWM: %5d\tRPM: %5d\tCDIR: %s\tSDIR: %s\r\n",
-//                             os::Task::getTickCount(),
-//                             static_cast<int32_t>(mSetTorque * 1000),
-//                             static_cast<int32_t>(mCurrentTorque * 1000),
-//                             static_cast<int32_t>(mOutputTorque * 1000),
-//                             mMotor.getPulsWidthPerMill(),
-//                             static_cast<int32_t>(mMotor.getCurrentRPS() * 60.0),
-//                             mMotor.getCurrentDirection() == SensorBLDC::Direction::FORWARD ? "F" : "B",
-//                             mMotor.getSetDirection() == SensorBLDC::Direction::FORWARD ? "F" : "B");
+        g_RTTerminal->printf("%10d\tSoll: %5d\tIst: %5d\tOutput: %5d\tPWM: %5d\tRPM: %5d\tCDIR: %s\tSDIR: %s\r\n",
+                             os::Task::getTickCount(),
+                             static_cast<int32_t>(mSetTorque * 1000),
+                             static_cast<int32_t>(mCurrentTorque * 1000),
+                             static_cast<int32_t>(mOutputTorque * 1000),
+                             mMotor.getPulsWidthPerMill(),
+                             static_cast<int32_t>(mMotor.getCurrentRPS() * 60.0),
+                             mMotor.getCurrentDirection() == SensorBLDC::Direction::FORWARD ? "F" : "B",
+                             mMotor.getSetDirection() == SensorBLDC::Direction::FORWARD ? "F" : "B");
 
         mMotor.checkMotor();
         mPhaseCurrentValueAvailable.take(controllerInterval);
