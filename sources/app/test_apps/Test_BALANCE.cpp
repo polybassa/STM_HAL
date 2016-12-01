@@ -77,6 +77,7 @@ void setup(void)
 
     //setup PID Controller. It needs the sample time of our loop function
     pid1.setSampleTime(std::chrono::milliseconds(5));
+    pid1.setOutputLimits(-1.0, 1.0);
 }
 
 // This function will run forever
