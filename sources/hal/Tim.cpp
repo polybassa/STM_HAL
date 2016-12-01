@@ -55,7 +55,12 @@ uint32_t Tim::getTimerFrequency(void) const
 
 uint32_t Tim::getPeriode(void) const
 {
-    return mConfiguration.TIM_Period;
+    return getBasePointer()->ARR;
+}
+
+void Tim::setPeriode(const uint32_t period) const
+{
+    setAutoReloadValue(period);
 }
 
 void Tim::enable(void) const

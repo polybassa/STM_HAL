@@ -76,5 +76,10 @@ float AdcWithDma::getVoltage(const float value) const
     return mAdcChannel.getVoltage(value);
 }
 
+uint32_t AdcWithDma::getAdcSampleTime(void) const
+{
+    return mAdcChannel.mSampleTime;
+}
+
 constexpr const std::array<const AdcWithDma,
                            Factory<AdcWithDma>::NUMBER_OF_ADC_WITH_DMA> Factory<AdcWithDma>::Container;

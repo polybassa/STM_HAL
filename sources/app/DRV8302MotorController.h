@@ -23,6 +23,7 @@
 #include "os_Queue.h"
 #include "PIDController.h"
 #include <limits>
+#include "Battery.h"
 
 namespace app
 {
@@ -36,6 +37,7 @@ class DRV8302MotorController final :
 
     os::TaskInterruptable mMotorControllerTask;
     const dev::SensorBLDC& mMotor;
+    const dev::Battery& mBattery;
     float mSetTorque = std::numeric_limits<float>::epsilon();
     float mCurrentTorque = std::numeric_limits<float>::epsilon();
     float mOutputTorque = std::numeric_limits<float>::epsilon();
@@ -44,17 +46,15 @@ class DRV8302MotorController final :
     dev::PIDController mController;
 
     os::Queue<float, 1> mSetTorqueQueue;
-    os::Semaphore mPhaseCurrentValueAvailable;
 
-    static constexpr std::chrono::milliseconds controllerInterval = std::chrono::milliseconds(10);
-    // TODO set value to a smaller number of ms
+    static constexpr std::chrono::milliseconds controllerInterval = std::chrono::milliseconds(5);
 
     void motorControllerTaskFunction(const bool&);
     void updatePwmOutput(void);
     void updateQuadrant(void);
 
 public:
-    DRV8302MotorController(const dev::SensorBLDC & motor, const float Kp,
+    DRV8302MotorController(const dev::SensorBLDC & motor, const dev::Battery & battery, const float Kp,
                            const float Ki);
 
     DRV8302MotorController(const DRV8302MotorController &) = delete;
@@ -64,6 +64,7 @@ public:
 
     virtual void setTorque(const float) override;
     virtual float getCurrentRPS(void) const override;
+    os::Semaphore mPhaseCurrentValueAvailable;
 
 #ifdef UNITTEST
     void triggerTaskExecution(void) { this->motorControllerTaskFunction(true); }

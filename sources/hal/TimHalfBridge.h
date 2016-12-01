@@ -55,6 +55,8 @@ struct HalfBridge {
 
     void triggerCommutationEvent(void) const;
 
+    void setupOutputsForCalibration(void) const;
+
     const enum Description mDescription;
     const Tim& mTim;
 

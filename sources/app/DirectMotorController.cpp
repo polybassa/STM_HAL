@@ -118,5 +118,5 @@ void DirectMotorController::setPwm(const float value)
 
 float DirectMotorController::getCurrentRPS(void) const
 {
-    return mMotor.getCurrentRPS();
+    return mMotor.getActualRPS();
 }

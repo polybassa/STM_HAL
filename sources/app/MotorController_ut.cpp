@@ -82,12 +82,12 @@ uint32_t os::Task::getTickCount(void)
 }
 
 //****** SensorBLDC functions ******
-float dev::SensorBLDC::getCurrentRPS(void) const
+float dev::SensorBLDC::getActualRPS(void) const
 {
     return g_currentRPS;
 }
 
-float dev::SensorBLDC::getCurrentOmega(void) const
+float dev::SensorBLDC::getActualOmega(void) const
 {
     return g_currentOmega;
 }
@@ -97,7 +97,7 @@ void dev::SensorBLDC::setPulsWidthInMill(const int32_t value) const
     g_currentPWM = value;
 }
 
-int32_t dev::SensorBLDC::getPulsWidthPerMill(void) const
+int32_t dev::SensorBLDC::getActualPulsWidthPerMill(void) const
 {
     return g_currentPWM;
 }
