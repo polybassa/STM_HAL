@@ -72,8 +72,12 @@ void DRV8302MotorController::exitDeepSleep(void)
 
 void DRV8302MotorController::motorControllerTaskFunction(const bool& join)
 {
-    mMotor.setPulsWidthInMill(0);
     mMotor.mPhaseCurrentSensor.calibrate();
+    mMotor.mPhaseCurrentSensor.setOffsetVoltage(mMotor.mPhaseCurrentSensor.getCurrentVoltage());
+    mMotor.setPulsWidthInMill(0);
+
+    const uint8_t arrSize = 20;
+    int arr[arrSize] = { 0 };
 
     do {
         float newSetTorque;
@@ -82,17 +86,27 @@ void DRV8302MotorController::motorControllerTaskFunction(const bool& join)
         }
         const auto phaseCurrent = mMotor.getPhaseCurrent();
 
-        mCurrentTorque = phaseCurrent * mMotor.mMotorConstant * 3;
+        mCurrentTorque = phaseCurrent * mMotor.mMotorConstant * 3.35;
         mController.compute();
 
 //        updatePwmOutput();
-        updateQuadrant();
+//        updateQuadrant();
+
+        arr[os::Task::getTickCount() % arrSize] = mCurrentTorque * 1000;
+        auto sum = 0;
+
+        for (int i = 0; i < arrSize; i++) {
+            sum += arr[i];
+        }
+
+        auto avg = sum / arrSize;
 
         g_RTTerminal->printf("%10d\t"
                              "mNmsoll: %5d\t"
                              "mNmist: %5d\t"
+                             "mNmAvg: %5d\t"
                              "mA: %5d\t"
-                             "mNm: %5d\t"
+//                             "mNmSet: %5d\t"
                              "mPWM: %5d\t"
                              "RPM: %5d\t"
                              "CDIR: %s\t"
@@ -100,8 +114,9 @@ void DRV8302MotorController::motorControllerTaskFunction(const bool& join)
                              os::Task::getTickCount(),
                              static_cast<int32_t>(mSetTorque * 1000),
                              static_cast<int32_t>(mCurrentTorque * 1000),
+                             static_cast<int32_t>(avg),
                              static_cast<int32_t>(phaseCurrent * 1000),
-                             static_cast<int32_t>(mOutputTorque * 1000),
+//                             static_cast<int32_t>(mOutputTorque * 1000),
                              mMotor.getPulsWidthPerMill(),
                              static_cast<int32_t>(mMotor.getCurrentRPS() * 60.0),
                              mMotor.getCurrentDirection() == SensorBLDC::Direction::FORWARD ? "F" : "B",

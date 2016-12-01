@@ -39,6 +39,8 @@ struct PhaseCurrentSensor {
     PhaseCurrentSensor& operator=(PhaseCurrentSensor &&) = delete;
 
     float getPhaseCurrent(void) const;
+    float getCurrentVoltage(void) const;
+    void setOffsetVoltage(float offsetVoltage) const;
     void registerValueAvailableSemaphore(os::Semaphore* valueAvailable) const;
     void unregisterValueAvailableSemaphore(void) const;
     void calibrate(void) const;

@@ -31,7 +31,7 @@ using hal::Tim;
 void PhaseCurrentSensor::setPulsWidthForTriggerPerMill(uint32_t value) const
 {
     static constexpr const uint32_t maxValue = 1000;
-    static constexpr const uint32_t minValue = 20;
+    static constexpr const uint32_t minValue = 25;
     if (value > maxValue) {
         value = maxValue;
     }
@@ -54,18 +54,21 @@ void PhaseCurrentSensor::setPulsWidthForTriggerPerMill(uint32_t value) const
 
 void PhaseCurrentSensor::updateCurrentValue(void) const
 {
+    std::array<uint16_t, PhaseCurrentSensor::NUMBER_OF_MEASUREMENTS_FOR_AVG> helparray = { 0 };
     auto& array = MeasurementValueBuffer[mDescription];
 
-    std::sort(array.begin(), array.end());
+    helparray = array;
+    std::sort(helparray.begin(), helparray.end());
 
     uint32_t sum = 0;
-    size_t valueWindowStart = array.size() >> 3;
-    size_t valueWindowEnd = array.size() - (array.size() >> 3);
+    size_t valueWindowStart = array.size() >> 2;
+    size_t valueWindowEnd = array.size() - (array.size() >> 2);
+
     for (size_t i = valueWindowStart; i < valueWindowEnd; i++) {
-        sum += array[i];
+        sum += helparray[i];
     }
 
-    //TODO: check if FFT with low pass elimination improves accuracy
+    //TODO: check if FFT with low pass improves accuracy
 
     mPhaseCurrentValue = static_cast<float>(sum) / static_cast<float>(valueWindowEnd - valueWindowStart);
 }
@@ -112,15 +115,21 @@ void PhaseCurrentSensor::calibrate(void) const
 float PhaseCurrentSensor::getPhaseCurrent(void) const
 {
     static constexpr const float SHUNT_CONDUCTANCE = 1 / SHUNT_RESISTANCE;
-    float val = (mAdcWithDma.getVoltage(mPhaseCurrentValue) -
-                 mOffsetVoltage) *
-                SHUNT_CONDUCTANCE / MEASUREMENT_GAIN;
+    return (mOffsetVoltage -
+            mAdcWithDma.getVoltage(mPhaseCurrentValue)) *
+           SHUNT_CONDUCTANCE / MEASUREMENT_GAIN;
+}
 
-//    return (mAdcWithDma.getVoltage(mPhaseCurrentValue) -
-//            mOffsetVoltage) *
-//           SHUNT_CONDUCTANCE / MEASUREMENT_GAIN;
+float PhaseCurrentSensor::getCurrentVoltage(void) const
+{
+    return mAdcWithDma.getVoltage(mPhaseCurrentValue);
+}
 
-    return val;
+void PhaseCurrentSensor::setOffsetVoltage(float offsetVoltage) const
+{
+    if ((offsetVoltage > 0) && (offsetVoltage < 3.3)) {
+        mOffsetVoltage = offsetVoltage;
+    }
 }
 
 void PhaseCurrentSensor::initialize(void) const

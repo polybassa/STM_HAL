@@ -25,7 +25,7 @@ using hal::Tim;
 void HalfBridge::setPulsWidthPerMill(uint32_t value) const
 {
     static constexpr const uint32_t maxValue = 1000;
-    static constexpr const uint32_t minValue = 20;
+    static constexpr const uint32_t minValue = 25;
     if (value > maxValue) {
         value = maxValue;
     }
