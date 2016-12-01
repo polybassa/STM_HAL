@@ -85,13 +85,22 @@ void DRV8302MotorController::motorControllerTaskFunction(const bool& join)
         mCurrentTorque = phaseCurrent * mMotor.mMotorConstant * 3;
         mController.compute();
 
-        updatePwmOutput();
+//        updatePwmOutput();
         updateQuadrant();
 
-        g_RTTerminal->printf("%10d\tSoll: %5d\tIst: %5d\tOutput: %5d\tPWM: %5d\tRPM: %5d\tCDIR: %s\tSDIR: %s\r\n",
+        g_RTTerminal->printf("%10d\t"
+                             "mNmsoll: %5d\t"
+                             "mNmist: %5d\t"
+                             "mA: %5d\t"
+                             "mNm: %5d\t"
+                             "mPWM: %5d\t"
+                             "RPM: %5d\t"
+                             "CDIR: %s\t"
+                             "SDIR: %s\r\n",
                              os::Task::getTickCount(),
                              static_cast<int32_t>(mSetTorque * 1000),
                              static_cast<int32_t>(mCurrentTorque * 1000),
+                             static_cast<int32_t>(phaseCurrent * 1000),
                              static_cast<int32_t>(mOutputTorque * 1000),
                              mMotor.getPulsWidthPerMill(),
                              static_cast<int32_t>(mMotor.getCurrentRPS() * 60.0),

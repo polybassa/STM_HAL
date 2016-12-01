@@ -40,15 +40,12 @@ os::TaskEndless drv8302Test("drv8302_Test", 2048, os::Task::Priority::MEDIUM, []
                                 os::ThisTask::sleep(std::chrono::milliseconds(5));
 
                                 while (true) {
-                                    auto torque = (poti.getValue() / 2000.0) - 1.0;
-                                    g_motorCtrl->setTorque(torque);
+//                                    auto torque = (poti.getValue() / 2000.0) - 1.0;
+//                                    g_motorCtrl->setTorque(torque);
+
+                                    auto pwm = poti.getValue() / 4;
+                                    motor.setPulsWidthInMill(pwm);
 
                                     os::ThisTask::sleep(std::chrono::milliseconds(5));
-
-//                                    g_RTTerminal->printf("a %d\r\n",
-//                                                         static_cast<int32_t>(motor.mPhaseCurrentSensor.getPhaseCurrent(
-//                                                                                                                        )
-//                                                                              *
-//                                                                              1000));
                                 }
                             });

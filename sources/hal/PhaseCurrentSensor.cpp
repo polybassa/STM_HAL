@@ -31,7 +31,7 @@ using hal::Tim;
 void PhaseCurrentSensor::setPulsWidthForTriggerPerMill(uint32_t value) const
 {
     static constexpr const uint32_t maxValue = 1000;
-    static constexpr const uint32_t minValue = 0;
+    static constexpr const uint32_t minValue = 20;
     if (value > maxValue) {
         value = maxValue;
     }
@@ -46,10 +46,9 @@ void PhaseCurrentSensor::setPulsWidthForTriggerPerMill(uint32_t value) const
     value = static_cast<uint32_t>(static_cast<float>(value) * scale) >> 1;
 
     const uint32_t sampleTime = 2 << mAdcWithDma.mAdcChannel.mSampleTime;
-
     TIM_SetCompare4(mHBridge.mTim.getBasePointer(),
                     static_cast<uint32_t>(std::max(
-                                                   static_cast<int32_t>(value - sampleTime),
+                                                   static_cast<int32_t>(value + HalfBridge::DEFAULT_DEADTIME),
                                                    static_cast<int32_t>(1))));
 }
 
@@ -65,6 +64,8 @@ void PhaseCurrentSensor::updateCurrentValue(void) const
     for (size_t i = valueWindowStart; i < valueWindowEnd; i++) {
         sum += array[i];
     }
+
+    //TODO: check if FFT with low pass elimination improves accuracy
 
     mPhaseCurrentValue = static_cast<float>(sum) / static_cast<float>(valueWindowEnd - valueWindowStart);
 }
@@ -111,9 +112,15 @@ void PhaseCurrentSensor::calibrate(void) const
 float PhaseCurrentSensor::getPhaseCurrent(void) const
 {
     static constexpr const float SHUNT_CONDUCTANCE = 1 / SHUNT_RESISTANCE;
-    return (mAdcWithDma.getVoltage(mPhaseCurrentValue) -
-            mOffsetVoltage) *
-           SHUNT_CONDUCTANCE / MEASUREMENT_GAIN;
+    float val = (mAdcWithDma.getVoltage(mPhaseCurrentValue) -
+                 mOffsetVoltage) *
+                SHUNT_CONDUCTANCE / MEASUREMENT_GAIN;
+
+//    return (mAdcWithDma.getVoltage(mPhaseCurrentValue) -
+//            mOffsetVoltage) *
+//           SHUNT_CONDUCTANCE / MEASUREMENT_GAIN;
+
+    return val;
 }
 
 void PhaseCurrentSensor::initialize(void) const
