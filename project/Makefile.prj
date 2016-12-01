@@ -38,6 +38,8 @@ VPATH+=${ROOT}/libraries/SystemView_Src_V240a/SEGGER
 VPATH+=${ROOT}/libraries/SystemView_Src_V240a/OS
 VPATH+=${ROOT}/libraries/SystemView_Src_V240a/Config
 
+VPATH+=${ROOT}/libraries/VESC
+
 VPATH+=${ROOT}/device
 
 VPATH+=${ROOT}/libraries/eMD6/driver/eMPL
@@ -65,6 +67,7 @@ IPATH+=${RTOS_SOURCE_DIR}/portable/GCC/ARM_CM4F
 IPATH+=${ROOT}/libraries/CMSIS/Include
 IPATH+=${ROOT}/libraries/STM32F30x_StdPeriph_Driver/inc
 IPATH+=${ROOT}/libraries
+IPATH+=${ROOT}/libraries/VESC
 
 IPATH+=${ROOT}/libraries/SystemView_Src_V240a/SEGGER
 IPATH+=${ROOT}/libraries/SystemView_Src_V240a/OS
@@ -127,6 +130,7 @@ ${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/TaskInterruptable.o
 #${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/MotorController.o
 #${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/DRV8302MotorController.o
 ${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/Mpu.o 
+${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/VescMotorController.o
 
 # eMPL Driver
 ${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/inv_mpu_dmp_motion_driver.o
