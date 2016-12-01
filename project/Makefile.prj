@@ -186,6 +186,14 @@ ${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/port.o
 ${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/heap_3.o
 ${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/event_groups.o
 
+# VESC
+${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/vesc_bldc_interface_uart.o
+${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/vesc_buffer.o
+${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/vesc_bldc_interface.o
+${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/vesc_packet.o
+${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/vesc_crc.o
+
+
 # SEGGER_SYSVIEW
 ${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/SEGGER_SYSVIEW_Config_FreeRTOS.o
 ${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/SEGGER_SYSVIEW.o

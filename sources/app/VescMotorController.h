@@ -25,8 +25,8 @@
 
 namespace app
 {
-static void send_packet_callback(unsigned char*, unsigned int);
-static void bldc_val_received(void* valPtr);
+void send_packet_callback(unsigned char*, unsigned int);
+void bldc_val_received(void* valPtr);
 
 class VescMotorController final :
     private os::DeepSleepModule, public interface::MotorController
@@ -34,7 +34,7 @@ class VescMotorController final :
     virtual void enterDeepSleep(void) override;
     virtual void exitDeepSleep(void) override;
 
-    static constexpr uint32_t STACKSIZE = 1024;
+    static constexpr uint32_t STACKSIZE = 2048;
 
     os::TaskInterruptable mMotorControllerTask;
     os::Queue<float, 1> mSetTorqueQueue;

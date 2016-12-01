@@ -17,8 +17,10 @@
 #include "trace.h"
 #include <cmath>
 #include "RealTimeDebugInterface.h"
+extern "C" {
 #include "vesc_bldc_interface_uart.h"
 #include "vesc_bldc_interface.h"
+}
 #include <functional>
 
 using app::VescMotorController;
@@ -31,14 +33,14 @@ constexpr std::chrono::milliseconds VescMotorController::controllerInterval;
 
 static VescMotorController* internalMotorControllerPointer = nullptr;
 
-static void app::send_packet_callback(unsigned char* data, unsigned int len)
+void app::send_packet_callback(unsigned char* data, unsigned int len)
 {
     if (internalMotorControllerPointer) {
         internalMotorControllerPointer->send_packet(data, len);
     }
 }
 
-static void app::bldc_val_received(void* valPtr)
+void app::bldc_val_received(void* valPtr)
 {
     if (valPtr) {
         mc_values* val = reinterpret_cast<mc_values*>(valPtr);
@@ -107,7 +109,7 @@ void VescMotorController::motorControllerTaskFunction(const bool& join)
         float newSetTorque;
         if (mSetTorqueQueue.receive(newSetTorque, 0)) {
             constexpr const float CPHI = 0.0065;
-            bldc_interface_set_current(newSetTorque / CPHI);
+            ::bldc_interface_set_current(newSetTorque / CPHI);
         }
 
         // process received data
@@ -122,9 +124,9 @@ void VescMotorController::motorControllerTaskFunction(const bool& join)
 
         // trigger get values every "receiveValuesPeriode" cycle of this loop
         if (executionCounter == 0) {
-            bldc_interface_get_values();
+            ::bldc_interface_get_values();
         }
-        executionCounter = ++executionCounter % receiveValuesPeriode;
+        executionCounter = (executionCounter + 1) % receiveValuesPeriode;
     } while (!join);
 }
 

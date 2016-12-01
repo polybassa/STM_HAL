@@ -122,20 +122,23 @@ class Factory<UsartWithDma>
         }
     }
 
+    template<Usart::Description desc>
+    static constexpr const UsartWithDma& _get(const size_t i)
+    {
+        return Container[i].mUsart.mDescription == desc ? (Container[i]) : _get<desc>(i + 1);
+    }
+
 public:
-    template<enum Usart::Description index>
+
+    template<enum Usart::Description desc>
     static constexpr const UsartWithDma& get(void)
     {
-        static_assert((Container[index].mDmaCmd != USART_DMAReq_Tx) || (Container[index].mTxDma != nullptr),
-                      "Tx Dma not assigned");
-        static_assert((Container[index].mDmaCmd != USART_DMAReq_Rx) || (Container[index].mRxDma != nullptr),
-                      "Rx Dma not assigned");
+        static_assert((_get<desc>(0).mDmaCmd != USART_DMAReq_Tx) ||
+                      (_get<desc>(0).mTxDma != nullptr), "Tx Dma not assigned");
+        static_assert((_get<desc>(0).mDmaCmd != USART_DMAReq_Rx) ||
+                      (_get<desc>(0).mRxDma != nullptr), "Rx Dma not assigned");
 
-        static_assert(index != Usart::Description::__ENUM__SIZE, "__ENUM__SIZE is not accessible");
-        static_assert(Container[index].mUsart.mDescription == index,
-                      "Wrong mapping between Description and Container");
-
-        return Container[index];
+        return _get<desc>(0);
     }
 
     template<typename U>
