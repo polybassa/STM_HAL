@@ -1,7 +1,7 @@
 /*
-	Copyright 2015 Benjamin Vedder	benjamin@vedder.se
+    Copyright 2015 Benjamin Vedder	benjamin@vedder.se
 
-	This program is free software: you can redistribute it and/or modify
+    This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
     the Free Software Foundation, either version 3 of the License, or
     (at your option) any later version.
@@ -13,7 +13,7 @@
 
     You should have received a copy of the GNU General Public License
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
-    */
+ */
 
 /*
  * bldc_interface_uart.h
@@ -26,10 +26,10 @@
 #define BLDC_INTERFACE_UART_H_
 
 // Includes
-#include "packet.h" // For the MAX_PACKET_LEN define
+#include "vesc_packet.h" // For the MAX_PACKET_LEN define
 
 // Functions
-void bldc_interface_uart_init(void(*func)(unsigned char *data, unsigned int len));
+void bldc_interface_uart_init(void (* func)(unsigned char* data, unsigned int len));
 void bldc_interface_uart_process_byte(unsigned char b);
 void bldc_interface_uart_run_timer(void);
 

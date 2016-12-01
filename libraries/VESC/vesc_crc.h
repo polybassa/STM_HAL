@@ -1,7 +1,7 @@
 /*
-	Copyright 2012-2014 Benjamin Vedder	benjamin@vedder.se
+    Copyright 2012-2014 Benjamin Vedder	benjamin@vedder.se
 
-	This program is free software: you can redistribute it and/or modify
+    This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
     the Free Software Foundation, either version 3 of the License, or
     (at your option) any later version.
@@ -13,7 +13,7 @@
 
     You should have received a copy of the GNU General Public License
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
-    */
+ */
 
 /*
  * crc.h
@@ -28,6 +28,6 @@
 /*
  * Functions
  */
-unsigned short crc16(unsigned char *buf, unsigned int len);
+unsigned short crc16(unsigned char* buf, unsigned int len);
 
 #endif /* CRC_H_ */
