@@ -108,7 +108,7 @@ void VescMotorController::motorControllerTaskFunction(const bool& join)
     do {
         float newSetTorque;
         if (mSetTorqueQueue.receive(newSetTorque, 0)) {
-            constexpr const float CPHI = 0.0065;
+            constexpr const float CPHI = 0.065;
             ::bldc_interface_set_current(newSetTorque / CPHI);
         }
 
