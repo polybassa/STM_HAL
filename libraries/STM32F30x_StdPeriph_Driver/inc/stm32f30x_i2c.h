@@ -84,9 +84,10 @@ typedef struct
   */
 
 #define IS_I2C_ALL_PERIPH(PERIPH)       (((PERIPH) == I2C1) || \
-                                         ((PERIPH) == I2C2))
+                                        ((PERIPH) == I2C2) || \
+                                        ((PERIPH) == I2C3))
 
-#define IS_I2C_ALL_PERIPH_BASE(PERIPH)       (((PERIPH) == I2C1_BASE) || ((PERIPH) == I2C2_BASE))
+#define IS_I2C_ALL_PERIPH_BASE(PERIPH)       (((PERIPH) == I2C1_BASE) || ((PERIPH) == I2C2_BASE)|| ((PERIPH) == I2C3_BASE))
 /** @defgroup I2C_Analog_Filter 
   * @{
   */
