@@ -21,7 +21,7 @@ enum Description {
     __ENUM__SIZE
 };
 
-static constexpr const uint32_t NUMBER_OF_MEASUREMENTS_FOR_AVG = 100;
+static constexpr const uint32_t NUMBER_OF_MEASUREMENTS_FOR_AVG = 32;
 static constexpr const float SHUNT_RESISTANCE = 0.002; // Ohm
 static constexpr const float MEASUREMENT_GAIN = 40.0;
 
@@ -34,7 +34,7 @@ static constexpr std::array<const PhaseCurrentSensor, PhaseCurrentSensor::__ENUM
       PhaseCurrentSensor(PhaseCurrentSensor::I_TOTAL_FB,
                          hal::Factory<hal::HalfBridge>::get<hal::HalfBridge::BLDC_PWM>(),
                          hal::Factory<hal::AdcWithDma>::get<hal::Adc::Channel::I_TOTAL_FB>(),
-                         TIM_OCInitTypeDef { TIM_OCMode_PWM2, TIM_OutputState_Disable, TIM_OutputNState_Disable, 1,
+                         TIM_OCInitTypeDef { TIM_OCMode_PWM2, TIM_OutputState_Enable, TIM_OutputNState_Disable, 1,
                                              TIM_OCPolarity_High, TIM_OCNPolarity_High, TIM_OCIdleState_Reset,
                                              TIM_OCNIdleState_Reset})
   } };

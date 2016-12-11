@@ -30,7 +30,6 @@
 enum Description {
     DEBUG_IF,
     MSCOM_IF,
-    VESC_IF,
     __ENUM__SIZE
 };
 
@@ -48,18 +47,13 @@ static constexpr const std::array<const Usart, Usart::__ENUM__SIZE + 1> Containe
             USART2_BASE,
             USART_InitTypeDef { 115200, USART_WordLength_8b, USART_StopBits_1, USART_Parity_No,
                                 USART_Mode_Rx | USART_Mode_Tx, USART_HardwareFlowControl_None}),
-      Usart(Usart::VESC_IF,
-            USART3_BASE,
-            USART_InitTypeDef { 115200, USART_WordLength_8b, USART_StopBits_1, USART_Parity_No,
-                                USART_Mode_Rx | USART_Mode_Tx, USART_HardwareFlowControl_None }),
       Usart(Usart::__ENUM__SIZE, 0, USART_InitTypeDef { 0, 0, 0, 0, 0, 0 })
   } };
 
 static constexpr const std::array<const uint32_t, hal::Usart::__ENUM__SIZE> Clocks =
 { {
       RCC_APB2Periph_USART1,
-      RCC_APB1Periph_USART2,
-      RCC_APB1Periph_USART3
+      RCC_APB1Periph_USART2
   } };
 
 #endif /* SOURCES_PMD_USART_CONFIG_CONTAINER_H_ */

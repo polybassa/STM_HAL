@@ -105,15 +105,6 @@ LDFLAGS= 	-ffunction-sections \
          	-lc \
          	-lstdc++ \
          	-lsupc++
-
-LIBPATHS= 	-L ../libraries/eMD6 
-         	
-LIBRARYS= 	-lmplmpu \
- 		 	-lgcc \
- 		 	-lm \
- 		 	-lc \
- 		 	-lstdc++ \
- 		 	-lsupc++
          	
 CC=${ARM_GCC}
 CPP=${ARM_GPP}
@@ -195,7 +186,7 @@ ${BINDIR}/%.a:
 	 @echo AR ${@}
 
 ${BINDIR}/%.elf:
-	 @${CPP} -T ${LDSCRIPT} ${LDFLAGS} ${LIBPATHS} -o ${@} $(filter %.o %.a, ${?}) ${LIBRARYS} 
+	 @${CPP} -T ${LDSCRIPT} ${LDFLAGS} -o ${@} $(filter %.o %.a, ${?}) 
 	 @${OBJCOPY} -O binary ${@} ${@:.elf=.bin}
 	 @${OBJCOPY} -O ihex ${@} ${@:.elf=.hex}
 	 @${PREFIX}objdump -D ${@} > ${@:.elf=.lst}

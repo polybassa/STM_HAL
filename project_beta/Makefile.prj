@@ -38,8 +38,6 @@ VPATH+=${ROOT}/libraries/SystemView_Src_V240a/SEGGER
 VPATH+=${ROOT}/libraries/SystemView_Src_V240a/OS
 VPATH+=${ROOT}/libraries/SystemView_Src_V240a/Config
 
-VPATH+=${ROOT}/libraries/VESC
-
 VPATH+=${ROOT}/device
 
 VPATH+=${ROOT}/libraries/eMD6/driver/eMPL
@@ -67,7 +65,6 @@ IPATH+=${RTOS_SOURCE_DIR}/portable/GCC/ARM_CM4F
 IPATH+=${ROOT}/libraries/CMSIS/Include
 IPATH+=${ROOT}/libraries/STM32F30x_StdPeriph_Driver/inc
 IPATH+=${ROOT}/libraries
-IPATH+=${ROOT}/libraries/VESC
 
 IPATH+=${ROOT}/libraries/SystemView_Src_V240a/SEGGER
 IPATH+=${ROOT}/libraries/SystemView_Src_V240a/OS
@@ -128,9 +125,8 @@ ${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/TaskInterruptable.o
 # App Layer
 #${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/BatteryObserver.o
 #${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/MotorController.o
-#${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/DRV8302MotorController.o
+${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/DRV8302MotorController.o
 ${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/Mpu.o 
-${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/VescMotorController.o
 
 # eMPL Driver
 ${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/inv_mpu_dmp_motion_driver.o
@@ -152,8 +148,7 @@ ${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/log_stm32.o ## Remove from build only for l
 #${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/TestLed.o
 #${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/TestRtc.o
 #${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/TestSleep.o
-#${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/TestDRV8302.o
-${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/Test_BALANCE.o
+${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/TestDRV8302.o
 
 # device
 ${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/startup_stm32f30x.o
@@ -185,14 +180,6 @@ ${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/tasks.o
 ${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/port.o
 ${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/heap_3.o
 ${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/event_groups.o
-
-# VESC
-${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/vesc_bldc_interface_uart.o
-${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/vesc_buffer.o
-${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/vesc_bldc_interface.o
-${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/vesc_packet.o
-${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/vesc_crc.o
-
 
 # SEGGER_SYSVIEW
 ${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/SEGGER_SYSVIEW_Config_FreeRTOS.o

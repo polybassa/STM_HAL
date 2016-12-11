@@ -5,10 +5,10 @@
 #define HAVE_ARPA_INET_H 1
 
 /* Define to 1 if you have the `clock_gettime' function. */
-#define HAVE_CLOCK_GETTIME 1
+/* #undef HAVE_CLOCK_GETTIME */
 
 /* Define to 1 if you have the `floor' function. */
-/* #undef HAVE_FLOOR */
+#define HAVE_FLOOR 1
 
 /* Define to 1 if you have the `getcwd' function. */
 #define HAVE_GETCWD 1
@@ -45,7 +45,7 @@
 #define HAVE_NETINET_IN_H 1
 
 /* Define to 1 if you have the `pow' function. */
-/* #undef HAVE_POW */
+#define HAVE_POW 1
 
 /* Define to 1 if you have the `select' function. */
 #define HAVE_SELECT 1
@@ -54,7 +54,7 @@
 #define HAVE_SOCKET 1
 
 /* Define to 1 if you have the `sqrt' function. */
-/* #undef HAVE_SQRT */
+#define HAVE_SQRT 1
 
 /* Define to 1 if you have the <stddef.h> header file. */
 #define HAVE_STDDEF_H 1

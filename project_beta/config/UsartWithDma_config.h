@@ -16,8 +16,9 @@
 #ifndef SOURCES_PMD_USARTWITHDMA_CONFIG_CONTAINER_H_
 #define SOURCES_PMD_USARTWITHDMA_CONFIG_CONTAINER_H_
 
-static constexpr const std::array<const UsartWithDma, 1> Container =
+static constexpr const std::array<const UsartWithDma, Usart::__ENUM__SIZE> Container =
 { {
+      UsartWithDma(Factory<Usart>::get<Usart::DEBUG_IF>()),
       UsartWithDma(Factory<Usart>::get<Usart::MSCOM_IF>(), USART_DMAReq_Rx | USART_DMAReq_Tx,
                    &Factory<Dma>::get<Dma::USART2_TX>(), &Factory<Dma>::get<Dma::USART2_RX>())
   } };

@@ -26,7 +26,7 @@ enum Description {
     __ENUM__SIZE
 };
 
-static constexpr const uint32_t HALFBRIDGE_PERIODE = 2000;
+static constexpr const uint32_t HALFBRIDGE_PERIODE = 4000;
 static constexpr const uint32_t HALL_SENSOR_PRESCALER = 179;
 static constexpr const uint32_t BUZZER_PWM_PERIODE = 72000;
 
