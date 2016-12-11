@@ -1,0 +1,81 @@
+IPATH+=${ROOT}/sources
+IPATH+=${ROOT}/sources/config
+IPATH+=${ROOT}/sources/app
+IPATH+=${ROOT}/sources/os
+IPATH+=${ROOT}/sources/dev
+IPATH+=${ROOT}/sources/interface
+IPATH+=${ROOT}/sources/utility
+IPATH+=${ROOT}/sources/hal
+IPATH+=${RTOS_SOURCE_DIR}/include
+IPATH+=${RTOS_SOURCE_DIR}/portable/GCC/ARM_CM4F
+IPATH+=${ROOT}/libraries/STM32F30x_StdPeriph_Driver/inc
+IPATH+=${ROOT}/libraries/CMSIS/Include
+IPATH+=${ROOT}/libraries
+IPATH+=${ROOT}/project/config
+
+IPATH+=${ROOT}/libraries/SystemView_Src_V240a/SEGGER
+IPATH+=${ROOT}/libraries/SystemView_Src_V240a/OS
+IPATH+=${ROOT}/libraries/SystemView_Src_V240a/Config
+
+VPATH+=${ROOT}/sources
+VPATH+=${ROOT}/sources/dev
+VPATH+=${ROOT}/sources/os
+VPATH+=${ROOT}/sources/app
+VPATH+=${ROOT}/sources/interface
+VPATH+=${ROOT}/sources/hal
+
+####################################DebugInterface############################################
+
+${BINDIR}/DebugInterface_ut.bin: DEFINES+=-DDEBUG
+${BINDIR}/DebugInterface_ut.bin: ${OBJDIR}/DebugInterface_ut.o 
+${BINDIR}/DebugInterface_ut.bin: ${OBJDIR}/DebugInterface.o
+${BINDIR}/DebugInterface_ut.bin: ${OBJDIR}/Mutex.o
+
+####################################BatteryObserver############################################
+
+${BINDIR}/BatteryObserver_ut.bin: DEFINES+=-DUNITTEST 
+${BINDIR}/BatteryObserver_ut.bin: ${OBJDIR}/BatteryObserver_ut.o 
+${BINDIR}/BatteryObserver_ut.bin: ${OBJDIR}/BatteryObserver.o 
+${BINDIR}/BatteryObserver_ut.bin: ${OBJDIR}/DeepSleepInterface.o 
+${BINDIR}/BatteryObserver_ut.bin: ${OBJDIR}/TemperatureSensor.o
+
+####################################TemperatureSensor############################################
+
+${BINDIR}/TemperatureSensor_ut.bin: DEFINES+=-DUNITTEST
+${BINDIR}/TemperatureSensor_ut.bin: ${OBJDIR}/TemperatureSensor.o
+${BINDIR}/TemperatureSensor_ut.bin: ${OBJDIR}/TemperatureSensor_NTC.o
+${BINDIR}/TemperatureSensor_ut.bin: ${OBJDIR}/TemperatureSensor_Internal.o
+${BINDIR}/TemperatureSensor_ut.bin: ${OBJDIR}/TemperatureSensor_ut.o
+
+####################################PIDController############################################
+
+${BINDIR}/PIDController_ut.bin: DEFINES+=-DUNITTEST
+${BINDIR}/PIDController_ut.bin: ${OBJDIR}/PIDController.o
+${BINDIR}/PIDController_ut.bin: ${OBJDIR}/PIDController_ut.o
+
+####################################DirectMotorController############################################
+
+${BINDIR}/DirectMotorController_ut.bin: DEFINES+=-DUNITTEST
+${BINDIR}/DirectMotorController_ut.bin: ${OBJDIR}/DirectMotorController.o
+${BINDIR}/DirectMotorController_ut.bin: ${OBJDIR}/DeepSleepInterface.o 
+${BINDIR}/DirectMotorController_ut.bin: ${OBJDIR}/DirectMotorController_ut.o
+
+################################################################################
+
+test: clean-all ${BINDIR} ${OBJDIR} test_binarys
+	@echo "Generate coverage report. See ${COVERAGEDIR}/index.html"
+	-@${LCOV} --directory ${OBJDIR}/ --base-directory ${OBJDIR}/ --gcov-tool ${GCOV} --capture -o ${OBJDIR}/cov.info
+	-@${GENHTML} ${OBJDIR}/cov.info -o ${COVERAGEDIR}
+
+TESTS=${BINDIR}/DebugInterface_ut.bin
+TESTS+=${BINDIR}/BatteryObserver_ut.bin
+TESTS+=${BINDIR}/TemperatureSensor_ut.bin	
+TESTS+=${BINDIR}/PIDController_ut.bin
+TESTS+=${BINDIR}/DirectMotorController_ut.bin
+
+test_binarys: ${TESTS}  
+	@echo "-------------------------------------------------------------"
+	@echo "-------------------------------------------------------------"
+	@$(foreach test,$^,./$(test);)	
+	@echo "-------------------------------------------------------------"
+	@echo "-------------------------------------------------------------"	

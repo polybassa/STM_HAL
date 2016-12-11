@@ -1,0 +1,204 @@
+ifeq ($(MAKECMDGOALS),debug_firmware)
+DEFINES+=-DDEBUG
+DEFINES+=-g
+DEFINES+=-O0
+DEFINES+=-DSYSVIEW
+LDFLAGS+=-O0
+endif
+
+ifeq ($(MAKECMDGOALS),firmware)
+DEFINES+=-O3
+LDFLAGS+=-O3
+DEFINES+=-DSYSVIEW
+endif
+
+ifneq (,$(filter debug_firmware firmware,$(MAKECMDGOALS)))
+
+DEFINES+=-DUSE_FREERTOS
+DEFINES+=-DMPU6050
+DEFINES+=-DEMPL_TARGET_PMD
+DEFINES+=-DEMPL
+DEFINES+=-DUSE_DMP
+DEFINES+=-DMPL_LOG_NDEBUG=1
+
+# Where to find source files that do not live in this directory.
+VPATH+=${ROOT}/sources
+VPATH+=${ROOT}/sources/hal
+VPATH+=${ROOT}/sources/os
+VPATH+=${ROOT}/sources/dev
+VPATH+=${ROOT}/sources/app
+VPATH+=${ROOT}/sources/app/test_apps
+VPATH+=${RTOS_SOURCE_DIR}
+VPATH+=${RTOS_SOURCE_DIR}/portable/MemMang
+VPATH+=${RTOS_SOURCE_DIR}/portable/GCC/ARM_CM4F
+VPATH+=${ROOT}/libraries/CMSIS/Source
+VPATH+=${ROOT}/libraries/STM32F30x_StdPeriph_Driver/src
+
+VPATH+=${ROOT}/libraries/SystemView_Src_V240a/SEGGER
+VPATH+=${ROOT}/libraries/SystemView_Src_V240a/OS
+VPATH+=${ROOT}/libraries/SystemView_Src_V240a/Config
+
+VPATH+=${ROOT}/libraries/VESC
+
+VPATH+=${ROOT}/device
+
+VPATH+=${ROOT}/libraries/eMD6/driver/eMPL
+VPATH+=${ROOT}/libraries/eMD6/driver/stm32L
+VPATH+=${ROOT}/libraries/eMD6/eMPL-hal
+VPATH+=${ROOT}/libraries/eMD6/mllite
+VPATH+=${ROOT}/libraries/eMD6/mpl
+
+VPATH+=${PRJ_PATH}
+
+# Where to find header files that do not live in the source directory.
+IPATH=${ROOT}/sources
+IPATH+=${PRJ_PATH}
+IPATH+=${PRJ_PATH}/config
+IPATH+=${ROOT}/sources/hal
+IPATH+=${ROOT}/sources/os
+IPATH+=${ROOT}/sources/dev
+IPATH+=${ROOT}/sources/app
+IPATH+=${ROOT}/sources/app/test_apps
+IPATH+=${ROOT}/sources/interface
+IPATH+=${ROOT}/sources/utility
+IPATH+=${ROOT}/definitions
+IPATH+=${RTOS_SOURCE_DIR}/include
+IPATH+=${RTOS_SOURCE_DIR}/portable/GCC/ARM_CM4F
+IPATH+=${ROOT}/libraries/CMSIS/Include
+IPATH+=${ROOT}/libraries/STM32F30x_StdPeriph_Driver/inc
+IPATH+=${ROOT}/libraries
+IPATH+=${ROOT}/libraries/VESC
+
+IPATH+=${ROOT}/libraries/SystemView_Src_V240a/SEGGER
+IPATH+=${ROOT}/libraries/SystemView_Src_V240a/OS
+IPATH+=${ROOT}/libraries/SystemView_Src_V240a/Config
+
+IPATH+=${ROOT}/libraries/eMD6/driver/eMPL
+IPATH+=${ROOT}/libraries/eMD6/driver/stm32L
+IPATH+=${ROOT}/libraries/eMD6/eMPL-hal
+IPATH+=${ROOT}/libraries/eMD6/driver/include
+IPATH+=${ROOT}/libraries/eMD6/mllite
+IPATH+=${ROOT}/libraries/eMD6/mpl
+
+# PMD firmware
+${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/main.o
+${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/versionfile.o
+
+# HAL Layer
+${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/Adc.o
+${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/AdcChannel.o
+${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/AdcWithDma.o
+${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/CRC.o
+${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/Dma.o
+${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/Exti.o
+${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/Gpio.o
+${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/I2c.o
+${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/Rtc.o
+${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/Spi.o
+${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/SpiWithDma.o
+${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/Tim.o
+${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/TimHalfBridge.o
+${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/TimHallDecoder.o
+${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/TimHallMeter.o
+${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/TimPwm.o
+${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/Usart.o
+${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/UsartWithDma.o
+${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/PhaseCurrentSensor.o
+
+# DEV Layer
+#${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/Battery.o
+${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/DebugInterface.o
+#${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/Light.o
+${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/PIDController.o
+#${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/TemperatureSensor.o
+#${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/TemperatureSensor_Internal.o
+#${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/TemperatureSensor_NTC.o
+${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/TimSensorBldc.o
+
+# OS Layer
+${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/CountingSemaphore.o
+${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/DeepSleepInterface.o
+${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/Mutex.o
+${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/RecursiveMutex.o
+${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/Semaphore.o
+${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/os_Task.o
+${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/TaskEndless.o
+${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/TaskInterruptable.o
+
+# App Layer
+#${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/BatteryObserver.o
+#${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/MotorController.o
+#${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/DRV8302MotorController.o
+${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/Mpu.o 
+${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/VescMotorController.o
+
+# eMPL Driver
+${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/inv_mpu_dmp_motion_driver.o
+${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/inv_mpu.o
+${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/pmd_empl.o
+${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/data_builder.o
+${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/hal_outputs.o
+${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/message_layer.o
+${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/ml_math_func.o
+${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/mlmath.o
+${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/mpl.o
+${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/results_holder.o
+${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/start_manager.o
+${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/storage_manager.o
+${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/eMPL_outputs.o
+${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/log_stm32.o ## Remove from build only for logging or Test
+
+#PMD TestApps
+#${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/TestLed.o
+#${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/TestRtc.o
+#${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/TestSleep.o
+#${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/TestDRV8302.o
+${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/Test_BALANCE.o
+
+# device
+${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/startup_stm32f30x.o
+${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/system_stm32f30x.o
+${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/syscalls.o
+${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/stm32f30x_it.o
+
+# driverlib
+${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/stm32f30x_rcc.o
+${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/stm32f30x_pwr.o
+${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/stm32f30x_rtc.o
+${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/stm32f30x_gpio.o
+${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/stm32f30x_usart.o
+${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/stm32f30x_spi.o
+${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/stm32f30x_dma.o
+${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/stm32f30x_misc.o
+${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/stm32f30x_exti.o
+${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/stm32f30x_syscfg.o
+${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/stm32f30x_tim.o
+${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/stm32f30x_adc.o
+${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/stm32f30x_crc.o
+${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/stm32f30x_i2c.o
+
+# freeRTOS
+${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/croutine.o
+${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/list.o
+${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/queue.o
+${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/tasks.o
+${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/port.o
+${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/heap_3.o
+${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/event_groups.o
+
+# VESC
+${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/vesc_bldc_interface_uart.o
+${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/vesc_buffer.o
+${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/vesc_bldc_interface.o
+${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/vesc_packet.o
+${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/vesc_crc.o
+
+
+# SEGGER_SYSVIEW
+${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/SEGGER_SYSVIEW_Config_FreeRTOS.o
+${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/SEGGER_SYSVIEW.o
+${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/SEGGER_RTT.o
+${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/SEGGER_RTT_printf.o
+${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/SEGGER_SYSVIEW_FreeRTOS.o
+
+endif
