@@ -140,7 +140,8 @@ void os::ThisTask::sleep(const std::chrono::milliseconds ms)
     if (os::Task::isSchedulerRunning()) {
         vTaskDelay(ms.count() / portTICK_RATE_MS);
     } else {
-        for (size_t i = 0; i < ms.count() * (SystemCoreClock / 1000); i++) {
+        const size_t countervalue = ms.count() * (SystemCoreClock / 5000);
+        for (size_t i = 0; i < countervalue; i++) {
             __NOP();
         }
     }
