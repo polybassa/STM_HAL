@@ -33,6 +33,7 @@ VPATH+=${RTOS_SOURCE_DIR}/portable/MemMang
 VPATH+=${RTOS_SOURCE_DIR}/portable/GCC/ARM_CM4F
 VPATH+=${ROOT}/libraries/CMSIS/Source
 VPATH+=${ROOT}/libraries/CMSIS/Device/ST/STM32F30x/Source
+VPATH+=${ROOT}/libraries/CMSIS/Device/ST/STM32F30x/Source/Templates
 VPATH+=${ROOT}/libraries/STM32F30x_StdPeriph_Driver/src
 
 VPATH+=${ROOT}/libraries/SystemView_Src_V240a/SEGGER
