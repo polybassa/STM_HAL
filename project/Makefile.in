@@ -76,7 +76,7 @@ check:
 	@@CPPCHECKER@ --enable=all --inconclusive -I sources/hal/ -I sources/dev/ -I sources/app/ -I sources/utility/ -I sources/interface/ -I sources/os/ -I ../libraries/STM32F30x_StdPeriph_Driver/inc/ --std=posix --quiet .
 
 ENDINGS=c h cpp
-CODE_DIRS=../sources config
+CODE_DIRS=../sources config ../libraries/VESC ../libraries/Filters-master
 filelist:
 	@rm -f $@.txt
 	@$(foreach END, ${ENDINGS}, $(foreach DIR, ${CODE_DIRS}, find ./$(DIR) -name "*.$(END)" >> $@.txt;))

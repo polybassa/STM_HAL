@@ -47,16 +47,17 @@
 #include "Battery.h"
 
 /* APP LAYER INLCUDES */
-#include "BatteryObserver.h"
-#include "DRV8302MotorController.h"
+#include "VescMotorController.h"
+#include "Mpu.h"
 
 /* GLOBAL VARIABLES */
 static const int __attribute__((used)) g_DebugZones = ZONE_ERROR | ZONE_WARNING | ZONE_VERBOSE | ZONE_INFO;
 extern char _version_start;
 extern char _version_end;
-const std::string VERSION(&_version_start, ( &_version_end   -   & _version_start));
+const std::string VERSION(&_version_start, (&_version_end - &_version_start));
 
-app::DRV8302MotorController* g_motorCtrl = nullptr;
+app::VescMotorController* g_motorCtrl = nullptr;
+app::Mpu* g_mpu = nullptr;
 dev::RealTimeDebugInterface* g_RTTerminal;
 
 void initializePowerSupply(void)
@@ -69,7 +70,8 @@ void initializePowerSupply(void)
 }
 
 int main(void)
-{	g_RTTerminal = new dev::RealTimeDebugInterface();
+{
+    g_RTTerminal = new dev::RealTimeDebugInterface();
 
     hal::initFactory<hal::Factory<hal::Gpio> >();
     hal::initFactory<hal::Factory<hal::Tim> >();
@@ -87,7 +89,7 @@ int main(void)
     hal::initFactory<hal::Factory<hal::Adc> >();
     hal::initFactory<hal::Factory<hal::Adc::Channel> >();
     hal::initFactory<hal::Factory<hal::AdcWithDma> >();
-    hal::initFactory<hal::Factory<hal::PhaseCurrentSensor>> ();
+    hal::initFactory<hal::Factory<hal::PhaseCurrentSensor> >();
     hal::initFactory<hal::Factory<hal::Crc> >();
     hal::initFactory<hal::Factory<hal::I2c> >();
 
@@ -98,7 +100,9 @@ int main(void)
 
     os::ThisTask::sleep(std::chrono::milliseconds(10));
 
-    g_motorCtrl = new app::DRV8302MotorController( dev::Factory<dev::SensorBLDC>::get<dev::SensorBLDC::BLDC>(), 0.5, 0.2);
+    g_motorCtrl = new app::VescMotorController(hal::Factory<hal::Usart>::get<hal::Usart::Description::VESC_IF>());
+
+    g_mpu = new app::Mpu();
 
     os::Task::startScheduler();
 
