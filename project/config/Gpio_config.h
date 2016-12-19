@@ -71,7 +71,7 @@ enum Description {
     LED_6,
     // ===PORTF===
     BUZZER,
-	PWM1,
+    PWM1,
     // ===PORTG===
     __ENUM__SIZE
 };
