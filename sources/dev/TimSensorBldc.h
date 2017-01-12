@@ -61,6 +61,7 @@ struct SensorBLDC {
 
     const float mMotorConstant = 0.0;
     const float mMotorCoilResistance = 0.0;
+    const float mMotorGeneratorConstant = 0.0;
 
     const hal::PhaseCurrentSensor& mPhaseCurrentSensor;
 
@@ -68,6 +69,7 @@ private:
     constexpr SensorBLDC(const enum Description&        desc,
                          const float                    motorConstant,
                          const float                    motorCoilResistance,
+                         const float                    motorGeneratorConstant,
                          const hal::PhaseCurrentSensor& currentSensor,
                          const hal::HalfBridge&         hBridge,
                          const hal::HallDecoder&        hallDecoder,
@@ -76,6 +78,7 @@ private:
         mDescription(desc),
         mMotorConstant(motorConstant),
         mMotorCoilResistance(motorCoilResistance),
+        mMotorGeneratorConstant(motorGeneratorConstant),
         mPhaseCurrentSensor(currentSensor),
         mHBridge(hBridge),
         mHallDecoder(hallDecoder),
@@ -115,8 +118,9 @@ class Factory<SensorBLDC>
     { {
           SensorBLDC(
                      SensorBLDC::BLDC,
-                     0.065,
+                     0.072583,
                      0.33,
+                     144,
                      hal::Factory<hal::PhaseCurrentSensor>::get<hal::PhaseCurrentSensor::I_TOTAL_FB>(),
                      hal::Factory<hal::HalfBridge>::get<hal::HalfBridge::BLDC_PWM>(),
                      hal::Factory<hal::HallDecoder>::get<hal::HallDecoder::BLDC_DECODER>(),

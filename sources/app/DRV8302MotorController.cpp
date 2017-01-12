@@ -27,7 +27,7 @@ static const int __attribute__((unused)) g_DebugZones = ZONE_ERROR | ZONE_WARNIN
 
 constexpr std::chrono::milliseconds DRV8302MotorController::controllerInterval;
 
-DRV8302MotorController::DRV8302MotorController(const SensorBLDC& motor, const float Kp,
+DRV8302MotorController::DRV8302MotorController(const SensorBLDC& motor, const dev::Battery& battery, const float Kp,
                                                const float Ki) :
     os::DeepSleepModule(),
     mMotorControllerTask("DRV8302MotorControl",
@@ -38,13 +38,14 @@ DRV8302MotorController::DRV8302MotorController(const SensorBLDC& motor, const fl
                              motorControllerTaskFunction(join);
                          }),
     mMotor(motor),
+    mBattery(battery),
     mController(mCurrentTorque,
                 mOutputTorque,
                 mSetTorque,
                 Kp,
                 Ki,
                 static_cast<const float>(0.0),
-                dev::PIDController::ControlDirection::DIRECT),
+                dev::PIDController::ControlDirection::REVERSE),
     mSetTorqueQueue()
 {
     mController.setSampleTime(controllerInterval);
@@ -73,11 +74,12 @@ void DRV8302MotorController::exitDeepSleep(void)
 void DRV8302MotorController::motorControllerTaskFunction(const bool& join)
 {
     mMotor.mPhaseCurrentSensor.calibrate();
-    mMotor.mPhaseCurrentSensor.setOffsetVoltage(mMotor.mPhaseCurrentSensor.getCurrentVoltage());
+//    mMotor.mPhaseCurrentSensor.setOffsetVoltage(mMotor.mPhaseCurrentSensor.getCurrentVoltage());
     mMotor.setPulsWidthInMill(0);
 
     const uint8_t arrSize = 20;
-    int arr[arrSize] = { 0 };
+    float arr[arrSize] = { 0 };
+    static uint8_t counter = 0;
 
     do {
         float newSetTorque;
@@ -86,41 +88,65 @@ void DRV8302MotorController::motorControllerTaskFunction(const bool& join)
         }
         const auto phaseCurrent = mMotor.getPhaseCurrent();
 
-        mCurrentTorque = phaseCurrent * mMotor.mMotorConstant * 3.35;
-        mController.compute();
+        mCurrentTorque = phaseCurrent * mMotor.mMotorConstant * 3;
 
-//        updatePwmOutput();
-//        updateQuadrant();
+        arr[counter % arrSize] = mCurrentTorque * 1000;
+        counter++;
 
-        arr[os::Task::getTickCount() % arrSize] = mCurrentTorque * 1000;
         auto sum = 0;
 
         for (int i = 0; i < arrSize; i++) {
             sum += arr[i];
         }
 
-        auto avg = sum / arrSize;
+        float avg = sum / arrSize;
+
+        mController.compute();
+
+//        mMotor.setPulsWidthInMill(mSetTorque);
+
+        updatePwmOutput();
+        updateQuadrant();
 
         g_RTTerminal->printf("%10d\t"
-                             "mNmsoll: %5d\t"
-                             "mNmist: %5d\t"
-                             "mNmAvg: %5d\t"
-                             "mA: %5d\t"
-//                             "mNmSet: %5d\t"
-                             "mPWM: %5d\t"
-                             "RPM: %5d\t"
-                             "CDIR: %s\t"
-                             "SDIR: %s\r\n",
+                             "Soll: %5d\t"
+//				                         "Out: %5d\t"
+                             "Ist: %5d\t"
+//							 "IstAvg: %5d\t"
+//				                         "PWM: %5d\t"
+//							 "mA: %5d\t"
+                             "\n",
                              os::Task::getTickCount(),
                              static_cast<int32_t>(mSetTorque * 1000),
-                             static_cast<int32_t>(mCurrentTorque * 1000),
-                             static_cast<int32_t>(avg),
-                             static_cast<int32_t>(phaseCurrent * 1000),
 //                             static_cast<int32_t>(mOutputTorque * 1000),
-                             mMotor.getPulsWidthPerMill(),
-                             static_cast<int32_t>(mMotor.getCurrentRPS() * 60.0),
-                             mMotor.getCurrentDirection() == SensorBLDC::Direction::FORWARD ? "F" : "B",
-                             mMotor.getSetDirection() == SensorBLDC::Direction::FORWARD ? "F" : "B");
+                             static_cast<int32_t>(mCurrentTorque * 1000) //,
+//                             static_cast<int32_t>(avg)//,
+//                             static_cast<int32_t>(mSetPwm),
+//                             static_cast<int32_t>(phaseCurrent * 1000)
+                             );
+
+//        g_RTTerminal->printf("%10d\t"
+//                             "mNmsoll: %5d\t"
+//                             "mNmAvg: %5d\t"
+//                                               "VBat: %5d\t"
+//                             "mA: %5d\t"
+//                             "mNmSet: %5d\t"
+//                             "mPWM: %5d\t"
+//                            "mSetPWM: %5d\t"
+//                                              "RPM: %5d\t"
+//                             "CDIR: %s\t"
+//                             "SDIR: %s\r\n",
+//                             os::Task::getTickCount(),
+//                             static_cast<int32_t>(mSetTorque * 1000),
+//                             static_cast<int32_t>(avg),
+//                             static_cast<int32_t>(mBattery.getVoltage() * 1000),
+//                             static_cast<int32_t>(phaseCurrent * 1000),
+//                             static_cast<int32_t>(mOutputTorque * 1000),
+//                             mMotor.getPulsWidthPerMill(),
+//                             static_cast<int32_t>(mSetPwm),
+//                             static_cast<int32_t>(mMotor.getCurrentRPS() * 60.0),
+//                             mMotor.getCurrentDirection() == SensorBLDC::Direction::FORWARD ? "F" : "B",
+//                             mMotor.getSetDirection() == SensorBLDC::Direction::FORWARD ? "F" : "B");
 
         mMotor.checkMotor();
         mPhaseCurrentValueAvailable.take(controllerInterval);
@@ -129,7 +155,7 @@ void DRV8302MotorController::motorControllerTaskFunction(const bool& join)
 
 void DRV8302MotorController::updateQuadrant(void)
 {
-    if (mSetTorque > 0) {
+    if (mOutputTorque > 0) {
         mMotor.setDirection(dev::SensorBLDC::Direction::FORWARD);
     } else {
         mMotor.setDirection(dev::SensorBLDC::Direction::BACKWARD);
@@ -138,14 +164,13 @@ void DRV8302MotorController::updateQuadrant(void)
 
 void DRV8302MotorController::updatePwmOutput(void)
 {
-//    const float drivingCurrentInMotor = mOutputTorque / mMotor.mMotorConstant;
-//    const float deltaVoltage = drivingCurrentInMotor * mMotor.mMotorCoilResistance;
-//    const float voltageInductionMotor = mMotor.getCurrentOmega() * mMotor.mMotorConstant;
-//    const float voltageInputMotor = voltageInductionMotor + deltaVoltage;
-    //mSetPwm = (voltageInputMotor / 15) * 1000.0; // TODO remove 15. Stands for 15V on Motor
-    mSetPwm = std::abs((mSetTorque * 1000));
+    const float drivingCurrentInMotor = std::abs(mOutputTorque) / mMotor.mMotorConstant;
+    const float deltaVoltage = drivingCurrentInMotor * mMotor.mMotorCoilResistance;
+    const float voltageInductionMotor = std::abs(mMotor.getCurrentRPS() * 60) / mMotor.mMotorGeneratorConstant;
+    const float voltageInputMotor = voltageInductionMotor + deltaVoltage;
+    mSetPwm = (voltageInputMotor / mBattery.getVoltage()) * 1000.0;
+
     mMotor.setPulsWidthInMill(static_cast<int32_t>(mSetPwm));
-    //mMotor.setPulsWidthInMill(static_cast<int32_t>(std::abs(mOutputTorque * 2000)));
 }
 
 void DRV8302MotorController::setTorque(const float setValue)

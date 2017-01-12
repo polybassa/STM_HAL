@@ -109,7 +109,11 @@ void PhaseCurrentSensor::calibrate(void) const
     auto offset2 = mAdcWithDma.getVoltage(mPhaseCurrentValue);
     os::ThisTask::sleep(std::chrono::milliseconds(5));
     auto offset3 = mAdcWithDma.getVoltage(mPhaseCurrentValue);
-    mOffsetVoltage = std::max(std::min(offset1, offset2), std::min(std::max(offset1, offset2), offset3));
+    os::ThisTask::sleep(std::chrono::milliseconds(5));
+    auto offset4 = mAdcWithDma.getVoltage(mPhaseCurrentValue);
+    os::ThisTask::sleep(std::chrono::milliseconds(5));
+    auto offset5 = mAdcWithDma.getVoltage(mPhaseCurrentValue);
+    mOffsetVoltage = (offset1 + offset2 + offset3 + offset4 + offset5) / 5;
 }
 
 float PhaseCurrentSensor::getPhaseCurrent(void) const

@@ -45,7 +45,7 @@ private:
         dev::Factory<dev::TemperatureSensor>::get<interface::TemperatureSensor::BATTERY>();
 
     static const uint32_t VALUE_HOLD_TIME_IN_TICKS = 5;
-    static constexpr const float VOLTAGE_FACTOR = 15.2;
+    static constexpr const float VOLTAGE_FACTOR = 20; //20.098;
 };
 }
 

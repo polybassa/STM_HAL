@@ -44,16 +44,8 @@ os::TaskEndless drv8302Test("drv8302_Test", 2048, os::Task::Priority::MEDIUM, []
                                 const uint8_t measures = 20;
 
                                 while (true) {
-//                                    auto torque = (poti.getValue() / 2000.0) - 1.0;
-//                                    g_motorCtrl->setTorque(torque);
-
-                                    pwm += poti.getValue() / 4;
-                                    count++;
-                                    if (count % measures == 0) {
-                                        motor.setPulsWidthInMill(pwm / measures);
-                                        pwm = 0;
-                                        count = 0;
-                                    }
+                                    auto torque = (poti.getValue() / 2000.0) - 1.0;
+                                    g_motorCtrl->setTorque(torque);
 
                                     os::ThisTask::sleep(std::chrono::milliseconds(5));
                                 }
