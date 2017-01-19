@@ -16,9 +16,11 @@
 #include <cmath>
 #include "TimSensorBldc.h"
 #include "trace.h"
+#include "DRV8302MotorController.h"
 #include "RealTimeDebugInterface.h"
 
 extern dev::RealTimeDebugInterface* g_RTTerminal;
+extern app::DRV8302MotorController* g_motorCtrl;
 
 static const int __attribute__((unused)) g_DebugZones = ZONE_ERROR | ZONE_WARNING | ZONE_VERBOSE | ZONE_INFO;
 
@@ -80,8 +82,34 @@ int32_t SensorBLDC::getPulsWidthPerMill(void) const
 
 void SensorBLDC::setPulsWidthInMill(int32_t value) const
 {
-    mHBridge.setPulsWidthPerMill(std::abs(value));
-    mPhaseCurrentSensor.setPulsWidthForTriggerPerMill(std::abs(value));
+    uint32_t absVal = std::abs(value);
+    g_RTTerminal->printf(
+                         "PWMPeriod: %6d\t"
+                         "RPM: %6d\t"
+                         "PWM: %6d\t"
+                         "\n"
+                         ,
+                         static_cast<int32_t>(mHBridge.mTim.getPeriode()),
+                         static_cast<int32_t>(getCurrentRPS() * 60),
+                         static_cast<int32_t>(absVal)
+                         );
+
+    static const float maxRPS = 72000000 / 42 / mLongPWMPeriod / mPeriodSecurityOffset;
+
+    if ((absVal < mMotorMinPWM) && (getCurrentRPS() < maxRPS)) {
+        if (mHBridge.mTim.getPeriode() == mShortPWMPeriod) {
+            mHBridge.mTim.setPeriode(mLongPWMPeriod);
+            mPhaseCurrentSensor.registerValueAvailableSemaphore(&g_motorCtrl->mPhaseCurrentValueAvailable, true);
+            g_RTTerminal->printf("new PWMPeriod: %6d\n", static_cast<int32_t>(mHBridge.mTim.getPeriode()));
+        }
+    } else if ((absVal > mMotorReturnPWM) && (mHBridge.mTim.getPeriode() == mLongPWMPeriod)) {
+        mHBridge.mTim.setPeriode(mShortPWMPeriod);
+        mPhaseCurrentSensor.unregisterValueAvailableSemaphore(true);
+        g_RTTerminal->printf("new PWMPeriod: %6d\n", static_cast<int32_t>(mHBridge.mTim.getPeriode()));
+    }
+
+    mHBridge.setPulsWidthPerMill(absVal);
+    mPhaseCurrentSensor.setPulsWidthForTriggerPerMill(absVal);
 }
 
 void SensorBLDC::setDirection(const Direction dir) const

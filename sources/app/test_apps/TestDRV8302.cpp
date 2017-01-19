@@ -36,17 +36,16 @@ os::TaskEndless drv8302Test("drv8302_Test", 2048, os::Task::Priority::MEDIUM, []
 
                                 constexpr const auto& motor = dev::Factory<dev::SensorBLDC>::get<dev::SensorBLDC::BLDC>();
 
+                                uint8_t count = 0;
                                 poti.getValue();
                                 os::ThisTask::sleep(std::chrono::milliseconds(5));
 
-                                uint16_t pwm = 0;
-                                uint8_t count = 0;
-                                const uint8_t measures = 20;
-
                                 while (true) {
-                                    auto torque = (poti.getValue() / 2000.0) - 1.0;
-                                    g_motorCtrl->setTorque(torque);
+//                                    auto torque = (poti.getValue() / 2000.0) - 1.0;
+//                                    g_motorCtrl->setTorque(torque);
 
+                                    g_motorCtrl->setTorque(poti.getValue() / 4);
                                     os::ThisTask::sleep(std::chrono::milliseconds(5));
+                                    count++;
                                 }
                             });

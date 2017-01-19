@@ -46,7 +46,6 @@ class DRV8302MotorController final :
     dev::PIDController mController;
 
     os::Queue<float, 1> mSetTorqueQueue;
-    os::Semaphore mPhaseCurrentValueAvailable;
 
     static constexpr std::chrono::milliseconds controllerInterval = std::chrono::milliseconds(10);
     // TODO set value to a smaller number of ms
@@ -66,6 +65,7 @@ public:
 
     virtual void setTorque(const float) override;
     virtual float getCurrentRPS(void) const override;
+    os::Semaphore mPhaseCurrentValueAvailable;
 
 #ifdef UNITTEST
     void triggerTaskExecution(void) { this->motorControllerTaskFunction(true); }

@@ -28,7 +28,7 @@ void Pwm::setPulsWidthInMill(uint32_t value) const
     if (value > maxValue) {
         value = maxValue;
     }
-    static const float scale = mTim.mConfiguration.TIM_Period / maxValue;
+    static const float scale = mTim.getPeriode() / maxValue;
     value = value * scale;
 
     switch (mChannel) {

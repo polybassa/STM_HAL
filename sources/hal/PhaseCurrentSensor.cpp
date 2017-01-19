@@ -40,8 +40,8 @@ void PhaseCurrentSensor::setPulsWidthForTriggerPerMill(uint32_t value) const
         value = minValue;
     }
 
-    static const float scale = static_cast<float>(mHBridge.mTim.mConfiguration.TIM_Period) /
-                               static_cast<float>(maxValue);
+    float scale = static_cast<float>(mHBridge.mTim.getPeriode()) /
+                  static_cast<float>(maxValue);
 
     value = static_cast<uint32_t>(static_cast<float>(value) * scale) >> 1;
 
@@ -78,9 +78,27 @@ void PhaseCurrentSensor::registerValueAvailableSemaphore(os::Semaphore* valueAva
     mAdcWithDma.mDma.registerInterruptSemaphore(valueAvailable, hal::Dma::InterruptSource::TC);
 }
 
+void PhaseCurrentSensor::registerValueAvailableSemaphore(os::Semaphore* valueAvailable, bool doubleSpeed) const
+{
+    if (doubleSpeed) {
+        mAdcWithDma.mDma.registerInterruptSemaphore(valueAvailable, hal::Dma::InterruptSource::HT);
+    } else {
+        mAdcWithDma.mDma.registerInterruptSemaphore(valueAvailable, hal::Dma::InterruptSource::TC);
+    }
+}
+
 void PhaseCurrentSensor::unregisterValueAvailableSemaphore(void) const
 {
     mAdcWithDma.mDma.unregisterInterruptSemaphore(hal::Dma::InterruptSource::TC);
+}
+
+void PhaseCurrentSensor::unregisterValueAvailableSemaphore(bool doubleSpeed) const
+{
+    if (doubleSpeed) {
+        mAdcWithDma.mDma.unregisterInterruptSemaphore(hal::Dma::InterruptSource::HT);
+    } else {
+        mAdcWithDma.mDma.unregisterInterruptSemaphore(hal::Dma::InterruptSource::TC);
+    }
 }
 
 void PhaseCurrentSensor::enable(void) const
@@ -113,7 +131,7 @@ void PhaseCurrentSensor::calibrate(void) const
     auto offset4 = mAdcWithDma.getVoltage(mPhaseCurrentValue);
     os::ThisTask::sleep(std::chrono::milliseconds(5));
     auto offset5 = mAdcWithDma.getVoltage(mPhaseCurrentValue);
-    mOffsetVoltage = (offset1 + offset2 + offset3 + offset4 + offset5) / 5;
+    mOffsetVoltage = (offset3 + offset4 + offset5) / 3;
 }
 
 float PhaseCurrentSensor::getPhaseCurrent(void) const

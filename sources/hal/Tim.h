@@ -44,6 +44,7 @@ struct Tim {
     uint32_t getCounterValue(void) const;
     uint32_t getTimerFrequency(void) const;
     uint32_t getPeriode(void) const;
+    void setPeriode(const uint32_t period) const;
     void enable(void) const;
     void disable(void) const;
     void selectOutputTrigger(uint16_t TRGO_Source) const;

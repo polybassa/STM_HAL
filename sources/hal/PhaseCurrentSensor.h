@@ -42,7 +42,9 @@ struct PhaseCurrentSensor {
     float getCurrentVoltage(void) const;
     void setOffsetVoltage(float offsetVoltage) const;
     void registerValueAvailableSemaphore(os::Semaphore* valueAvailable) const;
+    void registerValueAvailableSemaphore(os::Semaphore* valueAvailable, bool doubleSpeed) const;
     void unregisterValueAvailableSemaphore(void) const;
+    void unregisterValueAvailableSemaphore(bool doubleSpeed) const;
     void calibrate(void) const;
     void reset(void) const;
 
