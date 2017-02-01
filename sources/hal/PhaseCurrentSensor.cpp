@@ -43,7 +43,7 @@ void PhaseCurrentSensor::setPulsWidthForTriggerPerMill(uint32_t value) const
     float scale = static_cast<float>(mHBridge.mTim.getPeriode()) /
                   static_cast<float>(maxValue);
 
-    value = static_cast<uint32_t>(static_cast<float>(value) * scale) >> 1;
+    value = static_cast<uint32_t>(static_cast<float>(value) * scale) * (0.8 - value / 8000.0);
 
     const uint32_t sampleTime = 2 << mAdcWithDma.mAdcChannel.mSampleTime;
     TIM_SetCompare4(mHBridge.mTim.getBasePointer(),

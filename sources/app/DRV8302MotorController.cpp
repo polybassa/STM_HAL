@@ -100,12 +100,10 @@ void DRV8302MotorController::motorControllerTaskFunction(const bool& join)
 
         float avg = sum / arrSize;
 
-//        mController.compute();
+        mController.compute();
 
-        mMotor.setPulsWidthInMill(mSetTorque);
-
-//        updatePwmOutput();
-//        updateQuadrant();
+        updatePwmOutput();
+        updateQuadrant();
 
         g_RTTerminal->printf("%10d\t"
                              "Soll: %5d\t"
