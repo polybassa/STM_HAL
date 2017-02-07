@@ -73,7 +73,7 @@ void DRV8302MotorController::exitDeepSleep(void)
 
 void DRV8302MotorController::motorControllerTaskFunction(const bool& join)
 {
-    mMotor.mPhaseCurrentSensor.calibrate();
+    mMotor.calibrate();
     mMotor.setPulsWidthInMill(0);
 
     const uint8_t arrSize = 20;
@@ -100,24 +100,26 @@ void DRV8302MotorController::motorControllerTaskFunction(const bool& join)
 
         float avg = sum / arrSize;
 
-        mController.compute();
+//        mController.compute();
+//
+//        updatePwmOutput();
+//        updateQuadrant();
 
-        updatePwmOutput();
-        updateQuadrant();
+        mMotor.setPulsWidthInMill(mSetTorque);
 
         g_RTTerminal->printf("%10d\t"
                              "Soll: %5d\t"
                              "Out: %5d\t"
                              "Ist: %5d\t"
                              "IstAvg: %5d\t"
-                             "PWM: %5d\t"
+                             "I: %5d\t"
                              "\n",
                              os::Task::getTickCount(),
                              static_cast<int32_t>(mSetTorque * 1000),
                              static_cast<int32_t>(mOutputTorque * 1000),
                              static_cast<int32_t>(mCurrentTorque * 1000),
                              static_cast<int32_t>(avg),
-                             static_cast<int32_t>(mSetPwm)
+                             static_cast<int32_t>(phaseCurrent * 1000)
                              );
 
         mMotor.checkMotor();

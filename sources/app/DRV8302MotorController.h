@@ -47,8 +47,7 @@ class DRV8302MotorController final :
 
     os::Queue<float, 1> mSetTorqueQueue;
 
-    static constexpr std::chrono::milliseconds controllerInterval = std::chrono::milliseconds(10);
-    // TODO set value to a smaller number of ms
+    static constexpr std::chrono::milliseconds controllerInterval = std::chrono::milliseconds(20);
 
     void motorControllerTaskFunction(const bool&);
     void updatePwmOutput(void);

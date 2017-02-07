@@ -50,6 +50,7 @@ struct SensorBLDC {
     Direction getSetDirection(void) const;
     void setDirection(const Direction) const;
     int32_t getPulsWidthPerMill(void) const;
+    void calibrate(void) const;
     uint32_t getNumberOfPolePairs(void) const;
     void setPulsWidthInMill(int32_t) const;
     void start(void) const;
@@ -62,11 +63,11 @@ struct SensorBLDC {
     const float mMotorConstant = 0.0;
     const float mMotorCoilResistance = 0.0;
     const float mMotorGeneratorConstant = 0.0;
-    const uint32_t mMotorMinPWM = 100;
-    const uint32_t mMotorReturnPWM = 130;       // Must be above MotorMinPWM
-    const uint32_t mShortPWMPeriod = 9000;      // Must be same as HALFBRIDGE_PERIODE in Tim_Config.h
-    const uint32_t mLongPWMPeriod = 18000;      // Should be Double of ShortPWMPeriod
-    const uint32_t mPeriodSecurityOffset = 30;   // Min. PWM cycles / commutation step
+    static const constexpr uint32_t MOTORMINPWM = 250;
+    static const constexpr uint32_t MOTORRETURNPWM = 300;       // Must be above MotorMinPWM
+    static const constexpr uint32_t MOTORSHORTPERIOD = 9000;      // Must be same as HALFBRIDGE_PERIODE in Tim_Config.h
+    static const constexpr uint32_t MOTORLONGPERIOD = 18000;      // Should be Double of ShortPWMPeriod
+    static const constexpr uint32_t PERIODSECURITYOFFSET = 6;   // Min. PWM cycles / commutation step
 
     const hal::PhaseCurrentSensor& mPhaseCurrentSensor;
 
@@ -123,7 +124,7 @@ class Factory<SensorBLDC>
     { {
           SensorBLDC(
                      SensorBLDC::BLDC,
-                     0.072583,
+                     0.065,
                      0.33,
                      144,
                      hal::Factory<hal::PhaseCurrentSensor>::get<hal::PhaseCurrentSensor::I_TOTAL_FB>(),

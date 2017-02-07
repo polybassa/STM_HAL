@@ -81,7 +81,8 @@ static constexpr const std::array<const Adc::Channel,
                    Factory<Adc>::get<Adc::Description::PMD_ADC4>(),
                    ADC_Channel_11,
                    ADC_SampleTime_4Cycles5,
-                   std::chrono::milliseconds(0)),
+                   std::chrono::milliseconds(0),
+                   3),
   } };
 
 #endif /* SOURCES_PMD_ADC_CHANNEL_CONFIG_CONTAINER_H_ */

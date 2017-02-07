@@ -29,6 +29,12 @@ using hal::HalfBridge;
 using hal::HallDecoder;
 using hal::Tim;
 
+const constexpr uint32_t dev::SensorBLDC::MOTORMINPWM;
+const constexpr uint32_t dev::SensorBLDC::MOTORRETURNPWM;
+const constexpr uint32_t dev::SensorBLDC::MOTORSHORTPERIOD;
+const constexpr uint32_t dev::SensorBLDC::MOTORLONGPERIOD;
+const constexpr uint32_t dev::SensorBLDC::PERIODSECURITYOFFSET;
+
 float SensorBLDC::getCurrentRPS(void) const
 {
     const float maximumRPS = 70;
@@ -84,15 +90,15 @@ void SensorBLDC::setPulsWidthInMill(int32_t value) const
 {
     uint32_t absVal = std::abs(value);
 
-    static const float maxRPS = 72000000 / 42 / mLongPWMPeriod / mPeriodSecurityOffset;
+    const constexpr float maxRPS = 72000000 / 42 / MOTORLONGPERIOD / PERIODSECURITYOFFSET;
 
-    if ((absVal < mMotorMinPWM) && (getCurrentRPS() < maxRPS)) {
-        if (mHBridge.mTim.getPeriode() == mShortPWMPeriod) {
-            mHBridge.mTim.setPeriode(mLongPWMPeriod);
+    if ((absVal < MOTORMINPWM) && (getCurrentRPS() < maxRPS)) {
+        if (mHBridge.mTim.getPeriode() == MOTORSHORTPERIOD) {
+            mHBridge.mTim.setPeriode(MOTORLONGPERIOD);
             mPhaseCurrentSensor.registerValueAvailableSemaphore(&g_motorCtrl->mPhaseCurrentValueAvailable, true);
         }
-    } else if ((absVal > mMotorReturnPWM) && (mHBridge.mTim.getPeriode() == mLongPWMPeriod)) {
-        mHBridge.mTim.setPeriode(mShortPWMPeriod);
+    } else if ((absVal > MOTORRETURNPWM) && (mHBridge.mTim.getPeriode() == MOTORLONGPERIOD)) {
+        mHBridge.mTim.setPeriode(MOTORSHORTPERIOD);
         mPhaseCurrentSensor.unregisterValueAvailableSemaphore(true);
     }
 
@@ -145,6 +151,14 @@ size_t SensorBLDC::getPreviousHallPosition(const size_t position) const
         static const size_t positions[] = {0, 3, 6, 2, 5, 1, 4, 0};
         return positions[position];
     }
+}
+
+void SensorBLDC::calibrate(void) const
+{
+    TIM_SetCompare1(mHBridge.mTim.getBasePointer(), 0);
+    TIM_SetCompare2(mHBridge.mTim.getBasePointer(), 0);
+    TIM_SetCompare3(mHBridge.mTim.getBasePointer(), 0);
+    mPhaseCurrentSensor.calibrate();
 }
 
 void SensorBLDC::computeDirection(void) const
