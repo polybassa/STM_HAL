@@ -43,7 +43,7 @@ void PhaseCurrentSensor::setPulsWidthForTriggerPerMill(uint32_t value) const
     float scale = static_cast<float>(mHBridge.mTim.getPeriode()) /
                   static_cast<float>(maxValue);
 
-    value = static_cast<uint32_t>(static_cast<float>(value) * scale) * (0.8 - value / 8000.0);
+    value = static_cast<uint32_t>(static_cast<float>(value) * scale) * (0.7 + value / 5000.0);
 
     const uint32_t sampleTime = 2 << mAdcWithDma.mAdcChannel.mSampleTime;
     TIM_SetCompare4(mHBridge.mTim.getBasePointer(),
@@ -54,23 +54,14 @@ void PhaseCurrentSensor::setPulsWidthForTriggerPerMill(uint32_t value) const
 
 void PhaseCurrentSensor::updateCurrentValue(void) const
 {
-    std::array<uint16_t, PhaseCurrentSensor::NUMBER_OF_MEASUREMENTS_FOR_AVG> helparray = { 0 };
     auto& array = MeasurementValueBuffer[mDescription];
 
-    helparray = array;
-    std::sort(helparray.begin(), helparray.end());
-
-    uint32_t sum = 0;
-    size_t valueWindowStart = array.size() >> 2;
-    size_t valueWindowEnd = array.size() - (array.size() >> 2);
-
-    for (size_t i = valueWindowStart; i < valueWindowEnd; i++) {
-        sum += helparray[i];
+    for (size_t i = 0; i < PhaseCurrentSensor::NUMBER_OF_MEASUREMENTS_FOR_AVG; i++) {
+        mPhaseCurrentValue -= mPhaseCurrentValue / mFilterWidth;
+        mPhaseCurrentValue += static_cast<float>(array[i]) / mFilterWidth;
     }
 
     //TODO: check if FFT with low pass improves accuracy
-
-    mPhaseCurrentValue = static_cast<float>(sum) / static_cast<float>(valueWindowEnd - valueWindowStart);
 }
 
 void PhaseCurrentSensor::registerValueAvailableSemaphore(os::Semaphore* valueAvailable) const
@@ -121,17 +112,8 @@ void PhaseCurrentSensor::reset(void) const
 
 void PhaseCurrentSensor::calibrate(void) const
 {
-    os::ThisTask::sleep(std::chrono::milliseconds(5));
-    auto offset1 = mAdcWithDma.getVoltage(mPhaseCurrentValue);
-    os::ThisTask::sleep(std::chrono::milliseconds(5));
-    auto offset2 = mAdcWithDma.getVoltage(mPhaseCurrentValue);
-    os::ThisTask::sleep(std::chrono::milliseconds(5));
-    auto offset3 = mAdcWithDma.getVoltage(mPhaseCurrentValue);
-    os::ThisTask::sleep(std::chrono::milliseconds(5));
-    auto offset4 = mAdcWithDma.getVoltage(mPhaseCurrentValue);
-    os::ThisTask::sleep(std::chrono::milliseconds(5));
-    auto offset5 = mAdcWithDma.getVoltage(mPhaseCurrentValue);
-    mOffsetVoltage = (offset3 + offset4 + offset5) / 3;
+    os::ThisTask::sleep(std::chrono::milliseconds(250));
+    mOffsetVoltage = mAdcWithDma.getVoltage(mPhaseCurrentValue);
 }
 
 float PhaseCurrentSensor::getPhaseCurrent(void) const
@@ -163,6 +145,8 @@ void PhaseCurrentSensor::initialize(void) const
 
     /* Channel 4 output compare signal is connected to TRGO */
     TIM_SelectOutputTrigger(mHBridge.mTim.getBasePointer(), (uint16_t)TIM_TRGOSource_OC4Ref);
+
+    setPulsWidthForTriggerPerMill(1);
 }
 
 constexpr const std::array<const PhaseCurrentSensor,

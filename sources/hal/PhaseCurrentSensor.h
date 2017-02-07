@@ -66,8 +66,9 @@ private:
     const HalfBridge& mHBridge;
     const AdcWithDma& mAdcWithDma;
     const TIM_OCInitTypeDef mAdcTrgoConfiguration;
+    static const constexpr size_t mFilterWidth = 256;
 
-    mutable float mPhaseCurrentValue = 0.0;
+    mutable float mPhaseCurrentValue = 0;
     mutable float mOffsetVoltage = 1.8449707;
 
     friend class Factory<PhaseCurrentSensor>;
