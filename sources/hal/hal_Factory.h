@@ -24,7 +24,7 @@ const T& getFactory(void)
     static T instance;
     return instance;
 }
-
+//__attribute__ ((__constructor__)) advise GCC to call this function before main.
 template<typename T>
 inline void initFactory(void)
 {
