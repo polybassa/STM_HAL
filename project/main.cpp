@@ -97,8 +97,9 @@ int main(void)
     Trace(ZONE_INFO, "Version: %c \r\n", &_version_start);
 
     os::ThisTask::sleep(std::chrono::milliseconds(10));
+    dev::Battery* mBattery = new dev::Battery();
 
-    g_motorCtrl = new app::DRV8302MotorController( dev::Factory<dev::SensorBLDC>::get<dev::SensorBLDC::BLDC>(), 0.5, 0.2);
+    g_motorCtrl = new app::DRV8302MotorController( dev::Factory<dev::SensorBLDC>::get<dev::SensorBLDC::BLDC>(), *mBattery, 0.4, 0.1);
 
     os::Task::startScheduler();
 

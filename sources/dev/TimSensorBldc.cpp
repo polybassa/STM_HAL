@@ -16,9 +16,11 @@
 #include <cmath>
 #include "TimSensorBldc.h"
 #include "trace.h"
+#include "DRV8302MotorController.h"
 #include "RealTimeDebugInterface.h"
 
 extern dev::RealTimeDebugInterface* g_RTTerminal;
+extern app::DRV8302MotorController* g_motorCtrl;
 
 static const int __attribute__((unused)) g_DebugZones = ZONE_ERROR | ZONE_WARNING | ZONE_VERBOSE | ZONE_INFO;
 
@@ -26,6 +28,12 @@ using dev::SensorBLDC;
 using hal::HalfBridge;
 using hal::HallDecoder;
 using hal::Tim;
+
+const constexpr uint32_t dev::SensorBLDC::MOTORMINPWM;
+const constexpr uint32_t dev::SensorBLDC::MOTORRETURNPWM;
+const constexpr uint32_t dev::SensorBLDC::MOTORSHORTPERIOD;
+const constexpr uint32_t dev::SensorBLDC::MOTORLONGPERIOD;
+const constexpr uint32_t dev::SensorBLDC::PERIODSECURITYOFFSET;
 
 float SensorBLDC::getCurrentRPS(void) const
 {
@@ -80,8 +88,22 @@ int32_t SensorBLDC::getPulsWidthPerMill(void) const
 
 void SensorBLDC::setPulsWidthInMill(int32_t value) const
 {
-    mHBridge.setPulsWidthPerMill(std::abs(value));
-    mPhaseCurrentSensor.setPulsWidthForTriggerPerMill(std::abs(value));
+    uint32_t absVal = std::abs(value);
+
+    const constexpr float maxRPS = 72000000 / 42 / MOTORLONGPERIOD / PERIODSECURITYOFFSET;
+
+    if ((absVal < MOTORMINPWM) && (getCurrentRPS() < maxRPS)) {
+        if (mHBridge.mTim.getPeriode() == MOTORSHORTPERIOD) {
+            mHBridge.mTim.setPeriode(MOTORLONGPERIOD);
+            mPhaseCurrentSensor.registerValueAvailableSemaphore(&g_motorCtrl->mPhaseCurrentValueAvailable, true);
+        }
+    } else if ((absVal > MOTORRETURNPWM) && (mHBridge.mTim.getPeriode() == MOTORLONGPERIOD)) {
+        mHBridge.mTim.setPeriode(MOTORSHORTPERIOD);
+        mPhaseCurrentSensor.unregisterValueAvailableSemaphore(true);
+    }
+
+    mHBridge.setPulsWidthPerMill(absVal);
+    mPhaseCurrentSensor.setPulsWidthForTriggerPerMill(absVal);
 }
 
 void SensorBLDC::setDirection(const Direction dir) const
@@ -131,6 +153,14 @@ size_t SensorBLDC::getPreviousHallPosition(const size_t position) const
     }
 }
 
+void SensorBLDC::calibrate(void) const
+{
+    TIM_SetCompare1(mHBridge.mTim.getBasePointer(), 0);
+    TIM_SetCompare2(mHBridge.mTim.getBasePointer(), 0);
+    TIM_SetCompare3(mHBridge.mTim.getBasePointer(), 0);
+    mPhaseCurrentSensor.calibrate();
+}
+
 void SensorBLDC::computeDirection(void) const
 {
     const uint32_t currentPosition = mHallDecoder.getCurrentHallState();
@@ -161,7 +191,6 @@ void SensorBLDC::disableManualCommutation(const size_t hallPosition) const
 void SensorBLDC::commutate(const size_t hallPosition) const
 {
     if (mUpdateSetDirection != mSetDirection) {
-        mPhaseCurrentSensor.reset();
         mSetDirection = mUpdateSetDirection;
     }
 
@@ -185,7 +214,7 @@ void SensorBLDC::commutate(const size_t hallPosition) const
 
 float SensorBLDC::getPhaseCurrent(void) const
 {
-    return mSetDirection == Direction::FORWARD ? 0.0 -
+    return mCurrentDirection == Direction::FORWARD ? 0.0 -
            mPhaseCurrentSensor.getPhaseCurrent() : mPhaseCurrentSensor.getPhaseCurrent();
 }
 

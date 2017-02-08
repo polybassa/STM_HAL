@@ -106,13 +106,13 @@ ${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/UsartWithDma.o
 ${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/PhaseCurrentSensor.o
 
 # DEV Layer
-#${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/Battery.o
+${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/Battery.o
 ${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/DebugInterface.o
 #${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/Light.o
 ${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/PIDController.o
-#${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/TemperatureSensor.o
-#${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/TemperatureSensor_Internal.o
-#${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/TemperatureSensor_NTC.o
+${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/TemperatureSensor.o
+${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/TemperatureSensor_Internal.o
+${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/TemperatureSensor_NTC.o
 ${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/TimSensorBldc.o
 
 # OS Layer

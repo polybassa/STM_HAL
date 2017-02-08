@@ -39,8 +39,12 @@ struct PhaseCurrentSensor {
     PhaseCurrentSensor& operator=(PhaseCurrentSensor &&) = delete;
 
     float getPhaseCurrent(void) const;
+    float getCurrentVoltage(void) const;
+    void setOffsetVoltage(float offsetVoltage) const;
     void registerValueAvailableSemaphore(os::Semaphore* valueAvailable) const;
+    void registerValueAvailableSemaphore(os::Semaphore* valueAvailable, bool doubleSpeed) const;
     void unregisterValueAvailableSemaphore(void) const;
+    void unregisterValueAvailableSemaphore(bool doubleSpeed) const;
     void calibrate(void) const;
     void reset(void) const;
 
@@ -62,8 +66,9 @@ private:
     const HalfBridge& mHBridge;
     const AdcWithDma& mAdcWithDma;
     const TIM_OCInitTypeDef mAdcTrgoConfiguration;
+    static const constexpr size_t mFilterWidth = 256;
 
-    mutable float mPhaseCurrentValue = 0.0;
+    mutable float mPhaseCurrentValue = 0;
     mutable float mOffsetVoltage = 1.8449707;
 
     friend class Factory<PhaseCurrentSensor>;

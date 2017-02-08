@@ -25,7 +25,7 @@ using hal::Tim;
 void HalfBridge::setPulsWidthPerMill(uint32_t value) const
 {
     static constexpr const uint32_t maxValue = 1000;
-    static constexpr const uint32_t minValue = 0;
+    static constexpr const uint32_t minValue = 25;
     if (value > maxValue) {
         value = maxValue;
     }
@@ -35,7 +35,7 @@ void HalfBridge::setPulsWidthPerMill(uint32_t value) const
     }
     mPulsWidth = value;
 
-    static const float scale = static_cast<float>(mTim.mConfiguration.TIM_Period) / static_cast<float>(maxValue);
+    float scale = static_cast<float>(mTim.getPeriode()) / static_cast<float>(maxValue);
 
     value = static_cast<uint32_t>(static_cast<float>(value) * scale);
 

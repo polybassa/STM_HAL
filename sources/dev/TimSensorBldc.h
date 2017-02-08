@@ -50,6 +50,7 @@ struct SensorBLDC {
     Direction getSetDirection(void) const;
     void setDirection(const Direction) const;
     int32_t getPulsWidthPerMill(void) const;
+    void calibrate(void) const;
     uint32_t getNumberOfPolePairs(void) const;
     void setPulsWidthInMill(int32_t) const;
     void start(void) const;
@@ -61,6 +62,12 @@ struct SensorBLDC {
 
     const float mMotorConstant = 0.0;
     const float mMotorCoilResistance = 0.0;
+    const float mMotorGeneratorConstant = 0.0;
+    static const constexpr uint32_t MOTORMINPWM = 250;
+    static const constexpr uint32_t MOTORRETURNPWM = 300;       // Must be above MotorMinPWM
+    static const constexpr uint32_t MOTORSHORTPERIOD = 9000;      // Must be same as HALFBRIDGE_PERIODE in Tim_Config.h
+    static const constexpr uint32_t MOTORLONGPERIOD = 18000;      // Should be Double of ShortPWMPeriod
+    static const constexpr uint32_t PERIODSECURITYOFFSET = 6;   // Min. PWM cycles / commutation step
 
     const hal::PhaseCurrentSensor& mPhaseCurrentSensor;
 
@@ -68,6 +75,7 @@ private:
     constexpr SensorBLDC(const enum Description&        desc,
                          const float                    motorConstant,
                          const float                    motorCoilResistance,
+                         const float                    motorGeneratorConstant,
                          const hal::PhaseCurrentSensor& currentSensor,
                          const hal::HalfBridge&         hBridge,
                          const hal::HallDecoder&        hallDecoder,
@@ -76,6 +84,7 @@ private:
         mDescription(desc),
         mMotorConstant(motorConstant),
         mMotorCoilResistance(motorCoilResistance),
+        mMotorGeneratorConstant(motorGeneratorConstant),
         mPhaseCurrentSensor(currentSensor),
         mHBridge(hBridge),
         mHallDecoder(hallDecoder),
@@ -117,6 +126,7 @@ class Factory<SensorBLDC>
                      SensorBLDC::BLDC,
                      0.065,
                      0.33,
+                     144,
                      hal::Factory<hal::PhaseCurrentSensor>::get<hal::PhaseCurrentSensor::I_TOTAL_FB>(),
                      hal::Factory<hal::HalfBridge>::get<hal::HalfBridge::BLDC_PWM>(),
                      hal::Factory<hal::HallDecoder>::get<hal::HallDecoder::BLDC_DECODER>(),

@@ -21,7 +21,7 @@ enum Description {
     __ENUM__SIZE
 };
 
-static constexpr const uint32_t NUMBER_OF_MEASUREMENTS_FOR_AVG = 32;
+static constexpr const uint32_t NUMBER_OF_MEASUREMENTS_FOR_AVG = 20;
 static constexpr const float SHUNT_RESISTANCE = 0.002; // Ohm
 static constexpr const float MEASUREMENT_GAIN = 40.0;
 
