@@ -49,7 +49,7 @@ DRV8302MotorController::DRV8302MotorController(const SensorBLDC& motor, const de
     mSetTorqueQueue()
 {
     mController.setSampleTime(controllerInterval);
-    mController.setOutputLimits(-1.0, 1.0);
+    mController.setOutputLimits(-1.5, 1.5);
     mController.setMode(dev::PIDController::ControlMode::AUTOMATIC);
     setTorque(0.00001);
     mSetTorque = 0.00001;
@@ -100,26 +100,30 @@ void DRV8302MotorController::motorControllerTaskFunction(const bool& join)
 
         float avg = sum / arrSize;
 
-//        mController.compute();
-//
-//        updatePwmOutput();
-//        updateQuadrant();
+        mController.compute();
 
-        mMotor.setPulsWidthInMill(mSetTorque);
+        updatePwmOutput();
+        updateQuadrant();
 
         g_RTTerminal->printf("%10d\t"
                              "Soll: %5d\t"
                              "Out: %5d\t"
                              "Ist: %5d\t"
                              "IstAvg: %5d\t"
-                             "I: %5d\t"
+                             "PWM: %5d\t"
+                             "RPS: %5d\t"
+                             "CDIR: %s\t"
+                             "SDIR: %s\t"
                              "\n",
                              os::Task::getTickCount(),
                              static_cast<int32_t>(mSetTorque * 1000),
                              static_cast<int32_t>(mOutputTorque * 1000),
                              static_cast<int32_t>(mCurrentTorque * 1000),
                              static_cast<int32_t>(avg),
-                             static_cast<int32_t>(phaseCurrent * 1000)
+                             static_cast<int32_t>(mMotor.getPulsWidthPerMill()),
+                             static_cast<int32_t>(mMotor.getCurrentRPS()),
+                             mMotor.getCurrentDirection() == SensorBLDC::Direction::FORWARD ? "F" : "B",
+                             mMotor.getSetDirection() == SensorBLDC::Direction::FORWARD ? "F" : "B"
                              );
 
         mMotor.checkMotor();
