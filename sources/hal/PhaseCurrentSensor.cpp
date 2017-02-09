@@ -119,11 +119,10 @@ float PhaseCurrentSensor::getPhaseCurrent(void) const
 {
     static constexpr const float SHUNT_CONDUCTANCE = 1 / SHUNT_RESISTANCE;
     float powerFactor = 1;
-    float border = 30;
-    float fact = 2;
+    static const constexpr float fact = 2;
 
-    if (prevVal < border) {
-        fact = static_cast<float>(prevVal) / (border * fact) + 1 / fact;
+    if (prevVal < mPowerFactorBorder) {
+        powerFactor = static_cast<float>(prevVal) / (mPowerFactorBorder * fact) + 1 / fact;
     }
 
     return (mOffsetVoltage -
