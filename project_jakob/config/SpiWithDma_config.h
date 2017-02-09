@@ -13,35 +13,12 @@
  *  You should have received a copy of the GNU General Public License
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>. */
 
-#ifndef SOURCES_PMD_FACTORY_H_
-#define SOURCES_PMD_FACTORY_H_
+#ifndef SOURCES_PMD_SPIWITHDMA_CONFIG_CONTAINER_H_
+#define SOURCES_PMD_SPIWITHDMA_CONFIG_CONTAINER_H_
 
-namespace hal
-{
-template<typename T>
-const T& getFactory(void)
-{
-    static T instance;
-    return instance;
-}
-//__attribute__ ((__constructor__)) advise GCC to call this function before main.
-template<typename T>
-inline void initFactory(void)
-{
-    getFactory<T>();
-}
-
-template<typename T>
-class Factory
-{
-    Factory(void) = delete;
-
-public:
-    Factory(const Factory&) = delete;
-    Factory(Factory &&) = delete;
-    Factory& operator=(const Factory&) = delete;
-    Factory& operator=(Factory &&) = delete;
-};
-}
-
-#endif /* SOURCES_PMD_FACTORY_H_ */
+static constexpr const std::array<const SpiWithDma, Spi::__ENUM__SIZE> Container =
+{ {
+      SpiWithDma(&Factory<Spi>::get<Spi::BACKLIGHT>(), SPI_I2S_DMAReq_Tx, &Factory<Dma>::get<Dma::SPI2_TX>()),
+      SpiWithDma(&Factory<Spi>::get<Spi::HEADLIGHT>(), SPI_I2S_DMAReq_Tx, &Factory<Dma>::get<Dma::SPI3_TX>())
+  } };
+#endif /* SOURCES_PMD_SPI_CONFIG_CONTAINER_H_ */
