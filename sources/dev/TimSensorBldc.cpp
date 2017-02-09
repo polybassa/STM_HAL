@@ -191,6 +191,7 @@ void SensorBLDC::disableManualCommutation(const size_t hallPosition) const
 void SensorBLDC::commutate(const size_t hallPosition) const
 {
     if (mUpdateSetDirection != mSetDirection) {
+        mPhaseCurrentSensor.reset();
         mSetDirection = mUpdateSetDirection;
     }
 
@@ -214,7 +215,7 @@ void SensorBLDC::commutate(const size_t hallPosition) const
 
 float SensorBLDC::getPhaseCurrent(void) const
 {
-    return mCurrentDirection == Direction::FORWARD ? 0.0 -
+    return mSetDirection == Direction::FORWARD ? 0.0 -
            mPhaseCurrentSensor.getPhaseCurrent() : mPhaseCurrentSensor.getPhaseCurrent();
 }
 

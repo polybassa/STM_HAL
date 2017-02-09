@@ -70,6 +70,8 @@ private:
 
     mutable float mPhaseCurrentValue = 0;
     mutable float mOffsetVoltage = 1.8449707;
+    mutable uint16_t mOffsetValue = 0;
+    mutable uint32_t mLastPulsWidth = 0;
 
     friend class Factory<PhaseCurrentSensor>;
     friend struct dev::SensorBLDC;

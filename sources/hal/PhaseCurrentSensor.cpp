@@ -40,6 +40,8 @@ void PhaseCurrentSensor::setPulsWidthForTriggerPerMill(uint32_t value) const
         value = minValue;
     }
 
+    prevVal = value;
+
     float scale = static_cast<float>(mHBridge.mTim.getPeriode()) /
                   static_cast<float>(maxValue);
 
@@ -60,8 +62,6 @@ void PhaseCurrentSensor::updateCurrentValue(void) const
         mPhaseCurrentValue -= mPhaseCurrentValue / mFilterWidth;
         mPhaseCurrentValue += static_cast<float>(array[i]) / mFilterWidth;
     }
-
-    //TODO: check if FFT with low pass improves accuracy
 }
 
 void PhaseCurrentSensor::registerValueAvailableSemaphore(os::Semaphore* valueAvailable) const
@@ -105,23 +105,30 @@ void PhaseCurrentSensor::disable(void) const
 
 void PhaseCurrentSensor::reset(void) const
 {
-    mAdcWithDma.mDma.disable();
-    mAdcWithDma.mDma.setCurrentDataCounter(NUMBER_OF_MEASUREMENTS_FOR_AVG);
-    mAdcWithDma.mDma.enable();
+    mPhaseCurrentValue = 2 * mOffsetValue - mPhaseCurrentValue;
 }
 
 void PhaseCurrentSensor::calibrate(void) const
 {
     os::ThisTask::sleep(std::chrono::milliseconds(250));
+    mOffsetValue = mPhaseCurrentValue;
     mOffsetVoltage = mAdcWithDma.getVoltage(mPhaseCurrentValue);
 }
 
 float PhaseCurrentSensor::getPhaseCurrent(void) const
 {
     static constexpr const float SHUNT_CONDUCTANCE = 1 / SHUNT_RESISTANCE;
+    float powerFactor = 1;
+    float border = 30;
+    float fact = 2;
+
+    if (prevVal < border) {
+        fact = static_cast<float>(prevVal) / (border * fact) + 1 / fact;
+    }
+
     return (mOffsetVoltage -
             mAdcWithDma.getVoltage(mPhaseCurrentValue)) *
-           SHUNT_CONDUCTANCE / MEASUREMENT_GAIN;
+           SHUNT_CONDUCTANCE / MEASUREMENT_GAIN * powerFactor;
 }
 
 float PhaseCurrentSensor::getCurrentVoltage(void) const
