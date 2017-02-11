@@ -16,7 +16,6 @@
 #include "VescMotorController.h"
 #include "trace.h"
 #include <cmath>
-#include "RealTimeDebugInterface.h"
 extern "C" {
 #include "vesc_bldc_interface_uart.h"
 #include "vesc_bldc_interface.h"
@@ -24,8 +23,6 @@ extern "C" {
 #include <functional>
 
 using app::VescMotorController;
-
-extern dev::RealTimeDebugInterface* g_RTTerminal;
 
 static const int __attribute__((unused)) g_DebugZones = ZONE_ERROR | ZONE_WARNING | ZONE_VERBOSE | ZONE_INFO;
 
@@ -46,19 +43,19 @@ void app::bldc_val_received(void* valPtr)
         mc_values* val = reinterpret_cast<mc_values*>(valPtr);
 
         //UNCOMMENT for TRACING
-        //	g_RTTerminal->printf("Input voltage: %5d mV\r\n",       static_cast<size_t>(val->v_in * 1000));
-        //	g_RTTerminal->printf("Temp:          %5d mdegC\r\n",static_cast<size_t>(val->temp_pcb* 1000));
-        //	g_RTTerminal->printf("Current motor: %5d mA\r\n",       static_cast<size_t>(val->current_motor* 1000));
-        //	g_RTTerminal->printf("Current in:    %5d mA\r\n",       static_cast<size_t>(val->current_in* 1000));
-        //	g_RTTerminal->printf("RPM:           %5d RPM\r\n",      static_cast<size_t>(val->rpm* 1000));
-        //	g_RTTerminal->printf("Duty cycle:    %5d %%\r\n",       static_cast<size_t>(val->duty_now * 100.0));
-        //	g_RTTerminal->printf("Ah Drawn:      %5d mAh\r\n",      static_cast<size_t>(val->amp_hours* 1000));
-        //	g_RTTerminal->printf("Ah Regen:      %5d mAh\r\n",      static_cast<size_t>(val->amp_hours_charged* 1000));
-        //	g_RTTerminal->printf("Wh Drawn:      %5d mWh\r\n",      static_cast<size_t>(val->watt_hours* 1000));
-        //	g_RTTerminal->printf("Wh Regen:      %5d mWh\r\n",      static_cast<size_t>(val->watt_hours_charged* 1000));
-        //	g_RTTerminal->printf("Tacho:         %i counts\r\n", val->tachometer);
-        //	g_RTTerminal->printf("Tacho ABS:     %i counts\r\n", val->tachometer_abs);
-        //	g_RTTerminal->printf("Fault Code:    %s\r\n", bldc_interface_fault_to_string(val->fault_code));
+        //	Trace(ZONE_INFO, "Input voltage: %5d mV\r\n",       static_cast<size_t>(val->v_in * 1000));
+        //	Trace(ZONE_INFO, "Temp:          %5d mdegC\r\n",static_cast<size_t>(val->temp_pcb* 1000));
+        //	Trace(ZONE_INFO, "Current motor: %5d mA\r\n",       static_cast<size_t>(val->current_motor* 1000));
+        //	Trace(ZONE_INFO, "Current in:    %5d mA\r\n",       static_cast<size_t>(val->current_in* 1000));
+        //	Trace(ZONE_INFO, "RPM:           %5d RPM\r\n",      static_cast<size_t>(val->rpm* 1000));
+        //	Trace(ZONE_INFO, "Duty cycle:    %5d %%\r\n",       static_cast<size_t>(val->duty_now * 100.0));
+        //	Trace(ZONE_INFO, "Ah Drawn:      %5d mAh\r\n",      static_cast<size_t>(val->amp_hours* 1000));
+        //	Trace(ZONE_INFO, "Ah Regen:      %5d mAh\r\n",      static_cast<size_t>(val->amp_hours_charged* 1000));
+        //	Trace(ZONE_INFO, "Wh Drawn:      %5d mWh\r\n",      static_cast<size_t>(val->watt_hours* 1000));
+        //	Trace(ZONE_INFO, "Wh Regen:      %5d mWh\r\n",      static_cast<size_t>(val->watt_hours_charged* 1000));
+        //	Trace(ZONE_INFO, "Tacho:         %i counts\r\n", val->tachometer);
+        //	Trace(ZONE_INFO, "Tacho ABS:     %i counts\r\n", val->tachometer_abs);
+        //	Trace(ZONE_INFO, "Fault Code:    %s\r\n", bldc_interface_fault_to_string(val->fault_code));
 
         if (internalMotorControllerPointer) {
             internalMotorControllerPointer->mCurrentRPS = val->rpm / 60;

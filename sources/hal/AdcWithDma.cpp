@@ -15,7 +15,6 @@
 
 #include "AdcWithDma.h"
 #include "trace.h"
-#include "RealTimeDebugInterface.h"
 
 static const int __attribute__((unused)) g_DebugZones = ZONE_ERROR |
                                                         ZONE_WARNING | ZONE_VERBOSE | ZONE_INFO;
@@ -23,8 +22,6 @@ using hal::Adc;
 using hal::AdcWithDma;
 using hal::Dma;
 using hal::Factory;
-
-extern dev::RealTimeDebugInterface* g_RTTerminal;
 
 void AdcWithDma::initialize(void) const
 {

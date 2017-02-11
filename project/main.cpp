@@ -19,8 +19,6 @@
 #include "os_Task.h"
 #include "cpp_overrides.h"
 #include "trace.h"
-#include "SEGGER_SYSVIEW.h"
-#include "RealTimeDebugInterface.h"
 
 /* OS LAYER INCLUDES */
 #include "hal_Factory.h"
@@ -58,7 +56,6 @@ extern char _version_end;
 const std::string VERSION(&_version_start, (&_version_end - &_version_start));
 
 app::DRV8302MotorController* g_motorCtrl = nullptr;
-dev::RealTimeDebugInterface* g_RTTerminal;
 
 void initializePowerSupply(void)
 {
@@ -71,8 +68,6 @@ void initializePowerSupply(void)
 
 int main(void)
 {
-    g_RTTerminal = new dev::RealTimeDebugInterface();
-
     hal::initFactory<hal::Factory<hal::Gpio> >();
     hal::initFactory<hal::Factory<hal::Tim> >();
     hal::initFactory<hal::Factory<hal::HallDecoder> >();

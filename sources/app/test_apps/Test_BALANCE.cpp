@@ -2,15 +2,16 @@
 
 #include "Test_BALANCE.h"
 #include "Mpu.h"
-#include "RealTimeDebugInterface.h"
 #include "Gpio.h"
 #include "Adc.h"
 #include "AdcChannel.h"
 #include "VescMotorController.h"
 #include "PIDController.h"
+#include "trace.h"
+
+static const int __attribute__((unused)) g_DebugZones = ZONE_ERROR | ZONE_WARNING | ZONE_VERBOSE | ZONE_INFO;
 
 extern app::Mpu* g_mpu;
-extern dev::RealTimeDebugInterface* g_RTTerminal;
 extern app::VescMotorController* g_motorCtrl;
 
 // Get any GPIO you want. You can access them by their name (DESCRIPTION)
@@ -36,17 +37,17 @@ dev::PIDController pid1(setValue1,
 
 void setup(void)
 {
-    g_RTTerminal->printf("Hi Jakob. Here is some setup code\n");
-    g_RTTerminal->printf("Turn the motor off, first\n");
+    Trace(ZONE_INFO, "Hi Jakob. Here is some setup code\n");
+    Trace(ZONE_INFO, "Turn the motor off, first\n");
     g_motorCtrl->setTorque(0.0);
 
-    g_RTTerminal->printf("Wait some ms\n");
+    Trace(ZONE_INFO, "Wait some ms\n");
     os::ThisTask::sleep(std::chrono::milliseconds(5));
 
-    g_RTTerminal->printf("Wait some s\n");
+    Trace(ZONE_INFO, "Wait some s\n");
     os::ThisTask::sleep(std::chrono::seconds(5));
 
-    g_RTTerminal->printf("Let some LEDs blink\n");
+    Trace(ZONE_INFO, "Let some LEDs blink\n");
     led10 = true;
     led3 = false;
     os::ThisTask::sleep(std::chrono::milliseconds(500));
@@ -62,18 +63,18 @@ void setup(void)
     float voltagePoti1 = poti1.getVoltage();
     uint32_t valuePoti1 = poti1.getValue();
 
-    g_RTTerminal->printf("Poti1 measures %d mV. This is an absolute value of %d\n",
-                         static_cast<uint32_t>(voltagePoti1 * 1000), valuePoti1);
-    g_RTTerminal->printf("Unfortunately, this trace interface doesn't support floats.\n");
-    g_RTTerminal->printf("If you want to print a float, you have to cast it as signed or unsigned value.\n");
+    Trace(ZONE_INFO, "Poti1 measures %d mV. This is an absolute value of %d\n",
+          static_cast<uint32_t>(voltagePoti1 * 1000), valuePoti1);
+    Trace(ZONE_INFO, "Unfortunately, this trace interface doesn't support floats.\n");
+    Trace(ZONE_INFO, "If you want to print a float, you have to cast it as signed or unsigned value.\n");
 
-    g_RTTerminal->printf("\nLets try to read from the MPU6050.\n");
+    Trace(ZONE_INFO, "\nLets try to read from the MPU6050.\n");
 
     Eigen::Vector3f gravity = g_mpu->getGravity();
-    g_RTTerminal->printf("Gravity: x:%6d, y:%6d, z:%6d\n",
-                         static_cast<int32_t>(gravity.x() * 1000),
-                         static_cast<int32_t>(gravity.y() * 1000),
-                         static_cast<int32_t>(gravity.z() * 1000));
+    Trace(ZONE_INFO, "Gravity: x:%6d, y:%6d, z:%6d\n",
+          static_cast<int32_t>(gravity.x() * 1000),
+          static_cast<int32_t>(gravity.y() * 1000),
+          static_cast<int32_t>(gravity.z() * 1000));
 
     //setup PID Controller. It needs the sample time of our loop function
     pid1.setSampleTime(std::chrono::milliseconds(5));

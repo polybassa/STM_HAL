@@ -16,9 +16,6 @@
 #include "PhaseCurrentSensor.h"
 #include "trace.h"
 #include <algorithm>
-#include "RealTimeDebugInterface.h"
-
-extern dev::RealTimeDebugInterface* g_RTTerminal;
 
 static const int __attribute__((unused)) g_DebugZones = ZONE_ERROR | ZONE_WARNING | ZONE_VERBOSE | ZONE_INFO;
 
