@@ -13,6 +13,14 @@
  *  You should have received a copy of the GNU General Public License
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>. */
 
+#ifndef SOURCES_PMD_TIMHALLDECODER_INTERRUPTS_H_
+#define SOURCES_PMD_TIMHALLDECODER_INTERRUPTS_H_
+
+#define HALLDECODER_TIM3_INTERRUPT_ENABLED false
+#define HALLDECODER_TIM4_INTERRUPT_ENABLED true
+
+#endif /* SOURCES_PMD_TIMHALLDECODER_INTERRUPTS_H_ */
+
 #ifndef SOURCES_PMD_TIMHALLDECODER_CONFIG_DESCRIPTION_H_
 #define SOURCES_PMD_TIMHALLDECODER_CONFIG_DESCRIPTION_H_
 

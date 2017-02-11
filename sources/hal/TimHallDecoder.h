@@ -25,6 +25,7 @@
 
 extern "C" {
 void TIM3_IRQHandler(void);
+void TIM4_IRQHandler(void);
 }
 
 namespace hal
@@ -85,6 +86,7 @@ private:
     friend class Factory<HallDecoder>;
     friend struct dev::SensorBLDC;
     friend void ::TIM3_IRQHandler(void);
+    friend void ::TIM4_IRQHandler(void);
 };
 
 template<>

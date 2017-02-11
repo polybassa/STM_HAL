@@ -32,11 +32,16 @@ VPATH+=${RTOS_SOURCE_DIR}
 VPATH+=${RTOS_SOURCE_DIR}/portable/MemMang
 VPATH+=${RTOS_SOURCE_DIR}/portable/GCC/ARM_CM4F
 VPATH+=${ROOT}/libraries/CMSIS/Source
+VPATH+=${ROOT}/libraries/CMSIS/Device/ST/STM32F30x/Source
+VPATH+=${ROOT}/libraries/CMSIS/Device/ST/STM32F30x/Source/Templates
 VPATH+=${ROOT}/libraries/STM32F30x_StdPeriph_Driver/src
+VPATH+=${ROOT}/libraries/Filters-master
 
 VPATH+=${ROOT}/libraries/SystemView_Src_V240a/SEGGER
 VPATH+=${ROOT}/libraries/SystemView_Src_V240a/OS
 VPATH+=${ROOT}/libraries/SystemView_Src_V240a/Config
+
+VPATH+=${ROOT}/libraries/VESC
 
 VPATH+=${ROOT}/device
 
@@ -63,8 +68,11 @@ IPATH+=${ROOT}/definitions
 IPATH+=${RTOS_SOURCE_DIR}/include
 IPATH+=${RTOS_SOURCE_DIR}/portable/GCC/ARM_CM4F
 IPATH+=${ROOT}/libraries/CMSIS/Include
+IPATH+=${ROOT}/libraries/CMSIS/Device/ST/STM32F30x/Include
 IPATH+=${ROOT}/libraries/STM32F30x_StdPeriph_Driver/inc
 IPATH+=${ROOT}/libraries
+IPATH+=${ROOT}/libraries/VESC
+IPATH+=${ROOT}/libraries/Filters-master
 
 IPATH+=${ROOT}/libraries/SystemView_Src_V240a/SEGGER
 IPATH+=${ROOT}/libraries/SystemView_Src_V240a/OS
@@ -82,35 +90,36 @@ ${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/main.o
 ${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/versionfile.o
 
 # HAL Layer
-#${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/Adc.o
-#${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/AdcChannel.o
-#${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/AdcWithDma.o
+${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/Adc.o
+${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/AdcChannel.o
+${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/AdcWithDma.o
 #${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/CRC.o
-#${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/Dma.o
+${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/Dma.o
 ${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/Exti.o
 ${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/Gpio.o
 ${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/I2c.o
+${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/Comp.o
 #${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/Rtc.o
 #${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/Spi.o
 #${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/SpiWithDma.o
-#${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/Tim.o
-#${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/TimHalfBridge.o
-#${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/TimHallDecoder.o
-#${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/TimHallMeter.o
-#${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/TimPwm.o
+${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/Tim.o
+${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/TimHalfBridge.o
+${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/TimHallDecoder.o
+${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/TimHallMeter.o
+${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/TimPwm.o
 ${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/Usart.o
 #${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/UsartWithDma.o
-#${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/PhaseCurrentSensor.o
+${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/PhaseCurrentSensor.o
 
 # DEV Layer
-#${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/Battery.o
+${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/Battery.o
 ${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/DebugInterface.o
 #${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/Light.o
-#${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/PIDController.o
-#${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/TemperatureSensor.o
-#${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/TemperatureSensor_Internal.o
-#${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/TemperatureSensor_NTC.o
-#${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/TimSensorBldc.o
+${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/PIDController.o
+${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/TemperatureSensor.o
+${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/TemperatureSensor_Internal.o
+${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/TemperatureSensor_NTC.o
+${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/TimSensorBldc.o
 
 # OS Layer
 ${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/CountingSemaphore.o
@@ -125,7 +134,7 @@ ${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/TaskInterruptable.o
 # App Layer
 #${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/BatteryObserver.o
 #${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/MotorController.o
-#${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/DRV8302MotorController.o
+${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/DRV8302MotorController.o
 ${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/Mpu.o 
 
 # eMPL Driver
@@ -148,9 +157,9 @@ ${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/log_stm32.o ## Remove from build only for l
 #${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/TestLed.o
 #${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/TestRtc.o
 #${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/TestSleep.o
-${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/TestGpio.o
+#${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/TestGpio.o
 
-#${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/TestDRV8302.o
+${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/TestDRV8302.o
 
 # device
 ${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/startup_stm32f30x.o
@@ -173,6 +182,8 @@ ${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/stm32f30x_tim.o
 ${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/stm32f30x_adc.o
 ${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/stm32f30x_crc.o
 ${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/stm32f30x_i2c.o
+${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/stm32f30x_comp.o
+
 
 # freeRTOS
 ${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/croutine.o

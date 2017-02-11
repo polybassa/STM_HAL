@@ -29,11 +29,21 @@ using hal::Tim;
 static constexpr float M_PI = 3.14159265358979323846f;
 #endif
 
+#if HALLDECODER_TIM3_INTERRUPT_ENABLED
 extern "C" void TIM3_IRQHandler(void)
 {
     constexpr const auto& hallDecoder = Factory<HallDecoder>::get<HallDecoder::BLDC_DECODER>();
     hallDecoder.interruptHandler();
 }
+#endif
+
+#if HALLDECODER_TIM4_INTERRUPT_ENABLED
+extern "C" void TIM4_IRQHandler(void)
+{
+    constexpr const auto& hallDecoder = Factory<HallDecoder>::get<HallDecoder::BLDC_DECODER>();
+    hallDecoder.interruptHandler();
+}
+#endif
 
 void HallDecoder::interruptHandler(void) const
 {
@@ -183,8 +193,15 @@ void HallDecoder::initialize(void) const
     TIM_ClearFlag(mTim.getBasePointer(), TIM_IT_CC1 | TIM_IT_CC2 | TIM_IT_CC3);
     TIM_ITConfig(mTim.getBasePointer(), TIM_IT_CC1 | TIM_IT_CC2 | TIM_IT_CC3, ENABLE);
 
+#if HALLDECODER_TIM3_INTERRUPT_ENABLED
     NVIC_SetPriority(IRQn_Type::TIM3_IRQn, 6);
     NVIC_EnableIRQ(IRQn_Type::TIM3_IRQn);
+#endif
+
+#if HALLDECODER_TIM4_INTERRUPT_ENABLED
+    NVIC_SetPriority(IRQn_Type::TIM4_IRQn, 6);
+    NVIC_EnableIRQ(IRQn_Type::TIM4_IRQn);
+#endif
 }
 
 constexpr const std::array<const HallDecoder,
