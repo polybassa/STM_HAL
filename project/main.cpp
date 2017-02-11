@@ -39,6 +39,7 @@
 #include "AdcWithDma.h"
 #include "CRC.h"
 #include "I2c.h"
+#include "Comp.h"
 
 /* DEV LAYER INLCUDES */
 #include "TimSensorBldc.h"
@@ -47,56 +48,49 @@
 /* APP LAYER INLCUDES */
 #include "BatteryObserver.h"
 #include "DRV8302MotorController.h"
+#include "Mpu.h"
 
 /* GLOBAL VARIABLES */
 static const int __attribute__((used)) g_DebugZones = ZONE_ERROR | ZONE_WARNING | ZONE_VERBOSE | ZONE_INFO;
 extern char _version_start;
 extern char _version_end;
-
 const std::string VERSION(&_version_start, (&_version_end - &_version_start));
 
 app::DRV8302MotorController* g_motorCtrl = nullptr;
-
-void initializePowerSupply(void)
-{
-    constexpr auto& supply5V0 = hal::Factory<hal::Gpio>::get<hal::Gpio::ENABLE_5V0_SUPPLY>();
-    constexpr auto& supply5V8 = hal::Factory<hal::Gpio>::get<hal::Gpio::ENABLE_5V8_SUPPLY>();
-
-    supply5V0 = true;
-    supply5V8 = true;
-}
+app::Mpu* g_Mpu = nullptr;
 
 int main(void)
 {
     hal::initFactory<hal::Factory<hal::Gpio> >();
-    hal::initFactory<hal::Factory<hal::Tim> >();
-    hal::initFactory<hal::Factory<hal::HallDecoder> >();
-    hal::initFactory<hal::Factory<hal::HallMeter> >();
-    hal::initFactory<hal::Factory<hal::HalfBridge> >();
-    hal::initFactory<hal::Factory<hal::Pwm> >();
-    hal::initFactory<hal::Factory<hal::Exti> >();
-    hal::initFactory<hal::Factory<hal::Dma> >();
-    hal::initFactory<hal::Factory<hal::Usart> >();
-    hal::initFactory<hal::Factory<hal::UsartWithDma> >();
-    hal::initFactory<hal::Factory<hal::Spi> >();
-    hal::initFactory<hal::Factory<hal::SpiWithDma> >();
-    hal::initFactory<hal::Factory<hal::Rtc> >();
-    hal::initFactory<hal::Factory<hal::Adc> >();
-    hal::initFactory<hal::Factory<hal::Adc::Channel> >();
-    hal::initFactory<hal::Factory<hal::AdcWithDma> >();
-    hal::initFactory<hal::Factory<hal::PhaseCurrentSensor> >();
-    hal::initFactory<hal::Factory<hal::Crc> >();
-    hal::initFactory<hal::Factory<hal::I2c> >();
+     hal::initFactory<hal::Factory<hal::Tim> >();
+     hal::initFactory<hal::Factory<hal::HallDecoder> >();
+     hal::initFactory<hal::Factory<hal::HallMeter> >();
+     hal::initFactory<hal::Factory<hal::HalfBridge> >();
+     hal::initFactory<hal::Factory<hal::Pwm> >();
+     hal::initFactory<hal::Factory<hal::Exti> >();
+     hal::initFactory<hal::Factory<hal::Dma> >();
+     hal::initFactory<hal::Factory<hal::Usart> >();
+     hal::initFactory<hal::Factory<hal::UsartWithDma> >();
+     hal::initFactory<hal::Factory<hal::Spi> >();
+     hal::initFactory<hal::Factory<hal::SpiWithDma> >();
+     hal::initFactory<hal::Factory<hal::Rtc> >();
+     hal::initFactory<hal::Factory<hal::Adc> >();
+     hal::initFactory<hal::Factory<hal::Adc::Channel> >();
+     hal::initFactory<hal::Factory<hal::AdcWithDma> >();
+     hal::initFactory<hal::Factory<hal::PhaseCurrentSensor>> ();
+     hal::initFactory<hal::Factory<hal::Crc> >();
+     hal::initFactory<hal::Factory<hal::I2c> >();
+     hal::initFactory<hal::Factory<hal::Comp> >();
 
-    initializePowerSupply();
-
-    TraceInit();
-    Trace(ZONE_INFO, "Version: %c \r\n", &_version_start);
+     TraceInit();
+     Trace(ZONE_INFO, "Version: %c \r\n", &_version_start);
 
     os::ThisTask::sleep(std::chrono::milliseconds(10));
-    dev::Battery* mBattery = new dev::Battery();
+    //g_Mpu = new app::Mpu();
 
-    g_motorCtrl = new app::DRV8302MotorController( dev::Factory<dev::SensorBLDC>::get<dev::SensorBLDC::BLDC>(), *mBattery, 3.5, 3);
+    dev::Battery mBattery;
+
+     g_motorCtrl = new app::DRV8302MotorController( dev::Factory<dev::SensorBLDC>::get<dev::SensorBLDC::BLDC>(), mBattery, 200000, 80000);
 
     os::Task::startScheduler();
 

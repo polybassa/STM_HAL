@@ -17,10 +17,9 @@
 #define SOURCES_PMD_COMP_H_
 
 #include <cstdint>
-#include <limits>
 #include <array>
-#include <functional>
 #include "stm32f30x_comp.h"
+#include "stm32f30x_rcc.h"
 #include "hal_Factory.h"
 
 namespace hal
@@ -58,6 +57,7 @@ class Factory<Comp>
 
     Factory(void)
     {
+        RCC_APB2PeriphClockCmd(RCC_APB2Periph_SYSCFG, ENABLE);
         for (const Comp& comp : Container) {
             comp.initialize();
         }

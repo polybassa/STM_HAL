@@ -42,6 +42,10 @@ static dev::RealTimeDebugInterface& terminal = dev::RealTimeDebugInterface::inst
         terminal.printStartupMessage(); \
 } while (0)
 
+#define TraceLight(...) do { \
+        terminal.printf(__VA_ARGS__); \
+} while (0)
+
 #else
 #define Trace(ZONE, ...)
 #define TraceInit()

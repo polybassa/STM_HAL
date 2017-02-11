@@ -47,11 +47,12 @@ class DRV8302MotorController final :
 
     os::Queue<float, 1> mSetTorqueQueue;
 
-    static constexpr std::chrono::milliseconds controllerInterval = std::chrono::milliseconds(5);
+    static constexpr std::chrono::milliseconds controllerInterval = std::chrono::milliseconds(4);
 
     void motorControllerTaskFunction(const bool&);
     void updatePwmOutput(void);
     void updateQuadrant(void);
+    void adjustControllerLimits(void);
 
 public:
     DRV8302MotorController(const dev::SensorBLDC & motor, const dev::Battery & battery, const float Kp,

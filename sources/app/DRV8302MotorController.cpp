@@ -43,11 +43,11 @@ DRV8302MotorController::DRV8302MotorController(const dev::SensorBLDC& motor,
                 Kp,
                 Ki,
                 static_cast<const float>(0.0),
-                dev::PIDController::ControlDirection::REVERSE),
+                dev::PIDController::ControlDirection::DIRECT),
     mSetTorqueQueue()
 {
     mController.setSampleTime(controllerInterval);
-    mController.setOutputLimits(-1.5, 1.5);
+    mController.setOutputLimits(-100000, 100000);
     mController.setMode(dev::PIDController::ControlMode::AUTOMATIC);
     setTorque(0.00001);
     mSetTorque = 0.00001;
@@ -81,38 +81,78 @@ void DRV8302MotorController::motorControllerTaskFunction(const bool& join)
         }
 
         mCurrentTorque = mMotor.getActualTorqueInNewtonMeter();
-        mController.compute();
 
+        adjustControllerLimits();
+
+#if 1
+        mController.compute();
+#else
+        mOutputTorque = mSetTorque * 1000;
+#endif
         updatePwmOutput();
         updateQuadrant();
 
-        Trace(ZONE_INFO, "%10d\t"
-              "Soll: %5d\t"
-              "Out: %5d\t"
-              "Ist: %5d\t"
-              "PWM: %5d\t"
-              "RPS: %5d\t"
-              "CDIR: %s\t"
-              "SDIR: %s\t"
-              "\n",
-              os::Task::getTickCount(),
-              static_cast<int32_t>(mSetTorque * 1000),
-              static_cast<int32_t>(mOutputTorque * 1000),
-              static_cast<int32_t>(mCurrentTorque * 1000),
-              static_cast<int32_t>(mMotor.getActualPulsWidthPerMill()),
-              static_cast<int32_t>(mMotor.getActualRPS()),
-              mMotor.getActualDirection() == dev::SensorBLDC::Direction::FORWARD ? "F" : "B",
-              mMotor.getSetDirection() == dev::SensorBLDC::Direction::FORWARD ? "F" : "B"
-              );
+        TraceLight(
+                   "tick: %5d\t"
+                   "Soll: %5d\t"
+                   "Out: %5d\t"
+                   "Ist: %5d\t"
+                   "PWM: %5d\t"
+                   "RPS: %5d\t"
+                   //"periode: %5d\t"
+                   //"samples: %5d\t"
+                   "U[mV]: %5d\t"
+                   //"Phase I: %5d\t"
+                   "CDIR: %s\t"
+                   "SDIR: %s\t"
+                   "\n",
+                   os::Task::getTickCount() % 1000,
+                   static_cast<int32_t>(mSetTorque * 1000),
+                   static_cast<int32_t>(mOutputTorque * 1000),
+                   static_cast<int32_t>(mCurrentTorque * 1000),
+                   static_cast<int32_t>(mMotor.getActualPulsWidthPerMill()),
+                   static_cast<int32_t>(mMotor.getActualRPS()),
+                   //mMotor.mHBridge.mTim.getPeriode(),
+                   //mMotor.mPhaseCurrentSensor.getNumberOfMeasurementsForPhaseCurrentValue()
+                   static_cast<int32_t>(mBattery.getVoltage() * 1000),
+                   //static_cast<int32_t>(mMotor.mPhaseCurrentSensor.getCurrentVoltage() * 1000),
+                   mMotor.getActualDirection() == dev::SensorBLDC::Direction::FORWARD ? "F" : "B",
+                   mMotor.getSetDirection() == dev::SensorBLDC::Direction::FORWARD ? "F" : "B"
+                   );
 
         mMotor.checkMotor();
         mPhaseCurrentValueAvailable.take(controllerInterval);
     } while (!join);
 }
 
+void DRV8302MotorController::adjustControllerLimits(void)
+{
+    const float MAXIMUM_VOLTAGE = mBattery.getVoltage();
+    static constexpr const float MAXIMUM_PULSWIDTH = 1000.0; //because of pwm per mill
+    const float MAXIMUM_CONTROLLER_OUTPUT = MAXIMUM_VOLTAGE * MAXIMUM_PULSWIDTH / mMotor.mMotorCoilResistance;
+
+    /*
+     * Formula for suppression factor = -0.03 / (abs(x) - 0.05)^2 + 1.1
+     * suppression factor in range 0.01 to 1
+     */
+
+    float supressionFactor = -0.03 / std::pow(std::abs(mSetTorque) + 0.05, 2.0) + 1.1;
+
+    //check bounds
+    supressionFactor = std::min(1.0f, std::max(0.01f, supressionFactor));
+
+    mController.setOutputLimits(0.0 - (MAXIMUM_CONTROLLER_OUTPUT * supressionFactor),
+                                MAXIMUM_CONTROLLER_OUTPUT * supressionFactor);
+
+    static const float initial_P = mController.getKp();
+    static const float initial_I = mController.getKi();
+
+    mController.setTunings(initial_P * supressionFactor, initial_I * supressionFactor, 0);
+}
+
 void DRV8302MotorController::updateQuadrant(void)
 {
-    if (mOutputTorque > 0) {
+    if (mOutputTorque < 0) {
         mMotor.setDirection(dev::SensorBLDC::Direction::FORWARD);
     } else {
         mMotor.setDirection(dev::SensorBLDC::Direction::BACKWARD);
@@ -121,13 +161,13 @@ void DRV8302MotorController::updateQuadrant(void)
 
 void DRV8302MotorController::updatePwmOutput(void)
 {
-    const float drivingCurrentInMotor = std::abs(mOutputTorque) / mMotor.mMotorConstant;
-    const float deltaVoltage = drivingCurrentInMotor * mMotor.mMotorCoilResistance;
-    const float voltageInductionMotor = std::abs(mMotor.getActualRPS() * 60) / mMotor.mMotorGeneratorConstant;
-    const float voltageInputMotor = voltageInductionMotor + deltaVoltage;
-    mSetPwm = (voltageInputMotor / mBattery.getVoltage()) * 1000.0;
+    /*
+       dM / dPWM = U / R
+       dPWM / dM = R / U
+       dPWM = R * dM / U
+     */
 
-    mMotor.setPulsWidthInMill(static_cast<int32_t>(mSetPwm));
+    mMotor.setPulsWidthInMill(static_cast<int32_t>(mMotor.mMotorCoilResistance * mOutputTorque / mBattery.getVoltage()));
 }
 
 void DRV8302MotorController::setTorque(const float setValue)

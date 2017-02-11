@@ -44,6 +44,7 @@ struct PhaseCurrentSensor {
     void setNumberOfMeasurementsForPhaseCurrentValue(uint32_t) const;
     void enable(void) const;
     void disable(void) const;
+    size_t getNumberOfMeasurementsForPhaseCurrentValue(void) const;
 
 private:
     constexpr PhaseCurrentSensor(const enum Description&  desc,
@@ -59,10 +60,8 @@ private:
     const HalfBridge& mHBridge;
     const AdcWithDma& mAdcWithDma;
     const TIM_OCInitTypeDef mAdcTrgoConfiguration;
-    static const constexpr size_t mFilterWidth = 128;
 
     mutable float mPhaseCurrentValue = 0;
-    mutable float mOffsetVoltage = 1.8449707;
     mutable uint16_t mOffsetValue = 2000;
     mutable size_t mNumberOfMeasurementsForPhaseCurrentValue = MAX_NUMBER_OF_MEASUREMENTS;
 

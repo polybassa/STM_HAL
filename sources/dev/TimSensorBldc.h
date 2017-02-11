@@ -69,6 +69,10 @@ struct SensorBLDC {
     const float mMotorGeneratorConstant = 0.0;
 
     const hal::PhaseCurrentSensor& mPhaseCurrentSensor;
+    const hal::HalfBridge& mHBridge;
+    const hal::HallDecoder& mHallDecoder;
+    const hal::HallMeter& mHallMeter1;
+    const hal::HallMeter& mHallMeter2;
 
 private:
     constexpr SensorBLDC(const enum Description&        desc,
@@ -90,11 +94,6 @@ private:
         mHallMeter1(hallMeter1),
         mHallMeter2(hallMeter2)
     {}
-
-    const hal::HalfBridge& mHBridge;
-    const hal::HallDecoder& mHallDecoder;
-    const hal::HallMeter& mHallMeter1;
-    const hal::HallMeter& mHallMeter2;
 
     mutable Direction mSetDirection = Direction::FORWARD;
     mutable Direction mUpdateSetDirection = Direction::FORWARD;
