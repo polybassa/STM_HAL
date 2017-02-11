@@ -21,6 +21,11 @@
 #define ZONE_INFO 0x00000004
 #define ZONE_VERBOSE 0x00000008
 
+#if defined(UNITTEST)
+#define Trace(ZONE, ...)
+#define TraceInit()
+#else
+
 #if defined(DEBUG)
 #include "RealTimeDebugInterface.h"
 
@@ -40,5 +45,6 @@ static dev::RealTimeDebugInterface& terminal = dev::RealTimeDebugInterface::inst
 #else
 #define Trace(ZONE, ...)
 #define TraceInit()
+#endif
 #endif
 #endif /* #ifndef _TRACE_H_ */
