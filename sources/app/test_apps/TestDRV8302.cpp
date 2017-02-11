@@ -44,11 +44,5 @@ os::TaskEndless drv8302Test("drv8302_Test", 2048, os::Task::Priority::MEDIUM, []
                                     g_motorCtrl->setTorque(torque);
 
                                     os::ThisTask::sleep(std::chrono::milliseconds(5));
-
-//                                    g_RTTerminal->printf("a %d\r\n",
-//                                                         static_cast<int32_t>(motor.mPhaseCurrentSensor.getPhaseCurrent(
-//                                                                                                                        )
-//                                                                              *
-//                                                                              1000));
                                 }
                             });

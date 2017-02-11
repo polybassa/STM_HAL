@@ -27,7 +27,7 @@ using hal::HalfBridge;
 using hal::HallDecoder;
 using hal::Tim;
 
-float SensorBLDC::getCurrentRPS(void) const
+float SensorBLDC::getActualRPS(void) const
 {
     const float maximumRPS = 70;
 
@@ -54,13 +54,13 @@ float SensorBLDC::getCurrentRPS(void) const
     }
 }
 
-float SensorBLDC::getCurrentOmega(void) const
+float SensorBLDC::getActualOmega(void) const
 {
 #ifndef M_PI
-    static constexpr float M_PI = 3.14159265358979323846f;
+    static constexpr const float M_PI = 3.14159265358979323846f;
 #endif
 
-    return getCurrentRPS() * 2 * M_PI;
+    return getActualRPS() * 2 * M_PI;
 }
 
 SensorBLDC::Direction SensorBLDC::getSetDirection(void) const
@@ -68,20 +68,53 @@ SensorBLDC::Direction SensorBLDC::getSetDirection(void) const
     return mSetDirection;
 }
 
-SensorBLDC::Direction SensorBLDC::getCurrentDirection(void) const
+SensorBLDC::Direction SensorBLDC::getActualDirection(void) const
 {
     return mCurrentDirection;
 }
 
-int32_t SensorBLDC::getPulsWidthPerMill(void) const
+int32_t SensorBLDC::getActualPulsWidthPerMill(void) const
 {
     return mHBridge.getPulsWidthPerMill();
 }
 
+void SensorBLDC::modifyPulsWidthPeriode(void) const
+{
+    //TODO make this dynamic
+
+    static const constexpr uint32_t MOTORMINPWM = 250;
+    static const constexpr uint32_t MOTORRETURNPWM = 300;       // Must be above MotorMinPWM
+    static const constexpr uint32_t MOTORSHORTPERIOD = 9000;      // Must be same as HALFBRIDGE_PERIODE in Tim_Config.h
+    static const constexpr uint32_t MOTORLONGPERIOD = 18000;      // Should be Double of ShortPWMPeriod
+    static const constexpr uint32_t PERIODSECURITYOFFSET = 6;   // Min. PWM cycles / commutation step
+
+    static constexpr const float HALL_EVENTS_PER_ROTATION = 6;
+
+    static const float maxRPS = static_cast<float>(SystemCoreClock) /
+                                (getNumberOfPolePairs() *
+                                 HALL_EVENTS_PER_ROTATION) / MOTORLONGPERIOD / PERIODSECURITYOFFSET;
+
+    if ((getActualPulsWidthPerMill() < MOTORMINPWM) && (getActualRPS() < maxRPS)) {
+        if (mHBridge.mTim.getPeriode() == MOTORSHORTPERIOD) {
+            mHBridge.mTim.setPeriode(MOTORLONGPERIOD);
+            mPhaseCurrentSensor.setNumberOfMeasurementsForPhaseCurrentValue(
+                                                                            hal::PhaseCurrentSensor::
+                                                                            MAX_NUMBER_OF_MEASUREMENTS / 2);
+        }
+    } else if ((getActualPulsWidthPerMill() > MOTORRETURNPWM) && (mHBridge.mTim.getPeriode() == MOTORLONGPERIOD)) {
+        mHBridge.mTim.setPeriode(MOTORSHORTPERIOD);
+        mPhaseCurrentSensor.setNumberOfMeasurementsForPhaseCurrentValue(
+                                                                        hal::PhaseCurrentSensor::
+                                                                        MAX_NUMBER_OF_MEASUREMENTS);
+    }
+}
+
 void SensorBLDC::setPulsWidthInMill(int32_t value) const
 {
-    mHBridge.setPulsWidthPerMill(std::abs(value));
-    mPhaseCurrentSensor.setPulsWidthForTriggerPerMill(std::abs(value));
+    uint32_t absVal = std::abs(value);
+
+    mHBridge.setPulsWidthPerMill(absVal);
+    mPhaseCurrentSensor.setPulsWidthForTriggerPerMill(absVal);
 }
 
 void SensorBLDC::setDirection(const Direction dir) const
@@ -129,6 +162,12 @@ size_t SensorBLDC::getPreviousHallPosition(const size_t position) const
         static const size_t positions[] = {0, 3, 6, 2, 5, 1, 4, 0};
         return positions[position];
     }
+}
+
+void SensorBLDC::calibrate(void) const
+{
+    mHBridge.setupOutputsForCalibration();
+    mPhaseCurrentSensor.calibrate();
 }
 
 void SensorBLDC::computeDirection(void) const
@@ -183,10 +222,15 @@ void SensorBLDC::commutate(const size_t hallPosition) const
     }
 }
 
-float SensorBLDC::getPhaseCurrent(void) const
+float SensorBLDC::getActualPhaseCurrent(void) const
 {
     return mSetDirection == Direction::FORWARD ? 0.0 -
            mPhaseCurrentSensor.getPhaseCurrent() : mPhaseCurrentSensor.getPhaseCurrent();
+}
+
+float SensorBLDC::getActualTorqueInNewtonMeter(void) const
+{
+    return getActualPhaseCurrent() * mMotorConstant;
 }
 
 void SensorBLDC::manualCommutation(const size_t hallPosition) const
@@ -307,7 +351,9 @@ void SensorBLDC::stop(void) const
 }
 
 void SensorBLDC::checkMotor(void) const
-{}
+{
+    // TODO: Add some checks for overcurrent or something like that
+}
 
 uint32_t SensorBLDC::getNumberOfPolePairs(void) const
 {

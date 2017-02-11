@@ -24,18 +24,16 @@ using hal::Tim;
 
 void HalfBridge::setPulsWidthPerMill(uint32_t value) const
 {
-    static constexpr const uint32_t maxValue = 1000;
-    static constexpr const uint32_t minValue = 0;
-    if (value > maxValue) {
-        value = maxValue;
+    if (value > MAXIMAL_PWM_IN_MILL) {
+        value = MAXIMAL_PWM_IN_MILL;
     }
 
-    if (value < minValue) {
-        value = minValue;
+    if (value < MINIMAL_PWM_IN_MILL) {
+        value = MINIMAL_PWM_IN_MILL;
     }
     mPulsWidth = value;
 
-    static const float scale = static_cast<float>(mTim.mConfiguration.TIM_Period) / static_cast<float>(maxValue);
+    static const float scale = static_cast<float>(mTim.getPeriode()) / static_cast<float>(MAXIMAL_PWM_IN_MILL);
 
     value = static_cast<uint32_t>(static_cast<float>(value) * scale);
 
@@ -155,6 +153,13 @@ void HalfBridge::enableTimerCommunication(void) const
 void HalfBridge::disableTimerCommunication(void) const
 {
     TIM_SelectCOM(mTim.getBasePointer(), DISABLE);
+}
+
+void HalfBridge::setupOutputsForCalibration(void) const
+{
+    TIM_SetCompare1(mTim.getBasePointer(), 0);
+    TIM_SetCompare2(mTim.getBasePointer(), 0);
+    TIM_SetCompare3(mTim.getBasePointer(), 0);
 }
 
 void HalfBridge::initialize(void) const

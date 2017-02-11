@@ -54,6 +54,7 @@
 static const int __attribute__((used)) g_DebugZones = ZONE_ERROR | ZONE_WARNING | ZONE_VERBOSE | ZONE_INFO;
 extern char _version_start;
 extern char _version_end;
+
 const std::string VERSION(&_version_start, (&_version_end - &_version_start));
 
 app::DRV8302MotorController* g_motorCtrl = nullptr;
@@ -98,8 +99,9 @@ int main(void)
     Trace(ZONE_INFO, "Version: %c \r\n", &_version_start);
 
     os::ThisTask::sleep(std::chrono::milliseconds(10));
+    dev::Battery* mBattery = new dev::Battery();
 
-    g_motorCtrl = new app::DRV8302MotorController( dev::Factory<dev::SensorBLDC>::get<dev::SensorBLDC::BLDC>(), 0.5, 0.2);
+    g_motorCtrl = new app::DRV8302MotorController( dev::Factory<dev::SensorBLDC>::get<dev::SensorBLDC::BLDC>(), *mBattery, 3.5, 3);
 
     os::Task::startScheduler();
 

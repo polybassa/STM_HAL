@@ -39,10 +39,15 @@ struct PhaseCurrentSensor {
     PhaseCurrentSensor& operator=(PhaseCurrentSensor &&) = delete;
 
     float getPhaseCurrent(void) const;
+    float getCurrentVoltage(void) const;
     void registerValueAvailableSemaphore(os::Semaphore* valueAvailable) const;
     void unregisterValueAvailableSemaphore(void) const;
     void calibrate(void) const;
     void reset(void) const;
+    void setPulsWidthForTriggerPerMill(uint32_t) const;
+    void setNumberOfMeasurementsForPhaseCurrentValue(uint32_t) const;
+    void enable(void) const;
+    void disable(void) const;
 
 private:
     constexpr PhaseCurrentSensor(const enum Description&  desc,
@@ -53,24 +58,24 @@ private:
 
     void updateCurrentValue(void) const;
     void initialize(void) const;
-    void enable(void) const;
-    void disable(void) const;
-
-    void setPulsWidthForTriggerPerMill(uint32_t) const;
 
     const enum Description mDescription;
     const HalfBridge& mHBridge;
     const AdcWithDma& mAdcWithDma;
     const TIM_OCInitTypeDef mAdcTrgoConfiguration;
+    static const constexpr size_t mFilterWidth = 128;
 
-    mutable float mPhaseCurrentValue = 0.0;
+    mutable float mPhaseCurrentValue = 0;
     mutable float mOffsetVoltage = 1.8449707;
+    mutable uint16_t mOffsetValue = 2000;
+    mutable size_t mNumberOfMeasurementsForPhaseCurrentValue = MAX_NUMBER_OF_MEASUREMENTS;
+
+    mutable os::Semaphore* mValueAvailableSemaphore = nullptr;
 
     friend class Factory<PhaseCurrentSensor>;
-    friend struct dev::SensorBLDC;
 
     static std::array<
-                      std::array<uint16_t, NUMBER_OF_MEASUREMENTS_FOR_AVG>,
+                      std::array<uint16_t, MAX_NUMBER_OF_MEASUREMENTS>,
                       Description::__ENUM__SIZE> MeasurementValueBuffer;
 };
 

@@ -278,7 +278,7 @@ static constexpr const std::array<const Gpio, Gpio::__ENUM__SIZE + 1> Container 
            GPIO_InitTypeDef { GPIO_Pin_13, GPIO_Mode_OUT, GPIO_Speed_50MHz, GPIO_OType_PP, GPIO_PuPd_DOWN }),
       Gpio(Gpio::LED_8,
            GPIOE_BASE,
-           GPIO_InitTypeDef { GPIO_Pin_14, GPIO_Mode_AF, GPIO_Speed_50MHz, GPIO_OType_PP, GPIO_PuPd_NOPULL },
+           GPIO_InitTypeDef { GPIO_Pin_14, GPIO_Mode_OUT, GPIO_Speed_50MHz, GPIO_OType_PP, GPIO_PuPd_NOPULL },
            GPIO_PinSource14, //TODO Configure as Output. Currently used for Trigger of ADC of PhaseCurrentMeasurement
            GPIO_AF_2),
       Gpio(Gpio::LED_6,

@@ -44,23 +44,29 @@ struct SensorBLDC {
     SensorBLDC& operator=(const SensorBLDC&) = delete;
     SensorBLDC& operator=(SensorBLDC &&) = delete;
 
-    float getCurrentRPS(void) const;
-    float getCurrentOmega(void) const;
-    Direction getCurrentDirection(void) const;
+    float getActualRPS(void) const;
+    float getActualOmega(void) const;
+    Direction getActualDirection(void) const;
+    int32_t getActualPulsWidthPerMill(void) const;
+    float getActualPhaseCurrent(void) const;
+    float getActualTorqueInNewtonMeter(void) const;
+
+    uint32_t getNumberOfPolePairs(void) const;
+
     Direction getSetDirection(void) const;
     void setDirection(const Direction) const;
-    int32_t getPulsWidthPerMill(void) const;
-    uint32_t getNumberOfPolePairs(void) const;
+
+    void calibrate(void) const;
     void setPulsWidthInMill(int32_t) const;
     void start(void) const;
     void stop(void) const;
     void checkMotor(void) const;
-    float getPhaseCurrent(void) const;
 
     const enum Description mDescription;
 
     const float mMotorConstant = 0.0;
     const float mMotorCoilResistance = 0.0;
+    const float mMotorGeneratorConstant = 0.0;
 
     const hal::PhaseCurrentSensor& mPhaseCurrentSensor;
 
@@ -68,6 +74,7 @@ private:
     constexpr SensorBLDC(const enum Description&        desc,
                          const float                    motorConstant,
                          const float                    motorCoilResistance,
+                         const float                    motorGeneratorConstant,
                          const hal::PhaseCurrentSensor& currentSensor,
                          const hal::HalfBridge&         hBridge,
                          const hal::HallDecoder&        hallDecoder,
@@ -76,6 +83,7 @@ private:
         mDescription(desc),
         mMotorConstant(motorConstant),
         mMotorCoilResistance(motorCoilResistance),
+        mMotorGeneratorConstant(motorGeneratorConstant),
         mPhaseCurrentSensor(currentSensor),
         mHBridge(hBridge),
         mHallDecoder(hallDecoder),
@@ -101,6 +109,7 @@ private:
     void commutate(const size_t hallPosition) const;
     void disableManualCommutation(const size_t hallPosition) const;
     void enableManualCommutation(void) const;
+    void modifyPulsWidthPeriode(void) const;
 
     size_t getNextHallPosition(const size_t position) const;
     size_t getPreviousHallPosition(const size_t position) const;
@@ -117,6 +126,7 @@ class Factory<SensorBLDC>
                      SensorBLDC::BLDC,
                      0.065,
                      0.33,
+                     144,
                      hal::Factory<hal::PhaseCurrentSensor>::get<hal::PhaseCurrentSensor::I_TOTAL_FB>(),
                      hal::Factory<hal::HalfBridge>::get<hal::HalfBridge::BLDC_PWM>(),
                      hal::Factory<hal::HallDecoder>::get<hal::HallDecoder::BLDC_DECODER>(),

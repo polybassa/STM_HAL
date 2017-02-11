@@ -39,8 +39,13 @@ struct AdcWithDma {
     void startConversion(const std::array<uint16_t, n>& data, std::function<void(void)> callBack) const;
     void stopConversion(void) const;
 
+    void startConversion(uint16_t const* const data, const size_t length, os::Semaphore* dataAvailableSemaphore) const;
+    void startConversion(uint16_t const* const data, const size_t length, std::function<void(void)> callBack) const;
+
     float getVoltage(const uint16_t) const;
     float getVoltage(const float) const;
+
+    uint32_t getAdcSampleTime(void) const;
 
 private:
     constexpr AdcWithDma(const Adc::Channel& adcChannel,
@@ -54,10 +59,6 @@ private:
     const Dma& mDma;
 
     void initialize(void) const;
-    void startConversion(uint16_t const* const data, const size_t length, os::Semaphore* dataAvailableSemaphore) const;
-    void startConversion(uint16_t const* const data, const size_t length, std::function<void(void)> callBack) const;
-
-    friend struct PhaseCurrentSensor;
     friend class Factory<AdcWithDma>;
 };
 

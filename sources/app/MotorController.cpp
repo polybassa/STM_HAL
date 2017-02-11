@@ -83,7 +83,7 @@ void MotorController::motorControllerTaskFunction(const bool& join)
         if (mSetTorqueQueue.receive(newSetTorque, 0)) {
             mSetTorque = newSetTorque;
         }
-        mCurrentOmega = mMotor.getCurrentOmega();
+        mCurrentOmega = mMotor.getActualOmega();
         updateCurrentTorque();
         mController.compute();
         updatePwmOutput();
@@ -107,7 +107,8 @@ void MotorController::updateCurrentTorque(void)
      * P = U * I
      * I = Omega * MotorConstant
      */
-    const float voltageInputMotor = (static_cast<float>(mMotor.getPulsWidthPerMill()) / 1000.0) * mBattery.getVoltage();
+    const float voltageInputMotor =
+        (static_cast<float>(mMotor.getActualPulsWidthPerMill()) / 1000.0) * mBattery.getVoltage();
     const float voltageInductionMotor = mCurrentOmega * mMotorConstant;
     const float deltaVoltage = voltageInputMotor - voltageInductionMotor; // bessere Formel mit Induktivitaet und Frequenz verwenden
     const float drivingCurrentInMotor = deltaVoltage / mMotorCoilResistance;
@@ -131,5 +132,5 @@ void MotorController::setTorque(const float setValue)
 
 float MotorController::getCurrentRPS(void) const
 {
-    return mMotor.getCurrentRPS();
+    return mMotor.getActualRPS();
 }
