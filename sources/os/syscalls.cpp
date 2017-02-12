@@ -510,7 +510,6 @@ ssize_t _write_r(struct _reent* r, int file, const void* buf, size_t nbyte)
 #include "trace.h"
 void _console_write_r(const void* buf, const size_t len)
 {
-    terminal.send(reinterpret_cast<const char*>(buf), len);
-    terminal.send("\r", 1);
+    terminal.printf("%s\r\n", reinterpret_cast<const char*>(buf));
 }
 #endif
