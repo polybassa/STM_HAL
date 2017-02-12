@@ -28,6 +28,7 @@ VPATH+=${ROOT}/sources/hal
 ####################################DebugInterface############################################
 
 ${BINDIR}/DebugInterface_ut.bin: DEFINES+=-DDEBUG
+${BINDIR}/DebugInterface_ut.bin: DEFINES+=-DUNITTEST
 ${BINDIR}/DebugInterface_ut.bin: ${OBJDIR}/DebugInterface_ut.o 
 ${BINDIR}/DebugInterface_ut.bin: ${OBJDIR}/DebugInterface.o
 ${BINDIR}/DebugInterface_ut.bin: ${OBJDIR}/Mutex.o

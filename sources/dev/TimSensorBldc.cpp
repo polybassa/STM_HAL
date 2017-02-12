@@ -16,9 +16,6 @@
 #include <cmath>
 #include "TimSensorBldc.h"
 #include "trace.h"
-#include "RealTimeDebugInterface.h"
-
-extern dev::RealTimeDebugInterface* g_RTTerminal;
 
 static const int __attribute__((unused)) g_DebugZones = ZONE_ERROR | ZONE_WARNING | ZONE_VERBOSE | ZONE_INFO;
 
@@ -146,9 +143,7 @@ SensorBLDC::Direction SensorBLDC::getCurrentDirection(const size_t lastPosition,
         return Direction::FORWARD;
     }
 
-    // This should never happen
-    //Trace(ZONE_ERROR, "Invalid current motor direction!!");
-    g_RTTerminal->printf("ERROR IN GET DIRECTION\r\n");
+    Trace(ZONE_ERROR, "ERROR IN GET DIRECTION\r\n");
 
     return Direction::FORWARD;
 }

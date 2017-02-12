@@ -21,25 +21,30 @@
 #define ZONE_INFO 0x00000004
 #define ZONE_VERBOSE 0x00000008
 
-#if defined(DEBUG)
-#include "DebugInterface.h"
+#if defined(UNITTEST)
+#define Trace(ZONE, ...)
+#define TraceInit()
+#else
 
-static const dev::DebugInterface terminal;
+#if defined(DEBUG)
+#include "RealTimeDebugInterface.h"
+
+static dev::RealTimeDebugInterface& terminal = dev::RealTimeDebugInterface::instance();
 
 #define Trace(ZONE, ...) do { \
         if (g_DebugZones & (ZONE)) { \
-            terminal.print("%s:%u: ", __FILE__, __LINE__); \
-            terminal.print(__VA_ARGS__); \
+            terminal.printf("%s:%u: ", __FILE__, __LINE__); \
+            terminal.printf(__VA_ARGS__); \
         } \
 } while (0)
 
 #define TraceInit() do { \
-        terminal.clearTerminal(); \
         terminal.printStartupMessage(); \
 } while (0)
 
 #else
 #define Trace(ZONE, ...)
 #define TraceInit()
+#endif
 #endif
 #endif /* #ifndef _TRACE_H_ */

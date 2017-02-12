@@ -16,11 +16,8 @@
 #include "DRV8302MotorController.h"
 #include "trace.h"
 #include <cmath>
-#include "RealTimeDebugInterface.h"
 
 using app::DRV8302MotorController;
-
-extern dev::RealTimeDebugInterface* g_RTTerminal;
 
 static const int __attribute__((unused)) g_DebugZones = ZONE_ERROR | ZONE_WARNING | ZONE_VERBOSE | ZONE_INFO;
 
@@ -89,24 +86,24 @@ void DRV8302MotorController::motorControllerTaskFunction(const bool& join)
         updatePwmOutput();
         updateQuadrant();
 
-        g_RTTerminal->printf("%10d\t"
-                             "Soll: %5d\t"
-                             "Out: %5d\t"
-                             "Ist: %5d\t"
-                             "PWM: %5d\t"
-                             "RPS: %5d\t"
-                             "CDIR: %s\t"
-                             "SDIR: %s\t"
-                             "\n",
-                             os::Task::getTickCount(),
-                             static_cast<int32_t>(mSetTorque * 1000),
-                             static_cast<int32_t>(mOutputTorque * 1000),
-                             static_cast<int32_t>(mCurrentTorque * 1000),
-                             static_cast<int32_t>(mMotor.getActualPulsWidthPerMill()),
-                             static_cast<int32_t>(mMotor.getActualRPS()),
-                             mMotor.getActualDirection() == dev::SensorBLDC::Direction::FORWARD ? "F" : "B",
-                             mMotor.getSetDirection() == dev::SensorBLDC::Direction::FORWARD ? "F" : "B"
-                             );
+        Trace(ZONE_INFO, "%10d\t"
+              "Soll: %5d\t"
+              "Out: %5d\t"
+              "Ist: %5d\t"
+              "PWM: %5d\t"
+              "RPS: %5d\t"
+              "CDIR: %s\t"
+              "SDIR: %s\t"
+              "\n",
+              os::Task::getTickCount(),
+              static_cast<int32_t>(mSetTorque * 1000),
+              static_cast<int32_t>(mOutputTorque * 1000),
+              static_cast<int32_t>(mCurrentTorque * 1000),
+              static_cast<int32_t>(mMotor.getActualPulsWidthPerMill()),
+              static_cast<int32_t>(mMotor.getActualRPS()),
+              mMotor.getActualDirection() == dev::SensorBLDC::Direction::FORWARD ? "F" : "B",
+              mMotor.getSetDirection() == dev::SensorBLDC::Direction::FORWARD ? "F" : "B"
+              );
 
         mMotor.checkMotor();
         mPhaseCurrentValueAvailable.take(controllerInterval);

@@ -18,11 +18,13 @@
 
 #include "SEGGER_RTT.h"
 #include "stm32f30x_rcc.h"
+#include <utility>
 
 namespace dev
 {
-struct RealTimeDebugInterface {
-    inline RealTimeDebugInterface(void)
+class RealTimeDebugInterface
+{
+    RealTimeDebugInterface(void)
     {
         SEGGER_RTT_ConfigUpBuffer(0,
                                   nullptr,
@@ -30,6 +32,7 @@ struct RealTimeDebugInterface {
                                   0,
                                   SEGGER_RTT_MODE_NO_BLOCK_TRIM);
     }
+public:
     RealTimeDebugInterface(const RealTimeDebugInterface&) = delete;
     RealTimeDebugInterface(RealTimeDebugInterface &&) = delete;
     RealTimeDebugInterface& operator=(const RealTimeDebugInterface&) = delete;
@@ -39,6 +42,12 @@ struct RealTimeDebugInterface {
     void printf(Params && ... params)
     {
         SEGGER_RTT_printf(0, std::forward<Params>(params) ...);
+    }
+
+    static RealTimeDebugInterface& instance()
+    {
+        static RealTimeDebugInterface _instance;
+        return _instance;
     }
 
     void printStartupMessage(void)

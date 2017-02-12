@@ -17,7 +17,6 @@
 #include "trace.h"
 #include "DRV8302MotorController.h"
 #include "TimSensorBldc.h"
-#include "RealTimeDebugInterface.h"
 #include "Adc.h"
 #include "AdcWithDma.h"
 #include <chrono>
@@ -26,11 +25,8 @@
 static const int __attribute__((unused)) g_DebugZones = ZONE_ERROR | ZONE_WARNING | ZONE_VERBOSE | ZONE_INFO;
 
 extern app::DRV8302MotorController* g_motorCtrl;
-extern dev::RealTimeDebugInterface* g_RTTerminal;
 
 os::TaskEndless drv8302Test("drv8302_Test", 2048, os::Task::Priority::MEDIUM, [] (const bool&){
-                                g_RTTerminal->printStartupMessage();
-
                                 constexpr const hal::Adc::Channel& poti =
                                     hal::Factory<hal::Adc::Channel>::get<hal::Adc::Channel::NTC_MOTOR>();
 
