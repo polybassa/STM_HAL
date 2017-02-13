@@ -127,7 +127,12 @@ void VescMotorController::motorControllerTaskFunction(const bool& join)
             ::bldc_interface_get_values();
         }
         executionCounter = (executionCounter + 1) % receiveValuesPeriode;
+
+        os::ThisTask::sleep(std::chrono::milliseconds(1));
+
     } while (!join);
+
+
 }
 
 void VescMotorController::setTorque(const float setValue)

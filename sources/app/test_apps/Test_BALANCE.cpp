@@ -46,6 +46,10 @@ void setup(void)
     g_RTTerminal->printf("Wait some s\n");
     os::ThisTask::sleep(std::chrono::seconds(5));
 
+    g_RTTerminal->printf("Now we need more torque\n");
+    g_motorCtrl->setTorque(0.5);
+    os::ThisTask::sleep(std::chrono::seconds(5));
+
     g_RTTerminal->printf("Let some LEDs blink\n");
     led10 = true;
     led3 = false;
