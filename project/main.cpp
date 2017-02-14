@@ -56,7 +56,9 @@ extern char _version_start;
 extern char _version_end;
 const std::string VERSION(&_version_start, (&_version_end - &_version_start));
 
-app::VescMotorController* g_motorCtrl = nullptr;
+app::VescMotorController* g_motorCtrlL = nullptr;
+app::VescMotorController* g_motorCtrlR = nullptr;
+
 app::Mpu* g_mpu = nullptr;
 dev::RealTimeDebugInterface* g_RTTerminal;
 
@@ -100,7 +102,8 @@ int main(void)
 
     os::ThisTask::sleep(std::chrono::milliseconds(10));
 
-    g_motorCtrl = new app::VescMotorController(hal::Factory<hal::Usart>::get<hal::Usart::Description::VESC_IF>());
+    g_motorCtrlL = new app::VescMotorController(hal::Factory<hal::Usart>::get<hal::Usart::Description::VESC_IF>());
+    g_motorCtrlR = new app::VescMotorController(hal::Factory<hal::Usart>::get<hal::Usart::Description::MSCOM_IF>());
 
     g_mpu = new app::Mpu();
 
