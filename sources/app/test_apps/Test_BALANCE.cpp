@@ -11,7 +11,8 @@
 
 extern app::Mpu* g_mpu;
 extern dev::RealTimeDebugInterface* g_RTTerminal;
-extern app::VescMotorController* g_motorCtrl;
+extern app::VescMotorController* g_motorCtrlL;
+extern app::VescMotorController* g_motorCtrlR;
 
 // Get any GPIO you want. You can access them by their name (DESCRIPTION)
 constexpr const hal::Gpio& led10 = hal::Factory<hal::Gpio>::get<hal::Gpio::LED_10>();
@@ -38,7 +39,8 @@ void setup(void)
 {
     g_RTTerminal->printf("Hi Jakob. Here is some setup code\n");
     g_RTTerminal->printf("Turn the motor off, first\n");
-    g_motorCtrl->setTorque(0.0);
+    g_motorCtrlL->setTorque(0.0);
+    g_motorCtrlR->setTorque(0.0);
 
     g_RTTerminal->printf("Wait some ms\n");
     os::ThisTask::sleep(std::chrono::milliseconds(5));
@@ -47,7 +49,9 @@ void setup(void)
     os::ThisTask::sleep(std::chrono::seconds(5));
 
     g_RTTerminal->printf("Now we need more torque\n");
-    g_motorCtrl->setTorque(0.5);
+    g_motorCtrlL->setTorque(0.5);
+    g_motorCtrlR->setTorque(0.5);
+
     os::ThisTask::sleep(std::chrono::seconds(5));
 
     g_RTTerminal->printf("Let some LEDs blink\n");
@@ -99,7 +103,8 @@ void loop(void)
     pid1.compute();
 
     //update torque
-    g_motorCtrl->setTorque(outValue1);
+    g_motorCtrlL->setTorque(outValue1);
+    g_motorCtrlR->setTorque(outValue1);
 
     //has to be the same value as the PID Controller sample time
     os::ThisTask::sleep(std::chrono::milliseconds(5));

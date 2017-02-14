@@ -129,10 +129,7 @@ void VescMotorController::motorControllerTaskFunction(const bool& join)
         executionCounter = (executionCounter + 1) % receiveValuesPeriode;
 
         os::ThisTask::sleep(std::chrono::milliseconds(1));
-
     } while (!join);
-
-
 }
 
 void VescMotorController::setTorque(const float setValue)
