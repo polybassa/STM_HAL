@@ -35,9 +35,11 @@ class VescMotorController final :
     virtual void exitDeepSleep(void) override;
 
     static constexpr uint32_t STACKSIZE = 2048;
+    static os::Mutex bldcLibraryMutex;
 
     os::TaskInterruptable mMotorControllerTask;
     os::Queue<float, 1> mSetTorqueQueue;
+
     const hal::Usart& mInterface;
     float mCurrentRPS;
 
