@@ -32,6 +32,7 @@ static const int __attribute__((unused)) g_DebugZones = ZONE_ERROR | ZONE_WARNIN
 constexpr std::chrono::milliseconds VescMotorController::controllerInterval;
 
 static VescMotorController* internalMotorControllerPointer = nullptr;
+static os::Mutex VescMotorController::bldcLibraryMutex;
 
 void app::send_packet_callback(unsigned char* data, unsigned int len)
 {
@@ -79,9 +80,6 @@ VescMotorController::VescMotorController(const hal::Usart& interface) :
     mInterface(interface)
 {
     setTorque(0.00001);
-    internalMotorControllerPointer = this;
-    ::bldc_interface_uart_init(send_packet_callback);
-    ::bldc_interface_set_rx_value_func(reinterpret_cast<void (*)(mc_values*)>(bldc_val_received));
 }
 
 void VescMotorController::enterDeepSleep(void)
@@ -109,24 +107,31 @@ void VescMotorController::motorControllerTaskFunction(const bool& join)
         float newSetTorque;
         if (mSetTorqueQueue.receive(newSetTorque, 0)) {
             constexpr const float CPHI = 0.065;
+
+            os::LockGuard<os::Mutex> lock(bldcLibraryMutex);
+
+            internalMotorControllerPointer = this;
+
+            ::bldc_interface_uart_init(send_packet_callback);
+//            ::bldc_interface_set_rx_value_func(reinterpret_cast<void (*)(mc_values*)>(bldc_val_received));
             ::bldc_interface_set_current(newSetTorque / CPHI);
         }
 
         // process received data
-        const unsigned int arrayLength = 128;
-        unsigned char dataArray[arrayLength];
-
-        const size_t receivedBytes = mInterface.receiveAvailableData(dataArray, arrayLength);
-
-        for (size_t i = 0; i < receivedBytes; i++) {
-            ::bldc_interface_uart_process_byte(dataArray[i]);
-        }
-
-        // trigger get values every "receiveValuesPeriode" cycle of this loop
-        if (executionCounter == 0) {
-            ::bldc_interface_get_values();
-        }
-        executionCounter = (executionCounter + 1) % receiveValuesPeriode;
+//        const unsigned int arrayLength = 128;
+//        unsigned char dataArray[arrayLength];
+//
+//        const size_t receivedBytes = mInterface.receiveAvailableData(dataArray, arrayLength);
+//
+//        for (size_t i = 0; i < receivedBytes; i++) {
+//            ::bldc_interface_uart_process_byte(dataArray[i]);
+//        }
+//
+//        // trigger get values every "receiveValuesPeriode" cycle of this loop
+//        if (executionCounter == 0) {
+//            ::bldc_interface_get_values();
+//        }
+//        executionCounter = (executionCounter + 1) % receiveValuesPeriode;
 
         os::ThisTask::sleep(std::chrono::milliseconds(1));
     } while (!join);
