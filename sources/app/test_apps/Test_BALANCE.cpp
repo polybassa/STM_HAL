@@ -8,6 +8,7 @@
 #include "AdcChannel.h"
 #include "VescMotorController.h"
 #include "PIDController.h"
+#include "SEGGER_RTT.h"
 #include <cmath>
 
 extern app::Mpu* g_mpu;
@@ -45,6 +46,107 @@ float torqueBias = 0;
 float torqueLeft = 0;
 float torqueRight = 0;
 
+// use global definition, to feed same time to the PID controller and the sleep function
+std::chrono::milliseconds WAITTIME = std::chrono::milliseconds(20);
+
+void receiveCommand(void)
+{
+    //PARSE FOR INPUT:P=1234 D=1234<ENTER>
+
+    static constexpr const size_t BUFFERSIZE = 100;
+
+    static char buffer[BUFFERSIZE];
+    static size_t index = 0;
+
+    static bool values_Stored = false;
+    static int p_Stored = 0;
+    static int d_Stored = 0;
+
+    if (SEGGER_RTT_HasKey()) {
+        buffer[index] = static_cast<char>(SEGGER_RTT_GetKey());
+        index = (index + 1) % BUFFERSIZE;
+    }
+
+    char* delimeterPosition = reinterpret_cast<char*>(memchr(buffer, '\n', BUFFERSIZE));
+
+    if (delimeterPosition == nullptr) {
+        return;
+    }
+
+    const size_t endIndex = reinterpret_cast<size_t>(delimeterPosition) - reinterpret_cast<size_t>(buffer);
+
+    buffer[endIndex] = 0;
+
+    char* parameter_P_Position = strstr(buffer, "P=");
+    char* parameter_D_Position = strstr(buffer, "D=");
+
+    char parameter_P[4];
+    char parameter_D[4];
+
+    if ((parameter_D_Position == nullptr) || (parameter_P_Position == nullptr)) {
+        g_RTTerminal->printf("P= and D= not found\n");
+        values_Stored = false;
+        p_Stored = 0;
+        d_Stored = 0;
+        index = 0;
+        memset(buffer, 0, BUFFERSIZE);
+        return;
+    }
+    memcpy(parameter_P, parameter_P_Position + 2, 4);
+    memcpy(parameter_D, parameter_D_Position + 2, 4);
+
+    for (size_t i = 0; i < 4; i++) {
+        if ((parameter_P[i] > '9') || (parameter_P[i] < '0')) {
+            g_RTTerminal->printf("Input error Parameter P\n");
+            values_Stored = false;
+            p_Stored = 0;
+            d_Stored = 0;
+            index = 0;
+            memset(buffer, 0, BUFFERSIZE);
+            return;
+        }
+    }
+
+    for (size_t i = 0; i < 4; i++) {
+        if ((parameter_D[i] > '9') || (parameter_D[i] < '0')) {
+            g_RTTerminal->printf("Input error Parameter D\n");
+            values_Stored = false;
+            p_Stored = 0;
+            d_Stored = 0;
+            index = 0;
+            memset(buffer, 0, BUFFERSIZE);
+            return;
+        }
+    }
+
+    int p = atoi(parameter_P);
+    int d = atoi(parameter_D);
+
+    if (!values_Stored) {
+        values_Stored = true;
+        p_Stored = p;
+        d_Stored = d;
+        index = 0;
+        memset(buffer, 0, BUFFERSIZE);
+        g_RTTerminal->printf("Stored P=%2d.%2d D=%2d.%2d\n", p / 100, p % 100, d / 100, d % 100);
+        return;
+    } else {
+        if ((p == p_Stored) && (d == d_Stored)) {
+            g_RTTerminal->printf("New P %d.%d and D %d.%d will be applied\n", p / 100, p % 100, d / 100, d % 100);
+
+            pid1.setTunings(static_cast<float>(p) / 100, KI, static_cast<float>(d) / 100);
+        } else {
+            g_RTTerminal->printf("Error: Stored P=%4d D=%4d, Read P=%4d D=%4d\n", p_Stored, d_Stored, p, d);
+        }
+    }
+
+    values_Stored = false;
+    p_Stored = 0;
+    d_Stored = 0;
+    index = 0;
+    memset(buffer, 0, BUFFERSIZE);
+}
+
 void setup(void)
 {
     g_RTTerminal->printf("Hi Jakob. Here is some setup code\n");
@@ -71,7 +173,7 @@ void setup(void)
                          static_cast<uint32_t>(voltagePoti1 * 1000), valuePoti1);
 
     //setup PID Controller. It needs the sample time of our loop function
-    pid1.setSampleTime(std::chrono::milliseconds(5));
+    pid1.setSampleTime(WAITTIME);
     pid1.setOutputLimits(-1.0, 1.0);
     pid1.setMode(dev::PIDController::ControlMode::AUTOMATIC);
     pid1.setControllerDirection(dev::PIDController::ControlDirection::DIRECT);
@@ -100,15 +202,13 @@ void loop(void)
 
     //Read torque bias from Poti1 and calculate/map torque bias afterwards.
     float valuePoti1 = poti1.getValue();
-    g_RTTerminal->printf(
-                         "Poti1 raw: %d ",
+    g_RTTerminal->printf("Poti1 raw: %d ",
                          static_cast<uint32_t>(valuePoti1));
 
     torqueBias = valuePoti1;
     torqueBias = (torqueBias - 2048) * 0.3 / 2048;
 
-    g_RTTerminal->printf(
-                         "torqueBias: %d mNm",
+    g_RTTerminal->printf("torqueBias: %d mNm",
                          static_cast<int32_t>(torqueBias * 1000));
 
     //Add torque bias (important for cornering) to both left and right resulting torque values
@@ -128,8 +228,10 @@ void loop(void)
     g_RTTerminal->printf("MRechts:%6dmNm\n",
                          static_cast<int32_t>(torqueRight * 1000));
 
+    receiveCommand();
+
     //has to be the same value as the PID Controller sample time
-    os::ThisTask::sleep(std::chrono::milliseconds(20));
+    os::ThisTask::sleep(WAITTIME);
 }
 
 const os::TaskEndless app::balanceTest("PMD_Demo", 4096,

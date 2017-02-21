@@ -140,7 +140,7 @@ void Usart::enableReceiveTimeout(std::function<void(void)> callback, const size_
 
 void Usart::enableNonBlockingReceive(std::function<void(uint8_t)> callback) const
 {
-    ReceiveTimeoutInterruptCallbacks[mDescription] = callback;
+    ReceiveInterruptCallbacks[mDescription] = callback;
 
     USART_ClearITPendingBit(reinterpret_cast<USART_TypeDef*>(mPeripherie), USART_IT_RXNE);
     USART_ITConfig(reinterpret_cast<USART_TypeDef*>(mPeripherie), USART_IT_RXNE, ENABLE);
@@ -148,7 +148,7 @@ void Usart::enableNonBlockingReceive(std::function<void(uint8_t)> callback) cons
 
 void Usart::disableNonBlockingReceive(void) const
 {
-    ReceiveTimeoutInterruptCallbacks[mDescription] = nullptr;
+    ReceiveInterruptCallbacks[mDescription] = nullptr;
 
     USART_ITConfig(reinterpret_cast<USART_TypeDef*>(mPeripherie), USART_IT_RXNE, DISABLE);
 }
@@ -283,6 +283,7 @@ void Usart::clearParityError(void) const
 }
 
 Usart::ReceiveTimeoutCallbackArray Usart::ReceiveTimeoutInterruptCallbacks;
+Usart::ReceiveCallbackArray Usart::ReceiveInterruptCallbacks;
 
 constexpr const std::array<const Usart, Usart::__ENUM__SIZE + 1> Factory<Usart>::Container;
 constexpr const std::array<const uint32_t, Usart::__ENUM__SIZE> Factory<Usart>::Clocks;
