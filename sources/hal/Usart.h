@@ -99,8 +99,8 @@ private:
     void initialize(void) const;
     IRQn getIRQn(void) const;
 
-    using ReceiveTimeoutCallbackArray = std::array<std::function<void(void)>, Usart::__ENUM__SIZE>;
     using ReceiveCallbackArray = std::array<std::function<void(uint8_t)>, Usart::__ENUM__SIZE>;
+    using ReceiveTimeoutCallbackArray = std::array<std::function<void(void)>, Usart::__ENUM__SIZE>;
 
     static ReceiveTimeoutCallbackArray ReceiveTimeoutInterruptCallbacks;
     static ReceiveCallbackArray ReceiveInterruptCallbacks;

@@ -81,10 +81,10 @@ VescMotorController::VescMotorController(const hal::Usart& interface) :
     mSetTorqueQueue(),
     mInterface(interface)
 {
-	if(bldcLibraryMutex == nullptr){
-		bldcLibraryMutex = new os::Mutex();
-		//Memory leak... this will never be freed
-	}
+    if (bldcLibraryMutex == nullptr) {
+        bldcLibraryMutex = new os::Mutex();
+        //Memory leak... this will never be freed
+    }
     setTorque(0.00001);
 }
 
