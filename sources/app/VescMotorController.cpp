@@ -33,13 +33,15 @@ static const int __attribute__((unused)) g_DebugZones = ZONE_ERROR | ZONE_WARNIN
 
 constexpr std::chrono::milliseconds VescMotorController::controllerInterval;
 
-static VescMotorController* internalMotorControllerPointer = nullptr;
-static os::Mutex* bldcLibraryMutex = nullptr;
+static VescMotorController* txMotorControllerPointer = nullptr;
+static VescMotorController* rxMotorControllerPointer = nullptr;
+
+static os::Mutex bldcLibraryMutex;
 
 void app::send_packet_callback(unsigned char* data, unsigned int len)
 {
-    if (internalMotorControllerPointer) {
-        internalMotorControllerPointer->send_packet(data, len);
+    if (txMotorControllerPointer) {
+        txMotorControllerPointer->send_packet(data, len);
     }
 }
 
@@ -63,8 +65,8 @@ void app::bldc_val_received(void* valPtr)
         //	g_RTTerminal->printf("Tacho ABS:     %i counts\r\n", val->tachometer_abs);
         //	g_RTTerminal->printf("Fault Code:    %s\r\n", bldc_interface_fault_to_string(val->fault_code));
 
-        if (internalMotorControllerPointer) {
-            internalMotorControllerPointer->mCurrentRPS = val->rpm / 60;
+        if (rxMotorControllerPointer) {
+            rxMotorControllerPointer->mCurrentRPS = val->rpm / 60;
         }
     }
 }
@@ -81,12 +83,10 @@ VescMotorController::VescMotorController(const hal::Usart& interface) :
     mSetTorqueQueue(),
     mInterface(interface)
 {
-	if(bldcLibraryMutex == nullptr){
-		bldcLibraryMutex = new os::Mutex();
-		//Memory leak... this will never be freed
-	}
     setTorque(0.00001);
 }
+
+VescMotorController::~VescMotorController(void) {}
 
 void VescMotorController::enterDeepSleep(void)
 {
@@ -106,7 +106,16 @@ void VescMotorController::send_packet(unsigned char* data, unsigned int len)
 void VescMotorController::motorControllerTaskFunction(const bool& join)
 {
     // if update of RPS Value is to slow, use a smaller value here!
-    const size_t receiveValuesPeriode = 1000;
+    const size_t receiveValuesPeriode = 100;
+
+    ::bldc_interface_uart_init(send_packet_callback);
+    ::bldc_interface_set_rx_value_func(reinterpret_cast<void (*)(mc_values*)>(bldc_val_received));
+
+    if (mInterface.mDescription == hal::Usart::Description::VESC_IF) {
+        rxMotorControllerPointer = this;
+
+        mInterface.enableNonBlockingReceive(::bldc_interface_uart_process_byte);
+    }
 
     size_t executionCounter = 0;
     do {
@@ -114,30 +123,19 @@ void VescMotorController::motorControllerTaskFunction(const bool& join)
         if (mSetTorqueQueue.receive(newSetTorque, 0)) {
             constexpr const float CPHI = 0.065;
 
-            os::LockGuard<os::Mutex> lock(*bldcLibraryMutex);
+            os::LockGuard<os::Mutex> lock(bldcLibraryMutex);
+            txMotorControllerPointer = this;
 
-            internalMotorControllerPointer = this;
-
-            ::bldc_interface_uart_init(send_packet_callback);
-//            ::bldc_interface_set_rx_value_func(reinterpret_cast<void (*)(mc_values*)>(bldc_val_received));
             ::bldc_interface_set_current(newSetTorque / CPHI);
         }
 
-        // process received data
-//        const unsigned int arrayLength = 128;
-//        unsigned char dataArray[arrayLength];
-//
-//        const size_t receivedBytes = mInterface.receiveAvailableData(dataArray, arrayLength);
-//
-//        for (size_t i = 0; i < receivedBytes; i++) {
-//            ::bldc_interface_uart_process_byte(dataArray[i]);
-//        }
-//
-//        // trigger get values every "receiveValuesPeriode" cycle of this loop
-//        if (executionCounter == 0) {
-//            ::bldc_interface_get_values();
-//        }
-//        executionCounter = (executionCounter + 1) % receiveValuesPeriode;
+        // trigger get values every "receiveValuesPeriode" cycle of this loop
+        if ((executionCounter == 0) && (mInterface.mDescription == hal::Usart::Description::VESC_IF)) {
+            os::LockGuard<os::Mutex> lock(bldcLibraryMutex);
+            txMotorControllerPointer = this;
+            ::bldc_interface_get_values();
+        }
+        executionCounter = (executionCounter + 1) % receiveValuesPeriode;
 
         os::ThisTask::sleep(std::chrono::milliseconds(1));
     } while (!join);

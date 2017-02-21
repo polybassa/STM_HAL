@@ -75,7 +75,11 @@ struct Usart {
     void setBaudRate(const size_t) const;
 
     void enableReceiveTimeout(std::function<void(void)> callback, const size_t) const;
+    void enableNonBlockingReceive(std::function<void(uint8_t)> callback) const;
+
     void disableReceiveTimeout(void) const;
+    void disableNonBlockingReceive(void) const;
+
     void enableReceiveTimeoutIT_Flag(void) const;
     void disableReceiveTimeoutIT_Flag(void) const;
 
@@ -95,9 +99,11 @@ private:
     void initialize(void) const;
     IRQn getIRQn(void) const;
 
-    using CallbackArray = std::array<std::function<void(void)>, Usart::__ENUM__SIZE>;
+    using ReceiveCallbackArray = std::array<std::function<void(uint8_t)>, Usart::__ENUM__SIZE>;
+    using ReceiveTimeoutCallbackArray = std::array<std::function<void(void)>, Usart::__ENUM__SIZE>;
 
-    static CallbackArray ReceiveTimeoutInterruptCallbacks;
+    static ReceiveTimeoutCallbackArray ReceiveTimeoutInterruptCallbacks;
+    static ReceiveCallbackArray ReceiveInterruptCallbacks;
 
     friend class Factory<Usart>;
     friend struct UsartWithDma;

@@ -140,7 +140,7 @@ void os::ThisTask::sleep(const std::chrono::milliseconds ms)
     if (os::Task::isSchedulerRunning()) {
         vTaskDelay(ms.count() / portTICK_RATE_MS);
     } else {
-        for (size_t i = 0; i < ms.count() * (SystemCoreClock / 1000); i++) {
+        for (size_t i = 0; i < ms.count() * (SystemCoreClock / 10000); i++) {
             __NOP();
         }
     }
@@ -210,24 +210,4 @@ extern "C" void vApplicationStackOverflowHook(xTaskHandle pxTask, signed char* p
        function is called if a stack overflow is detected. */
     taskDISABLE_INTERRUPTS();
     for ( ; ; ) {}
-}
-
-#include "Gpio.h"
-
-extern "C" void traceFreeRTOS_TASK_SWITCHED_IN(void)
-{
-#ifdef TRACE_RTOS
-    uint8_t taskNumber = os::ThisTask::getName()[0] - '0';
-    constexpr auto& t0 = hal::Factory<hal::Gpio>::get<hal::Gpio::TRACE0>();
-    constexpr auto& t1 = hal::Factory<hal::Gpio>::get<hal::Gpio::TRACE1>();
-    constexpr auto& t2 = hal::Factory<hal::Gpio>::get<hal::Gpio::TRACE2>();
-    constexpr auto& t3 = hal::Factory<hal::Gpio>::get<hal::Gpio::TRACE3>();
-    constexpr auto& t4 = hal::Factory<hal::Gpio>::get<hal::Gpio::TRACE4>();
-
-    t0 = taskNumber & 0x01;
-    t1 = taskNumber & 0x02;
-    t2 = taskNumber & 0x04;
-    t3 = taskNumber & 0x08;
-    t4 = taskNumber & 0x10;
-#endif /* TRACE_RTOS */
 }
