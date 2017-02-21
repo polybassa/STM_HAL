@@ -22,6 +22,8 @@ extern "C" {
 #include "vesc_bldc_interface.h"
 }
 #include <functional>
+#include "LockGuard.h"
+#include "Mutex.h"
 
 using app::VescMotorController;
 
@@ -32,7 +34,7 @@ static const int __attribute__((unused)) g_DebugZones = ZONE_ERROR | ZONE_WARNIN
 constexpr std::chrono::milliseconds VescMotorController::controllerInterval;
 
 static VescMotorController* internalMotorControllerPointer = nullptr;
-static os::Mutex VescMotorController::bldcLibraryMutex;
+static os::Mutex* bldcLibraryMutex = nullptr;
 
 void app::send_packet_callback(unsigned char* data, unsigned int len)
 {
@@ -79,6 +81,10 @@ VescMotorController::VescMotorController(const hal::Usart& interface) :
     mSetTorqueQueue(),
     mInterface(interface)
 {
+	if(bldcLibraryMutex == nullptr){
+		bldcLibraryMutex = new os::Mutex();
+		//Memory leak... this will never be freed
+	}
     setTorque(0.00001);
 }
 
@@ -108,7 +114,7 @@ void VescMotorController::motorControllerTaskFunction(const bool& join)
         if (mSetTorqueQueue.receive(newSetTorque, 0)) {
             constexpr const float CPHI = 0.065;
 
-            os::LockGuard<os::Mutex> lock(bldcLibraryMutex);
+            os::LockGuard<os::Mutex> lock(*bldcLibraryMutex);
 
             internalMotorControllerPointer = this;
 
