@@ -17,10 +17,9 @@ extern app::VescMotorController* g_motorCtrlL;
 extern app::VescMotorController* g_motorCtrlR;
 
 // Get any GPIO you want. You can access them by their name (DESCRIPTION)
-constexpr const hal::Gpio& led10 = hal::Factory<hal::Gpio>::get<
-                                                                hal::Gpio::LED_10>();
-constexpr const hal::Gpio& led3 =
-    hal::Factory<hal::Gpio>::get<hal::Gpio::LED_3>();
+constexpr const hal::Gpio& led10 = hal::Factory<hal::Gpio>::get<hal::Gpio::LED_10>();
+constexpr const hal::Gpio& led3 = hal::Factory<hal::Gpio>::get<hal::Gpio::LED_3>();
+constexpr const hal::Gpio& userbutton = hal::Factory<hal::Gpio>::get<hal::Gpio::USER_BUTTON>();
 
 constexpr const hal::Adc::Channel& poti1 = hal::Factory<hal::Adc::Channel
                                                         > ::get<hal::Adc::Channel::NTC_BATTERY>();
@@ -29,12 +28,20 @@ constexpr const hal::Adc::Channel& poti2 = hal::Factory<hal::Adc::Channel
 constexpr const hal::Adc::Channel& poti3 = hal::Factory<hal::Adc::Channel
                                                         > ::get<hal::Adc::Channel::NTC_MOTOR>();
 
-// Lets prepare a PID Controller for later
+//PID 1 for angle dependent Control
 float setValue1, currentValue1, outValue1;
-const float KP = 0.22;
-const float KI = 0;
-const float KD = 0.0002;
-dev::PIDController pid1(currentValue1, outValue1, setValue1, KP, KI, KD,
+const float KP1 = 0.26;
+const float KI1 = 0;
+const float KD1 = 0.0002;
+dev::PIDController pid1(currentValue1, outValue1, setValue1, KP1, KI1, KD1,
+                        dev::PIDController::ControlDirection::DIRECT);
+
+//PID 2 for speed dependent Control
+float setValue2, currentValue2, outValue2;
+const float KP2 = 0.0005;
+const float KI2 = 0;
+const float KD2 = 0;
+dev::PIDController pid2(currentValue2, outValue2, setValue2, KP2, KI2, KD2,
                         dev::PIDController::ControlDirection::DIRECT);
 
 //Variables to calculate Vehicle Angle
@@ -45,9 +52,12 @@ float torqueTotal = 0;
 float torqueBias = 0;
 float torqueLeft = 0;
 float torqueRight = 0;
+float motorSpeedL = 0;
+float balancingEnabled = 0;
 
 // use global definition, to feed same time to the PID controller and the sleep function
 std::chrono::milliseconds WAITTIME = std::chrono::milliseconds(20);
+
 
 void receiveCommand(void)
 {
@@ -134,7 +144,7 @@ void receiveCommand(void)
         if ((p == p_Stored) && (d == d_Stored)) {
             g_RTTerminal->printf("New P %d.%d and D %d.%d will be applied\n", p / 100, p % 100, d / 100, d % 100);
 
-            pid1.setTunings(static_cast<float>(p) / 100, KI, static_cast<float>(d) / 100);
+            pid1.setTunings(static_cast<float>(p) / 100, KI1, static_cast<float>(d) / 100);
         } else {
             g_RTTerminal->printf("Error: Stored P=%4d D=%4d, Read P=%4d D=%4d\n", p_Stored, d_Stored, p, d);
         }
@@ -149,39 +159,43 @@ void receiveCommand(void)
 
 void setup(void)
 {
-    g_RTTerminal->printf("Hi Jakob. Here is some setup code\n");
+	//Als erstes Motoren ausschalten.
     g_RTTerminal->printf("Turn the motor off, first\n");
     torqueLeft = 0;
     torqueRight = 0;
     g_motorCtrlL->setTorque(torqueLeft);
     g_motorCtrlR->setTorque(torqueRight);
 
-    g_RTTerminal->printf("Wait some ms\n");
-    os::ThisTask::sleep(std::chrono::milliseconds(5));
-
-    g_RTTerminal->printf("Now we need more torque\n");
-    torqueLeft = 0.2;
-    torqueRight = 0.2;
-    g_motorCtrlL->setTorque(torqueLeft);
-    g_motorCtrlR->setTorque(torqueRight);
-
-    float voltagePoti1 = poti1.getVoltage();
-    uint32_t valuePoti1 = poti1.getValue();
-
-    g_RTTerminal->printf(
-                         "Poti1 measures %d mV. This is an absolute value of %d\n",
-                         static_cast<uint32_t>(voltagePoti1 * 1000), valuePoti1);
-
-    //setup PID Controller. It needs the sample time of our loop function
+    //setup PID1 Controller. It needs the sample time of our loop function
     pid1.setSampleTime(WAITTIME);
-    pid1.setOutputLimits(-1.0, 1.0);
+    pid1.setOutputLimits(-0.8, 0.8);
     pid1.setMode(dev::PIDController::ControlMode::AUTOMATIC);
     pid1.setControllerDirection(dev::PIDController::ControlDirection::DIRECT);
+
+    //setup PID2 Controller. It needs the sample time of our loop function
+    pid2.setSampleTime(WAITTIME);
+    pid2.setOutputLimits(-0.8, 0.8);
+    pid2.setMode(dev::PIDController::ControlMode::AUTOMATIC);
+    pid2.setControllerDirection(dev::PIDController::ControlDirection::DIRECT);
 }
 
 // This function will run forever
 void loop(void)
 {
+	//Als erstes checken, ob der Taster am Lenker gedrückt ist und bei Bedarf LED 3 einschalten
+	if(userbutton == true){
+		balancingEnabled = 1;
+		led3 = true;
+	}
+	else{
+		balancingEnabled = 0;
+		led3 = false;
+	}
+
+    g_RTTerminal->printf("Enabled: %6d ",
+                         static_cast<int32_t>(balancingEnabled));
+
+
     Eigen::Vector3f gravity = g_mpu->getGravity();
     g_RTTerminal->printf("Gravity: x:%6d, y:%6d, z:%6d ",
                          static_cast<int32_t>(gravity.x() * 1000),
@@ -192,13 +206,30 @@ void loop(void)
     g_RTTerminal->printf("Winkel: %6d mDeg ",
                          static_cast<int32_t>(VehicleAngle * 1000));
 
-    // update the current Value of the PID Controller and compute!
-    currentValue1 = VehicleAngle;
-    setValue1 = 0;
-    pid1.compute();
+    //Read RPS from left VESC Inverter
+    motorSpeedL = (g_motorCtrlL->getCurrentRPS());
+    g_RTTerminal->printf("LeftRPS: %6d ",
+                         static_cast<int32_t>(motorSpeedL));
 
-    g_RTTerminal->printf("Total Torque: %6d mNm ",
+    // update the current Value of the PID Controllers and compute!
+    currentValue1 = VehicleAngle;
+    currentValue2 = motorSpeedL;
+
+
+
+    setValue1 = 0;
+    setValue2 = 0;
+    pid1.compute();
+    pid2.compute();
+
+    torqueTotal = outValue1 + outValue2;
+
+    g_RTTerminal->printf("PID1: %6d mNm ",
                          static_cast<int32_t>(outValue1 * 1000));
+    g_RTTerminal->printf("PID2: %6d mNm ",
+                         static_cast<int32_t>(outValue2 * 1000));
+    g_RTTerminal->printf("Total Torque: %6d mNm ",
+                         static_cast<int32_t>(torqueTotal * 1000));
 
     //Read torque bias from Poti1 and calculate/map torque bias afterwards.
     float valuePoti1 = poti1.getValue();
@@ -219,8 +250,8 @@ void loop(void)
     torqueRight = torqueTotal - torqueBias;
 
     //update torque. Negative Torque for left inverter.
-    g_motorCtrlL->setTorque(torqueLeft);
-    g_motorCtrlR->setTorque(torqueRight);
+    g_motorCtrlL->setTorque(torqueLeft * balancingEnabled);
+    g_motorCtrlR->setTorque(torqueRight * balancingEnabled);
 
     //Debug output
     g_RTTerminal->printf("MLinks:%6dmNm ",
@@ -228,9 +259,12 @@ void loop(void)
     g_RTTerminal->printf("MRechts:%6dmNm\n",
                          static_cast<int32_t>(torqueRight * 1000));
 
+    //Receive new PID Params from Tracing
     receiveCommand();
 
-    //has to be the same value as the PID Controller sample time
+
+
+    //has to be the same valu e as the PID Controller sample time
     os::ThisTask::sleep(WAITTIME);
 }
 
