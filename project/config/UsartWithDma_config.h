@@ -17,8 +17,6 @@
 #define SOURCES_PMD_USARTWITHDMA_CONFIG_CONTAINER_H_
 
 static constexpr const std::array<const UsartWithDma, 0> Container =
-{ {
-
-  } };
+{ {} };
 
 #endif /* SOURCES_PMD_USART_CONFIG_CONTAINER_H_ */

@@ -9,6 +9,7 @@
 #include "VescMotorController.h"
 #include "PIDController.h"
 #include "SEGGER_RTT.h"
+#include "Light.h"
 #include <cmath>
 
 extern app::Mpu* g_mpu;
@@ -53,11 +54,12 @@ float torqueBias = 0;
 float torqueLeft = 0;
 float torqueRight = 0;
 float motorSpeedL = 0;
+float newMotorSpeedL = 0;
+
 float balancingEnabled = 0;
 
 // use global definition, to feed same time to the PID controller and the sleep function
 std::chrono::milliseconds WAITTIME = std::chrono::milliseconds(20);
-
 
 void receiveCommand(void)
 {
@@ -159,7 +161,7 @@ void receiveCommand(void)
 
 void setup(void)
 {
-	//Als erstes Motoren ausschalten.
+    //Als erstes Motoren ausschalten.
     g_RTTerminal->printf("Turn the motor off, first\n");
     torqueLeft = 0;
     torqueRight = 0;
@@ -182,19 +184,17 @@ void setup(void)
 // This function will run forever
 void loop(void)
 {
-	//Als erstes checken, ob der Taster am Lenker gedrückt ist und bei Bedarf LED 3 einschalten
-	if(userbutton == true){
-		balancingEnabled = 1;
-		led3 = true;
-	}
-	else{
-		balancingEnabled = 0;
-		led3 = false;
-	}
+    //Als erstes checken, ob der Taster am Lenker gedrückt ist und bei Bedarf LED 3 einschalten
+    if (userbutton == true) {
+        balancingEnabled = 1;
+        led3 = true;
+    } else {
+        balancingEnabled = 0;
+        led3 = false;
+    }
 
     g_RTTerminal->printf("Enabled: %6d ",
                          static_cast<int32_t>(balancingEnabled));
-
 
     Eigen::Vector3f gravity = g_mpu->getGravity();
     g_RTTerminal->printf("Gravity: x:%6d, y:%6d, z:%6d ",
@@ -207,15 +207,18 @@ void loop(void)
                          static_cast<int32_t>(VehicleAngle * 1000));
 
     //Read RPS from left VESC Inverter
-    motorSpeedL = (g_motorCtrlL->getCurrentRPS());
+    newMotorSpeedL = (g_motorCtrlL->getCurrentRPS());
     g_RTTerminal->printf("LeftRPS: %6d ",
                          static_cast<int32_t>(motorSpeedL));
+
+    //update MOtorspeed filtered
+    constexpr const float FILTERSIZE = 32;
+    motorSpeedL -= motorSpeedL / FILTERSIZE;
+    motorSpeedL += newMotorSpeedL / FILTERSIZE;
 
     // update the current Value of the PID Controllers and compute!
     currentValue1 = VehicleAngle;
     currentValue2 = motorSpeedL;
-
-
 
     setValue1 = 0;
     setValue2 = 0;
@@ -262,10 +265,32 @@ void loop(void)
     //Receive new PID Params from Tracing
     receiveCommand();
 
-
-
     //has to be the same valu e as the PID Controller sample time
     os::ThisTask::sleep(WAITTIME);
+}
+
+constexpr const dev::Light& backLight = dev::Factory<dev::Light>::get<interface::Light::BACKLIGHT>();
+constexpr const dev::Light& headLight = dev::Factory<dev::Light>::get<interface::Light::HEADLIGHT>();
+
+void setup_LED(void)
+{
+    for (uint8_t i = 0; i < 255; i++) {
+        backLight.setColor({0, 0, i});
+        headLight.setColor({0, 0, i});
+
+        os::ThisTask::sleep(std::chrono::milliseconds(10));
+    }
+    backLight.setColor({0, 0, 0});
+    headLight.setColor({0, 0, 0});
+}
+
+void loop_LED(void)
+{
+    os::ThisTask::sleep(std::chrono::milliseconds(500));
+    backLight.setColor({50, 50, 50});
+    os::ThisTask::sleep(std::chrono::milliseconds(500));
+
+    backLight.setColor({0, 0, 0});
 }
 
 const os::TaskEndless app::balanceTest("PMD_Demo", 4096,
@@ -276,3 +301,12 @@ const os::TaskEndless app::balanceTest("PMD_Demo", 4096,
                                                loop();
                                            }
                                        });
+
+const os::TaskEndless app::ledTest("LED_Demo", 4096,
+                                   os::Task::Priority::LOW, [&](const bool&)
+                                   {
+                                       setup_LED();
+                                       while (1) {
+                                           loop_LED();
+                                       }
+                                   });

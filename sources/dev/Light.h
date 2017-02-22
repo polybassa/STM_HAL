@@ -44,7 +44,7 @@ private:
     const enum interface::Light::Description mDescription;
     const hal::SpiWithDma& mSpi;
 
-    static const size_t LED_COUNT = 13;
+    static const size_t LED_COUNT = 25;
     static const size_t COLORS_PER_LED = 3;
     static const size_t BYTE_TO_8BIT_SCALE_FACTOR = 4;
 

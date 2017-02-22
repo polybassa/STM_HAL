@@ -8,6 +8,7 @@
 namespace app
 {
 extern const os::TaskEndless balanceTest;
+extern const os::TaskEndless ledTest;
 }
 
 #endif /* SOURCES_PMD_TEST_BALANCE_H_ */

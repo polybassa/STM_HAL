@@ -95,6 +95,7 @@ int main(void)
     hal::initFactory<hal::Factory<hal::Crc> >();
     hal::initFactory<hal::Factory<hal::I2c> >();
 
+
     initializePowerSupply();
 
     TraceInit();
