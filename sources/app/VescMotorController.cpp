@@ -86,8 +86,6 @@ VescMotorController::VescMotorController(const hal::Usart& interface) :
     setTorque(0.00001);
 }
 
-
-
 void VescMotorController::enterDeepSleep(void)
 {
     mMotorControllerTask.join();
