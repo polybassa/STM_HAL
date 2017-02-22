@@ -74,7 +74,11 @@ void Usart::USART_IRQHandler(const Usart& peripherie)
             Usart::ReceiveInterruptCallbacks[peripherie.mDescription](static_cast<uint8_t>(USART_ReceiveData(reinterpret_cast<USART_TypeDef*>(peripherie.mPeripherie))));
         }
         USART_ClearITPendingBit(reinterpret_cast<USART_TypeDef*>(peripherie.mPeripherie), USART_IT_RXNE);
+
     }
+
+    USART_ClearITPendingBit(reinterpret_cast<USART_TypeDef*>(peripherie.mPeripherie), USART_IT_ORE);
+    USART_ClearITPendingBit(reinterpret_cast<USART_TypeDef*>(peripherie.mPeripherie), USART_IT_PE);
 }
 
 void Usart::initialize() const

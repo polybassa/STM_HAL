@@ -16,7 +16,7 @@
 #ifndef SOURCES_PMD_EXTI_INTERRUPTS_H_
 #define SOURCES_PMD_EXTI_INTERRUPTS_H_
 
-#define EXTI0_INTERRUPT_ENABLED true
+#define EXTI0_INTERRUPT_ENABLED false
 #define EXTI1_INTERRUPT_ENABLED true
 #define EXTI2_INTERRUPT_ENABLED false
 #define EXTI3_INTERRUPT_ENABLED false
@@ -39,7 +39,6 @@
 #define SOURCES_PMD_EXTI_CONFIG_DESCRIPTION_H_
 
 enum Description {
-    WAKEUP,
     IMU_INT,
     __ENUM__SIZE
 };
@@ -50,9 +49,6 @@ enum Description {
 
 static constexpr const std::array<const Exti, Exti::__ENUM__SIZE> Container =
 { {
-      Exti(Exti::WAKEUP,
-           Factory<Gpio>::get<Gpio::USER_BUTTON>(),
-           EXTI_Trigger_Rising),
       Exti(Exti::IMU_INT,
            Factory<Gpio>::get<Gpio::MPU_INTERRUPT>(),
            EXTI_Trigger_Rising)

@@ -86,7 +86,7 @@ VescMotorController::VescMotorController(const hal::Usart& interface) :
     setTorque(0.00001);
 }
 
-VescMotorController::~VescMotorController(void) {}
+
 
 void VescMotorController::enterDeepSleep(void)
 {
@@ -106,7 +106,7 @@ void VescMotorController::send_packet(unsigned char* data, unsigned int len)
 void VescMotorController::motorControllerTaskFunction(const bool& join)
 {
     // if update of RPS Value is to slow, use a smaller value here!
-    const size_t receiveValuesPeriode = 100;
+    const size_t receiveValuesPeriode = 50;
 
     ::bldc_interface_uart_init(send_packet_callback);
     ::bldc_interface_set_rx_value_func(reinterpret_cast<void (*)(mc_values*)>(bldc_val_received));
@@ -137,6 +137,7 @@ void VescMotorController::motorControllerTaskFunction(const bool& join)
         }
         executionCounter = (executionCounter + 1) % receiveValuesPeriode;
 
+        bldc_interface_uart_run_timer();
         os::ThisTask::sleep(std::chrono::milliseconds(1));
     } while (!join);
 }
