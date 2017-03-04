@@ -286,11 +286,52 @@ void setup_LED(void)
 
 void loop_LED(void)
 {
-    os::ThisTask::sleep(std::chrono::milliseconds(500));
-    backLight.setColor({50, 50, 50});
-    os::ThisTask::sleep(std::chrono::milliseconds(500));
+    static size_t state = 0;
 
-    backLight.setColor({0, 0, 0});
+    Eigen::Vector3f gravity = g_mpu->getGravity();
+
+    float tempvehicleAngle = gravity.x();
+    float tempvehicleRotation = std::abs(gravity.y());
+
+    if (tempvehicleRotation > 0.6) {
+        //charging
+
+        constexpr const size_t timeForOneLed_ms = 200 / 10;
+        static size_t iteration = 0;
+
+        if (iteration == 0) {
+            state = ++state;
+            if (state > 21) {state = 21; }
+
+            backLight.displayNumber(state, {0, 30, 0});
+            headLight.displayNumber(state, {0, 30, 0});
+        }
+
+        iteration++;
+        iteration = iteration % timeForOneLed_ms;
+    } else {
+        state = 0;
+        static bool direction = true;
+
+        if ((tempvehicleAngle > 0.1) && (direction == false)) {
+            direction = true;
+        } else if ((tempvehicleAngle < -0.1) && (direction == true)) {
+            direction = false;
+        }
+
+        if (!direction) {
+            headLight.setColor({static_cast<uint8_t>(30 * tempvehicleAngle + 10),
+                                static_cast<uint8_t>(30 * tempvehicleAngle + 10),
+                                static_cast<uint8_t>(30 * tempvehicleAngle + 10)});
+            backLight.setColor({static_cast<uint8_t>(90 * tempvehicleAngle + 10), 0, 0});
+        } else {
+            backLight.setColor({static_cast<uint8_t>(30 * tempvehicleAngle + 10),
+                                static_cast<uint8_t>(30 * tempvehicleAngle + 10),
+                                static_cast<uint8_t>(30 * tempvehicleAngle + 10)});
+            backLight.setColor({static_cast<uint8_t>(90 * tempvehicleAngle + 10), 0, 0});
+        }
+    }
+    os::ThisTask::sleep(std::chrono::milliseconds(10));
 }
 
 const os::TaskEndless app::balanceTest("PMD_Demo", 4096,
