@@ -30,15 +30,17 @@ os::TaskEndless drv8302Test("drv8302_Test", 2048, os::Task::Priority::MEDIUM, []
                                 constexpr const hal::Adc::Channel& poti =
                                     hal::Factory<hal::Adc::Channel>::get<hal::Adc::Channel::NTC_MOTOR>();
 
-                                constexpr const auto& motor = dev::Factory<dev::SensorBLDC>::get<dev::SensorBLDC::BLDC>();
-
                                 poti.getValue();
                                 os::ThisTask::sleep(std::chrono::milliseconds(5));
 
+                                auto torque = 0.0;
+
                                 while (true) {
-                                    auto torque = (poti.getValue() / 2000.0) - 1.0;
+                                    auto newtorque = (poti.getValue() / 2000.0) - 1.0;
+                                    torque -= torque / 32;
+                                    torque += newtorque / 32;
                                     g_motorCtrl->setTorque(torque);
 
-                                    os::ThisTask::sleep(std::chrono::milliseconds(5));
+                                    os::ThisTask::sleep(std::chrono::milliseconds(50));
                                 }
                             });

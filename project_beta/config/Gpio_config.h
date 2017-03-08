@@ -32,20 +32,20 @@ enum Description {
     TEST_PIN_OUT,
     DEBUG_TXD,
     DEBUG_RXD,
-    //COMP3_INP     //IR_RXDANA COMP3_INP
+    COMP_3_INP, //IR_RXDANA COMP3_INP
     // ===PORTC===
     NTC_FETS,
     BAT_VOL,
     BAT_CUR_ADC,
     DMS,
-    //COMP3 OUT,
+    COMP_3_OUT,
     MEMS_SDA,
     LED_FRONT_PIN,
     // ===PORTD===
-    HALL_A,
-    HALL_B,
-    HALL_C,
-    //COMP3_INM
+    HALL1,
+    HALL2,
+    HALL3,
+    COMP_3_INM,
     // ===PORTE===
     A_HS,
     B_HS,
@@ -79,14 +79,14 @@ static constexpr const std::array<const Gpio, Gpio::__ENUM__SIZE + 1> Container 
       Gpio(Gpio::PHSTA,
            GPIOA_BASE,
            GPIO_InitTypeDef { GPIO_Pin_6, GPIO_Mode_AN, GPIO_Speed_50MHz, GPIO_OType_PP, GPIO_PuPd_NOPULL}),
-      Gpio(Gpio::MEMS_CLK,    // I2C3
+      Gpio(Gpio::MEMS_CLK, // I2C3
            GPIOA_BASE,
            GPIO_InitTypeDef { GPIO_Pin_8, GPIO_Mode_AF, GPIO_Speed_50MHz, GPIO_OType_PP, GPIO_PuPd_DOWN },
            GPIO_PinSource8,
            GPIO_AF_3),
       Gpio(Gpio::IR_TXD, //UART1
            GPIOA_BASE,
-           GPIO_InitTypeDef { GPIO_Pin_9, GPIO_Mode_AF, GPIO_Speed_50MHz, GPIO_OType_PP, GPIO_PuPd_UP },
+           GPIO_InitTypeDef { GPIO_Pin_9, GPIO_Mode_AF, GPIO_Speed_50MHz, GPIO_OType_PP, GPIO_PuPd_DOWN },
            GPIO_PinSource9,
            GPIO_AF_7),
       Gpio(Gpio::IR_RXD,
@@ -122,7 +122,9 @@ static constexpr const std::array<const Gpio, Gpio::__ENUM__SIZE + 1> Container 
            GPIO_InitTypeDef { GPIO_Pin_11, GPIO_Mode_AF, GPIO_Speed_50MHz, GPIO_OType_PP, GPIO_PuPd_NOPULL },
            GPIO_PinSource11,
            GPIO_AF_7),
-      //IR_RXDANA COMP3_INP
+      Gpio(Gpio::COMP_3_INP,
+           GPIOB_BASE,
+           GPIO_InitTypeDef { GPIO_Pin_14, GPIO_Mode_AN, GPIO_Speed_50MHz, GPIO_OType_PP, GPIO_PuPd_NOPULL}),
       // ===================PORTC=================
       Gpio(Gpio::NTC_FETS,
            GPIOC_BASE,
@@ -136,8 +138,12 @@ static constexpr const std::array<const Gpio, Gpio::__ENUM__SIZE + 1> Container 
       Gpio(Gpio::DMS,
            GPIOC_BASE,
            GPIO_InitTypeDef { GPIO_Pin_3, GPIO_Mode_AN, GPIO_Speed_50MHz, GPIO_OType_PP, GPIO_PuPd_NOPULL}),
-      // COMP3_OUT
-      Gpio(Gpio::MEMS_SDA,  //I2C3
+      Gpio(Gpio::COMP_3_OUT,
+           GPIOC_BASE,
+           GPIO_InitTypeDef { GPIO_Pin_8, GPIO_Mode_AF, GPIO_Speed_50MHz, GPIO_OType_PP, GPIO_PuPd_DOWN },
+           GPIO_PinSource8,
+           GPIO_AF_7),
+      Gpio(Gpio::MEMS_SDA, //I2C3
            GPIOC_BASE,
            GPIO_InitTypeDef { GPIO_Pin_9, GPIO_Mode_AF, GPIO_Speed_50MHz, GPIO_OType_PP, GPIO_PuPd_DOWN },
            GPIO_PinSource9,
@@ -148,22 +154,24 @@ static constexpr const std::array<const Gpio, Gpio::__ENUM__SIZE + 1> Container 
            GPIO_PinSource12,
            GPIO_AF_6),
       // ===================PORTD=================
-      Gpio(Gpio::HALL_A, // TIM4
+      Gpio(Gpio::HALL1, // TIM4
            GPIOD_BASE,
            GPIO_InitTypeDef { GPIO_Pin_12, GPIO_Mode_AF, GPIO_Speed_2MHz, GPIO_OType_PP, GPIO_PuPd_UP},
            GPIO_PinSource12,
            GPIO_AF_2),
-      Gpio(Gpio::HALL_B,
+      Gpio(Gpio::HALL2,
            GPIOD_BASE,
            GPIO_InitTypeDef { GPIO_Pin_13, GPIO_Mode_AF, GPIO_Speed_2MHz, GPIO_OType_PP, GPIO_PuPd_UP },
            GPIO_PinSource13,
            GPIO_AF_2),
-      Gpio(Gpio::HALL_C,
+      Gpio(Gpio::HALL3,
            GPIOD_BASE,
            GPIO_InitTypeDef { GPIO_Pin_14, GPIO_Mode_AF, GPIO_Speed_2MHz, GPIO_OType_PP, GPIO_PuPd_UP },
            GPIO_PinSource14,
            GPIO_AF_2),
-      //COMP3_INM
+      Gpio(Gpio::COMP_3_INM,
+           GPIOD_BASE,
+           GPIO_InitTypeDef { GPIO_Pin_15, GPIO_Mode_AN, GPIO_Speed_50MHz, GPIO_OType_PP, GPIO_PuPd_NOPULL}),
       // ===================PORTE=================
       Gpio(Gpio::A_HS, //TIM20
            GPIOE_BASE,

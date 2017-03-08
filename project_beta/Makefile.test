@@ -10,6 +10,7 @@ IPATH+=${RTOS_SOURCE_DIR}/include
 IPATH+=${RTOS_SOURCE_DIR}/portable/GCC/ARM_CM4F
 IPATH+=${ROOT}/libraries/STM32F30x_StdPeriph_Driver/inc
 IPATH+=${ROOT}/libraries/CMSIS/Include
+IPATH+=${ROOT}/libraries/CMSIS/Device/ST/STM32F30x/Include
 IPATH+=${ROOT}/libraries
 IPATH+=${ROOT}/project/config
 
@@ -27,6 +28,7 @@ VPATH+=${ROOT}/sources/hal
 ####################################DebugInterface############################################
 
 ${BINDIR}/DebugInterface_ut.bin: DEFINES+=-DDEBUG
+${BINDIR}/DebugInterface_ut.bin: DEFINES+=-DUNITTEST
 ${BINDIR}/DebugInterface_ut.bin: ${OBJDIR}/DebugInterface_ut.o 
 ${BINDIR}/DebugInterface_ut.bin: ${OBJDIR}/DebugInterface.o
 ${BINDIR}/DebugInterface_ut.bin: ${OBJDIR}/Mutex.o

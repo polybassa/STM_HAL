@@ -2,8 +2,8 @@
   ******************************************************************************
   * @file    stm32f30x_dac.c
   * @author  MCD Application Team
-  * @version V1.2.2
-  * @date    27-February-2015
+  * @version V1.2.3
+  * @date    10-July-2015
   * @brief   This file provides firmware functions to manage the following 
   *          functionalities of the Digital-to-Analog Converter (DAC) peripheral: 
   *           + DAC channels configuration: trigger, output buffer, data format

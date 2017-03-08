@@ -13,13 +13,18 @@
  *  You should have received a copy of the GNU General Public License
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>. */
 
-#ifndef SOURCES_PMD_USARTWITHDMA_CONFIG_CONTAINER_H_
-#define SOURCES_PMD_USARTWITHDMA_CONFIG_CONTAINER_H_
+#include "Comp.h"
+#include "trace.h"
 
-static constexpr const std::array<const UsartWithDma, 1> Container =
-{ {
-      UsartWithDma(Factory<Usart>::get<Usart::MSCOM_IF>(), USART_DMAReq_Rx | USART_DMAReq_Tx,
-                   &Factory<Dma>::get<Dma::USART2_TX>(), &Factory<Dma>::get<Dma::USART2_RX>())
-  } };
+static const int __attribute__((unused)) g_DebugZones = ZONE_ERROR | ZONE_WARNING | ZONE_VERBOSE | ZONE_INFO;
 
-#endif /* SOURCES_PMD_USART_CONFIG_CONTAINER_H_ */
+using hal::Comp;
+using hal::Factory;
+
+void Comp::initialize() const
+{
+    COMP_DeInit(mPeripherie);
+    COMP_Init(mPeripherie, &mConfiguration);
+}
+
+constexpr const std::array<const Comp, Comp::__ENUM__SIZE> Factory<Comp>::Container;

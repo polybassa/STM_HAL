@@ -112,6 +112,8 @@ void SensorBLDC::setPulsWidthInMill(int32_t value) const
 
     mHBridge.setPulsWidthPerMill(absVal);
     mPhaseCurrentSensor.setPulsWidthForTriggerPerMill(absVal);
+
+    //modifyPulsWidthPeriode();
 }
 
 void SensorBLDC::setDirection(const Direction dir) const

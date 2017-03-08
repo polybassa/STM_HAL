@@ -23,7 +23,9 @@ enum Description {
 
 #define ACTIVEFREEWHEELING 1
 
-static constexpr uint32_t DEFAULT_DEADTIME = 50;
+static constexpr const uint32_t DEFAULT_DEADTIME = 50;
+static constexpr const uint32_t MINIMAL_PWM_IN_MILL = 25;
+static constexpr const uint32_t MAXIMAL_PWM_IN_MILL = 1000;
 
 #else
 #ifndef SOURCES_PMD_TIMHALFBRIDGE_CONFIG_CONTAINER_H_

@@ -31,7 +31,7 @@ float Battery::getTemperature(void) const
 
 float Battery::getVoltage(void) const
 {
-    return voltagePeripherie.getVoltage() * Battery::VOLTAGE_FACTOR;
+    return voltagePeripherie.getValue() * 1 / Battery::VOLTAGE_FACTOR;
 }
 
 float Battery::getCurrent(void) const

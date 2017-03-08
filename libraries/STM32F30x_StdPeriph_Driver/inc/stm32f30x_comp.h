@@ -2,8 +2,8 @@
   ******************************************************************************
   * @file    stm32f30x_comp.h
   * @author  MCD Application Team
-  * @version V1.2.2
-  * @date    27-February-2015
+  * @version V1.2.3
+  * @date    10-July-2015
   * @brief   This file contains all the functions prototypes for the COMP firmware 
   *          library.
   ******************************************************************************
@@ -406,7 +406,7 @@ typedef struct
 void COMP_DeInit(uint32_t COMP_Selection);
 
 /* Initialization and Configuration functions *********************************/
-void COMP_Init(uint32_t COMP_Selection, COMP_InitTypeDef* COMP_InitStruct);
+void COMP_Init(uint32_t COMP_Selection, COMP_InitTypeDef const * COMP_InitStruct);
 void COMP_StructInit(COMP_InitTypeDef* COMP_InitStruct);
 void COMP_Cmd(uint32_t COMP_Selection, FunctionalState NewState);
 void COMP_SwitchCmd(uint32_t COMP_Selection, FunctionalState NewState);

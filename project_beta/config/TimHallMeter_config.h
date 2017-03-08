@@ -40,12 +40,12 @@ static constexpr const std::array<const HallMeter, HallMeter::__ENUM__SIZE> Cont
 { {
       HallMeter(HallMeter::BLDC_METER,
                 Factory<Tim>::get<Tim::HALL_METER>(),
-                TIM_TS_ITR3,
+                TIM_TS_ITR2,
                 TIM_ICInitTypeDef { TIM_Channel_1, TIM_ICPolarity_Rising, TIM_ICSelection_TRC, TIM_ICPSC_DIV1, 0x00}
                 ),
       HallMeter(HallMeter::BLDC_METER_32BIT,
                 Factory<Tim>::get<Tim::HALL_METER_32BIT>(),
-                TIM_TS_ITR2,
+                TIM_TS_ITR3,
                 TIM_ICInitTypeDef { TIM_Channel_1, TIM_ICPolarity_Rising, TIM_ICSelection_TRC, TIM_ICPSC_DIV1, 0x00}
                 )
   } };

@@ -19,13 +19,9 @@
 #include <cstdint>
 #include <array>
 #include "hal_Factory.h"
+#include "stm32f30x_syscfg.h"
 #include "TimHalfBridge.h"
 #include "AdcWithDma.h"
-
-namespace dev
-{
-struct SensorBLDC;
-}
 
 namespace hal
 {
@@ -89,6 +85,9 @@ class Factory<PhaseCurrentSensor>
         for (const auto& obj : Container) {
             obj.initialize();
         }
+
+        // if TIM20 provides trigger signal for ADC34, this trigger has to be remaped
+        SYSCFG_ADCTriggerRemapConfig(REMAPADCTRIGGER_ADC34_EXT5, ENABLE);
     }
 public:
 

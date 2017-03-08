@@ -24,6 +24,11 @@
 float gCurrentVoltage;
 
 //--------------------------MOCKING--------------------------
+uint32_t hal::Adc::Channel::getValue(void) const
+{
+    return gCurrentVoltage;
+}
+
 float hal::Adc::Channel::getVoltage(void) const
 {
     return gCurrentVoltage;
