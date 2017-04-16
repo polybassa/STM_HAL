@@ -47,7 +47,7 @@
 
 /* APP LAYER INLCUDES */
 #include "BatteryObserver.h"
-#include "DRV8302MotorController.h"
+#include "MotorController.h"
 #include "Mpu.h"
 
 /* GLOBAL VARIABLES */
@@ -56,7 +56,7 @@ extern char _version_start;
 extern char _version_end;
 const std::string VERSION(&_version_start, (&_version_end - &_version_start));
 
-app::DRV8302MotorController* g_motorCtrl = nullptr;
+app::MotorController* g_motorCtrl = nullptr;
 app::Mpu* g_Mpu = nullptr;
 
 int main(void)
@@ -90,7 +90,7 @@ int main(void)
 
     dev::Battery mBattery;
 
-     g_motorCtrl = new app::DRV8302MotorController( dev::Factory<dev::SensorBLDC>::get<dev::SensorBLDC::BLDC>(), mBattery, 200000, 80000);
+     g_motorCtrl = new app::MotorController( dev::Factory<dev::SensorBLDC>::get<dev::SensorBLDC::BLDC>(), mBattery, 200000, 80000);
 
     os::Task::startScheduler();
 

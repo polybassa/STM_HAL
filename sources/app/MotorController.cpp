@@ -1,4 +1,4 @@
-/* Copyright (C) 2015  Nils Weiss, Alexander Strobl, Daniel Tatzel
+/* Copyright (C) 2016  Nils Weiss
  *
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -18,24 +18,17 @@
 #include <cmath>
 
 using app::MotorController;
-using dev::Battery;
-using dev::PIDController;
-using dev::SensorBLDC;
 
 static const int __attribute__((unused)) g_DebugZones = ZONE_ERROR | ZONE_WARNING | ZONE_VERBOSE | ZONE_INFO;
 
-constexpr std::chrono::milliseconds MotorController::motorCheckInterval;
 constexpr std::chrono::milliseconds MotorController::controllerInterval;
 
-MotorController::MotorController(
-                                 const SensorBLDC& motor,
-                                 const Battery&    battery,
-                                 const float       motorConstant,
-                                 const float       motorResistance,
-                                 const float       Kp,
-                                 const float       Ki) :
+MotorController::MotorController(const dev::SensorBLDC& motor,
+                                 const dev::Battery&    battery,
+                                 const float            Kp,
+                                 const float            Ki) :
     os::DeepSleepModule(),
-    mMotorControllerTask("1MotorControl",
+    mMotorControllerTask("MotorControl",
                          MotorController::STACKSIZE,
                          os::Task::Priority::HIGH,
                          [this](const bool& join)
@@ -44,85 +37,132 @@ MotorController::MotorController(
                          }),
     mMotor(motor),
     mBattery(battery),
-    mMotorConstant(motorConstant),
-    mMotorCoilResistance(motorResistance),
     mController(mCurrentTorque,
                 mOutputTorque,
                 mSetTorque,
                 Kp,
                 Ki,
                 static_cast<const float>(0.0),
-                PIDController::ControlDirection::DIRECT),
+                dev::PIDController::ControlDirection::DIRECT),
     mSetTorqueQueue()
 {
     mController.setSampleTime(controllerInterval);
-    mController.setOutputLimits(-1.0, 1.0);
-    mController.setMode(PIDController::ControlMode::AUTOMATIC);
+    mController.setOutputLimits(-100000, 100000);
+    mController.setMode(dev::PIDController::ControlMode::AUTOMATIC);
+    setTorque(0.00001);
     mSetTorque = 0.00001;
+
+    mMotor.mPhaseCurrentSensor.registerValueAvailableSemaphore(&mPhaseCurrentValueAvailable);
+
     mMotor.start();
 }
 
 void MotorController::enterDeepSleep(void)
 {
     mMotorControllerTask.join();
-    mController.setMode(PIDController::ControlMode::MANUAL);
     mMotor.stop();
 }
 
 void MotorController::exitDeepSleep(void)
 {
     mMotor.start();
-    mController.setMode(PIDController::ControlMode::AUTOMATIC);
     mMotorControllerTask.start();
 }
 
 void MotorController::motorControllerTaskFunction(const bool& join)
 {
+    mMotor.calibrate();
+    mMotor.setPulsWidthInMill(0);
+
     do {
         float newSetTorque;
         if (mSetTorqueQueue.receive(newSetTorque, 0)) {
             mSetTorque = newSetTorque;
         }
-        mCurrentOmega = mMotor.getActualOmega();
-        updateCurrentTorque();
+
+        mCurrentTorque = mMotor.getActualTorqueInNewtonMeter();
+        adjustControllerLimits();
         mController.compute();
         updatePwmOutput();
-        static constexpr uint32_t waitPeriode = controllerInterval.count() / motorCheckInterval.count();
-        for (uint32_t i = 0; i < waitPeriode; i++) {
-            mMotor.checkMotor(mBattery);
-            os::ThisTask::sleep(motorCheckInterval);
-        }
+        updateQuadrant();
+
+#if 0
+        TraceLight(
+                   "tick: %5d\t"
+                   "Soll: %5d\t"
+                   "Out: %5d\t"
+                   "Ist: %5d\t"
+                   "PWM: %5d\t"
+                   "RPS: %5d\t"
+                   //"periode: %5d\t"
+                   //"samples: %5d\t"
+                   "U[mV]: %5d\t"
+                   //"Phase I: %5d\t"
+                   "CDIR: %s\t"
+                   "SDIR: %s\t"
+                   "\n",
+                   os::Task::getTickCount() % 1000,
+                   static_cast<int32_t>(mSetTorque * 1000),
+                   static_cast<int32_t>(mOutputTorque * 1000),
+                   static_cast<int32_t>(mCurrentTorque * 1000),
+                   static_cast<int32_t>(mMotor.getActualPulsWidthPerMill()),
+                   static_cast<int32_t>(mMotor.getActualRPS()),
+                   //mMotor.mHBridge.mTim.getPeriode(),
+                   //mMotor.mPhaseCurrentSensor.getNumberOfMeasurementsForPhaseCurrentValue()
+                   static_cast<int32_t>(mBattery.getVoltage() * 1000),
+                   //static_cast<int32_t>(mMotor.mPhaseCurrentSensor.getCurrentVoltage() * 1000),
+                   mMotor.getActualDirection() == dev::SensorBLDC::Direction::FORWARD ? "F" : "B",
+                   mMotor.getSetDirection() == dev::SensorBLDC::Direction::FORWARD ? "F" : "B"
+                   );
+#endif
+        mMotor.checkMotor();
+        mPhaseCurrentValueAvailable.take(controllerInterval);
     } while (!join);
 }
 
-void MotorController::setTunings(const float kp, const float ki, const float kd)
+void MotorController::adjustControllerLimits(void)
 {
-    mController.setTunings(kp, ki, kd);
+    const float MAXIMUM_VOLTAGE = mBattery.getVoltage();
+    static constexpr const float MAXIMUM_PULSWIDTH = 1000.0; //because of pwm per mill
+    const float MAXIMUM_CONTROLLER_OUTPUT = MAXIMUM_VOLTAGE * MAXIMUM_PULSWIDTH / mMotor.mMotorCoilResistance;
+
+    /*
+     * Formula for suppression factor = -0.03 / (abs(x) - 0.05)^2 + 1.1
+     * suppression factor in range 0.01 to 1
+     */
+
+    float supressionFactor = -0.03 / std::pow(std::abs(mSetTorque) + 0.05, 2.0) + 1.1;
+
+    //check bounds
+    supressionFactor = std::min(1.0f, std::max(0.01f, supressionFactor));
+
+    mController.setOutputLimits(0.0 - (MAXIMUM_CONTROLLER_OUTPUT * supressionFactor),
+                                MAXIMUM_CONTROLLER_OUTPUT * supressionFactor);
+
+    static const float initial_P = mController.getKp();
+    static const float initial_I = mController.getKi();
+
+    mController.setTunings(initial_P * supressionFactor, initial_I * supressionFactor, 0);
 }
 
-void MotorController::updateCurrentTorque(void)
+void MotorController::updateQuadrant(void)
 {
-    /*
-     * P = T * Omega
-     * P = U * I
-     * I = Omega * MotorConstant
-     */
-    const float voltageInputMotor =
-        (static_cast<float>(mMotor.getActualPulsWidthPerMill()) / 1000.0) * mBattery.getVoltage();
-    const float voltageInductionMotor = mCurrentOmega * mMotorConstant;
-    const float deltaVoltage = voltageInputMotor - voltageInductionMotor; // bessere Formel mit Induktivitaet und Frequenz verwenden
-    const float drivingCurrentInMotor = deltaVoltage / mMotorCoilResistance;
-    mCurrentTorque = drivingCurrentInMotor * mMotorConstant;
+    if (mOutputTorque < 0) {
+        mMotor.setDirection(dev::SensorBLDC::Direction::FORWARD);
+    } else {
+        mMotor.setDirection(dev::SensorBLDC::Direction::BACKWARD);
+    }
 }
 
 void MotorController::updatePwmOutput(void)
 {
-    const float drivingCurrentInMotor = mOutputTorque / mMotorConstant;
-    const float deltaVoltage = drivingCurrentInMotor * mMotorCoilResistance;
-    const float voltageInductionMotor = mCurrentOmega * mMotorConstant;
-    const float voltageInputMotor = voltageInductionMotor + deltaVoltage;
-    const float pulswidth = (voltageInputMotor / mBattery.getVoltage()) * 1000.0;
-    mMotor.setPulsWidthInMill(pulswidth);
+    /*
+       dM / dPWM = U / R
+       dPWM / dM = R / U
+       dPWM = R * dM / U
+     */
+
+    mMotor.setPulsWidthInMill(static_cast<int32_t>(mMotor.mMotorCoilResistance * mOutputTorque / mBattery.getVoltage()));
 }
 
 void MotorController::setTorque(const float setValue)
