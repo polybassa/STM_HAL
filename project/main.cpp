@@ -45,10 +45,24 @@
 #include "TimSensorBldc.h"
 #include "Battery.h"
 
+/* VIRT LAYER INCLUDES */
+#include "virtual_MotorController.h"
+#include "virtual_TemperatureSensor.h"
+#include "virtual_Battery.h"
+#include "virtual_BalanceController.h"
+
+/* COM LAYER INCLUDES */
+#include "DataTransferObject.h"
+
 /* APP LAYER INLCUDES */
 #include "BatteryObserver.h"
 #include "MotorController.h"
+#include "BalanceController.h"
 #include "Mpu.h"
+#include "SteeringController.h"
+#include "SlaveController.h"
+#include "BalanceController.h"
+#include "Communication.h"
 
 /* GLOBAL VARIABLES */
 static const int __attribute__((used)) g_DebugZones = ZONE_ERROR | ZONE_WARNING | ZONE_VERBOSE | ZONE_INFO;
@@ -85,8 +99,12 @@ int main(void)
      TraceInit();
      Trace(ZONE_INFO, "Version: %c \r\n", &_version_start);
 
+     const bool isMaster = true; //hal::Factory<hal::Gpio>::get<hal::Gpio::CONFIG>();
+
+
     os::ThisTask::sleep(std::chrono::milliseconds(10));
-    //g_Mpu = new app::Mpu();
+
+    g_Mpu = new app::Mpu();
 
     dev::Battery mBattery;
 

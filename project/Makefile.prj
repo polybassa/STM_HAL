@@ -27,6 +27,8 @@ VPATH+=${ROOT}/sources/hal
 VPATH+=${ROOT}/sources/os
 VPATH+=${ROOT}/sources/dev
 VPATH+=${ROOT}/sources/app
+VPATH+=${ROOT}/sources/virtual
+VPATH+=${ROOT}/sources/com
 VPATH+=${ROOT}/sources/app/test_apps
 VPATH+=${RTOS_SOURCE_DIR}
 VPATH+=${RTOS_SOURCE_DIR}/portable/MemMang
@@ -64,6 +66,9 @@ IPATH+=${ROOT}/sources/app
 IPATH+=${ROOT}/sources/app/test_apps
 IPATH+=${ROOT}/sources/interface
 IPATH+=${ROOT}/sources/utility
+IPATH+=${ROOT}/sources/virtual
+IPATH+=${ROOT}/sources/com
+
 IPATH+=${ROOT}/definitions
 IPATH+=${RTOS_SOURCE_DIR}/include
 IPATH+=${RTOS_SOURCE_DIR}/portable/GCC/ARM_CM4F
@@ -157,8 +162,9 @@ ${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/log_stm32.o ## Remove from build only for l
 #${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/TestRtc.o
 #${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/TestSleep.o
 #${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/TestGpio.o
-${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/TestIR.o
-${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/TestDRV8302.o
+#${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/TestIR.o
+#${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/TestDRV8302.o
+${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/Test_BALANCE.o
 
 # device
 ${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/startup_stm32f30x.o

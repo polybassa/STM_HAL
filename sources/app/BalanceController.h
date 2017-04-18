@@ -17,7 +17,7 @@
 #define SOURCES_PMD_BALANCECONTROLLER_H_
 
 #include "PIDController.h"
-#include "DirectMotorController.h"
+#include "MotorController.h"
 #include "Mpu.h"
 #include "TaskInterruptable.h"
 #include "DeepSleepInterface.h"
@@ -37,7 +37,7 @@ class BalanceController final :
 
     os::TaskInterruptable mBalanceControllerTask;
     const Mpu& mMpu;
-    DirectMotorController& mMotor;
+    MotorController& mMotor;
     os::Queue<float, 1> mSetAngleQueue;
     dev::PIDController mControllerP;
     dev::PIDController mControllerD;
@@ -64,7 +64,7 @@ class BalanceController final :
 public:
     BalanceController(
                       const Mpu &gyro,
-                      DirectMotorController & motor);
+                      MotorController & motor);
 
     BalanceController(const BalanceController &) = delete;
     BalanceController(BalanceController &&) = delete;
