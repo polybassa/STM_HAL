@@ -20,6 +20,7 @@ enum Description {
     // ===PORTA===
     NTC_BAT,
     NTC_MOT,
+    CONFIG,
     DMS_OFFSET,
     PHSTA,
     MEMS_CLK,
@@ -73,6 +74,9 @@ static constexpr const std::array<const Gpio, Gpio::__ENUM__SIZE + 1> Container 
       Gpio(Gpio::NTC_MOT,
            GPIOA_BASE,
            GPIO_InitTypeDef { GPIO_Pin_1, GPIO_Mode_AN, GPIO_Speed_50MHz, GPIO_OType_PP, GPIO_PuPd_NOPULL}),
+      Gpio(Gpio::CONFIG,
+           GPIOA_BASE,
+           GPIO_InitTypeDef { GPIO_Pin_2, GPIO_Mode_IN, GPIO_Speed_2MHz, GPIO_OType_PP, GPIO_PuPd_DOWN }),
       Gpio(Gpio::DMS_OFFSET, // TODO CHECK //DAC1_OUT2
            GPIOA_BASE,
            GPIO_InitTypeDef { GPIO_Pin_5, GPIO_Mode_AN, GPIO_Speed_50MHz, GPIO_OType_PP, GPIO_PuPd_NOPULL}),
