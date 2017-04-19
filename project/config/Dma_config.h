@@ -19,10 +19,10 @@
 #define DMA1_CHANNEL1_INTERRUPT_ENABLED false
 #define DMA1_CHANNEL2_INTERRUPT_ENABLED false
 #define DMA1_CHANNEL3_INTERRUPT_ENABLED false
-#define DMA1_CHANNEL4_INTERRUPT_ENABLED false
+#define DMA1_CHANNEL4_INTERRUPT_ENABLED true
 #define DMA1_CHANNEL5_INTERRUPT_ENABLED true
-#define DMA1_CHANNEL6_INTERRUPT_ENABLED true
-#define DMA1_CHANNEL7_INTERRUPT_ENABLED true
+#define DMA1_CHANNEL6_INTERRUPT_ENABLED false
+#define DMA1_CHANNEL7_INTERRUPT_ENABLED false
 #define DMA2_CHANNEL1_INTERRUPT_ENABLED false
 #define DMA2_CHANNEL2_INTERRUPT_ENABLED true
 #define DMA2_CHANNEL3_INTERRUPT_ENABLED false
@@ -36,9 +36,8 @@
 
 enum Description {
     // DMA1
-    SPI2_TX,
-    USART2_RX,
-    USART2_TX,
+    USART1_RX,
+    USART1_TX,
     // DMA2
     SPI3_TX,
     MEMORY,
@@ -53,27 +52,20 @@ enum Description {
 
 static constexpr const std::array<const Dma, Dma::__ENUM__SIZE + 1> Container =
 { {
-      Dma(Dma::SPI2_TX,
-          DMA1_Channel5_BASE,
-          DMA_InitTypeDef { SPI2_BASE + 0x0C, 0, DMA_DIR_PeripheralDST, 0, DMA_PeripheralInc_Disable,
+      Dma(Dma::USART1_RX,
+          DMA1_Channel4_BASE,
+          DMA_InitTypeDef { USART1_BASE + 0x24, 0, DMA_DIR_PeripheralSRC, 0, DMA_PeripheralInc_Disable,
                             DMA_MemoryInc_Enable, DMA_PeripheralDataSize_Byte,
                             DMA_MemoryDataSize_Byte, DMA_Mode_Normal,
-                            DMA_Priority_Low, DMA_M2M_Disable },
+                            DMA_Priority_High, DMA_M2M_Disable},
+          DMA_IT_TC, IRQn_Type::DMA1_Channel4_IRQn),
+      Dma(Dma::USART1_TX,
+          DMA1_Channel5_BASE,
+          DMA_InitTypeDef { USART1_BASE + 0x28, 0, DMA_DIR_PeripheralDST, 0, DMA_PeripheralInc_Disable,
+                            DMA_MemoryInc_Enable, DMA_PeripheralDataSize_Byte,
+                            DMA_MemoryDataSize_Byte, DMA_Mode_Normal,
+                            DMA_Priority_High, DMA_M2M_Disable},
           DMA_IT_TC, IRQn_Type::DMA1_Channel5_IRQn),
-      Dma(Dma::USART2_RX,
-          DMA1_Channel6_BASE,
-          DMA_InitTypeDef { USART2_BASE + 0x24, 0, DMA_DIR_PeripheralSRC, 0, DMA_PeripheralInc_Disable,
-                            DMA_MemoryInc_Enable, DMA_PeripheralDataSize_Byte,
-                            DMA_MemoryDataSize_Byte, DMA_Mode_Circular,
-                            DMA_Priority_Medium, DMA_M2M_Disable},
-          DMA_IT_TC, IRQn_Type::DMA1_Channel6_IRQn),
-      Dma(Dma::USART2_TX,
-          DMA1_Channel7_BASE,
-          DMA_InitTypeDef { USART2_BASE + 0x28, 0, DMA_DIR_PeripheralDST, 0, DMA_PeripheralInc_Disable,
-                            DMA_MemoryInc_Enable, DMA_PeripheralDataSize_Byte,
-                            DMA_MemoryDataSize_Byte, DMA_Mode_Circular,
-                            DMA_Priority_Medium, DMA_M2M_Disable},
-          DMA_IT_TC, IRQn_Type::DMA1_Channel7_IRQn),
       Dma(Dma::SPI3_TX,
           DMA2_Channel2_BASE,
           DMA_InitTypeDef { SPI3_BASE + 0x0C, 0, DMA_DIR_PeripheralDST, 0, DMA_PeripheralInc_Disable,

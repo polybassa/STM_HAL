@@ -60,8 +60,7 @@ class Factory<Light>
     static constexpr const std::array<const Light,
                                       interface::Light::__ENUM__SIZE> Container =
     { {
-          Light(interface::Light::HEADLIGHT, hal::Factory<hal::SpiWithDma>::get<hal::Spi::HEADLIGHT>()),
-          Light(interface::Light::BACKLIGHT, hal::Factory<hal::SpiWithDma>::get<hal::Spi::BACKLIGHT>())
+          Light(interface::Light::HEADLIGHT, hal::Factory<hal::SpiWithDma>::get<hal::Spi::HEADLIGHT>())
       } };
 
 public:
