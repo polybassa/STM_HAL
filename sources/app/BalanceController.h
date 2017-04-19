@@ -39,26 +39,8 @@ class BalanceController final :
     const Mpu& mMpu;
     MotorController& mMotor;
     os::Queue<float, 1> mSetAngleQueue;
-    dev::PIDController mControllerP;
-    dev::PIDController mControllerD;
 
-    float mSetAngle = 0;
-    float mCurrentAngle = std::numeric_limits<float>::epsilon();
-    float mOutputTorqueControllerD = std::numeric_limits<float>::epsilon();
-
-    float mSetAngleSpeed = 0;
-    float mCurrentAngleSpeed = std::numeric_limits<float>::epsilon();
-    float mOutputTorqueControllerP = std::numeric_limits<float>::epsilon();
-
-    static constexpr float Kp_P = 0.009;
-    static constexpr float Ki_P = 0;
-    static constexpr float Kd_P = 0;
-
-    static constexpr float Kp_D = 0.009;
-    static constexpr float Ki_D = 0;
-    static constexpr float Kd_D = 0;
-
-    const std::chrono::milliseconds mControllerInterval = std::chrono::milliseconds(3);
+    const std::chrono::milliseconds mControllerInterval = std::chrono::milliseconds(4);
 
     void balanceControllerTaskFunction(const bool&);
 public:
@@ -72,10 +54,6 @@ public:
     BalanceController& operator=(BalanceController &&) = delete;
 
     virtual void setTargetAngleInDegree(const float angle) override;
-
-#if defined(DEBUG)
-    void setTunings(const float kp, const float ki, const float kd);
-#endif
 };
 }
 
