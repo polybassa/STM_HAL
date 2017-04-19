@@ -65,7 +65,9 @@
 #include "Communication.h"
 
 /* GLOBAL VARIABLES */
-static const int __attribute__((used)) g_DebugZones = ZONE_ERROR | ZONE_WARNING | ZONE_VERBOSE | ZONE_INFO;
+static const int __attribute__((used)) g_DebugZones = ZONE_ERROR | ZONE_WARNING |
+                                                      ZONE_VERBOSE | ZONE_INFO;
+
 extern char _version_start;
 extern char _version_end;
 const std::string VERSION(&_version_start, (&_version_end - &_version_start));
@@ -73,42 +75,124 @@ const std::string VERSION(&_version_start, (&_version_end - &_version_start));
 app::MotorController* g_motorCtrl = nullptr;
 app::Mpu* g_Mpu = nullptr;
 
+virt::Light* g_light1 = nullptr;
+
+
 int main(void)
 {
     hal::initFactory<hal::Factory<hal::Gpio> >();
-     hal::initFactory<hal::Factory<hal::Tim> >();
-     hal::initFactory<hal::Factory<hal::HallDecoder> >();
-     hal::initFactory<hal::Factory<hal::HallMeter> >();
-     hal::initFactory<hal::Factory<hal::HalfBridge> >();
-     hal::initFactory<hal::Factory<hal::Pwm> >();
-     hal::initFactory<hal::Factory<hal::Exti> >();
-     hal::initFactory<hal::Factory<hal::Dma> >();
-     hal::initFactory<hal::Factory<hal::Usart> >();
-     hal::initFactory<hal::Factory<hal::UsartWithDma> >();
-     hal::initFactory<hal::Factory<hal::Spi> >();
-     hal::initFactory<hal::Factory<hal::SpiWithDma> >();
-     hal::initFactory<hal::Factory<hal::Rtc> >();
-     hal::initFactory<hal::Factory<hal::Adc> >();
-     hal::initFactory<hal::Factory<hal::Adc::Channel> >();
-     hal::initFactory<hal::Factory<hal::AdcWithDma> >();
-     hal::initFactory<hal::Factory<hal::PhaseCurrentSensor>> ();
-     hal::initFactory<hal::Factory<hal::Crc> >();
-     hal::initFactory<hal::Factory<hal::I2c> >();
-     hal::initFactory<hal::Factory<hal::Comp> >();
+    hal::initFactory<hal::Factory<hal::Tim> >();
+    hal::initFactory<hal::Factory<hal::HallDecoder> >();
+    hal::initFactory<hal::Factory<hal::HallMeter> >();
+    hal::initFactory<hal::Factory<hal::HalfBridge> >();
+    hal::initFactory<hal::Factory<hal::Pwm> >();
+    hal::initFactory<hal::Factory<hal::Exti> >();
+    hal::initFactory<hal::Factory<hal::Dma> >();
+    hal::initFactory<hal::Factory<hal::Usart> >();
+    hal::initFactory<hal::Factory<hal::UsartWithDma> >();
+    hal::initFactory<hal::Factory<hal::Spi> >();
+    hal::initFactory<hal::Factory<hal::SpiWithDma> >();
+    hal::initFactory<hal::Factory<hal::Rtc> >();
+    hal::initFactory<hal::Factory<hal::Adc> >();
+    hal::initFactory<hal::Factory<hal::Adc::Channel> >();
+    hal::initFactory<hal::Factory<hal::AdcWithDma> >();
+    hal::initFactory<hal::Factory<hal::PhaseCurrentSensor> >();
+    hal::initFactory<hal::Factory<hal::Crc> >();
+    hal::initFactory<hal::Factory<hal::I2c> >();
+    hal::initFactory<hal::Factory<hal::Comp> >();
 
-     TraceInit();
-     Trace(ZONE_INFO, "Version: %c \r\n", &_version_start);
+    TraceInit();
+    Trace(ZONE_INFO, "Version: %s \r\n", VERSION.c_str());
 
-     const bool isMaster = true; //hal::Factory<hal::Gpio>::get<hal::Gpio::CONFIG>();
-
-
-    os::ThisTask::sleep(std::chrono::milliseconds(10));
+    const bool isMaster = hal::Factory<hal::Gpio>::get<hal::Gpio::CONFIG>();
 
     g_Mpu = new app::Mpu();
 
-    dev::Battery mBattery;
+    auto battery = new dev::Battery();
+    auto vBattery = new virt::Battery();
 
-     g_motorCtrl = new app::MotorController( dev::Factory<dev::SensorBLDC>::get<dev::SensorBLDC::BLDC>(), mBattery, 200000, 80000);
+    g_motorCtrl = new app::MotorController(
+                                           dev::Factory<dev::SensorBLDC>::get<dev::SensorBLDC::BLDC>(),
+                                           *battery, 200000, 80000);
+
+    auto vMotor = new virt::MotorController();
+
+    auto balancer = new app::BalanceController(*g_Mpu, *g_motorCtrl);
+    auto vBalancer = new virt::BalanceController();
+
+    auto virtHeadLight = new virt::Light(interface::Light::HEADLIGHT);
+
+    g_light1 = virtHeadLight;
+
+    auto virtInternalTemp = new virt::TemperatureSensor(interface::TemperatureSensor::INTERNAL);
+    auto virtMotorTemp = new virt::TemperatureSensor(interface::TemperatureSensor::MOTOR);
+    auto virtBatteryTemp = new virt::TemperatureSensor(interface::TemperatureSensor::BATTERY);
+    auto virtFetTemp = new virt::TemperatureSensor(interface::TemperatureSensor::FET);
+
+    static auto masterToSlaveDTO = com::make_dto(*virtHeadLight, *virtHeadLight, *vBalancer);
+
+    static auto slaveToMasterDTO = com::make_dto(*virtMotorTemp,
+                                          *virtBatteryTemp,
+                                          *virtFetTemp,
+                                          *vBattery,
+                                          *vMotor);
+
+
+	// TODO make different build targets to reduce flash size
+    if (!isMaster) {
+    	[[gnu::used]] auto comApp =
+            new app::Communication<decltype(masterToSlaveDTO), decltype(slaveToMasterDTO)>(
+                                                                                           hal::Factory<hal::
+                                                                                                        UsartWithDma>::
+                                                                                           get<hal::Usart::MSCOM_IF>(),
+                                                                                           masterToSlaveDTO,
+                                                                                           slaveToMasterDTO);
+    } else {
+    	[[gnu::used]] auto comApp =
+            new app::Communication<decltype(slaveToMasterDTO), decltype(masterToSlaveDTO)>(
+                                                                                           hal::Factory<hal::
+                                                                                                        UsartWithDma>::
+                                                                                           get<hal::Usart::MSCOM_IF>(),
+                                                                                           slaveToMasterDTO,
+                                                                                           masterToSlaveDTO);
+    }
+
+    if (!isMaster) {
+        //===================== APPS in Slave ==========================
+    	[[gnu::unused]] auto slaveController = new app::SlaveController(
+                                                        *balancer,
+                                                        *vBalancer,
+                                                        *g_motorCtrl,
+                                                        *vMotor,
+                                                        *battery,
+                                                        *vBattery,
+                                                        dev::Factory<dev::TemperatureSensor>::get<interface::
+                                                                                                  TemperatureSensor::
+                                                                                                  INTERNAL>(),
+                                                        dev::Factory<dev::TemperatureSensor>::get<interface::
+                                                                                                  TemperatureSensor::
+                                                                                                  MOTOR>(),
+                                                        dev::Factory<dev::TemperatureSensor>::get<interface::
+                                                                                                  TemperatureSensor::
+                                                                                                  FET>(),
+                                                        dev::Factory<dev::TemperatureSensor>::get<interface::
+                                                                                                  TemperatureSensor::
+                                                                                                  BATTERY>(),
+                                                        *virtInternalTemp,
+                                                        *virtMotorTemp,
+                                                        *virtFetTemp,
+                                                        *virtBatteryTemp,
+                                                        dev::Factory<dev::Light>::get<interface::Light::HEADLIGHT>(),
+                                                        dev::Factory<dev::Light>::get<interface::Light::HEADLIGHT>(),
+                                                        *virtHeadLight,
+                                                        *virtHeadLight);
+    }
+    else {
+        //===================== APPS in Master ==========================
+        constexpr const auto& straingaugeSensor =
+            dev::Factory<dev::StraingaugeSensor>::get<dev::StraingaugeSensor::STRAINGAUGESENSOR>();
+        [[gnu::unused]] auto steering = new app::SteeringController(*balancer, *vBalancer, straingaugeSensor);
+    }
 
     os::Task::startScheduler();
 
