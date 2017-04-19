@@ -89,7 +89,8 @@ class Factory<StraingaugeSensor>
 {
     static constexpr const std::array<const StraingaugeSensor, StraingaugeSensor::__ENUM__SIZE> Container =
     { {
-          StraingaugeSensor(StraingaugeSensor::STRAINGAUGESENSOR, hal::Factory<hal::Adc::Channel>::get<hal::Adc::Channel::DMS>())
+          StraingaugeSensor(StraingaugeSensor::STRAINGAUGESENSOR,
+                            hal::Factory<hal::Adc::Channel>::get<hal::Adc::Channel::DMS>())
       } };
 
 public:

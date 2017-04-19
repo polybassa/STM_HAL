@@ -40,7 +40,6 @@ const TaskEndless app::testMsCom("MsCom", 2048, os::Task::Priority::LOW, [] (con
                                          } else {
                                              g_light1->setColor({value, static_cast<uint8_t>(255 - value), value});
 
-
                                              os::ThisTask::sleep(std::chrono::milliseconds(50));
                                          }
                                      }
