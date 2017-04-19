@@ -102,10 +102,10 @@ void loop(void)
     os::ThisTask::sleep(std::chrono::milliseconds(5));
 
     Eigen::Vector3f gravity = g_Mpu->getGravity();
-        Trace(ZONE_INFO, "Gravity: x:%6d, y:%6d, z:%6d\n",
-              static_cast<int32_t>(gravity.x() * 1000),
-              static_cast<int32_t>(gravity.y() * 1000),
-              static_cast<int32_t>(gravity.z() * 1000));
+    Trace(ZONE_INFO, "Gravity: x:%6d, y:%6d, z:%6d\n",
+          static_cast<int32_t>(gravity.x() * 1000),
+          static_cast<int32_t>(gravity.y() * 1000),
+          static_cast<int32_t>(gravity.z() * 1000));
 }
 
 const os::TaskEndless app::balanceTest(
