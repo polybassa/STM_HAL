@@ -14,55 +14,34 @@
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>. */
 
 #include "TestMsCom.h"
-#include "DebugInterface.h"
 #include "Gpio.h"
 #include "virtual_Light.h"
-#include "Communication.h"
-#include "Adc.h"
+#include "trace.h"
 
+static const int __attribute__((used)) g_DebugZones = ZONE_ERROR | ZONE_WARNING |
+                                                      ZONE_VERBOSE | ZONE_INFO;
 using os::TaskEndless;
 
-extern app::Communication* g_Com;
+extern virt::Light* g_light1; // = nullptr;
 
-const TaskEndless app::testMsCom("MsCom", 2048, os::Task::Priority::MEDIUM, [] (const bool&){
-                                     const dev::DebugInterface com;
-
+const TaskEndless app::testMsCom("MsCom", 2048, os::Task::Priority::LOW, [] (const bool&){
                                      constexpr auto& master = hal::Factory<hal::Gpio>::get<hal::Gpio::CONFIG>();
 
-                                     virt::Light headLight(virt::Light::HEADLIGHT, *g_Com);
-                                     virt::Light backLight(virt::Light::BACKLIGHT, *g_Com);
+                                     Trace(ZONE_INFO, "Start MS Com test");
 
-                                     com.print("Start MS Com test");
+                                     uint8_t value = 0;
 
                                      while (true) {
                                          if (!master) {
-                                             auto color = headLight.getColor();
-//            com.print("R:%d G:%d B:%d\r\n", color.red, color.green, color.blue);
-                                             color = backLight.getColor();
-//            com.print("R:%d G:%d B:%d\r\n", color.red, color.green, color.blue);
-                                             os::ThisTask::sleep(std::chrono::milliseconds(10));
+                                             auto color = g_light1->getColor();
+                                             Trace(ZONE_INFO, "R:%d G:%d B:%d\r\n", color.red, color.green, color.blue);
+
+                                             os::ThisTask::sleep(std::chrono::milliseconds(50));
                                          } else {
-                                             static uint8_t value = 0;
+                                             g_light1->setColor({value, static_cast<uint8_t>(255 - value), value});
 
-                                             headLight.setColor({value, value, value});
-                                             backLight.setColor({value++, 0, 0});
 
-//            constexpr auto& tBatt = virt::Factory<virt::TemperatureSensor>::get<virt::TemperatureSensor::BATTERY>();
-//            constexpr auto& tMotor = virt::Factory<virt::TemperatureSensor>::get<virt::TemperatureSensor::MOTOR>();
-//            constexpr auto& tFet = virt::Factory<virt::TemperatureSensor>::get<virt::TemperatureSensor::FET>();
-//
-//            virt::Battery batt;
-//            virt::MotorController motor;
-//
-//            com.print("Slave values\r\n");
-//            com.print("Temperature Battery: %f\r\n", tBatt.getTemperature());
-//            com.print("Temperature Motor: %f\r\n", tMotor.getTemperature());
-//            com.print("Temperature FET: %f\r\n", tFet.getTemperature());
-//            com.print("Battery voltage: %f\r\n", batt.getVoltage());
-//            com.print("Battery current: %f\r\n", batt.getCurrent());
-//            com.print("Motor RPS: %f\r\n", motor.getCurrentRPS());
-
-                                             os::ThisTask::sleep(std::chrono::milliseconds(10));
+                                             os::ThisTask::sleep(std::chrono::milliseconds(50));
                                          }
                                      }
                                  });
