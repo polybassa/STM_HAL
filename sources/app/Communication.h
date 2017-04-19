@@ -51,7 +51,7 @@ private:
     virtual void enterDeepSleep(void) override;
     virtual void exitDeepSleep(void) override;
 
-    static constexpr uint32_t STACKSIZE = 2048;
+    static constexpr uint32_t STACKSIZE = 1024;
 
     const hal::UsartWithDma& mInterface;
     rxDto& mRxDto;
@@ -115,12 +115,13 @@ void app::Communication<rxDto, txDto>::TxTaskFunction(const bool& join)
         const auto bytesTransmitted = mInterface.send(mTxDto.data(),
                                                       mTxDto.length(),
                                                       ticksToWaitForTx);
+
         if (bytesTransmitted != mTxDto.length()) {
             if (mErrorCallback) {
                 mErrorCallback(ErrorCode::TX_ERROR);
             }
         }
-        os::ThisTask::sleep(std::chrono::milliseconds(5));
+        os::ThisTask::sleep(std::chrono::milliseconds(10));
     } while (!join);
 }
 
@@ -130,7 +131,7 @@ void app::Communication<rxDto, txDto>::RxTaskFunction(const bool& join)
     mInterface.enableReceiveTimeout(10);
 
     do {
-        os::ThisTask::sleep(std::chrono::milliseconds(1));
+        os::ThisTask::sleep(std::chrono::milliseconds(9));
 
         constexpr uint32_t ticksToWaitForRx = 30;
 

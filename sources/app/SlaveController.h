@@ -33,9 +33,9 @@ namespace app
 {
 class SlaveController final
 {
-    static constexpr uint32_t STACKSIZE = 2048;
-    static constexpr auto UPDATE_INTERNAL_INTERVAL = std::chrono::milliseconds(3);
-    static constexpr auto UPDATE_EXTERNAL_INTERVAL = std::chrono::milliseconds(1);
+    static constexpr uint32_t STACKSIZE = 1024;
+    static constexpr auto UPDATE_INTERNAL_INTERVAL = std::chrono::milliseconds(20);
+    static constexpr auto UPDATE_EXTERNAL_INTERVAL = std::chrono::milliseconds(20);
 
     os::TaskInterruptable mUpdateExternalObjectsTask;
     os::TaskInterruptable mUpdateInternalObjectsTask;

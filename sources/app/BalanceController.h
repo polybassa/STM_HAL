@@ -33,7 +33,7 @@ class BalanceController final :
     virtual void enterDeepSleep(void) override;
     virtual void exitDeepSleep(void) override;
 
-    static constexpr uint32_t STACKSIZE = 2048;
+    static constexpr uint32_t STACKSIZE = 1024;
 
     os::TaskInterruptable mBalanceControllerTask;
     const Mpu& mMpu;
@@ -58,7 +58,7 @@ class BalanceController final :
     static constexpr float Ki_D = 0;
     static constexpr float Kd_D = 0;
 
-    const std::chrono::milliseconds mControllerInterval = std::chrono::milliseconds(6);
+    const std::chrono::milliseconds mControllerInterval = std::chrono::milliseconds(3);
 
     void balanceControllerTaskFunction(const bool&);
 public:

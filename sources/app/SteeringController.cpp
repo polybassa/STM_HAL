@@ -33,7 +33,7 @@ SteeringController::SteeringController(
                             {
                                 SteeringControllerTaskFunction(join);
                             }),
-    mStraingaugeUpdateTask("9StrainGaugeUpdate", 2048, os::Task::Priority::VERY_LOW, [this](const bool& join){
+    mStraingaugeUpdateTask("9StrainGaugeUpdate", 1024, os::Task::Priority::VERY_LOW, [this](const bool& join){
                                StraingaugeUpdateTaskFunction(join);
                            }),
     mQueue(),
@@ -54,11 +54,12 @@ void SteeringController::exitDeepSleep(void)
     mSteeringControllerTask.start();
 }
 
+// Do all steering related stuff here, and use the balanceControllers as output
 void SteeringController::SteeringControllerTaskFunction(const bool& join)
 {
     do {
         std::pair<float, float> newDirectionAndSpeed;
-        mQueue.receive(newDirectionAndSpeed);
+        mQueue.receive(newDirectionAndSpeed, 100);
 
         float speed = newDirectionAndSpeed.second;
         float direction = newDirectionAndSpeed.first;
@@ -73,10 +74,10 @@ void SteeringController::SteeringControllerTaskFunction(const bool& join)
 void SteeringController::StraingaugeUpdateTaskFunction(const bool& join)
 {
     do {
-        auto value = mDms.getDirection(); // ADC takes something around 10 ms for conversion
+        auto value = mDms.getDirection();
         value = 0.0; // TODO REMOVE
         mStraingaugeValueQueue.overwrite(value);
-        os::ThisTask::sleep(std::chrono::milliseconds(1));
+        os::ThisTask::sleep(std::chrono::milliseconds(30));
     } while (!join);
 }
 

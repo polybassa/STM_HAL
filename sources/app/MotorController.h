@@ -33,7 +33,7 @@ class MotorController final :
     virtual void enterDeepSleep(void) override;
     virtual void exitDeepSleep(void) override;
 
-    static constexpr uint32_t STACKSIZE = 1024;
+    static constexpr uint32_t STACKSIZE = 2048;
 
     os::TaskInterruptable mMotorControllerTask;
     const dev::SensorBLDC& mMotor;

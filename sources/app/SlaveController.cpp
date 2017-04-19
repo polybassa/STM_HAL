@@ -45,7 +45,7 @@ SlaveController::SlaveController(
                                  const virt::Light&                     vLight2) :
     mUpdateExternalObjectsTask("6UpdateExternalTask",
                                SlaveController::STACKSIZE,
-                               os::Task::Priority::LOW,
+                               os::Task::Priority::HIGH,
                                [this](const bool& join)
                                {
                                    UpdateExternalObjectsTaskFunction(join);
