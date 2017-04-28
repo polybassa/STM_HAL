@@ -100,9 +100,9 @@ void BalanceController::balanceControllerTaskFunction(const bool& join)
     pid2.setControllerDirection(dev::PIDController::ControlDirection::DIRECT);
 
     do {
-    	float angleInputValue = 0.0;
+        float angleInputValue = 0.0;
 
-    	mSetAngleQueue.receive(angleInputValue, 0);
+        mSetAngleQueue.receive(angleInputValue, 0);
 
         //Print current MPU6050 GravityVector to RTT
         Eigen::Vector3f gravity = mMpu.getGravity();

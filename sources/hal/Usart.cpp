@@ -88,6 +88,7 @@ void Usart::initialize() const
 
     if (mTxPinActiveLevelInversion) {
         USART_InvPinCmd(reinterpret_cast<USART_TypeDef*>(mPeripherie), USART_InvPin_Tx, ENABLE);
+        USART_InvPinCmd(reinterpret_cast<USART_TypeDef*>(mPeripherie), USART_InvPin_Rx, ENABLE);
     }
 
     USART_Cmd(reinterpret_cast<USART_TypeDef*>(mPeripherie), ENABLE);
