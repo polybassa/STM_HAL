@@ -149,7 +149,7 @@ void BalanceController::balanceControllerTaskFunction(const bool& join)
         //receiveCommand();
 
         //GPIO Timing Ausgabe
-
+#ifdef DEBUG
         //Print if Powertrain is enabled to RTT
         TraceLight("Enabled;%6d;",
                    static_cast<int32_t>(balancingEnabled));
@@ -184,7 +184,7 @@ void BalanceController::balanceControllerTaskFunction(const bool& join)
                    static_cast<int32_t>(torqueLeft * 1000));
         TraceLight("MRechts;%6d;\n",
                    static_cast<int32_t>(torqueRight * 1000));
-
+#endif
         //has to be the same valu e as the PID Controller sample time
         sysTickOld = os::Task::getTickCount();
 
