@@ -38,7 +38,7 @@ inline bool operator!=(const Color& c1, const Color& c2)
 
 struct Light {
     enum Description {
-        HEADLIGHT, BACKLIGHT, __ENUM__SIZE
+        HEADLIGHT, __ENUM__SIZE
     };
 };
 }

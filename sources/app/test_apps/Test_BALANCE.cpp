@@ -5,18 +5,18 @@
 #include "Gpio.h"
 #include "Adc.h"
 #include "AdcChannel.h"
-#include "VescMotorController.h"
+#include "MotorController.h"
 #include "PIDController.h"
 #include "trace.h"
 
 static const int __attribute__((unused)) g_DebugZones = ZONE_ERROR | ZONE_WARNING | ZONE_VERBOSE | ZONE_INFO;
 
-extern app::Mpu* g_mpu;
-extern app::VescMotorController* g_motorCtrl;
+extern app::Mpu* g_Mpu;
+extern app::MotorController* g_motorCtrl;
 
 // Get any GPIO you want. You can access them by their name (DESCRIPTION)
-constexpr const hal::Gpio& led10 = hal::Factory<hal::Gpio>::get<hal::Gpio::LED_10>();
-constexpr const hal::Gpio& led3 = hal::Factory<hal::Gpio>::get<hal::Gpio::LED_3>();
+//constexpr const hal::Gpio& led10 = hal::Factory<hal::Gpio>::get<hal::Gpio::LED_10>();
+//constexpr const hal::Gpio& led3 = hal::Factory<hal::Gpio>::get<hal::Gpio::LED_3>();
 
 constexpr const hal::Adc::Channel& poti1 = hal::Factory<hal::Adc::Channel>::get<hal::Adc::Channel::NTC_BATTERY>();
 constexpr const hal::Adc::Channel& poti2 = hal::Factory<hal::Adc::Channel>::get<hal::Adc::Channel::NTC_FET>();
@@ -47,18 +47,18 @@ void setup(void)
     Trace(ZONE_INFO, "Wait some s\n");
     os::ThisTask::sleep(std::chrono::seconds(5));
 
-    Trace(ZONE_INFO, "Let some LEDs blink\n");
-    led10 = true;
-    led3 = false;
-    os::ThisTask::sleep(std::chrono::milliseconds(500));
-    led10 = false;
-    led3 = true;
-    os::ThisTask::sleep(std::chrono::milliseconds(500));
-    led10 = true;
-    led3 = true;
-    os::ThisTask::sleep(std::chrono::milliseconds(500));
-    led10 = false;
-    led3 = false;
+//    Trace(ZONE_INFO, "Let some LEDs blink\n");
+//    led10 = true;
+//    led3 = false;
+//    os::ThisTask::sleep(std::chrono::milliseconds(500));
+//    led10 = false;
+//    led3 = true;
+//    os::ThisTask::sleep(std::chrono::milliseconds(500));
+//    led10 = true;
+//    led3 = true;
+//    os::ThisTask::sleep(std::chrono::milliseconds(500));
+//    led10 = false;
+//    led3 = false;
 
     float voltagePoti1 = poti1.getVoltage();
     uint32_t valuePoti1 = poti1.getValue();
@@ -70,7 +70,7 @@ void setup(void)
 
     Trace(ZONE_INFO, "\nLets try to read from the MPU6050.\n");
 
-    Eigen::Vector3f gravity = g_mpu->getGravity();
+    Eigen::Vector3f gravity = g_Mpu->getGravity();
     Trace(ZONE_INFO, "Gravity: x:%6d, y:%6d, z:%6d\n",
           static_cast<int32_t>(gravity.x() * 1000),
           static_cast<int32_t>(gravity.y() * 1000),
@@ -84,7 +84,7 @@ void setup(void)
 // This function will run forever
 void loop(void)
 {
-    Eigen::Vector3f accel = g_mpu->getAcceleration();
+    Eigen::Vector3f accel = g_Mpu->getAcceleration();
 
     // update the current Value of the PID Controller
     currentValue1 = accel.x();
@@ -100,6 +100,12 @@ void loop(void)
 
     //has to be the same value as the PID Controller sample time
     os::ThisTask::sleep(std::chrono::milliseconds(5));
+
+    Eigen::Vector3f gravity = g_Mpu->getGravity();
+    Trace(ZONE_INFO, "Gravity: x:%6d, y:%6d, z:%6d\n",
+          static_cast<int32_t>(gravity.x() * 1000),
+          static_cast<int32_t>(gravity.y() * 1000),
+          static_cast<int32_t>(gravity.z() * 1000));
 }
 
 const os::TaskEndless app::balanceTest(

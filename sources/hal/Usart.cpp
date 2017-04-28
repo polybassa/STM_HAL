@@ -68,6 +68,16 @@ void Usart::USART_IRQHandler(const Usart& peripherie)
             Usart::ReceiveTimeoutInterruptCallbacks[peripherie.mDescription]();
         }
         USART_ClearITPendingBit(reinterpret_cast<USART_TypeDef*>(peripherie.mPeripherie), USART_IT_RTO);
+    } else if (USART_GetITStatus(reinterpret_cast<USART_TypeDef*>(peripherie.mPeripherie), USART_IT_RXNE)) {
+        if (Usart::ReceiveInterruptCallbacks[peripherie.mDescription]) {
+            uint8_t databyte =
+                static_cast<uint8_t>(USART_ReceiveData(reinterpret_cast<USART_TypeDef*>(peripherie.mPeripherie)));
+            Usart::ReceiveInterruptCallbacks[peripherie.mDescription](databyte);
+        }
+        USART_ClearITPendingBit(reinterpret_cast<USART_TypeDef*>(peripherie.mPeripherie), USART_IT_RXNE);
+    } else {
+        USART_ClearITPendingBit(reinterpret_cast<USART_TypeDef*>(peripherie.mPeripherie), USART_IT_ORE);
+        USART_ClearITPendingBit(reinterpret_cast<USART_TypeDef*>(peripherie.mPeripherie), USART_IT_PE);
     }
 }
 
@@ -75,6 +85,12 @@ void Usart::initialize() const
 {
     USART_DeInit(reinterpret_cast<USART_TypeDef*>(mPeripherie));
     USART_Init(reinterpret_cast<USART_TypeDef*>(mPeripherie), &mConfiguration);
+
+    if (mTxPinActiveLevelInversion) {
+        USART_InvPinCmd(reinterpret_cast<USART_TypeDef*>(mPeripherie), USART_InvPin_Tx, ENABLE);
+        USART_InvPinCmd(reinterpret_cast<USART_TypeDef*>(mPeripherie), USART_InvPin_Rx, ENABLE);
+    }
+
     USART_Cmd(reinterpret_cast<USART_TypeDef*>(mPeripherie), ENABLE);
     mInitalized = true;
 
@@ -126,6 +142,21 @@ void Usart::enableReceiveTimeout(std::function<void(void)> callback, const size_
     USART_SetReceiverTimeOut(reinterpret_cast<USART_TypeDef*>(mPeripherie), bitsUntilTimeout);
     USART_ReceiverTimeOutCmd(reinterpret_cast<USART_TypeDef*>(mPeripherie), ENABLE);
     enableReceiveTimeoutIT_Flag();
+}
+
+void Usart::enableNonBlockingReceive(std::function<void(uint8_t)> callback) const
+{
+    ReceiveInterruptCallbacks[mDescription] = callback;
+
+    USART_ClearITPendingBit(reinterpret_cast<USART_TypeDef*>(mPeripherie), USART_IT_RXNE);
+    USART_ITConfig(reinterpret_cast<USART_TypeDef*>(mPeripherie), USART_IT_RXNE, ENABLE);
+}
+
+void Usart::disableNonBlockingReceive(void) const
+{
+    ReceiveTimeoutInterruptCallbacks[mDescription] = nullptr;
+
+    USART_ITConfig(reinterpret_cast<USART_TypeDef*>(mPeripherie), USART_IT_RXNE, DISABLE);
 }
 
 void Usart::disableReceiveTimeout(void) const
@@ -257,7 +288,8 @@ void Usart::clearParityError(void) const
     USART_ClearFlag(reinterpret_cast<USART_TypeDef*>(mPeripherie), USART_FLAG_PE);
 }
 
-Usart::CallbackArray Usart::ReceiveTimeoutInterruptCallbacks;
+Usart::ReceiveTimeoutCallbackArray Usart::ReceiveTimeoutInterruptCallbacks;
+Usart::ReceiveCallbackArray Usart::ReceiveInterruptCallbacks;
 
 constexpr const std::array<const Usart, Usart::__ENUM__SIZE + 1> Factory<Usart>::Container;
 constexpr const std::array<const uint32_t, Usart::__ENUM__SIZE> Factory<Usart>::Clocks;

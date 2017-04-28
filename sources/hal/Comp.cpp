@@ -25,6 +25,7 @@ void Comp::initialize() const
 {
     COMP_DeInit(mPeripherie);
     COMP_Init(mPeripherie, &mConfiguration);
+    COMP_Cmd(mPeripherie, ENABLE);
 }
 
 constexpr const std::array<const Comp, Comp::__ENUM__SIZE> Factory<Comp>::Container;

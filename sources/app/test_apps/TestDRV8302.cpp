@@ -15,7 +15,7 @@
 
 #include "TestDRV8302.h"
 #include "trace.h"
-#include "DRV8302MotorController.h"
+#include "MotorController.h"
 #include "TimSensorBldc.h"
 #include "Adc.h"
 #include "AdcWithDma.h"
@@ -24,7 +24,7 @@
 
 static const int __attribute__((unused)) g_DebugZones = ZONE_ERROR | ZONE_WARNING | ZONE_VERBOSE | ZONE_INFO;
 
-extern app::DRV8302MotorController* g_motorCtrl;
+extern app::MotorController* g_motorCtrl;
 
 os::TaskEndless drv8302Test("drv8302_Test", 2048, os::Task::Priority::MEDIUM, [] (const bool&){
                                 constexpr const hal::Adc::Channel& poti =
@@ -36,11 +36,16 @@ os::TaskEndless drv8302Test("drv8302_Test", 2048, os::Task::Priority::MEDIUM, []
                                 auto torque = 0.0;
 
                                 while (true) {
-                                    auto newtorque = (poti.getValue() / 2000.0) - 1.0;
-                                    torque -= torque / 32;
-                                    torque += newtorque / 32;
+                                    auto newtorque = poti.getVoltage() - 1.0;
+
+                                    newtorque = std::min(1.0, newtorque);
+                                    newtorque = std::max(-1.0, newtorque);
+
+                                    torque -= torque / 20;
+                                    torque += newtorque / 20;
+
                                     g_motorCtrl->setTorque(torque);
 
-                                    os::ThisTask::sleep(std::chrono::milliseconds(50));
+                                    os::ThisTask::sleep(std::chrono::milliseconds(5));
                                 }
                             });

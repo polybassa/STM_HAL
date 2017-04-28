@@ -91,7 +91,7 @@ static constexpr const std::array<const Gpio, Gpio::__ENUM__SIZE + 1> Container 
            GPIO_AF_7),
       Gpio(Gpio::IR_RXD,
            GPIOA_BASE,
-           GPIO_InitTypeDef { GPIO_Pin_10, GPIO_Mode_AF, GPIO_Speed_50MHz, GPIO_OType_PP, GPIO_PuPd_DOWN },
+           GPIO_InitTypeDef { GPIO_Pin_10, GPIO_Mode_AF, GPIO_Speed_50MHz, GPIO_OType_PP, GPIO_PuPd_NOPULL },
            GPIO_PinSource10,
            GPIO_AF_7),
       Gpio(Gpio::SWDIO,

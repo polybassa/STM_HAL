@@ -33,7 +33,7 @@ void HalfBridge::setPulsWidthPerMill(uint32_t value) const
     }
     mPulsWidth = value;
 
-    static const float scale = static_cast<float>(mTim.getPeriode()) / static_cast<float>(MAXIMAL_PWM_IN_MILL);
+    const float scale = static_cast<float>(mTim.getPeriode()) / (static_cast<float>(MAXIMAL_PWM_IN_MILL) - 1);
 
     value = static_cast<uint32_t>(static_cast<float>(value) * scale);
 

@@ -70,15 +70,15 @@ int main(void)
      hal::initFactory<hal::Factory<hal::Exti> >();
      hal::initFactory<hal::Factory<hal::Dma> >();
      hal::initFactory<hal::Factory<hal::Usart> >();
-//     hal::initFactory<hal::Factory<hal::UsartWithDma> >();
-//     hal::initFactory<hal::Factory<hal::Spi> >();
-//     hal::initFactory<hal::Factory<hal::SpiWithDma> >();
-//     hal::initFactory<hal::Factory<hal::Rtc> >();
+     hal::initFactory<hal::Factory<hal::UsartWithDma> >();
+     hal::initFactory<hal::Factory<hal::Spi> >();
+     hal::initFactory<hal::Factory<hal::SpiWithDma> >();
+     hal::initFactory<hal::Factory<hal::Rtc> >();
      hal::initFactory<hal::Factory<hal::Adc> >();
      hal::initFactory<hal::Factory<hal::Adc::Channel> >();
      hal::initFactory<hal::Factory<hal::AdcWithDma> >();
      hal::initFactory<hal::Factory<hal::PhaseCurrentSensor>> ();
-//     hal::initFactory<hal::Factory<hal::Crc> >();
+     hal::initFactory<hal::Factory<hal::Crc> >();
      hal::initFactory<hal::Factory<hal::I2c> >();
      hal::initFactory<hal::Factory<hal::Comp> >();
 
@@ -90,7 +90,7 @@ int main(void)
 
     dev::Battery mBattery;
 
-     g_motorCtrl = new app::DRV8302MotorController( dev::Factory<dev::SensorBLDC>::get<dev::SensorBLDC::BLDC>(), mBattery, 0.5, 0.2);
+     g_motorCtrl = new app::DRV8302MotorController( dev::Factory<dev::SensorBLDC>::get<dev::SensorBLDC::BLDC>(), mBattery, 200000, 80000);
 
     os::Task::startScheduler();
 

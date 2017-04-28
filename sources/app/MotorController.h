@@ -1,4 +1,4 @@
-/* Copyright (C) 2015  Nils Weiss, Alexander Strobl, Daniel Tatzel
+/* Copyright (C) 2016  Nils Weiss
  # *
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -17,20 +17,13 @@
 #define SOURCES_PMD_MOTORCONTROLLER_H_
 
 #include "interface_MotorController.h"
-#include "PIDController.h"
 #include "TimSensorBldc.h"
 #include "TaskInterruptable.h"
 #include "DeepSleepInterface.h"
-#include "Battery.h"
 #include "os_Queue.h"
+#include "PIDController.h"
 #include <limits>
-
-#ifdef UNITTEST
-extern int ut_TestPIDInput(void);
-extern int ut_TestPIDOutput(void);
-extern int ut_TestPIDInOut(void);
-extern int ut_TestSetTorque(void);
-#endif
+#include "Battery.h"
 
 namespace app
 {
@@ -40,35 +33,29 @@ class MotorController final :
     virtual void enterDeepSleep(void) override;
     virtual void exitDeepSleep(void) override;
 
-    static constexpr uint32_t STACKSIZE = 1024;
+    static constexpr uint32_t STACKSIZE = 2048;
 
     os::TaskInterruptable mMotorControllerTask;
     const dev::SensorBLDC& mMotor;
     const dev::Battery& mBattery;
-    const float mMotorConstant = 0.00768;
-    const float mMotorCoilResistance = 0.844;
-    dev::PIDController mController;
     float mSetTorque = std::numeric_limits<float>::epsilon();
     float mCurrentTorque = std::numeric_limits<float>::epsilon();
     float mOutputTorque = std::numeric_limits<float>::epsilon();
-    float mCurrentOmega = std::numeric_limits<float>::epsilon();
+    float mSetPwm = std::numeric_limits<float>::epsilon();
+
+    dev::PIDController mController;
 
     os::Queue<float, 1> mSetTorqueQueue;
 
-    static constexpr std::chrono::milliseconds motorCheckInterval = std::chrono::milliseconds(1);
-    static constexpr std::chrono::milliseconds controllerInterval = std::chrono::milliseconds(2);
+    static constexpr std::chrono::milliseconds controllerInterval = std::chrono::milliseconds(4);
 
     void motorControllerTaskFunction(const bool&);
-    void updateCurrentTorque(void);
     void updatePwmOutput(void);
+    void updateQuadrant(void);
+    void adjustControllerLimits(void);
 
 public:
-    MotorController(
-                    const dev::SensorBLDC & motor,
-                    const dev::Battery & battery,
-                    const float motorConstant,
-                    const float motorResistance,
-                    const float Kp,
+    MotorController(const dev::SensorBLDC & motor, const dev::Battery & battery, const float Kp,
                     const float Ki);
 
     MotorController(const MotorController &) = delete;
@@ -78,15 +65,10 @@ public:
 
     virtual void setTorque(const float) override;
     virtual float getCurrentRPS(void) const override;
-
-    void setTunings(const float kp, const float ki, const float kd);
+    os::Semaphore mPhaseCurrentValueAvailable;
 
 #ifdef UNITTEST
     void triggerTaskExecution(void) { this->motorControllerTaskFunction(true); }
-    friend int ::ut_TestPIDInput(void);
-    friend int ::ut_TestPIDOutput(void);
-    friend int ::ut_TestPIDInOut(void);
-    friend int ::ut_TestSetTorque(void);
 #endif
 };
 }
