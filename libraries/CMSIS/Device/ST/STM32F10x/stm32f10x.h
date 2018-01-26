@@ -15,15 +15,15 @@
   *          is using in the C source code, usually in main.c. This file contains:
   *           - Configuration section that allows to select:
   *              - The device used in the target application
-  *              - To use or not the peripheral’s drivers in application code(i.e. 
-  *                code will be based on direct access to peripheral’s registers 
+  *              - To use or not the peripheralï¿½s drivers in application code(i.e. 
+  *                code will be based on direct access to peripheralï¿½s registers 
   *                rather than drivers API), this option is controlled by 
   *                "#define USE_STDPERIPH_DRIVER"
   *              - To change few application-specific parameters such as the HSE 
   *                crystal frequency
   *           - Data structures and the address mapping for all peripherals
   *           - Peripheral's registers declarations and bits definition
-  *           - Macros to access peripheral’s registers hardware
+  *           - Macros to access peripheralï¿½s registers hardware
   *
   ******************************************************************************
   * @attention
@@ -49,6 +49,23 @@
     
 #ifndef __STM32F10x_H
 #define __STM32F10x_H
+
+#ifdef  USE_FULL_ASSERT
+
+/**
+  * @brief  The assert_param macro is used for function's parameters check.
+  * @param  expr: If expr is false, it calls assert_failed function which reports
+  *         the name of the source file and the source line number of the call
+  *         that failed. If expr is true, it returns no value.
+  * @retval None
+  */
+  #define assert_param(expr) ((expr) ? (void)0 : assert_failed((uint8_t *)__FILE__, __LINE__))
+/* Exported functions ------------------------------------------------------- */
+  void assert_failed(uint8_t* file, uint32_t line);
+#else
+  #define assert_param(expr) ((void)0)
+#endif /* USE_FULL_ASSERT */
+
 
 #ifdef __cplusplus
  extern "C" {

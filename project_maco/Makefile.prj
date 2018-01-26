@@ -100,14 +100,12 @@ ${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/stm32f10x_gpio.o
 ${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/stm32f10x_usart.o
 ${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/stm32f10x_spi.o
 ${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/stm32f10x_dma.o
-${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/stm32f10x_misc.o
+${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/misc.o
 ${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/stm32f10x_exti.o
-${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/stm32f10x_syscfg.o
 ${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/stm32f10x_tim.o
 ${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/stm32f10x_adc.o
 ${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/stm32f10x_crc.o
 ${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/stm32f10x_i2c.o
-${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/stm32f10x_comp.o
 
 # freeRTOS
 ${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/croutine.o

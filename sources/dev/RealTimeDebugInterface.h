@@ -17,7 +17,13 @@
 #define SOURCES_PMD_REALTIMEDEBUGINTERFACE_H_
 
 #include "SEGGER_RTT.h"
+#if defined (STM32F303xC) || defined (STM32F334x8) || defined (STM32F302x8) || defined (STM32F303xE)
 #include "stm32f30x_rcc.h"
+#endif
+#if defined (STM32F10X_LD) || defined (STM32F10X_LD_VL) || defined (STM32F10X_MD) || defined (STM32F10X_MD_VL) || \
+    defined (STM32F10X_HD) || defined (STM32F10X_HD_VL) || defined (STM32F10X_XL) || defined (STM32F10X_CL)
+#include "stm32f10x_rcc.h"
+#endif
 #include <utility>
 
 namespace dev
@@ -56,6 +62,7 @@ public:
         RCC_ClocksTypeDef clocks;
         RCC_GetClocksFreq(&clocks);
 
+#if defined (STM32F303xC) || defined (STM32F334x8) || defined (STM32F302x8) || defined (STM32F303xE)
         SEGGER_RTT_printf(0, "ADC12CLK: %d\r\n", clocks.ADC12CLK_Frequency);
         SEGGER_RTT_printf(0, "ADC34CLK: %d\r\n", clocks.ADC34CLK_Frequency);
         SEGGER_RTT_printf(0, "HCLK: %d\r\n", clocks.HCLK_Frequency);
@@ -79,6 +86,15 @@ public:
         SEGGER_RTT_printf(0, "USART1CLK: %d\r\n", clocks.USART1CLK_Frequency);
         SEGGER_RTT_printf(0, "USART2CLK: %d\r\n", clocks.USART2CLK_Frequency);
         SEGGER_RTT_printf(0, "USART3CLK: %d\r\n", clocks.USART3CLK_Frequency);
+#endif
+#if defined (STM32F10X_LD) || defined (STM32F10X_LD_VL) || defined (STM32F10X_MD) || defined (STM32F10X_MD_VL) || \
+        defined (STM32F10X_HD) || defined (STM32F10X_HD_VL) || defined (STM32F10X_XL) || defined (STM32F10X_CL)
+        SEGGER_RTT_printf(0, "HCLK: %d\r\n", clocks.HCLK_Frequency);
+        SEGGER_RTT_printf(0, "PCLK1: %d\r\n", clocks.PCLK1_Frequency);
+        SEGGER_RTT_printf(0, "PCLK2: %d\r\n", clocks.PCLK2_Frequency);
+        SEGGER_RTT_printf(0, "SYSCLK: %d\r\n", clocks.SYSCLK_Frequency);
+
+#endif
     }
 };
 }

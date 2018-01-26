@@ -21,6 +21,7 @@ enum Description {
     SWDIO,
     SWCLK,
     // ===PORTB===
+    TEST_PIN_OUT,
     // ===PORTC===
     // ===PORTD===
     // ===PORTE===
@@ -45,6 +46,9 @@ static constexpr const std::array<const Gpio, Gpio::__ENUM__SIZE + 1> Container 
            GPIO_InitTypeDef {GPIO_Pin_14, GPIO_Speed_50MHz, GPIO_Mode_AF_PP},
            GPIO_PinSource14),
       // ===================PORTB=================
+      Gpio(Gpio::TEST_PIN_OUT,
+           GPIOB_BASE,
+           GPIO_InitTypeDef {GPIO_Pin_0, GPIO_Speed_50MHz, GPIO_Mode_Out_PP}),
       // ===================PORTC=================
       // ===================PORTD=================
       // ===================PORTE=================

@@ -20,7 +20,7 @@
 extern "C" {
 #endif
 
-#include "stm32f10x.h"
+#include "stm32f30x.h"
 
 void NMI_Handler(void);
 void HardFault_Handler(void) __attribute__((naked));
