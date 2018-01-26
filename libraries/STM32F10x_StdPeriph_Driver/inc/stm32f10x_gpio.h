@@ -50,7 +50,14 @@
                                     ((PERIPH) == GPIOE) || \
                                     ((PERIPH) == GPIOF) || \
                                     ((PERIPH) == GPIOG))
-                                     
+
+#define IS_GPIO_ALL_PERIPH_BASE(PERIPH) (((PERIPH) == GPIOA_BASE) || \
+                                    ((PERIPH) == GPIOB_BASE) || \
+                                    ((PERIPH) == GPIOC_BASE) || \
+                                    ((PERIPH) == GPIOD_BASE) || \
+                                    ((PERIPH) == GPIOE_BASE) || \
+                                    ((PERIPH) == GPIOF_BASE) || \
+                                    ((PERIPH) == GPIOG_BASE))
 /** 
   * @brief  Output Maximum frequency selection  
   */
@@ -348,7 +355,7 @@ typedef enum
 
 void GPIO_DeInit(GPIO_TypeDef* GPIOx);
 void GPIO_AFIODeInit(void);
-void GPIO_Init(GPIO_TypeDef* GPIOx, GPIO_InitTypeDef* GPIO_InitStruct);
+void GPIO_Init(GPIO_TypeDef* GPIOx, GPIO_InitTypeDef const * const GPIO_InitStruct);
 void GPIO_StructInit(GPIO_InitTypeDef* GPIO_InitStruct);
 uint8_t GPIO_ReadInputDataBit(GPIO_TypeDef* GPIOx, uint16_t GPIO_Pin);
 uint16_t GPIO_ReadInputData(GPIO_TypeDef* GPIOx);

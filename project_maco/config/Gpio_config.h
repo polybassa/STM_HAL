@@ -45,20 +45,15 @@ static constexpr const std::array<const Gpio, Gpio::__ENUM__SIZE + 1> Container 
            GPIO_InitTypeDef {GPIO_Pin_14, GPIO_Speed_50MHz, GPIO_Mode_AF_PP},
            GPIO_PinSource14),
       // ===================PORTB=================
-
       // ===================PORTC=================
-
       // ===================PORTD=================
-
       // ===================PORTE=================
-
       // ===================PORTF=================
-
       // ===================PORTG=================
       Gpio(Gpio::__ENUM__SIZE,
            GPIOD_BASE,
            GPIO_InitTypeDef { GPIO_Pin_14, GPIO_Speed_50MHz, GPIO_Mode_AF_PP })
-  }};
+  } };
 
 #endif /* SOURCES_PMD_GPIO_CONFIG_CONTAINER_H_ */
 #endif /* SOURCES_PMD_GPIO_CONFIG_DESCRIPTION_H_ */

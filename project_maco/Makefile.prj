@@ -18,7 +18,7 @@ DEFINES+=-DUSE_FREERTOS
 
 # Where to find source files that do not live in this directory.
 VPATH+=${ROOT}/sources
-VPATH+=${ROOT}/sources/hal
+VPATH+=${ROOT}/sources/hal_stm32f10x
 VPATH+=${ROOT}/sources/os
 VPATH+=${ROOT}/sources/dev
 VPATH+=${RTOS_SOURCE_DIR}
@@ -43,7 +43,7 @@ IPATH=${ROOT}/sources
 IPATH+=${PRJ_PATH}
 IPATH+=${PRJ_PATH}/config
 IPATH+=${PRJ_PATH}/apps
-IPATH+=${ROOT}/sources/hal
+IPATH+=${ROOT}/sources/hal_stm32f10x
 IPATH+=${ROOT}/sources/os
 IPATH+=${ROOT}/sources/dev
 IPATH+=${ROOT}/sources/utility

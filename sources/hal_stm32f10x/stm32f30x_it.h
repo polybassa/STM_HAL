@@ -13,14 +13,14 @@
  *  You should have received a copy of the GNU General Public License
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>. */
 
-#ifndef __STM32F30X_IT_H
-#define __STM32F30X_IT_H
+#ifndef __STM32F10X_IT_H
+#define __STM32F10X_IT_H
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-#include "stm32f30x.h"
+#include "stm32f10x.h"
 
 void NMI_Handler(void);
 void HardFault_Handler(void) __attribute__((naked));
@@ -33,4 +33,4 @@ void DebugMon_Handler(void);
 }
 #endif
 
-#endif /* __STM32F30X_IT_H */
+#endif /* __STM32F10X_IT_H */
