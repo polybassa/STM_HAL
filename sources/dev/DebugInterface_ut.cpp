@@ -61,6 +61,11 @@ BaseType_t xQueueGenericSend(QueueHandle_t     xQueue,
     return 0;
 }
 
+BaseType_t xQueueSemaphoreTake(QueueHandle_t xQueue, TickType_t xTicksToWait)
+{
+    return 0;
+}
+
 BaseType_t xQueueGenericReceive(QueueHandle_t    xQueue,
                                 void* const      pvBuffer,
                                 TickType_t       xTicksToWait,
@@ -88,11 +93,11 @@ int ut_Send_Hello(void)
 
     CHECK_NOT_MEMCMP(teststring.c_str(), output.data(), teststring.size());
 
-    out.print(teststring.c_str());
+    out.printf(teststring.c_str());
 
     CHECK_MEMCMP(teststring.c_str(), output.data(), teststring.size());
 
-    out.print("%s", teststring.c_str());
+    out.printf("%s", teststring.c_str());
 
     CHECK_MEMCMP(teststring.c_str(), output.data(), teststring.size());
 
@@ -105,7 +110,7 @@ int ut_Send_Number(void)
 
     int testnum = 42;
 
-    out.print("%d", testnum);
+    out.printf("%d", testnum);
 
     std::string testout = std::to_string(testnum);
 
@@ -121,7 +126,7 @@ int ut_Send_Two_Numbers(void)
     int num1 = 42;
     float num2 = 42.0;
 
-    out.print("%d%f", num1, num2);
+    out.printf("%d%f", num1, num2);
 
     std::string testout = (std::to_string(num1) + std::to_string(num2));
 
@@ -138,7 +143,7 @@ int ut_Send_Multiple_Data(void)
     float num2 = 42.0;
     std::string teststring = "HELLO_TEST";
 
-    out.print("%d%f%s", num1, num2, teststring.c_str());
+    out.printf("%d%f%s", num1, num2, teststring.c_str());
 
     std::string testout = (std::to_string(num1) + std::to_string(num2) + teststring);
 
@@ -157,7 +162,7 @@ int ut_Send_to_much_Data(void)
     teststring = teststring + teststring + teststring + teststring + teststring +
                  teststring + teststring;
 
-    out.print("%s", teststring.c_str());
+    out.printf("%s", teststring.c_str());
 
     std::string testout = teststring;
 

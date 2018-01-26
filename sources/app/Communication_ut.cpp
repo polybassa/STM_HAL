@@ -181,7 +181,7 @@ int ut_CrcError(void)
     TestCaseEnd();
 }
 
-int ut_DeepSleep(void)
+int ut_ATParser(void)
 {
     TestCaseBegin();
 
@@ -286,7 +286,7 @@ int ut_ValueExchange(void)
 int main(int argc, const char* argv[])
 {
     UnitTestMainBegin();
-    RunTest(true, ut_DeepSleep);
+    RunTest(true, ut_ATParser);
     RunTest(true, ut_CrcError);
     RunTest(true, ut_ValueExchange);
     UnitTestMainEnd();
