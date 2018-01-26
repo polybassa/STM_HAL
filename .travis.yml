@@ -36,3 +36,12 @@ script:
         - make clean 
         - make debug_firmware
         - make clean-all
+        - cd ..
+        - cd project_maco
+        - make test 
+        - make clean 
+        - make firmware 
+        - make clean 
+        - make debug_firmware
+        - make clean-all
+
