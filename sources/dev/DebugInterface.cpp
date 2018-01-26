@@ -28,7 +28,6 @@
 
 #include "hal_Factory.h"
 
-
 using dev::DebugInterface;
 
 #if defined(DEBUG)
