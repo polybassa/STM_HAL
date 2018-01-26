@@ -17,8 +17,15 @@
 #include <cstdarg>
 #include <cstdio>
 #include <cstring>
-#include "stm32f30x_rcc.h"
 #include <string>
+#if defined (STM32F303xC) || defined (STM32F334x8) || defined (STM32F302x8) || defined (STM32F303xE)
+#include "stm32f30x_rcc.h"
+#endif
+#if defined (STM32F10X_LD) || defined (STM32F10X_LD_VL) || defined (STM32F10X_MD) || defined (STM32F10X_MD_VL) || \
+    defined (STM32F10X_HD) || defined (STM32F10X_HD_VL) || defined (STM32F10X_XL) || defined (STM32F10X_CL)
+#include "stm32f10x_rcc.h"
+#include "hal_Factory.h"
+#endif
 
 using dev::DebugInterface;
 
@@ -47,6 +54,7 @@ void DebugInterface::printStartupMessage(void) const
     RCC_ClocksTypeDef clocks;
     RCC_GetClocksFreq(&clocks);
 
+#if defined (STM32F303xC) || defined (STM32F334x8) || defined (STM32F302x8) || defined (STM32F303xE)
     print("ADC12CLK: %d\r\n", clocks.ADC12CLK_Frequency);
     print("ADC34CLK: %d\r\n", clocks.ADC34CLK_Frequency);
     print("HCLK: %d\r\n", clocks.HCLK_Frequency);
@@ -70,6 +78,15 @@ void DebugInterface::printStartupMessage(void) const
     print("USART1CLK: %d\r\n", clocks.USART1CLK_Frequency);
     print("USART2CLK: %d\r\n", clocks.USART2CLK_Frequency);
     print("USART3CLK: %d\r\n", clocks.USART3CLK_Frequency);
+#endif
+#if defined (STM32F10X_LD) || defined (STM32F10X_LD_VL) || defined (STM32F10X_MD) || defined (STM32F10X_MD_VL) || \
+    defined (STM32F10X_HD) || defined (STM32F10X_HD_VL) || defined (STM32F10X_XL) || defined (STM32F10X_CL)
+    print("HCLK: %d\r\n", clocks.HCLK_Frequency);
+    print("PCLK1: %d\r\n", clocks.PCLK1_Frequency);
+    print("PCLK2: %d\r\n", clocks.PCLK2_Frequency);
+    print("SYSCLK: %d\r\n", clocks.SYSCLK_Frequency);
+
+#endif
 }
 
 void DebugInterface::clearTerminal(void) const
