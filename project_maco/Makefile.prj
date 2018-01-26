@@ -9,12 +9,12 @@ endif
 ifeq ($(MAKECMDGOALS),firmware)
 DEFINES+=-O3
 LDFLAGS+=-O3
-DEFINES+=-DSYSVIEW
 endif
 
 ifneq (,$(filter debug_firmware firmware,$(MAKECMDGOALS)))
 
 DEFINES+=-DUSE_FREERTOS
+DEFINES+=-DHSE_VALUE=12000000
 
 # Where to find source files that do not live in this directory.
 VPATH+=${ROOT}/sources
