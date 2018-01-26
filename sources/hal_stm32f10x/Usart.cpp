@@ -135,8 +135,6 @@ void Usart::enableNonBlockingReceive(std::function<void(uint8_t)> callback) cons
 
 void Usart::disableNonBlockingReceive(void) const
 {
-    ReceiveTimeoutInterruptCallbacks[mDescription] = nullptr;
-
     USART_ITConfig(reinterpret_cast<USART_TypeDef*>(mPeripherie), USART_IT_RXNE, DISABLE);
 }
 

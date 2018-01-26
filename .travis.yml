@@ -38,6 +38,7 @@ script:
         - make clean-all
         - cd ..
         - cd project_maco
+        - ./configure
         - make test 
         - make clean 
         - make firmware 

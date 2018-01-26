@@ -74,37 +74,28 @@ struct Usart {
 
     void setBaudRate(const size_t) const;
 
-    void enableReceiveTimeout(std::function<void(void)> callback, const size_t) const;
     void enableNonBlockingReceive(std::function<void(uint8_t)> callback) const;
-
-    void disableReceiveTimeout(void) const;
     void disableNonBlockingReceive(void) const;
-
-    void enableReceiveTimeoutIT_Flag(void) const;
-    void disableReceiveTimeoutIT_Flag(void) const;
 
     static void USART_IRQHandler(const Usart& peripherie);
 
 private:
     constexpr Usart(const enum Description&  desc,
                     const uint32_t&          peripherie,
-                    const USART_InitTypeDef& conf,
-                    const bool               txPinActiveLevelInversion = false) :
-        mDescription(desc), mPeripherie(peripherie),
-        mConfiguration(conf), mTxPinActiveLevelInversion(txPinActiveLevelInversion) {}
+                    const USART_InitTypeDef& conf) :
+        mDescription(desc),
+        mPeripherie(peripherie),
+        mConfiguration(conf) {}
 
     const uint32_t mPeripherie;
     const USART_InitTypeDef mConfiguration;
-    const bool mTxPinActiveLevelInversion;
     mutable bool mInitalized = false;
 
     void initialize(void) const;
     IRQn getIRQn(void) const;
 
     using ReceiveCallbackArray = std::array<std::function<void(uint8_t)>, Usart::__ENUM__SIZE>;
-    using ReceiveTimeoutCallbackArray = std::array<std::function<void(void)>, Usart::__ENUM__SIZE>;
 
-    static ReceiveTimeoutCallbackArray ReceiveTimeoutInterruptCallbacks;
     static ReceiveCallbackArray ReceiveInterruptCallbacks;
 
     friend class Factory<Usart>;
