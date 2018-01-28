@@ -1,20 +1,20 @@
 ifeq ($(MAKECMDGOALS),debug_firmware)
 DEFINES+=-DDEBUG
 DEFINES+=-g
-DEFINES+=-O3
-DEFINES+=-DSYSVIEW
-LDFLAGS+=-O3
+DEFINES+=-O0
+#DEFINES+=-DSYSVIEW
+LDFLAGS+=-O0
 endif
 
 ifeq ($(MAKECMDGOALS),firmware)
-DEFINES+=-Os
-LDFLAGS+=-Os
+DEFINES+=-O0
+LDFLAGS+=-O0
 endif
 
 ifneq (,$(filter debug_firmware firmware,$(MAKECMDGOALS)))
 
 DEFINES+=-DUSE_FREERTOS
-DEFINES+=-DHSE_VALUE=12000000
+DEFINES+=-DHSE_VALUE=8000000
 
 # Where to find source files that do not live in this directory.
 VPATH+=${ROOT}/sources

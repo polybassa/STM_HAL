@@ -87,6 +87,13 @@ class Factory<Gpio>
             RCC_APB2PeriphResetCmd(clock, ENABLE);
             RCC_APB2PeriphResetCmd(clock, DISABLE);
         }
+
+        for (const auto& gpioremap : RemappingsContainer) {
+            if (IS_GPIO_REMAP(gpioremap)) {
+                GPIO_PinRemapConfig(gpioremap, ENABLE);
+            }
+        }
+
         for (const auto& gpio : Container) {
             if (gpio.mDescription != Gpio::__ENUM__SIZE) {
                 gpio.initialize();

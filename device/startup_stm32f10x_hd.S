@@ -93,6 +93,20 @@ LoopFillZerobss:
   ldr  r3, = _ebss
   cmp  r2, r3
   bcc  FillZerobss
+
+  ldr  r2, =__heap_start
+  b  LoopFillHeap
+/* Zero fill the bss segment. */
+FillHeap:
+  movs  r3, #0x00000000
+  str  r3, [r2], #4
+
+LoopFillHeap:
+  ldr  r3, =__heap_end
+  cmp  r2, r3
+  bcc  FillHeap
+
+
 /* Call the clock system intitialization function.*/
   bl  SystemInit   
 /* Call the application's entry point.*/
