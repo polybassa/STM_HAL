@@ -50,6 +50,7 @@ IPATH+=${ROOT}/sources/utility
 
 IPATH+=${ROOT}/definitions
 IPATH+=${RTOS_SOURCE_DIR}/include
+IPATH+=${RTOS_SOURCE_DIR}
 IPATH+=${RTOS_SOURCE_DIR}/portable/GCC/ARM_CM3
 IPATH+=${ROOT}/libraries/CMSIS/Include
 IPATH+=${ROOT}/libraries/CMSIS/Device/ST/STM32F10x

@@ -61,6 +61,11 @@ BaseType_t xQueueGenericSend(QueueHandle_t     xQueue,
     return 0;
 }
 
+BaseType_t xQueueSemaphoreTake(QueueHandle_t xQueue, TickType_t xTicksToWait)
+{
+    return 0;
+}
+
 BaseType_t xQueueGenericReceive(QueueHandle_t    xQueue,
                                 void* const      pvBuffer,
                                 TickType_t       xTicksToWait,

@@ -6,6 +6,7 @@ IPATH+=${ROOT}/sources/interface
 IPATH+=${ROOT}/sources/utility
 IPATH+=${ROOT}/sources/hal_stm32f10x
 IPATH+=${RTOS_SOURCE_DIR}/include
+IPATH+=${RTOS_SOURCE_DIR}
 IPATH+=${RTOS_SOURCE_DIR}/portable/GCC/ARM_CM3
 IPATH+=${ROOT}/libraries/STM32F10x_StdPeriph_Driver/inc
 IPATH+=${ROOT}/libraries/CMSIS/Include
