@@ -138,45 +138,6 @@ Infinite_Loop:
 
 #ifdef SYSVIEW
 
-.section  .text.SVC_HandlerSV
-.weak  SVC_HandlerSV
-.type SVC_HandlerSV, %function
-SVC_HandlerSV:
-	bl SEGGER_SYSVIEW_RecordEnterISR
-	bl SVC_Handler
-	bl SEGGER_SYSVIEW_RecordExitISR
-.size  SVC_HandlerSV, .-SVC_HandlerSV
-
-
-.section  .text.DebugMon_HandlerSV
-.weak  DebugMon_HandlerSV
-.type DebugMon_HandlerSV, %function
-DebugMon_HandlerSV:
-	bl SEGGER_SYSVIEW_RecordEnterISR
-	bl DebugMon_Handler
-	bl SEGGER_SYSVIEW_RecordExitISR
-.size  DebugMon_HandlerSV, .-DebugMon_HandlerSV
-
-
-.section  .text.PendSV_HandlerSV
-.weak  PendSV_HandlerSV
-.type PendSV_HandlerSV, %function
-PendSV_HandlerSV:
-	bl SEGGER_SYSVIEW_RecordEnterISR
-	bl PendSV_Handler
-	bl SEGGER_SYSVIEW_RecordExitISR
-.size  PendSV_HandlerSV, .-PendSV_HandlerSV
-
-
-.section  .text.SysTick_HandlerSV
-.weak  SysTick_HandlerSV
-.type SysTick_HandlerSV, %function
-SysTick_HandlerSV:
-	bl SEGGER_SYSVIEW_RecordEnterISR
-	bl SysTick_Handler
-	bl SEGGER_SYSVIEW_RecordExitISR
-.size  SysTick_HandlerSV, .-SysTick_HandlerSV
-
 
 .section  .text.WWDG_IRQHandlerSV
 .weak  WWDG_IRQHandlerSV
@@ -805,11 +766,11 @@ g_pfnVectors:
   .word  0
   .word  0
   .word  0
-  .word  SVC_HandlerSV
-  .word  DebugMon_HandlerSV
+  .word  SVC_Handler
+  .word  DebugMon_Handler
   .word  0
-  .word  PendSV_HandlerSV
-  .word  SysTick_HandlerSV
+  .word  PendSV_Handler
+  .word  SysTick_Handler
   .word  WWDG_IRQHandlerSV
   .word  PVD_IRQHandlerSV
   .word  TAMPER_IRQHandlerSV
