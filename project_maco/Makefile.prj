@@ -111,6 +111,7 @@ ${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/misc.o
 ${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/croutine.o
 ${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/list.o
 ${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/queue.o
+${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/stream_buffer.o
 ${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/tasks.o
 ${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/port.o
 ${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/heap_3.o

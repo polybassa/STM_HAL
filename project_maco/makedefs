@@ -19,7 +19,7 @@
 
 
 ROOT=..
-RTOS_SOURCE_DIR=${ROOT}/libraries/FreeRTOS/Source
+RTOS_SOURCE_DIR=${ROOT}/libraries/FreeRTOS/Source_10_0_0
 OBJDIR?=obj
 BINDIR?=exe
 COVERAGEDIR?=testcoverage
@@ -62,7 +62,7 @@ CPPFLAGS= \
 	    -fno-exceptions \
 	    -mcpu=cortex-m3 \
 	    -fno-builtin \
-	    -std=c++17 \
+	    -std=c++14 \
 	    -fno-rtti \
 	    -mthumb \
 	    -Wall \
@@ -78,7 +78,7 @@ LDFLAGS= 	-ffunction-sections \
     		-fno-exceptions \
     		-mcpu=cortex-m3 \
     		-fno-builtin \
-    		-std=c++17 \
+    		-std=c++14 \
     		-pedantic \
     		-fno-rtti \
     		-mthumb \
@@ -111,7 +111,7 @@ else
 # The flags passed to the compiler when we are not using arm-none-eabi tools.
 CFLAGS= -pedantic \
 	-fprofile-arcs \
-	–ftest-coverage \
+	-ftest-coverage \
         -std=c11 \
         -Wall \
         -O1 \
@@ -120,7 +120,7 @@ CFLAGS= -pedantic \
 
 CPPFLAGS= \
     --coverage \
-    -std=c++17 \
+    -std=c++14 \
     -Wall \
     -Wno-deprecated-register \
     -Wno-register \
