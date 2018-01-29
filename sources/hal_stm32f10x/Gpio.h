@@ -83,12 +83,11 @@ class Factory<Gpio>
         for (const auto& clock : Clocks) {
             RCC_APB2PeriphClockCmd(clock, ENABLE);
 
-            // Alternative way of GPIO_DeInit(X)
             RCC_APB2PeriphResetCmd(clock, ENABLE);
             RCC_APB2PeriphResetCmd(clock, DISABLE);
         }
 
-        for (const auto& gpioremap : RemappingsContainer) {
+        for (const auto& gpioremap : RemappingContainer) {
             if (IS_GPIO_REMAP(gpioremap)) {
                 GPIO_PinRemapConfig(gpioremap, ENABLE);
             }

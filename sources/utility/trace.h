@@ -27,10 +27,15 @@
 #else
 
 #if defined(DEBUG)
+#if defined(USART_DEBUG)
+#include "DebugInterface.h"
+
+static dev::DebugInterface terminal;
+#else
 #include "RealTimeDebugInterface.h"
 
 static dev::RealTimeDebugInterface& terminal = dev::RealTimeDebugInterface::instance();
-
+#endif
 #define Trace(ZONE, ...) do { \
         if (g_DebugZones & (ZONE)) { \
             terminal.printf("%s:%u: ", __FILE__, __LINE__); \

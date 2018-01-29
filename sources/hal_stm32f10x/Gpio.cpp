@@ -57,4 +57,4 @@ void Gpio::initialize(void) const
 
 constexpr const std::array<const Gpio, Gpio::Description::__ENUM__SIZE + 1> Factory<Gpio>::Container;
 constexpr const std::array<const uint32_t, 7> Factory<Gpio>::Clocks;
-constexpr const std::array<const uint32_t, 1> Factory<Gpio>::RemappingsContainer;
+constexpr const std::array<const uint32_t, 1> Factory<Gpio>::RemappingContainer;

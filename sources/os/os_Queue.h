@@ -161,7 +161,7 @@ uint32_t Queue<T, n>::spacesAvailable(void) const
 template<typename T, size_t n>
 void Queue<T, n>::reset(void) const
 {
-    return xQueueReset(mQueueHandle);
+    xQueueReset(mQueueHandle);
 }
 ///////////////////////////////////////////////////////////
 
@@ -230,7 +230,7 @@ bool Queue<T, 1>::receive(T& message, uint32_t ticksToWait) const
 template<typename T>
 void Queue<T, 1>::reset(void) const
 {
-    return xQueueReset(mQueueHandle);
+    xQueueReset(mQueueHandle);
 }
 }
 

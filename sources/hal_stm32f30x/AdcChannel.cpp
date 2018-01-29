@@ -25,9 +25,9 @@ using hal::Factory;
 
 uint32_t Adc::Channel::getValue(void) const
 {
-    const uint32_t now = os::Task::getTickCount();
+    const int now = static_cast<int>(os::Task::getTickCount());
 
-    if (std::abs(now - mLastUpdateTicks) < mCacheTimeInTicks) {
+    if (static_cast<uint32_t>(std::abs(now - static_cast<int>(mLastUpdateTicks))) < mCacheTimeInTicks) {
         return mCacheValue;
     }
     mLastUpdateTicks = now;

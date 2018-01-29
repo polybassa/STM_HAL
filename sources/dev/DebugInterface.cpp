@@ -51,41 +51,41 @@ DebugInterface::~DebugInterface()
 
 void DebugInterface::printStartupMessage(void) const
 {
-    print("Firmware\r\nBuild: %s %s\r\n", __DATE__, __TIME__);
+    this->printf("Firmware\r\nBuild: %s %s\r\n", __DATE__, __TIME__);
     RCC_ClocksTypeDef clocks;
     RCC_GetClocksFreq(&clocks);
 
 #if defined (STM32F303xC) || defined (STM32F334x8) || defined (STM32F302x8) || defined (STM32F303xE)
-    print("ADC12CLK: %d\r\n", clocks.ADC12CLK_Frequency);
-    print("ADC34CLK: %d\r\n", clocks.ADC34CLK_Frequency);
-    print("HCLK: %d\r\n", clocks.HCLK_Frequency);
-    print("HRTIM1CLK: %d\r\n", clocks.HRTIM1CLK_Frequency);
-    print("I2C1CLK: %d\r\n", clocks.I2C1CLK_Frequency);
-    print("I2C2CLK: %d\r\n", clocks.I2C2CLK_Frequency);
-    print("I2C3CLK: %d\r\n", clocks.I2C3CLK_Frequency);
-    print("PCLK1: %d\r\n", clocks.PCLK1_Frequency);
-    print("PCLK2: %d\r\n", clocks.PCLK2_Frequency);
-    print("SYSCLK: %d\r\n", clocks.SYSCLK_Frequency);
-    print("TIM15CLK: %d\r\n", clocks.TIM15CLK_Frequency);
-    print("TIM16CLK: %d\r\n", clocks.TIM16CLK_Frequency);
-    print("TIM17CLK: %d\r\n", clocks.TIM17CLK_Frequency);
-    print("TIM1CLK: %d\r\n", clocks.TIM1CLK_Frequency);
-    print("TIM20CLK: %d\r\n", clocks.TIM20CLK_Frequency);
-    print("TIM2CLK: %d\r\n", clocks.TIM2CLK_Frequency);
-    print("TIM3CLK: %d\r\n", clocks.TIM3CLK_Frequency);
-    print("TIM8CLK: %d\r\n", clocks.TIM8CLK_Frequency);
-    print("UART4CLK: %d\r\n", clocks.UART4CLK_Frequency);
-    print("UART5CLK: %d\r\n", clocks.UART5CLK_Frequency);
-    print("USART1CLK: %d\r\n", clocks.USART1CLK_Frequency);
-    print("USART2CLK: %d\r\n", clocks.USART2CLK_Frequency);
-    print("USART3CLK: %d\r\n", clocks.USART3CLK_Frequency);
+    this->printf("ADC12CLK: %d\r\n", clocks.ADC12CLK_Frequency);
+    this->printf("ADC34CLK: %d\r\n", clocks.ADC34CLK_Frequency);
+    this->printf("HCLK: %d\r\n", clocks.HCLK_Frequency);
+    this->printf("HRTIM1CLK: %d\r\n", clocks.HRTIM1CLK_Frequency);
+    this->printf("I2C1CLK: %d\r\n", clocks.I2C1CLK_Frequency);
+    this->printf("I2C2CLK: %d\r\n", clocks.I2C2CLK_Frequency);
+    this->printf("I2C3CLK: %d\r\n", clocks.I2C3CLK_Frequency);
+    this->printf("PCLK1: %d\r\n", clocks.PCLK1_Frequency);
+    this->printf("PCLK2: %d\r\n", clocks.PCLK2_Frequency);
+    this->printf("SYSCLK: %d\r\n", clocks.SYSCLK_Frequency);
+    this->printf("TIM15CLK: %d\r\n", clocks.TIM15CLK_Frequency);
+    this->printf("TIM16CLK: %d\r\n", clocks.TIM16CLK_Frequency);
+    this->printf("TIM17CLK: %d\r\n", clocks.TIM17CLK_Frequency);
+    this->printf("TIM1CLK: %d\r\n", clocks.TIM1CLK_Frequency);
+    this->printf("TIM20CLK: %d\r\n", clocks.TIM20CLK_Frequency);
+    this->printf("TIM2CLK: %d\r\n", clocks.TIM2CLK_Frequency);
+    this->printf("TIM3CLK: %d\r\n", clocks.TIM3CLK_Frequency);
+    this->printf("TIM8CLK: %d\r\n", clocks.TIM8CLK_Frequency);
+    this->printf("UART4CLK: %d\r\n", clocks.UART4CLK_Frequency);
+    this->printf("UART5CLK: %d\r\n", clocks.UART5CLK_Frequency);
+    this->printf("USART1CLK: %d\r\n", clocks.USART1CLK_Frequency);
+    this->printf("USART2CLK: %d\r\n", clocks.USART2CLK_Frequency);
+    this->printf("USART3CLK: %d\r\n", clocks.USART3CLK_Frequency);
 #endif
 #if defined (STM32F10X_LD) || defined (STM32F10X_LD_VL) || defined (STM32F10X_MD) || defined (STM32F10X_MD_VL) || \
     defined (STM32F10X_HD) || defined (STM32F10X_HD_VL) || defined (STM32F10X_XL) || defined (STM32F10X_CL)
-    print("HCLK: %d\r\n", clocks.HCLK_Frequency);
-    print("PCLK1: %d\r\n", clocks.PCLK1_Frequency);
-    print("PCLK2: %d\r\n", clocks.PCLK2_Frequency);
-    print("SYSCLK: %d\r\n", clocks.SYSCLK_Frequency);
+    this->printf("HCLK: %d\r\n", clocks.HCLK_Frequency);
+    this->printf("PCLK1: %d\r\n", clocks.PCLK1_Frequency);
+    this->printf("PCLK2: %d\r\n", clocks.PCLK2_Frequency);
+    this->printf("SYSCLK: %d\r\n", clocks.SYSCLK_Frequency);
 
 #endif
 }
@@ -111,7 +111,7 @@ void DebugInterface::send(const char* str, const size_t len) const
     this->interface.send(reinterpret_cast<const uint8_t*>(str), len);
 }
 
-void DebugInterface::print(const char* format, ...) const
+void DebugInterface::printf(const char* format, ...) const
 {
 #if defined(DEBUG)
     PrintMutex.take();

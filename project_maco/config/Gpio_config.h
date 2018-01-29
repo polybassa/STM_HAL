@@ -89,7 +89,7 @@ static constexpr const std::array<const Gpio, Gpio::__ENUM__SIZE + 1> Container 
            GPIO_InitTypeDef { GPIO_Pin_14, GPIO_Speed_50MHz, GPIO_Mode_AF_PP })
   } };
 
-static constexpr const std::array<const uint32_t, 1> RemappingsContainer =
+static constexpr const std::array<const uint32_t, 1> RemappingContainer =
 {{
      GPIO_Remap_SWJ_JTAGDisable
  }};
