@@ -35,11 +35,11 @@ AFLAGS=-mthumb \
 #-fstack-usage for compile time stack usage estimation
 
 CFLAGS=	-ffunction-sections \
-	-fno-strict-aliasing \
+		-fno-strict-aliasing \
         --specs=nano.specs \
-	-fno-common \
-	-pedantic \
-	-Werror=narrowing \
+		-fno-common \
+		-pedantic \
+		-Werror=narrowing \
     	-fmessage-length=0 \
         -fdata-sections     \
         -mcpu=cortex-m3 \
@@ -52,6 +52,7 @@ CFLAGS=	-ffunction-sections \
 CPPFLAGS= \
 	    -pedantic \
 	    -Werror=narrowing \
+	    -Wno-register \
 	    -ffunction-sections \
 	    -fno-strict-aliasing \
 	    --specs=nano.specs \
@@ -61,7 +62,7 @@ CPPFLAGS= \
 	    -fno-exceptions \
 	    -mcpu=cortex-m3 \
 	    -fno-builtin \
-	    -std=c++14 \
+	    -std=c++17 \
 	    -fno-rtti \
 	    -mthumb \
 	    -Wall \
@@ -69,7 +70,7 @@ CPPFLAGS= \
 	    -c 
 
 LDFLAGS= 	-ffunction-sections \
-		-fno-strict-aliasing \
+			-fno-strict-aliasing \
     		--specs=nano.specs \
     		-fno-common \
     		-fmessage-length=0 \
@@ -77,14 +78,14 @@ LDFLAGS= 	-ffunction-sections \
     		-fno-exceptions \
     		-mcpu=cortex-m3 \
     		-fno-builtin \
-    		-std=c++14 \
+    		-std=c++17 \
     		-pedantic \
     		-fno-rtti \
     		-mthumb \
     		-Wall \
     		-MD \
-		-Wl,--gc-sections \
-		-u _printf_float \
+			-Wl,--gc-sections \
+			-u _printf_float \
          	-static \
          	-Wl,-Map=${@:.elf=.map} \
          	-lgcc \
@@ -119,9 +120,10 @@ CFLAGS= -pedantic \
 
 CPPFLAGS= \
     --coverage \
-    -std=c++14 \
+    -std=c++17 \
     -Wall \
     -Wno-deprecated-register \
+    -Wno-register \
     -c \
     -g
 
