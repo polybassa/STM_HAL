@@ -69,6 +69,7 @@ ${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/versionfile.o
 # HAL Layer
 ${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/Gpio.o
 ${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/Usart.o
+${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/Dma.o
 
 # DEV Layer
 ${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/DebugInterface.o
@@ -101,7 +102,7 @@ ${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/stm32f10x_pwr.o
 ${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/stm32f10x_gpio.o
 ${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/stm32f10x_usart.o
 #${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/stm32f10x_spi.o
-#${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/stm32f10x_dma.o
+${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/stm32f10x_dma.o
 ${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/misc.o
 #${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/stm32f10x_exti.o
 #${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/stm32f10x_tim.o

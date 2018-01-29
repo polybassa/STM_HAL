@@ -105,6 +105,19 @@ typedef struct
                                    ((PERIPH) == DMA2_Channel4) || \
                                    ((PERIPH) == DMA2_Channel5))
 
+#define IS_DMA_ALL_PERIPH_BASE(PERIPH) (((PERIPH) == DMA1_Channel1_BASE) || \
+                                   ((PERIPH) == DMA1_Channel2_BASE) || \
+                                   ((PERIPH) == DMA1_Channel3_BASE) || \
+                                   ((PERIPH) == DMA1_Channel4_BASE) || \
+                                   ((PERIPH) == DMA1_Channel5_BASE) || \
+                                   ((PERIPH) == DMA1_Channel6_BASE) || \
+                                   ((PERIPH) == DMA1_Channel7_BASE) || \
+                                   ((PERIPH) == DMA2_Channel1_BASE) || \
+                                   ((PERIPH) == DMA2_Channel2_BASE) || \
+                                   ((PERIPH) == DMA2_Channel3_BASE) || \
+                                   ((PERIPH) == DMA2_Channel4_BASE) || \
+                                   ((PERIPH) == DMA2_Channel5_BASE))
+
 /** @defgroup DMA_data_transfer_direction 
   * @{
   */
@@ -408,7 +421,7 @@ typedef struct
   */
 
 void DMA_DeInit(DMA_Channel_TypeDef* DMAy_Channelx);
-void DMA_Init(DMA_Channel_TypeDef* DMAy_Channelx, DMA_InitTypeDef* DMA_InitStruct);
+void DMA_Init(DMA_Channel_TypeDef* DMAy_Channelx, DMA_InitTypeDef const * const DMA_InitStruct);
 void DMA_StructInit(DMA_InitTypeDef* DMA_InitStruct);
 void DMA_Cmd(DMA_Channel_TypeDef* DMAy_Channelx, FunctionalState NewState);
 void DMA_ITConfig(DMA_Channel_TypeDef* DMAy_Channelx, uint32_t DMA_IT, FunctionalState NewState);
