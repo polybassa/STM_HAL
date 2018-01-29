@@ -9,7 +9,7 @@ before_install:
 script: 
         - cd utilities 
         - ./configureWithDocker.sh
-        - ./makeWithDocker.shWithDocker.sh test
+        - ./makeWithDocker.sh test
         - ./makeWithDocker.sh clean 
         - ./makeWithDocker.sh firmware 
         - ./makeWithDocker.sh clean 
