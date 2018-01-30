@@ -85,7 +85,6 @@ LDFLAGS= 	-ffunction-sections \
     		-Wall \
     		-MD \
 			-Wl,--gc-sections \
-			-u _printf_float \
          	-static \
          	-Wl,-Map=${@:.elf=.map} \
          	-lgcc \

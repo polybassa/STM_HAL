@@ -2,14 +2,16 @@ ifeq ($(MAKECMDGOALS),debug_firmware)
 DEFINES+=-DDEBUG
 DEFINES+=-DUSART_DEBUG
 DEFINES+=-g
-DEFINES+=-O0
+DEFINES+=-O3
 DEFINES+=-DSYSVIEW
-LDFLAGS+=-O0
+DEFINES+=-DUSE_FULL_ASSERT
+LDFLAGS+=-O3
+LDFLAGS+=-u _printf_float
 endif
 
 ifeq ($(MAKECMDGOALS),firmware)
-DEFINES+=-O0
-LDFLAGS+=-O0
+DEFINES+=-O3
+LDFLAGS+=-O3
 endif
 
 ifneq (,$(filter debug_firmware firmware,$(MAKECMDGOALS)))

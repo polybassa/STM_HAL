@@ -68,6 +68,8 @@ Notes:
 #ifndef SYSVIEW_FREERTOS_H
 #define SYSVIEW_FREERTOS_H
 
+#ifdef SYSVIEW
+
 #include "SEGGER_SYSVIEW.h"
 
 /*********************************************************************
@@ -310,6 +312,8 @@ void SYSVIEW_RecordU32x5  (unsigned Id, U32 Para0, U32 Para1, U32 Para2, U32 Par
 
 #ifdef __cplusplus
 }
+#endif
+
 #endif
 
 #endif

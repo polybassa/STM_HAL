@@ -44,9 +44,7 @@ void Gpio::operator=(const bool& state) const
 
 void Gpio::initialize(void) const
 {
-    auto peripherie = reinterpret_cast<GPIO_TypeDef* const>(mPeripherie);
-
-    GPIO_Init(peripherie, &mConfiguration);
+    GPIO_Init(reinterpret_cast<GPIO_TypeDef* const>(mPeripherie), &mConfiguration);
 
     if (((mConfiguration.GPIO_Mode == GPIO_Mode_AF_OD) || (mConfiguration.GPIO_Mode == GPIO_Mode_AF_PP))
         && IS_GPIO_PIN_SOURCE(mPinSource))

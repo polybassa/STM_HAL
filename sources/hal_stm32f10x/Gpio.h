@@ -88,9 +88,7 @@ class Factory<Gpio>
         }
 
         for (const auto& gpioremap : RemappingContainer) {
-            if (IS_GPIO_REMAP(gpioremap)) {
-                GPIO_PinRemapConfig(gpioremap, ENABLE);
-            }
+            GPIO_PinRemapConfig(gpioremap, ENABLE);
         }
 
         for (const auto& gpio : Container) {

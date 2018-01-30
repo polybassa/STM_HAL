@@ -57,3 +57,8 @@ int main(void)
 
     while (1) {}
 }
+
+void assert_failed(uint8_t* file, uint32_t line)
+{
+    Trace(ZONE_ERROR, "ASSERT FAILED: %s:%u", file, line);
+}
