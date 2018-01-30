@@ -36,8 +36,13 @@ os::TaskEndless gpioTest("Gpio_Test", 1024, os::Task::Priority::MEDIUM, [] (cons
                                  out = false;
                                  gsm.send(reinterpret_cast<const uint8_t*>("Hello"), 6);
                                  secco.send(reinterpret_cast<const uint8_t*>("Hello"), 6);
-                                 Trace(ZONE_INFO, "loop\n");
-                                 test.send((const uint8_t*)"hello", 5);
-                                 test.send((const uint8_t*)"hellohellohellohellohello", 25);
+                                 Trace(ZONE_INFO, "loop\r\n");
+
+                                 auto x = test.send((const uint8_t*)"hello\r\n", 7);
+                                 Trace(ZONE_INFO, "sent: %d\r\n", x);
+                                 x = test.send((const uint8_t*)"hello\r\n", 7);
+                                 Trace(ZONE_INFO, "sent: %d\r\n", x);
+                                 os::ThisTask::sleep(std::chrono::milliseconds(300));
+                                 test.send((const uint8_t*)"hellohellohellohellohello\r\n", 27, 50);
                              }
                          });
