@@ -68,7 +68,6 @@ Notes:
 #ifndef SYSVIEW_FREERTOS_H
 #define SYSVIEW_FREERTOS_H
 
-#ifdef SYSVIEW
 
 #include "SEGGER_SYSVIEW.h"
 
@@ -196,6 +195,8 @@ Notes:
 #define apiID_XEVENTGROUPGETBITSFROMISR           (102u)
 #define apiID_VEVENTGROUPDELETE                   (103u)
 #define apiID_UXEVENTGROUPGETNUMBER               (104u)
+
+#ifdef SYSVIEW
 
 #define traceTASK_NOTIFY_TAKE()                                       SEGGER_SYSVIEW_RecordU32x2(apiID_OFFSET + apiID_ULTASKNOTIFYTAKE, xClearCountOnExit, xTicksToWait)
 #define traceTASK_DELAY()                                             SEGGER_SYSVIEW_RecordU32(apiID_OFFSET + apiID_VTASKDELAY, xTicksToDelay)

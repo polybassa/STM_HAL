@@ -45,6 +45,7 @@ void UsartWithDma::initialize() const
         registerInterruptSemaphores();
     }
     mInitialized = true;
+    Trace(ZONE_INFO, "Init done!");
 }
 
 bool UsartWithDma::isReadyToReceive(void) const
