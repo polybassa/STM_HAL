@@ -23,6 +23,7 @@ VPATH+=${ROOT}/sources
 VPATH+=${ROOT}/sources/hal_stm32f10x
 VPATH+=${ROOT}/sources/os
 VPATH+=${ROOT}/sources/dev
+VPATH+=${ROOT}/sources/app
 VPATH+=${RTOS_SOURCE_DIR}
 VPATH+=${RTOS_SOURCE_DIR}/portable/MemMang
 VPATH+=${RTOS_SOURCE_DIR}/portable/GCC/ARM_CM3
@@ -88,6 +89,7 @@ ${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/TaskEndless.o
 ${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/TaskInterruptable.o
 
 # App Layer
+${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/ModemDriver.o
 
 #PMD TestApps
 ${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/TestGpio.o
