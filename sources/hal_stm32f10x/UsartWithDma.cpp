@@ -40,12 +40,12 @@ void UsartWithDma::initialize() const
     if (!DmaTransferCompleteSemaphores[static_cast<size_t>(mUsart.mDescription)] ||
         !DmaReceiveCompleteSemaphores[static_cast<size_t>(mUsart.mDescription)])
     {
-        Trace(ZONE_ERROR, "Semaphore allocation failed/r/n");
+        Trace(ZONE_ERROR, "Semaphore allocation failed\r\n");
     } else {
         registerInterruptSemaphores();
     }
     mInitialized = true;
-    Trace(ZONE_INFO, "Init done!");
+    Trace(ZONE_INFO, "Init done!\r\n");
 }
 
 bool UsartWithDma::isReadyToReceive(void) const
@@ -91,7 +91,9 @@ size_t UsartWithDma::send(uint8_t const* const data, const size_t length, const 
         return 0;
     }
 
-    if ((mTxDma != nullptr) && (mDmaCmd & USART_DMAReq_Tx) && (length > MIN_LENGTH_FOR_DMA_TRANSFER)) {
+    const bool dmaSupport = (mTxDma != nullptr) && (mDmaCmd & USART_DMAReq_Tx);
+
+    if (dmaSupport && (length > MIN_LENGTH_FOR_DMA_TRANSFER)) {
         // clear Semaphore
         DmaTransferCompleteSemaphores.at(mUsart.mDescription).take(std::chrono::milliseconds(0));
         // we have DMA support
@@ -102,6 +104,8 @@ size_t UsartWithDma::send(uint8_t const* const data, const size_t length, const 
             mTxDma->disable();
             return length;
         } else {
+            Trace(ZONE_INFO, "Failed\r\n");
+
             mTxDma->disable();
             return 0;
         }
@@ -121,10 +125,11 @@ size_t UsartWithDma::receive(uint8_t* const data, const size_t length, const uin
         //Trace(ZONE_INFO, "OverRun Error detected \r\n");
     }
 
-    if ((mRxDma != nullptr) && (mDmaCmd & USART_DMAReq_Rx) && (length > MIN_LENGTH_FOR_DMA_TRANSFER)) {
+    const bool dmaSupport = (mRxDma != nullptr) && (mDmaCmd & USART_DMAReq_Rx);
+
+    if (dmaSupport && (length > MIN_LENGTH_FOR_DMA_TRANSFER)) {
         // clear Semaphore
         DmaReceiveCompleteSemaphores.at(mUsart.mDescription).take(std::chrono::milliseconds(0));
-        // we have DMA support
         mRxDma->setupTransfer(data, length);
         mRxDma->enable();
 
@@ -149,8 +154,9 @@ void UsartWithDma::sendNonBlocking(uint8_t const* const data, const size_t lengt
         return;
     }
 
-    if ((mTxDma != nullptr) && (mDmaCmd & USART_DMAReq_Tx)) {
-        // we have DMA support
+    const bool dmaSupport = (mTxDma != nullptr) && (mDmaCmd & USART_DMAReq_Tx);
+
+    if (dmaSupport) {
         mTxDma->setupTransfer(data, length, repeat);
         mTxDma->enable();
     }
@@ -161,8 +167,9 @@ void UsartWithDma::receiveNonBlocking(uint8_t const* const data, const size_t le
         return;
     }
 
-    if ((mRxDma != nullptr) && (mDmaCmd & USART_DMAReq_Rx)) {
-        // we have DMA support
+    const bool dmaSupport = (mRxDma != nullptr) && (mDmaCmd & USART_DMAReq_Rx);
+
+    if (dmaSupport) {
         mRxDma->setupTransfer(data, length, repeat);
         mRxDma->enable();
     }

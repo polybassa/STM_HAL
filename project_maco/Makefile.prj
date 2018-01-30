@@ -1,11 +1,10 @@
 ifeq ($(MAKECMDGOALS),debug_firmware)
 DEFINES+=-DDEBUG
-DEFINES+=-DUSART_DEBUG
+#DEFINES+=-DUSART_DEBUG
 DEFINES+=-g
-DEFINES+=-O3
-DEFINES+=-DSYSVIEW
+DEFINES+=-O0
 DEFINES+=-DUSE_FULL_ASSERT
-LDFLAGS+=-O3
+LDFLAGS+=-O0
 LDFLAGS+=-u _printf_float
 endif
 
@@ -118,17 +117,13 @@ ${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/misc.o
 ${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/croutine.o
 ${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/list.o
 ${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/queue.o
-${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/stream_buffer.o
+#${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/stream_buffer.o
 ${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/tasks.o
 ${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/port.o
 ${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/heap_3.o
 ${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/event_groups.o
 
 # SEGGER_SYSVIEW
-${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/SEGGER_SYSVIEW_Config_FreeRTOS.o
-${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/SEGGER_SYSVIEW.o
 ${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/SEGGER_RTT.o
 ${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/SEGGER_RTT_printf.o
-${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/SEGGER_SYSVIEW_FreeRTOS.o
-
 endif
