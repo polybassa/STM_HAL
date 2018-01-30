@@ -19,8 +19,8 @@
 #define DMA1_CHANNEL1_INTERRUPT_ENABLED false
 #define DMA1_CHANNEL2_INTERRUPT_ENABLED false
 #define DMA1_CHANNEL3_INTERRUPT_ENABLED false
-#define DMA1_CHANNEL4_INTERRUPT_ENABLED false
-#define DMA1_CHANNEL5_INTERRUPT_ENABLED true
+#define DMA1_CHANNEL4_INTERRUPT_ENABLED true
+#define DMA1_CHANNEL5_INTERRUPT_ENABLED false
 #define DMA1_CHANNEL6_INTERRUPT_ENABLED false
 #define DMA1_CHANNEL7_INTERRUPT_ENABLED false
 #define DMA2_CHANNEL1_INTERRUPT_ENABLED false
@@ -48,12 +48,12 @@ enum Description {
 static constexpr const std::array<const Dma, Dma::__ENUM__SIZE + 1> Container =
 { {
       Dma(Dma::USART1_TX,
-          DMA1_Channel5_BASE,
-          DMA_InitTypeDef { USART1_BASE + 0x4, 0, DMA_DIR_PeripheralDST, 0, DMA_PeripheralInc_Disable,
+          DMA1_Channel4_BASE,
+          DMA_InitTypeDef { USART1_BASE + 0x4, 1, DMA_DIR_PeripheralDST, 0, DMA_PeripheralInc_Disable,
                             DMA_MemoryInc_Enable, DMA_PeripheralDataSize_Byte,
                             DMA_MemoryDataSize_Byte, DMA_Mode_Normal,
                             DMA_Priority_High, DMA_M2M_Disable},
-          DMA_IT_TC, IRQn_Type::DMA1_Channel5_IRQn),
+          DMA_IT_TC, IRQn_Type::DMA1_Channel4_IRQn),
       Dma(Dma::__ENUM__SIZE,
           0,
           DMA_InitTypeDef { })
