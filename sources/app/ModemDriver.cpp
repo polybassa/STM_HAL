@@ -17,6 +17,8 @@
 #include "LockGuard.h"
 #include "trace.h"
 #include <cstring>
+#include <sstream>
+#include <string>
 
 using app::ModemDriver;
 
@@ -42,33 +44,42 @@ ModemDriver::ModemDriver(const hal::UsartWithDma& interface,
                          const hal::Gpio&         powerPin,
                          const hal::Gpio&         supplyPin) :
     os::DeepSleepModule(),
-    mModemDriverTask(
-                     "ModemDriverTask",
-                     ModemDriver::STACKSIZE,
-                     os::Task::Priority::HIGH,
-                     [this](const bool& join)
-                     {
-                         modemDriverTaskFunction(join);
-                     }),
+    mModemTxTask("ModemTxTask",
+                 ModemDriver::STACKSIZE,
+                 os::Task::Priority::HIGH,
+                 [this](const bool& join)
+                 {
+                     modemTxTaskFunction(join);
+                 }),
+    mModemRxTask("ModemRxTask",
+                 ModemDriver::STACKSIZE,
+                 os::Task::Priority::VERY_HIGH,
+                 [this](const bool& join)
+                 {
+                     modemRxTaskFunction(join);
+                 }),
     mInterface(interface),
     mModemReset(resetPin),
     mModemPower(powerPin),
     mModemSupplyVoltage(supplyPin)
 {
+    mDataAvailableSemaphore.take(std::chrono::milliseconds(0));
     mInterface.mUsart.enableNonBlockingReceive(ModemDriverInterruptHandler);
 }
 
 void ModemDriver::enterDeepSleep(void)
 {
-    mModemDriverTask.join();
+    mModemTxTask.join();
+    mModemRxTask.join();
 }
 
 void ModemDriver::exitDeepSleep(void)
 {
-    mModemDriverTask.start();
+    mModemRxTask.start();
+    mModemTxTask.start();
 }
 
-void ModemDriver::modemDriverTaskFunction(const bool& join)
+void ModemDriver::modemTxTaskFunction(const bool& join)
 {
     mState = ModemState::STARTMODEM;
     char sendingString[SLC_MTU] = "\r";
@@ -379,6 +390,20 @@ void ModemDriver::modemDriverTaskFunction(const bool& join)
     // stop code
 }
 
+void ModemDriver::modemRxTaskFunction(const bool& join)
+{
+    do {
+        auto && line = readLineFromModem(std::chrono::milliseconds(2500));
+
+        if (line.empty()) {
+            handleError();
+        } else {
+            mDataVector = std::move(line);
+            mDataAvailableSemaphore.give();
+        }
+    } while (!join);
+}
+
 void ModemDriver::modemOn(void) const
 {
     mModemSupplyVoltage = true;
@@ -399,117 +424,69 @@ void ModemDriver::modemReset(void) const
     os::ThisTask::sleep(std::chrono::milliseconds(1000));
 }
 
-ModemDriver::ModemReturnCode ModemDriver::modemSendRecv(std::string_view str)
+ModemDriver::ModemReturnCode ModemDriver::modemSendRecv(std::string_view str, std::chrono::milliseconds timeout)
 {
-    char somebuf[81];
-    int ret = 2;
+    ModemReturnCode ret = ModemReturnCode::TRY_AGAIN;
 
     mInterface.send(str);
 
-    while (ret == 2) {
-        std::memset(somebuf, 0, sizeof(somebuf));
-
-        //wait til a full message arrived
-        ret = readLineFromRingBuffer(somebuf, sizeof(somebuf));
-        Trace(ZONE_INFO, "> %s\r\n", somebuf);
-
-        if (ret == -1) {
-            Trace(ZONE_INFO, "TIMEOUT: (((%s)))\r\n", somebuf);
+    while (ret == ModemReturnCode::TRY_AGAIN) {
+        if (!mDataAvailableSemaphore.take(timeout)) {
             return ModemReturnCode::TIMEOUT;
         }
-
-        if (str == "AT+USORF") {
-            ret = ParseResponseLine_USORF(somebuf);
-        } else {
-            ret = ParseResponseLine(somebuf);
-        }
+        ret = parseResponse(std::string_view(reinterpret_cast<const char*>(mDataVector.data()), mDataVector.size()));
     }
 
     return ModemReturnCode(ret);
 }
 
-int ModemDriver::readLineFromRingBuffer(char* string, int size)
+std::vector<uint8_t> ModemDriver::readLineFromModem(std::chrono::milliseconds timeout)
 {
-    char linebufString[81];
-    int linebuf_idx = 0;
-    memset(linebufString, 0, sizeof(linebufString));
-    int inside_string = 0;
-
-    uint8_t r = 0;
-    while (1) {
-        if (!InputBuffer.receive(r, 25000)) {
-            return -1;
+    static constexpr const size_t BUFFERSIZE = 512;
+    std::array<uint8_t, BUFFERSIZE> buffer;
+    bool insideSubString = false;
+    for (auto pos = buffer.begin(); pos != buffer.end(); ) {
+        uint8_t newByte = 0;
+        if (!InputBuffer.receive(newByte, timeout.count())) {
+            return std::vector<uint8_t>();
         }
 
         //received message contains "
-        if (r == '"') {
-            if (inside_string) { inside_string = 0; } else { inside_string = 1; }
+        if (newByte == '"') {
+            insideSubString = (insideSubString == false) ? true : false;
         }
 
         //prompt
-        if (r == '@') {
-            linebufString[linebuf_idx++] = r;
-            strcpy(string, linebufString);
-            return strlen(string);
+        if (newByte == '@') {
+            *pos++ = newByte;
+            return std::vector<uint8_t>(buffer.begin(), pos);
         }
 
-        if (!inside_string && ((r == '\r') || (r == '\n') || (r == 0))) {
-            linebufString[linebuf_idx] = 0;
-            if (linebuf_idx >= size) {
-                linebuf_idx = 0;
-                return 0;
-            }
-            linebuf_idx = 0;
-            strcpy(string, linebufString);
-            //Trace(ZONE_INFO,"%s\n",string);
-            return strlen(string);
-        }
+        const bool terminationFound = (newByte == '\r') || (newByte == '\n') || (newByte == 0);
 
-        linebufString[linebuf_idx++] = r;
-
-        if (linebuf_idx >= sizeof(linebufString)) {
-            linebuf_idx = 0;
-            return 0;
+        if (!insideSubString && terminationFound) {
+            *pos++ = 0;
+            return std::vector<uint8_t>(buffer.begin(), pos);
         }
+        *pos++ = newByte;
     }
+    return std::vector<uint8_t>();
 }
 
-int ModemDriver::ParseResponseLine(char* answerbuf)
+ModemDriver::ModemReturnCode ModemDriver::parseResponse(std::string_view input)
 {
-    if (memcmp(answerbuf, "OK", 2) == 0) {
-        //OK is received
-        return 0;
-    } else if (memcmp(answerbuf, "+CME ERROR", 10) == 0) {
-        //ERROR is received
-        return 1;
-    } else if (memcmp(answerbuf, "ERROR", 5) == 0) {
-        //ERROR is received
-        return 1;
-    } else if (memcmp(answerbuf, "@", 1) == 0) {
-        //prompt
-        return 0;
+    if (input.find("+USORF") != std::string::npos) {
+        handleDataReception(input);
+        return ModemReturnCode::TRY_AGAIN;
+    } else if (input.find("OK") != std::string::npos) {
+        return ModemReturnCode::OK;
+    } else if (input.find("ERROR") != std::string::npos) {
+        return ModemReturnCode::FAULT;
+    } else if (input.find("@") != std::string::npos) {
+        return ModemReturnCode::OK;
     } else {
-        //ECHO or nothing
-        return 2;
-    }
-}
-
-int ModemDriver::ParseResponseLine_USORF(char* answerbuf)
-{
-    if (memcmp(answerbuf, "OK", 2) == 0) {
-        //OK is received
-        return 0;
-    } else if (memcmp(answerbuf, "ERROR", 5) == 0) {
-        //ERROR is received
-        return 1;
-    } else if (memcmp(answerbuf, "+USORF", 6) == 0) {
-        //some answerstuff
-        handle_USORF(answerbuf);
-        return 2;
-    } else {
-        //ECHO or nothing
-        //send the received message to the can controller
-        return 2;
+        Trace(ZONE_ERROR, "Couldn't parse \"%s\"\r\n", input);
+        return ModemReturnCode::TRY_AGAIN;
     }
 }
 
@@ -519,71 +496,31 @@ int ModemDriver::ParseResponseLine_USORF(char* answerbuf)
  * It is also possible that the response is only 2 pieces
  * +USORF: SOCKET_IDX,DATA_LEN
  * This indicates only how much data is in the buffer*/
-void ModemDriver::handle_USORF(char* string)
+void ModemDriver::handleDataReception(std::string_view input)
 {
-    char delimiter[] = ",";
-    char* ptr;
-
-    int i = 0;
-    char data[80];
-
-    //Trace(ZONE_INFO,"Receive: %s\n", string);
-
-    memset(data, 0, sizeof(data));
-
-    int socket = -1;
-    char* addrstr = NULL;
-    int port = -1;
-    char* lengthstr = NULL;
-    char* datastr = NULL;
-
-    ptr = strtok(string, delimiter);
-
-    while (ptr != NULL) {
-        // naechsten Abschnitt erstellen
-        if (i == 0) {
-            socket = strtol(ptr + 8, NULL, 10);
-        } else if (i == 1) {
-            if (ptr[0] == '"') {
-                addrstr = ptr;
-            } else {
-                lengthstr = ptr;
-                break;
-            }
-        } else if (i == 2) {
-            port = strtol(ptr, NULL, 10);
-        } else if (i == 3) {
-            lengthstr = ptr;
-        } else if (i == 4) {
-            datastr = ptr;
-            break;
-        }
-
-        ptr = strtok(NULL, delimiter);
-        i++;
-    }
-
-    if (lengthstr == NULL) {
-        /* Malformed response, contains no length! */
-        Trace(ZONE_INFO, "Malformed response to USORF: %s\r\n", string);
-        return;
-    }
-
-    /* Parse the length parameter */
-    strcpy(data, lengthstr);
-    int length = strtol(data, NULL, 10);
-
-    if (datastr != NULL) {
-        /* There is data to be read */
-        memset(data, 0, sizeof(data));
-        memcpy(data, ++datastr, length); // skip the quotation mark
-
-        onUdpReceived(socket, addrstr, port, (uint8_t*)data, length);
-        mModemBuffer -= length; // this estimate can be wrong, USORF should be called again to check if the buffer is still full
+    auto strings = splitDataString(input);
+    if (strings.size() == 5) {
+        mModemBuffer -= std::stoi(strings[3]);
+        //onUdpReceived()
+    } else if (strings.size() == 2) {
+        mModemBuffer = std::stoi(strings[1]);
     } else {
-        /* Received indication of how much data is in the modem buffer */
-        mModemBuffer = length;
+        Trace(ZONE_ERROR, "Malformed GSM data \r\n");
     }
+}
+
+std::vector<std::string> ModemDriver::splitDataString(std::string_view input)
+{
+    std::vector<std::string> strings;
+    std::string inputString = std::string(input.data(), input.length());
+
+    std::istringstream iss(inputString);
+    std::string s;
+    for (auto i = 0; i < 4 && getline(iss, s, ','); i++) {
+        strings.push_back(s);
+    }
+    if (getline(iss, s)) {strings.push_back(s); }
+    return strings;
 }
 
 void ModemDriver::onUdpReceived(uint8_t        socket,
@@ -606,20 +543,6 @@ void ModemDriver::onUdpReceived(uint8_t        socket,
     if (length == 0) {
         return;
     }
-
-//    uint8_t packetType = data[0];
-//
-//    if ((packetType == 1) || (packetType == '/')) {
-//        /* This kind of packet is handled internally by MaCo, don't forward. */
-//        if (length <= 1) {
-//            return; // Empty command
-//        }
-//        specialCommand_t cmd = data[1];
-//        handleSpecialCommand(cmd, data + 2, length - 2);
-//    } else {
-//        /* Anything else is forwarded to SecCo */
-//        sendString(&huart2, (const char*)data, length);
-//    }
 }
 
 bool ModemDriver::waitforRB(unsigned int delay, char* returnstring)

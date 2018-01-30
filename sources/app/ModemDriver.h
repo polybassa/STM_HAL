@@ -21,9 +21,12 @@
 #include "TaskInterruptable.h"
 #include "DeepSleepInterface.h"
 #include "os_StreamBuffer.h"
+#include "Semaphore.h"
 #include "UsartWithDma.h"
 #include "Gpio.h"
+#include <vector>
 #include <string_view>
+#include <chrono>
 
 namespace app
 {
@@ -58,10 +61,16 @@ class ModemDriver final :
     {
         TIMEOUT = -1,
         OK = 0,
-        FAULT = 1
+        FAULT = 1,
+        TRY_AGAIN = 2
     };
 
-    os::TaskInterruptable mModemDriverTask;
+    os::TaskInterruptable mModemTxTask;
+    os::TaskInterruptable mModemRxTask;
+
+    os::Semaphore mDataAvailableSemaphore;
+    std::vector<uint8_t> mDataVector;
+
     const hal::UsartWithDma& mInterface;
     const hal::Gpio& mModemReset;
     const hal::Gpio& mModemPower;
@@ -70,16 +79,20 @@ class ModemDriver final :
     int mModemBuffer = 0;
     ModemState mState = ModemState::STARTMODEM;
 
-    void modemDriverTaskFunction(const bool&);
+    void modemTxTaskFunction(const bool&);
+    void modemRxTaskFunction(const bool&);
 
     void modemOn(void) const;
     void modemOff(void) const;
     void modemReset(void) const;
 
-    ModemReturnCode modemSendRecv(std::string_view);
-    int readLineFromRingBuffer(char* string, int size);
-    int ParseResponseLine(char* answerbuf);
-    int ParseResponseLine_USORF(char* answerbuf);
+    std::vector<uint8_t> readLineFromModem(std::chrono::milliseconds timeout);
+
+    ModemReturnCode modemSendRecv(std::string_view, std::chrono::milliseconds timeout = std::chrono::seconds(2));
+    ModemReturnCode parseResponse(std::string_view input);
+    void handleDataReception(std::string_view input);
+    std::vector<std::string> splitDataString(std::string_view input);
+
     void handle_USORF(char* string);
     void onUdpReceived(uint8_t socket, const char* host, uint16_t port, const uint8_t* data, unsigned int length);
     bool waitforRB(unsigned int delay, char* returnstring);
