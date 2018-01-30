@@ -85,6 +85,11 @@ void UsartWithDma::registerReceiveCompleteCallback(std::function<void(void)> f) 
     }
 }
 
+size_t UsartWithDma::send(std::string_view str, const uint32_t ticksToWait) const
+{
+    return send(reinterpret_cast<uint8_t const* const>(str.data()), str.length(), ticksToWait);
+}
+
 size_t UsartWithDma::send(uint8_t const* const data, const size_t length, const uint32_t ticksToWait) const
 {
     if (data == nullptr) {

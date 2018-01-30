@@ -22,6 +22,7 @@
 #include "Usart.h"
 #include "Semaphore.h"
 #include "hal_Factory.h"
+#include <string_view>
 
 namespace hal
 {
@@ -38,6 +39,7 @@ struct UsartWithDma {
     template<size_t n>
     size_t send(const std::array<uint8_t, n>&) const;
     size_t send(uint8_t const* const, const size_t, const uint32_t ticksToWait = portMAX_DELAY) const;
+    size_t send(std::string_view, const uint32_t ticksToWait = portMAX_DELAY) const;
 
     template<size_t n>
     size_t receive(std::array<uint8_t, n>&) const;
