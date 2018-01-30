@@ -78,7 +78,7 @@ private:
     void initialize(void) const;
     void registerInterruptSemaphores(void) const;
 
-    static constexpr const size_t MIN_LENGTH_FOR_DMA_TRANSFER = 20;
+    static constexpr const size_t MIN_LENGTH_FOR_DMA_TRANSFER = 5;
     static std::array<os::Semaphore, Usart::__ENUM__SIZE> DmaTransferCompleteSemaphores;
     static std::array<os::Semaphore, Usart::__ENUM__SIZE> DmaReceiveCompleteSemaphores;
 
@@ -117,6 +117,7 @@ class Factory<UsartWithDma>
 
     Factory(void)
     {
+        static_assert(CONTAINERSIZE == Container.size(), "Set CONTAINERSIZE correct!");
         for (const auto& usart : Container) {
             usart.initialize();
         }

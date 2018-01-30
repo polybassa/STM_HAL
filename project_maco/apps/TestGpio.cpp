@@ -23,26 +23,21 @@ static const int __attribute__((unused)) g_DebugZones = ZONE_ERROR | ZONE_WARNIN
 
 os::TaskEndless gpioTest("Gpio_Test", 1024, os::Task::Priority::MEDIUM, [] (const bool&){
                              constexpr const hal::Gpio& out = hal::Factory<hal::Gpio>::get<hal::Gpio::TEST_PIN_OUT>();
-                             constexpr const hal::Usart& gsm = hal::Factory<hal::Usart>::get<hal::Usart::MODEM_COM>();
-                             constexpr const hal::Usart& secco = hal::Factory<hal::Usart>::get<hal::Usart::SECCO_COM>();
-
-                             constexpr const hal::UsartWithDma& test =
-                                 hal::Factory<hal::UsartWithDma>::get<hal::Usart::DEBUG_IF>();
+                             constexpr const hal::UsartWithDma& gsm =
+                                 hal::Factory<hal::UsartWithDma>::get<hal::Usart::MODEM_COM>();
+                             constexpr const hal::UsartWithDma& secco =
+                                 hal::Factory<hal::UsartWithDma>::get<hal::Usart::SECCO_COM>();
 
                              while (true) {
                                  os::ThisTask::sleep(std::chrono::milliseconds(300));
                                  out = true;
                                  os::ThisTask::sleep(std::chrono::milliseconds(300));
                                  out = false;
-                                 gsm.send(reinterpret_cast<const uint8_t*>("Hello"), 6);
-                                 secco.send(reinterpret_cast<const uint8_t*>("Hello"), 6);
+
+                                 gsm.send(reinterpret_cast<const uint8_t*>("Hello "), 6);
+                                 secco.send(reinterpret_cast<const uint8_t*>("Hello "), 6);
                                  Trace(ZONE_INFO, "loop\r\n");
 
-                                 auto x = test.send((const uint8_t*)"hello\r\n", 7);
-                                 Trace(ZONE_INFO, "sent: %d\r\n", x);
-                                 x = test.send((const uint8_t*)"hello\r\n", 7);
-                                 Trace(ZONE_INFO, "sent: %d\r\n", x);
                                  os::ThisTask::sleep(std::chrono::milliseconds(300));
-                                 test.send((const uint8_t*)"hellohellohellohellohello\r\n", 27, 50);
                              }
                          });
