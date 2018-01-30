@@ -22,7 +22,7 @@
 static const int __attribute__((unused)) g_DebugZones = ZONE_ERROR | ZONE_WARNING | ZONE_VERBOSE | ZONE_INFO;
 
 os::TaskEndless gpioTest("Gpio_Test", 1024, os::Task::Priority::MEDIUM, [] (const bool&){
-                             constexpr const hal::Gpio& out = hal::Factory<hal::Gpio>::get<hal::Gpio::TEST_PIN_OUT>();
+                             constexpr const hal::Gpio& out = hal::Factory<hal::Gpio>::get<hal::Gpio::SECCO_PWR>();
                              constexpr const hal::UsartWithDma& gsm =
                                  hal::Factory<hal::UsartWithDma>::get<hal::Usart::MODEM_COM>();
                              constexpr const hal::UsartWithDma& secco =

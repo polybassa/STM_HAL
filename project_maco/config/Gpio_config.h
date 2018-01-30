@@ -25,10 +25,13 @@ enum Description {
     SWDIO,
     SWCLK,
     // ===PORTB===
-    TEST_PIN_OUT,
+    SECCO_PWR,
     USART3_TX,
     USART3_RX,
     // ===PORTC===
+    MODEM_1,
+    MODEM_2,
+    MODEM_3,
     // ===PORTD===
     // ===PORTE===
     // ===PORTF===
@@ -68,7 +71,7 @@ static constexpr const std::array<const Gpio, Gpio::__ENUM__SIZE + 1> Container 
            GPIO_InitTypeDef {GPIO_Pin_14, GPIO_Speed_50MHz, GPIO_Mode_AF_PP},
            GPIO_PinSource14),
       // ===================PORTB=================
-      Gpio(Gpio::TEST_PIN_OUT,
+      Gpio(Gpio::SECCO_PWR,
            GPIOB_BASE,
            GPIO_InitTypeDef {GPIO_Pin_0, GPIO_Speed_50MHz, GPIO_Mode_Out_PP}),
       Gpio(Gpio::USART3_TX,
@@ -80,6 +83,15 @@ static constexpr const std::array<const Gpio, Gpio::__ENUM__SIZE + 1> Container 
            GPIO_InitTypeDef {GPIO_Pin_11, GPIO_Speed_50MHz, GPIO_Mode_IN_FLOATING},
            GPIO_PinSource11),
       // ===================PORTC=================
+      Gpio(Gpio::MODEM_3,
+           GPIOC_BASE,
+           GPIO_InitTypeDef {GPIO_Pin_7, GPIO_Speed_50MHz, GPIO_Mode_Out_PP}),
+      Gpio(Gpio::MODEM_2,
+           GPIOC_BASE,
+           GPIO_InitTypeDef {GPIO_Pin_8, GPIO_Speed_50MHz, GPIO_Mode_Out_PP}),
+      Gpio(Gpio::MODEM_3,
+           GPIOC_BASE,
+           GPIO_InitTypeDef {GPIO_Pin_9, GPIO_Speed_50MHz, GPIO_Mode_Out_PP}),
       // ===================PORTD=================
       // ===================PORTE=================
       // ===================PORTF=================
