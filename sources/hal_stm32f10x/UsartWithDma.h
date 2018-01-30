@@ -32,6 +32,9 @@ struct UsartWithDma {
     UsartWithDma& operator=(const UsartWithDma&) = delete;
     UsartWithDma& operator=(UsartWithDma &&) = delete;
 
+    bool isInitalized(void) const;
+    bool isReadyToReceive(void) const;
+
     template<size_t n>
     size_t send(const std::array<uint8_t, n>&) const;
     size_t send(uint8_t const* const, const size_t, const uint32_t ticksToWait = portMAX_DELAY) const;
@@ -40,8 +43,7 @@ struct UsartWithDma {
     size_t receive(std::array<uint8_t, n>&) const;
     size_t receive(uint8_t* const, const size_t, const uint32_t ticksToWait = portMAX_DELAY) const;
 
-    size_t receiveWithTimeout(uint8_t* const data, const size_t length, const uint32_t ticksToWait =
-                                  portMAX_DELAY) const;
+    size_t receiveAvailableData(uint8_t* const data, const size_t length) const;
 
     template<size_t n>
     void sendNonBlocking(const std::array<uint8_t, n>& rx, const bool repeat) const;
@@ -57,9 +59,6 @@ struct UsartWithDma {
     void registerTransferCompleteCallback(std::function<void(void)> ) const;
     void registerReceiveCompleteCallback(std::function<void(void)> ) const;
 
-    void enableReceiveTimeout(const size_t bitsUntilTimeout) const;
-    void disableReceiveTimeout(void) const;
-
     const Usart& mUsart;
 
 private:
@@ -74,11 +73,12 @@ private:
     Dma const* const mTxDma;
     Dma const* const mRxDma;
 
+    mutable bool mInitialized = false;
+
     void initialize(void) const;
     void registerInterruptSemaphores(void) const;
-    void receiveTimeoutCallback(void) const;
 
-    static constexpr const size_t MIN_LENGTH_FOR_DMA_TRANSFER = 0;
+    static constexpr const size_t MIN_LENGTH_FOR_DMA_TRANSFER = 20;
     static std::array<os::Semaphore, Usart::__ENUM__SIZE> DmaTransferCompleteSemaphores;
     static std::array<os::Semaphore, Usart::__ENUM__SIZE> DmaReceiveCompleteSemaphores;
 

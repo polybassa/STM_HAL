@@ -62,7 +62,7 @@ CPPFLAGS= \
 	    -fno-exceptions \
 	    -mcpu=cortex-m3 \
 	    -fno-builtin \
-	    -std=c++14 \
+	    -std=c++17 \
 	    -fno-rtti \
 	    -mthumb \
 	    -Wall \
@@ -78,7 +78,7 @@ LDFLAGS= 	-ffunction-sections \
     		-fno-exceptions \
     		-mcpu=cortex-m3 \
     		-fno-builtin \
-    		-std=c++14 \
+    		-std=c++17 \
     		-pedantic \
     		-fno-rtti \
     		-mthumb \
@@ -120,7 +120,7 @@ CFLAGS= -pedantic \
 
 CPPFLAGS= \
     --coverage \
-    -std=c++14 \
+    -std=c++17 \
     -Wall \
     -Wno-deprecated-register \
     -Wno-register \
@@ -128,7 +128,7 @@ CPPFLAGS= \
     -g
 
 LDFLAGS+= 	-lpthread \
-		-std=c++14 \
+		-std=c++17 \
 		-lcrypto \
 		--coverage 
 							

@@ -24,6 +24,8 @@
 #include "hal_Factory.h"
 #include "Gpio.h"
 #include "Usart.h"
+#include "Dma.h"
+#include "UsartWithDma.h"
 
 /* DEV LAYER INLCUDES */
 
@@ -45,6 +47,8 @@ int main(void)
 {
     hal::initFactory<hal::Factory<hal::Gpio> >();
     hal::initFactory<hal::Factory<hal::Usart> >();
+    hal::initFactory<hal::Factory<hal::Dma> >();
+    hal::initFactory<hal::Factory<hal::UsartWithDma> >();
 
     TraceInit();
     Trace(ZONE_INFO, "Version: %s \r\n", VERSION.c_str());

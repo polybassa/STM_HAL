@@ -18,8 +18,8 @@
 
 static constexpr const std::array<const UsartWithDma, 1> Container =
 { {
-      UsartWithDma(Factory<Usart>::get<Usart::MSCOM_IF>(), USART_DMAReq_Rx | USART_DMAReq_Tx,
-                   &Factory<Dma>::get<Dma::USART1_TX>(), &Factory<Dma>::get<Dma::USART1_RX>())
+      UsartWithDma(Factory<Usart>::get<Usart::DEBUG_IF>(), USART_DMAReq_Tx,
+                   &Factory<Dma>::get<Dma::USART1_TX>(), nullptr)
   } };
 
 #endif /* SOURCES_PMD_USART_CONFIG_CONTAINER_H_ */

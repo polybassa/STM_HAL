@@ -16,6 +16,7 @@
 #include "TestGpio.h"
 #include "Gpio.h"
 #include "Usart.h"
+#include "UsartWithDma.h"
 #include "trace.h"
 
 static const int __attribute__((unused)) g_DebugZones = ZONE_ERROR | ZONE_WARNING | ZONE_VERBOSE | ZONE_INFO;
@@ -25,6 +26,9 @@ os::TaskEndless gpioTest("Gpio_Test", 1024, os::Task::Priority::MEDIUM, [] (cons
                              constexpr const hal::Usart& gsm = hal::Factory<hal::Usart>::get<hal::Usart::MODEM_COM>();
                              constexpr const hal::Usart& secco = hal::Factory<hal::Usart>::get<hal::Usart::SECCO_COM>();
 
+                             constexpr const hal::UsartWithDma& test =
+                                 hal::Factory<hal::UsartWithDma>::get<hal::Usart::DEBUG_IF>();
+
                              while (true) {
                                  os::ThisTask::sleep(std::chrono::milliseconds(300));
                                  out = true;
@@ -32,6 +36,8 @@ os::TaskEndless gpioTest("Gpio_Test", 1024, os::Task::Priority::MEDIUM, [] (cons
                                  out = false;
                                  gsm.send(reinterpret_cast<const uint8_t*>("Hello"), 6);
                                  secco.send(reinterpret_cast<const uint8_t*>("Hello"), 6);
-                                 Trace(ZONE_INFO, "loop");
+                                 Trace(ZONE_INFO, "loop\n");
+                                 test.send((const uint8_t*)"hello", 5);
+                                 test.send((const uint8_t*)"hellohellohellohellohello", 25);
                              }
                          });

@@ -70,6 +70,8 @@ ${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/versionfile.o
 ${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/Gpio.o
 ${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/Usart.o
 ${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/Dma.o
+${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/UsartWithDma.o
+
 
 # DEV Layer
 ${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/DebugInterface.o
