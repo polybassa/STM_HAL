@@ -24,12 +24,14 @@
 #include "Semaphore.h"
 #include "UsartWithDma.h"
 #include "Gpio.h"
-#include <vector>
+#include <string>
 #include <string_view>
-#include <chrono>
+#include <vector>
 
 namespace app
 {
+struct ModemDriverTester;
+
 class ModemDriver final :
     private os::DeepSleepModule
 {
@@ -69,7 +71,7 @@ class ModemDriver final :
     os::TaskInterruptable mModemRxTask;
 
     os::Semaphore mDataAvailableSemaphore;
-    std::vector<uint8_t> mDataVector;
+    std::string mDataString;
 
     const hal::UsartWithDma& mInterface;
     const hal::Gpio& mModemReset;
@@ -86,7 +88,7 @@ class ModemDriver final :
     void modemOff(void) const;
     void modemReset(void) const;
 
-    std::vector<uint8_t> readLineFromModem(std::chrono::milliseconds timeout);
+    std::string readLineFromModem(std::chrono::milliseconds timeout);
 
     ModemReturnCode modemSendRecv(std::string_view, std::chrono::milliseconds timeout = std::chrono::seconds(2));
     ModemReturnCode parseResponse(std::string_view input);
@@ -111,6 +113,41 @@ public:
     ModemDriver& operator=(ModemDriver &&) = delete;
 
     static void ModemDriverInterruptHandler(uint8_t);
+
+    friend struct ModemDriverTester;
+};
+
+class ModemDriverTester
+{
+    ModemDriver& mTestee;
+public:
+
+    template<class ... Args>
+    decltype(auto) splitDataString(Args && ... args)
+    {
+        return mTestee.splitDataString(std::forward<Args>(args) ...);
+    }
+
+//    void modemOn(void) const;
+//    void modemOff(void) const;
+//    void modemReset(void) const;
+//
+//    std::string readLineFromModem(std::chrono::milliseconds timeout);
+//
+//    ModemDriver::ModemReturnCode modemSendRecv(std::string_view, std::chrono::milliseconds timeout = std::chrono::seconds(2));
+//    ModemDriver::ModemReturnCode parseResponse(std::string_view input);
+//    void handleDataReception(std::string_view input);
+//    std::vector<std::string> splitDataString(std::string_view input);
+//
+//    void handle_USORF(char* string);
+//    void onUdpReceived(uint8_t socket, const char* host, uint16_t port, const uint8_t* data, unsigned int length);
+//    bool waitforRB(unsigned int delay, char* returnstring);
+//    void getSendDataLengthCommand(char* outputstring, char const* const dataStringToSend);
+//    void handleError(void);
+
+    ModemDriverTester(ModemDriver& testee) :
+        mTestee(testee){}
+private:
 };
 }
 

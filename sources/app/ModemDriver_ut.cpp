@@ -187,9 +187,35 @@ int ut_DeepSleep(void)
     TestCaseEnd();
 }
 
+int ut_SplitDataString(void)
+{
+    TestCaseBegin();
+
+    app::ModemDriver driver(hal::Factory<hal::UsartWithDma>::get<hal::Usart::MODEM_COM>(),
+                            hal::Factory<hal::Gpio>::get<hal::Gpio::MODEM_1>(),
+                            hal::Factory<hal::Gpio>::get<hal::Gpio::MODEM_2>(),
+                            hal::Factory<hal::Gpio>::get<hal::Gpio::MODEM_3>());
+
+    app::ModemDriverTester tester(driver);
+
+    auto ret = tester.splitDataString("+USORF: SOCKET_IDX,\"IP_ADDRESS\",PORT,DATA_LEN,\"DATA\"");
+
+    CHECK(ret.size() == 5);
+
+    auto socket = ret[0];
+    auto ip = ret[1];
+    auto port = ret[2];
+    auto len = ret[3];
+    auto data = ret[4];
+
+    TestCaseEnd();
+}
+
 int main(int argc, const char* argv[])
 {
     UnitTestMainBegin();
     RunTest(true, ut_DeepSleep);
+    RunTest(true, ut_SplitDataString);
+
     UnitTestMainEnd();
 }

@@ -393,12 +393,12 @@ void ModemDriver::modemTxTaskFunction(const bool& join)
 void ModemDriver::modemRxTaskFunction(const bool& join)
 {
     do {
-        auto && line = readLineFromModem(std::chrono::milliseconds(2500));
+        auto line = readLineFromModem(std::chrono::milliseconds(2500));
 
         if (line.empty()) {
             handleError();
         } else {
-            mDataVector = std::move(line);
+            mDataString = line;
             mDataAvailableSemaphore.give();
         }
     } while (!join);
@@ -434,13 +434,13 @@ ModemDriver::ModemReturnCode ModemDriver::modemSendRecv(std::string_view str, st
         if (!mDataAvailableSemaphore.take(timeout)) {
             return ModemReturnCode::TIMEOUT;
         }
-        ret = parseResponse(std::string_view(reinterpret_cast<const char*>(mDataVector.data()), mDataVector.size()));
+        ret = parseResponse(std::string_view(reinterpret_cast<const char*>(mDataString.data()), mDataString.size()));
     }
 
     return ModemReturnCode(ret);
 }
 
-std::vector<uint8_t> ModemDriver::readLineFromModem(std::chrono::milliseconds timeout)
+std::string ModemDriver::readLineFromModem(std::chrono::milliseconds timeout)
 {
     static constexpr const size_t BUFFERSIZE = 512;
     std::array<uint8_t, BUFFERSIZE> buffer;
@@ -448,7 +448,7 @@ std::vector<uint8_t> ModemDriver::readLineFromModem(std::chrono::milliseconds ti
     for (auto pos = buffer.begin(); pos != buffer.end(); ) {
         uint8_t newByte = 0;
         if (!InputBuffer.receive(newByte, timeout.count())) {
-            return std::vector<uint8_t>();
+            return std::string();
         }
 
         //received message contains "
@@ -459,18 +459,18 @@ std::vector<uint8_t> ModemDriver::readLineFromModem(std::chrono::milliseconds ti
         //prompt
         if (newByte == '@') {
             *pos++ = newByte;
-            return std::vector<uint8_t>(buffer.begin(), pos);
+            return std::string(buffer.begin(), pos);
         }
 
         const bool terminationFound = (newByte == '\r') || (newByte == '\n') || (newByte == 0);
 
         if (!insideSubString && terminationFound) {
             *pos++ = 0;
-            return std::vector<uint8_t>(buffer.begin(), pos);
+            return std::string(buffer.begin(), pos);
         }
         *pos++ = newByte;
     }
-    return std::vector<uint8_t>();
+    return std::string();
 }
 
 ModemDriver::ModemReturnCode ModemDriver::parseResponse(std::string_view input)
