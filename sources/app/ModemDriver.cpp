@@ -490,12 +490,6 @@ ModemDriver::ModemReturnCode ModemDriver::parseResponse(std::string_view input)
     }
 }
 
-/* Parses the response to an AT+USORF command,
- * the response is composed of 5 pieces, separated by delimeter ",",
- * +USORF: SOCKET_IDX,"IP_ADDRESS",PORT,DATA_LEN,"DATA".
- * It is also possible that the response is only 2 pieces
- * +USORF: SOCKET_IDX,DATA_LEN
- * This indicates only how much data is in the buffer*/
 void ModemDriver::handleDataReception(std::string_view input)
 {
     auto strings = splitDataString(input);
@@ -509,6 +503,12 @@ void ModemDriver::handleDataReception(std::string_view input)
     }
 }
 
+/* Parses the response to an AT+USORF command,
+ * the response is composed of 5 pieces, separated by delimeter ",",
+ * +USORF: SOCKET_IDX,"IP_ADDRESS",PORT,DATA_LEN,"DATA".
+ * It is also possible that the response is only 2 pieces
+ * +USORF: SOCKET_IDX,DATA_LEN
+ * This indicates only how much data is in the buffer*/
 std::vector<std::string> ModemDriver::splitDataString(std::string_view input)
 {
     std::vector<std::string> strings;
@@ -560,8 +560,11 @@ void ModemDriver::getSendDataLengthCommand(char* outputstring, char const* const
     char string[10];
     memset(string, 0, 10);
 
+    char tempString[100];
+    std::memcpy(tempString, dataStringToSend, strlen(dataStringToSend));
+
     char* endptr;
-    endptr = strstr(dataStringToSend, "\r");
+    endptr = strstr(tempString, "\r");
     endptr++;
     unsigned int dataStringLength = (unsigned int)(endptr - dataStringToSend);
 

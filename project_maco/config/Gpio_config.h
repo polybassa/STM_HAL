@@ -83,7 +83,7 @@ static constexpr const std::array<const Gpio, Gpio::__ENUM__SIZE + 1> Container 
            GPIO_InitTypeDef {GPIO_Pin_11, GPIO_Speed_50MHz, GPIO_Mode_IN_FLOATING},
            GPIO_PinSource11),
       // ===================PORTC=================
-      Gpio(Gpio::MODEM_3,
+      Gpio(Gpio::MODEM_1,
            GPIOC_BASE,
            GPIO_InitTypeDef {GPIO_Pin_7, GPIO_Speed_50MHz, GPIO_Mode_Out_PP}),
       Gpio(Gpio::MODEM_2,

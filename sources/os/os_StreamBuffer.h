@@ -152,7 +152,7 @@ bool StreamBuffer<T, n>::setTriggerLevel(size_t triggerLevel) const
 template<typename T, size_t n>
 bool StreamBuffer<T, n>::sendCompletedFromISR(void) const
 {
-    uint32_t highPriorityTaskWoken = 0;
+    BaseType_t highPriorityTaskWoken = 0;
 
     auto retValue = xStreamBufferSendCompletedFromISR(mStreamBufferHandle, &highPriorityTaskWoken);
     if (highPriorityTaskWoken) {
@@ -164,7 +164,7 @@ bool StreamBuffer<T, n>::sendCompletedFromISR(void) const
 template<typename T, size_t n>
 bool StreamBuffer<T, n>::receiveCompletedFromISR(void) const
 {
-    uint32_t highPriorityTaskWoken = 0;
+    BaseType_t highPriorityTaskWoken = 0;
 
     auto retValue = xStreamBufferReceiveCompletedFromISR(mStreamBufferHandle, &highPriorityTaskWoken);
     if (highPriorityTaskWoken) {
