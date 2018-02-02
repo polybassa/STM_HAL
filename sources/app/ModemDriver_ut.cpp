@@ -26,9 +26,22 @@
 uint32_t g_currentTickCount;
 bool g_taskJoined, g_taskStarted;
 std::thread::id g_masterThreadId;
-static constexpr size_t MEMORYSIZE = 255;
-uint8_t g_masterRxMemroy[MEMORYSIZE];
-bool g_comError = false;
+
+static constexpr size_t MEMORYSIZE = 1024;
+uint8_t g_usartMemory[MEMORYSIZE];
+bool g_usartError = false;
+bool g_usartNonBlockingEnabled = false;
+std::function<void(uint8_t)> g_usartCallback;
+
+bool g_gpioState = false;
+
+static constexpr size_t STREAMBUFFERS = 2;
+std::array<std::array<uint8_t, MEMORYSIZE>, STREAMBUFFERS> g_streamBufferMemorys;
+std::array<std::array<uint8_t, MEMORYSIZE>::iterator, STREAMBUFFERS> g_streamBufferSendIterators;
+std::array<std::array<uint8_t, MEMORYSIZE>::iterator, STREAMBUFFERS> g_streamBufferReceiveIterators;
+int g_counterOfReturnedStreamBufferHandles = -1;
+
+bool g_semaphoreGiven = false;
 
 //--------------------------MOCKING--------------------------
 constexpr const std::array<const hal::Gpio, hal::Gpio::__ENUM__SIZE + 1> hal::Factory<hal::Gpio>::Container;
@@ -74,18 +87,21 @@ void os::ThisTask::yield(void)
 
 size_t hal::UsartWithDma::send(uint8_t const* const data, const size_t length, const uint32_t ticksToWait) const
 {
-    std::memcpy(g_masterRxMemroy, data, length);
-    return g_comError ? 0 : length;
+    std::memcpy(g_usartMemory, data, length);
+    return g_usartError ? 0 : length;
 }
 
 size_t hal::UsartWithDma::receive(uint8_t* const data, const size_t length, const uint32_t ticksToWait) const
 {
-    std::memcpy(data, g_masterRxMemroy, length);
-    return g_comError ? 0 : length;
+    std::memcpy(data, g_usartMemory, length);
+    return g_usartError ? 0 : length;
 }
 
 void hal::Usart::enableNonBlockingReceive(std::function<void(uint8_t)> callback) const
-{}
+{
+    g_usartNonBlockingEnabled = true;
+    g_usartCallback = callback;
+}
 
 size_t hal::UsartWithDma::send(std::string_view str, const uint32_t ticksToWait) const
 {
@@ -93,7 +109,9 @@ size_t hal::UsartWithDma::send(std::string_view str, const uint32_t ticksToWait)
 }
 
 void hal::Gpio::operator=(const bool& state) const
-{}
+{
+    g_gpioState = state;
+}
 
 void os::ThisTask::enterCriticalSection() {}
 
@@ -103,28 +121,72 @@ StreamBufferHandle_t xStreamBufferGenericCreate(size_t     xBufferSizeBytes,
                                                 size_t     xTriggerLevelBytes,
                                                 BaseType_t xIsMessageBuffer)
 {
-    return 0;
+    g_counterOfReturnedStreamBufferHandles++;
+    g_streamBufferReceiveIterators[g_counterOfReturnedStreamBufferHandles] =
+        g_streamBufferMemorys[g_counterOfReturnedStreamBufferHandles].begin();
+    g_streamBufferSendIterators[g_counterOfReturnedStreamBufferHandles] =
+        g_streamBufferMemorys[g_counterOfReturnedStreamBufferHandles].begin();
+
+    return reinterpret_cast<void*>(g_counterOfReturnedStreamBufferHandles);
 }
 
 size_t xStreamBufferSendFromISR(StreamBufferHandle_t xStreamBuffer,
                                 const void*          pvTxData,
                                 size_t               xDataLengthBytes,
                                 BaseType_t* const    pxHigherPriorityTaskWoken)
-{ return 1; }
+{
+    auto& it = g_streamBufferSendIterators[reinterpret_cast<size_t>(xStreamBuffer)];
+    size_t i;
+    auto p = reinterpret_cast<const uint8_t*>(pvTxData);
+
+    for (i = 0; i < xDataLengthBytes; i++) {
+        *it++ = *p++;
+    }
+    return i;
+}
 
 size_t xStreamBufferReceive(StreamBufferHandle_t xStreamBuffer,
                             void*                pvRxData,
                             size_t               xBufferLengthBytes,
                             TickType_t           xTicksToWait)
-{ return 1; }
+{
+    auto& it = g_streamBufferReceiveIterators[reinterpret_cast<size_t>(xStreamBuffer)];
+    auto& it_end = g_streamBufferSendIterators[reinterpret_cast<size_t>(xStreamBuffer)];
+
+    size_t i;
+    uint8_t* p = reinterpret_cast<uint8_t*>(pvRxData);
+
+    for (i = 0; i < xBufferLengthBytes && it != it_end; i++) {
+        *p++ = *it++;
+    }
+    return i;
+}
 
 void vStreamBufferDelete(StreamBufferHandle_t xStreamBuffer) {}
+
+size_t xStreamBufferBytesAvailable(StreamBufferHandle_t xStreamBuffer)
+{
+    auto it = g_streamBufferReceiveIterators[reinterpret_cast<size_t>(xStreamBuffer)];
+    auto it_end = g_streamBufferSendIterators[reinterpret_cast<size_t>(xStreamBuffer)];
+    size_t i;
+    for (i = 0; it != it_end; i++) {
+        it++;
+    }
+    return i;
+}
+
+BaseType_t xStreamBufferIsEmpty(StreamBufferHandle_t xStreamBuffer)
+{
+    auto it = g_streamBufferReceiveIterators[reinterpret_cast<size_t>(xStreamBuffer)];
+    auto it_end = g_streamBufferSendIterators[reinterpret_cast<size_t>(xStreamBuffer)];
+    return it == it_end;
+}
 
 QueueHandle_t xQueueGenericCreate(const UBaseType_t uxQueueLength,
                                   const UBaseType_t uxItemSize,
                                   const uint8_t     ucQueueType)
 {
-    return 0;
+    return reinterpret_cast<void*>(0xdeadbeef);
 }
 
 void vQueueDelete(QueueHandle_t xQueue) {}
@@ -139,7 +201,11 @@ BaseType_t xQueueGenericSend(QueueHandle_t     xQueue,
 
 BaseType_t xQueueSemaphoreTake(QueueHandle_t xQueue, TickType_t xTicksToWait)
 {
-    return 0;
+    if (g_semaphoreGiven) {
+        g_semaphoreGiven = false;
+        return true;
+    }
+    return false;
 }
 
 BaseType_t xQueueGenericReceive(QueueHandle_t    xQueue,
@@ -152,7 +218,8 @@ BaseType_t xQueueGenericReceive(QueueHandle_t    xQueue,
 
 BaseType_t xQueueGiveFromISR(QueueHandle_t xQueue, BaseType_t* const pxHigherPriorityTaskWoken)
 {
-    return 1;
+    g_semaphoreGiven = true;
+    return g_semaphoreGiven;
 }
 
 BaseType_t xQueueReceiveFromISR(QueueHandle_t xQueue, void* const pvBuffer, BaseType_t* const pxHigherPriorityTaskWoken)
@@ -166,8 +233,8 @@ int ut_DeepSleep(void)
     TestCaseBegin();
 
     g_currentTickCount = 0;
-    g_comError = false;
-    memset(g_masterRxMemroy, 0, MEMORYSIZE);
+    g_usartError = false;
+    memset(g_usartMemory, 0, MEMORYSIZE);
 
     CHECK(false == g_taskJoined);
     CHECK(false == g_taskStarted);
@@ -197,16 +264,183 @@ int ut_SplitDataString(void)
                             hal::Factory<hal::Gpio>::get<hal::Gpio::MODEM_3>());
 
     app::ModemDriverTester tester(driver);
+    {
+        const auto ret = tester.splitDataString("+USORF: 18,\"108.217.247.74\",220,15,\"0123456789qwert\"");
 
-    auto ret = tester.splitDataString("+USORF: SOCKET_IDX,\"IP_ADDRESS\",PORT,DATA_LEN,\"DATA\"");
+        CHECK(ret.size() == 6);
+        auto cmd = ret[0];
+        CHECK(cmd == "+USORF");
+        auto socket = ret[1];
+        CHECK(std::stoi(socket) == 18);
+        auto ip = ret[2];
+        CHECK(ip == "\"108.217.247.74\"");
+        auto port = ret[3];
+        CHECK(std::stoi(port) == 220);
+        auto len = ret[4];
+        CHECK(std::stoi(len) == 15);
+        auto data = ret[5];
+        CHECK(data == "\"0123456789qwert\"");
+    }
+    {
+        auto ret = tester.splitDataString("+UUSORF: 18,15");
 
-    CHECK(ret.size() == 5);
+        CHECK(ret.size() == 3);
+        auto cmd = ret[0];
+        CHECK(cmd == "+UUSORF");
+        auto socket = ret[1];
+        CHECK(std::stoi(socket) == 18);
+        auto len = ret[2];
+        CHECK(std::stoi(len) == 15);
+    }
+    {
+        auto ret = tester.splitDataString("+USORF: 18,\"108.217.247.74\",220,15,\"\x30\x31\x32\x00\"");
 
-    auto socket = ret[0];
-    auto ip = ret[1];
-    auto port = ret[2];
-    auto len = ret[3];
-    auto data = ret[4];
+        CHECK(ret.size() == 6);
+        auto cmd = ret[0];
+        CHECK(cmd == "+USORF");
+        auto socket = ret[1];
+        CHECK(std::stoi(socket) == 18);
+        auto ip = ret[2];
+        CHECK(ip == "\"108.217.247.74\"");
+        auto port = ret[3];
+        CHECK(std::stoi(port) == 220);
+        auto len = ret[4];
+        CHECK(std::stoi(len) == 15);
+        auto data = ret[5];
+        CHECK(data == "\"012\x00\"");
+    }
+    TestCaseEnd();
+}
+
+int ut_InterruptHandler(void)
+{
+    TestCaseBegin();
+
+    g_counterOfReturnedStreamBufferHandles = -1;
+    std::string teststring = "+USORF: 18,\"108.217.247.74\",220,15,\"0123456789qwert\"\r";
+    g_semaphoreGiven = false;
+
+    app::ModemDriver driver(hal::Factory<hal::UsartWithDma>::get<hal::Usart::MODEM_COM>(),
+                            hal::Factory<hal::Gpio>::get<hal::Gpio::MODEM_1>(),
+                            hal::Factory<hal::Gpio>::get<hal::Gpio::MODEM_2>(),
+                            hal::Factory<hal::Gpio>::get<hal::Gpio::MODEM_3>());
+
+    for (auto c : teststring) {
+        app::ModemDriver::ModemDriverInterruptHandler(static_cast<uint8_t>(c));
+    }
+
+    CHECK(g_semaphoreGiven == true);
+
+    std::string readback_str(teststring.length(), '\x00');
+
+    auto x = xStreamBufferReceive(reinterpret_cast<void*>(0), readback_str.data(), readback_str.size(), 0);
+
+    CHECK_MEMCMP(teststring.c_str(), readback_str.c_str(), teststring.length());
+    CHECK(teststring.length() == readback_str.length());
+    CHECK(teststring == readback_str);
+    CHECK(x == teststring.length());
+
+    TestCaseEnd();
+}
+
+int ut_InterruptHandler2(void)
+{
+    TestCaseBegin();
+
+    g_counterOfReturnedStreamBufferHandles = -1;
+    std::string teststring = "+USORF: 18,\"108.217.247.74\",220,15,\"0123456789qwert\"";
+    g_semaphoreGiven = false;
+
+    app::ModemDriver driver(hal::Factory<hal::UsartWithDma>::get<hal::Usart::MODEM_COM>(),
+                            hal::Factory<hal::Gpio>::get<hal::Gpio::MODEM_1>(),
+                            hal::Factory<hal::Gpio>::get<hal::Gpio::MODEM_2>(),
+                            hal::Factory<hal::Gpio>::get<hal::Gpio::MODEM_3>());
+
+    for (auto c : teststring) {
+        app::ModemDriver::ModemDriverInterruptHandler(static_cast<uint8_t>(c));
+    }
+
+    CHECK(g_semaphoreGiven == false);
+
+    std::string readback_str(teststring.length(), '\x00');
+
+    auto x = xStreamBufferReceive(reinterpret_cast<void*>(0), readback_str.data(), readback_str.size(), 0);
+
+    CHECK_MEMCMP(teststring.c_str(), readback_str.c_str(), teststring.length());
+    CHECK(teststring.length() == readback_str.length());
+    CHECK(teststring == readback_str);
+    CHECK(x == teststring.length());
+
+    TestCaseEnd();
+}
+
+int ut_SendRecvUSORF(void)
+{
+    TestCaseBegin();
+
+    g_counterOfReturnedStreamBufferHandles = -1;
+    std::string teststring = "+USORF: 18,\"108.217.247.74\",220,15,\"0123456789qwert\"\r";
+    g_semaphoreGiven = false;
+
+    app::ModemDriver driver(hal::Factory<hal::UsartWithDma>::get<hal::Usart::MODEM_COM>(),
+                            hal::Factory<hal::Gpio>::get<hal::Gpio::MODEM_1>(),
+                            hal::Factory<hal::Gpio>::get<hal::Gpio::MODEM_2>(),
+                            hal::Factory<hal::Gpio>::get<hal::Gpio::MODEM_3>());
+
+    for (auto c : teststring) {
+        app::ModemDriver::ModemDriverInterruptHandler(static_cast<uint8_t>(c));
+    }
+
+    app::ModemDriverTester tester(driver);
+
+    std::string sendString = "USOST\r";
+
+    auto x = tester.modemSendRecv(sendString);
+
+    CHECK(x == -1); // got Timeout because OK is missing
+    CHECK(tester.getDataString() == "0123456789qwert");
+    CHECK_MEMCMP(g_usartMemory, sendString.c_str(), sendString.length());
+
+    for (auto c : "OK\r") {
+        app::ModemDriver::ModemDriverInterruptHandler(static_cast<uint8_t>(c));
+    }
+    sendString = "TESTSTRING\r";
+    x = tester.modemSendRecv(sendString);
+    CHECK_MEMCMP(g_usartMemory, sendString.c_str(), sendString.length());
+
+    CHECK(x == 0); // got Timeout because OK is missing
+
+    TestCaseEnd();
+}
+
+int ut_SendRecvERROR(void)
+{
+    TestCaseBegin();
+
+    g_counterOfReturnedStreamBufferHandles = -1;
+    std::string teststring = "ERROR\r";
+    g_semaphoreGiven = false;
+
+    app::ModemDriver driver(hal::Factory<hal::UsartWithDma>::get<hal::Usart::MODEM_COM>(),
+                            hal::Factory<hal::Gpio>::get<hal::Gpio::MODEM_1>(),
+                            hal::Factory<hal::Gpio>::get<hal::Gpio::MODEM_2>(),
+                            hal::Factory<hal::Gpio>::get<hal::Gpio::MODEM_3>());
+
+    for (auto c : teststring) {
+        app::ModemDriver::ModemDriverInterruptHandler(static_cast<uint8_t>(c));
+    }
+
+    app::ModemDriverTester tester(driver);
+
+    auto x = tester.modemSendRecv("USOST\r");
+
+    CHECK(x == 1); // got Timeout because OK is missing
+
+    for (auto c : "OK\r") {
+        app::ModemDriver::ModemDriverInterruptHandler(static_cast<uint8_t>(c));
+    }
+    x = tester.modemSendRecv("USOST\r");
+    CHECK(x == 0); // got Timeout because OK is missing
 
     TestCaseEnd();
 }
@@ -216,6 +450,9 @@ int main(int argc, const char* argv[])
     UnitTestMainBegin();
     RunTest(true, ut_DeepSleep);
     RunTest(true, ut_SplitDataString);
-
+    RunTest(true, ut_InterruptHandler);
+    RunTest(true, ut_InterruptHandler2);
+    RunTest(true, ut_SendRecvUSORF);
+    RunTest(true, ut_SendRecvERROR);
     UnitTestMainEnd();
 }

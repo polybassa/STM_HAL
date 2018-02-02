@@ -37,6 +37,7 @@ public:
     bool send(T message, uint32_t ticksToWait = portMAX_DELAY) const;
     bool sendFromISR(T message) const;
     bool receive(T& message, uint32_t ticksToWait = portMAX_DELAY) const;
+    bool receive(char* message, const size_t length, uint32_t ticksToWait = portMAX_DELAY) const;
     bool receiveFromISR(T& message) const;
 
     bool isFull(void) const;
@@ -93,6 +94,12 @@ bool StreamBuffer<T, n>::sendFromISR(T message) const
         ThisTask::yield();
     }
     return retValue == sizeof(message);
+}
+
+template<typename T, size_t n>
+bool StreamBuffer<T, n>::receive(char* message, const size_t length, uint32_t ticksToWait) const
+{
+    return xStreamBufferReceive(mStreamBufferHandle, message, length, ticksToWait) == length;
 }
 
 template<typename T, size_t n>
