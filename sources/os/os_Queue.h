@@ -36,6 +36,7 @@ public:
 
     bool sendFront(T message, uint32_t ticksToWait = portMAX_DELAY) const;
     bool sendFrontFromISR(T message) const;
+    bool sendFromISR(T message) const;
     bool sendBack(T message, uint32_t ticksToWait = portMAX_DELAY) const;
     bool sendBackFromISR(T message) const;
     bool peek(T& message, uint32_t ticksToWait = portMAX_DELAY) const;
@@ -107,7 +108,7 @@ bool Queue<T, n>::sendBack(T message, uint32_t ticksToWait) const
 template<typename T, size_t n>
 bool Queue<T, n>::sendFrontFromISR(T message) const
 {
-    uint32_t highPriorityTaskWoken = 0;
+    BaseType_t highPriorityTaskWoken = 0;
 
     bool retValue = xQueueSendToFrontFromISR(mQueueHandle, &message, &highPriorityTaskWoken);
     if (highPriorityTaskWoken) {
@@ -119,9 +120,21 @@ bool Queue<T, n>::sendFrontFromISR(T message) const
 template<typename T, size_t n>
 bool Queue<T, n>::sendBackFromISR(T message) const
 {
-    uint32_t highPriorityTaskWoken = 0;
+    BaseType_t highPriorityTaskWoken = 0;
 
     bool retValue = xQueueSendToBackFromISR(mQueueHandle, &message, &highPriorityTaskWoken);
+    if (highPriorityTaskWoken) {
+        ThisTask::yield();
+    }
+    return retValue;
+}
+
+template<typename T, size_t n>
+bool Queue<T, n>::sendFromISR(T message) const
+{
+    BaseType_t highPriorityTaskWoken = 0;
+
+    bool retValue = xQueueSendFromISR(mQueueHandle, &message, &highPriorityTaskWoken);
     if (highPriorityTaskWoken) {
         ThisTask::yield();
     }
