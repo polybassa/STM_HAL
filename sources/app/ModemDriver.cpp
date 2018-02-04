@@ -79,7 +79,7 @@ void ModemDriver::modemTxTaskFunction(const bool& join)
         }
 
         mState = ModemState::WAITFORRB;
-        size_t numberOfBytesToSend = 0;
+        std::string output;
         uint32_t timeOfLastUdpSend = 0;
 
         while (mState >= ModemState::WAITFORRB) {
@@ -87,41 +87,30 @@ void ModemDriver::modemTxTaskFunction(const bool& join)
             case ModemState::WAITFORRB:
                 if (OutputBuffer.isEmpty()) {
                     if (os::Task::getTickCount() - timeOfLastUdpSend >= 1000) {
-                        mState = ModemState::SENDHELLO;
+                        if (sendHelloMessage() != ModemReturnCode::OK) {
+                            handleError();
+                        } else {
+                            timeOfLastUdpSend = os::Task::getTickCount();
+                        }
                     } else {
+                        // wait a second for new input data
+
                         modemSendRecv("", std::chrono::milliseconds(1000));
                         if (mModemBuffer > 0) {
                             mState = ModemState::RECEIVEFROMSERVER;
                         }
                     }
                 } else {
-                    numberOfBytesToSend = OutputBuffer.bytesAvailable();
                     mState = ModemState::SENDDATALENGTH;
                 }
                 break;
 
-            case ModemState::SENDHELLO:
-
-                switch (modemSendRecv(CMD_USOST)) {
-                case ModemReturnCode::TIMEOUT:
-                    mState = ModemState::STARTMODEM;
-                    break;
-
-                case ModemReturnCode::OK:
-                    mState = ModemState::SENDHELLOSTRING;
-                    break;
-
-                case ModemReturnCode::TRY_AGAIN:
-                case ModemReturnCode::FAULT:
-                    handleError();
-
-                    break;
-                }
-
-                break;
-
             case ModemState::SENDDATALENGTH:
                 {
+                    auto numberOfBytesToSend = OutputBuffer.bytesAvailable();
+                    output = std::string(numberOfBytesToSend, '\x00');
+                    OutputBuffer.receive(output.data(), output.size(), 1);
+
                     std::string cmd = CMD_USOST_BEGIN + std::to_string(numberOfBytesToSend) + "\r";
 
                     switch (modemSendRecv(cmd)) {
@@ -143,71 +132,21 @@ void ModemDriver::modemTxTaskFunction(const bool& join)
                     break;
                 }
 
-            case ModemState::SENDHELLOSTRING:
-
+            case ModemState::SENDDATASTRING:
                 timeOfLastUdpSend = os::Task::getTickCount();
 
-                switch (modemSendRecv("HELLO\r")) {
+                switch (modemSendRecv(output)) {
                 case ModemReturnCode::TIMEOUT:
                     mState = ModemState::STARTMODEM;
                     break;
 
                 case ModemReturnCode::OK:
-                    mState = ModemState::CHECKFROMSERVER;
+                    mState = ModemState::WAITFORRB;
                     break;
 
                 case ModemReturnCode::TRY_AGAIN:
                 case ModemReturnCode::FAULT:
                     handleError();
-
-                    break;
-                }
-
-                break;
-
-            case ModemState::SENDDATASTRING:
-                {
-                    timeOfLastUdpSend = os::Task::getTickCount();
-                    std::string output(numberOfBytesToSend, '\x00');
-                    OutputBuffer.receive(output.data(), output.size(), 1);
-
-                    switch (modemSendRecv(output)) {
-                    case ModemReturnCode::TIMEOUT:
-                        mState = ModemState::STARTMODEM;
-                        break;
-
-                    case ModemReturnCode::OK:
-                        mState = ModemState::CHECKFROMSERVER;
-                        break;
-
-                    case ModemReturnCode::TRY_AGAIN:
-                    case ModemReturnCode::FAULT:
-                        handleError();
-                        break;
-                    }
-                }
-
-                break;
-
-            case ModemState::CHECKFROMSERVER:
-
-                switch (modemSendRecv("AT+USORF=0,0\r", std::chrono::milliseconds(4000))) {
-                case ModemReturnCode::TIMEOUT:
-                    mState = ModemState::STARTMODEM;
-                    break;
-
-                case ModemReturnCode::OK:
-                    if (mModemBuffer > 0) {
-                        mState = ModemState::RECEIVEFROMSERVER;
-                    } else {
-                        mState = ModemState::WAITFORRB;
-                    }
-                    break;
-
-                case ModemReturnCode::TRY_AGAIN:
-                case ModemReturnCode::FAULT:
-                    handleError();
-
                     break;
                 }
 
@@ -221,7 +160,7 @@ void ModemDriver::modemTxTaskFunction(const bool& join)
                     break;
 
                 case ModemReturnCode::OK:
-                    mState = ModemState::CHECKFROMSERVER;
+                    mState = ModemState::WAITFORRB;
                     break;
 
                 case ModemReturnCode::TRY_AGAIN:
@@ -235,6 +174,18 @@ void ModemDriver::modemTxTaskFunction(const bool& join)
             }
         }
     } while (!join);
+}
+
+ModemDriver::ModemReturnCode ModemDriver::sendHelloMessage(void)
+{
+    if (modemSendRecv(CMD_USOST) != ModemReturnCode::OK) {
+        return ModemReturnCode::FAULT;
+    }
+
+    if (modemSendRecv("HELLO\r") != ModemReturnCode::OK) {
+        return ModemReturnCode::FAULT;
+    }
+    return ModemReturnCode::OK;
 }
 
 ModemDriver::ModemReturnCode ModemDriver::modemStartup(void)

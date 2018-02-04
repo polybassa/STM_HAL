@@ -102,6 +102,7 @@ class ModemDriver final :
     void modemReset(void);
 
     ModemReturnCode modemStartup(void);
+    ModemReturnCode sendHelloMessage(void);
 
     ModemReturnCode modemSendRecv(std::string_view, std::chrono::milliseconds timeout = std::chrono::milliseconds(8000));
     ParseResult parseResponse(std::string_view input) const;
