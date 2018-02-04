@@ -18,6 +18,7 @@
 
 #include "FreeRTOS.h"
 #include "queue.h"
+#include <chrono>
 
 namespace os
 {
@@ -34,16 +35,20 @@ public:
     Queue& operator=(Queue &&);
     ~Queue(void);
 
-    bool sendFront(T message, uint32_t ticksToWait = portMAX_DELAY) const;
-    bool sendFrontFromISR(T message) const;
-    bool sendFromISR(T message) const;
-    bool sendBack(T message, uint32_t ticksToWait = portMAX_DELAY) const;
-    bool sendBackFromISR(T message) const;
+    bool sendFront(T & message, std::chrono::milliseconds = std::chrono::milliseconds(portMAX_DELAY)) const;
+    bool sendFront(T& message, uint32_t ticksToWait = portMAX_DELAY) const;
+    bool sendFrontFromISR(T& message) const;
+    bool sendFromISR(T& message) const;
+    bool sendBack(T & message, std::chrono::milliseconds = std::chrono::milliseconds(portMAX_DELAY)) const;
+    bool sendBack(T& message, uint32_t ticksToWait = portMAX_DELAY) const;
+    bool sendBackFromISR(T& message) const;
+    bool peek(T & message, std::chrono::milliseconds = std::chrono::milliseconds(portMAX_DELAY)) const;
     bool peek(T& message, uint32_t ticksToWait = portMAX_DELAY) const;
     bool peekFromISR(T& message) const;
+    bool receive(T & message, std::chrono::milliseconds = std::chrono::milliseconds(portMAX_DELAY)) const;
     bool receive(T& message, uint32_t ticksToWait = portMAX_DELAY) const;
-    uint32_t messagesWaiting(void) const;
-    uint32_t spacesAvailable(void) const;
+    UBaseType_t messagesWaiting(void) const;
+    UBaseType_t spacesAvailable(void) const;
     void reset(void) const;
 };
 
@@ -60,10 +65,12 @@ public:
     Queue& operator=(Queue &&);
     ~Queue(void);
 
+    bool peek(T & message, std::chrono::milliseconds = std::chrono::milliseconds(portMAX_DELAY)) const;
     bool peek(T& message, uint32_t ticksToWait = portMAX_DELAY) const;
     bool peekFromISR(T& message) const;
-    bool overwrite(const T message);
-    bool overwriteFromISR(const T message);
+    bool overwrite(const T& message);
+    bool overwriteFromISR(const T& message);
+    bool receive(T & message, std::chrono::milliseconds = std::chrono::milliseconds(portMAX_DELAY)) const;
     bool receive(T& message, uint32_t ticksToWait = portMAX_DELAY) const;
     void reset(void) const;
 };
@@ -94,19 +101,31 @@ Queue<T, n>::~Queue(void)
 }
 
 template<typename T, size_t n>
-bool Queue<T, n>::sendFront(T message, uint32_t ticksToWait) const
+bool Queue<T, n>::sendFront(T& message, std::chrono::milliseconds ticksToWait) const
+{
+    return xQueueSendToFront(mQueueHandle, &message, ticksToWait.count());
+}
+
+template<typename T, size_t n>
+bool Queue<T, n>::sendFront(T& message, uint32_t ticksToWait) const
 {
     return xQueueSendToFront(mQueueHandle, &message, ticksToWait);
 }
 
 template<typename T, size_t n>
-bool Queue<T, n>::sendBack(T message, uint32_t ticksToWait) const
+bool Queue<T, n>::sendBack(T& message, std::chrono::milliseconds ticksToWait) const
+{
+    return xQueueSendToBack(mQueueHandle, &message, ticksToWait.count());
+}
+
+template<typename T, size_t n>
+bool Queue<T, n>::sendBack(T& message, uint32_t ticksToWait) const
 {
     return xQueueSendToBack(mQueueHandle, &message, ticksToWait);
 }
 
 template<typename T, size_t n>
-bool Queue<T, n>::sendFrontFromISR(T message) const
+bool Queue<T, n>::sendFrontFromISR(T& message) const
 {
     BaseType_t highPriorityTaskWoken = 0;
 
@@ -118,7 +137,7 @@ bool Queue<T, n>::sendFrontFromISR(T message) const
 }
 
 template<typename T, size_t n>
-bool Queue<T, n>::sendBackFromISR(T message) const
+bool Queue<T, n>::sendBackFromISR(T& message) const
 {
     BaseType_t highPriorityTaskWoken = 0;
 
@@ -130,7 +149,7 @@ bool Queue<T, n>::sendBackFromISR(T message) const
 }
 
 template<typename T, size_t n>
-bool Queue<T, n>::sendFromISR(T message) const
+bool Queue<T, n>::sendFromISR(T& message) const
 {
     BaseType_t highPriorityTaskWoken = 0;
 
@@ -139,6 +158,12 @@ bool Queue<T, n>::sendFromISR(T message) const
         ThisTask::yield();
     }
     return retValue;
+}
+
+template<typename T, size_t n>
+bool Queue<T, n>::peek(T& message, std::chrono::milliseconds ticksToWait) const
+{
+    return xQueuePeek(mQueueHandle, &message, ticksToWait.count());
 }
 
 template<typename T, size_t n>
@@ -154,19 +179,25 @@ bool Queue<T, n>::peekFromISR(T& message) const
 }
 
 template<typename T, size_t n>
+bool Queue<T, n>::receive(T& message, std::chrono::milliseconds ticksToWait) const
+{
+    return xQueueReceive(mQueueHandle, &message, ticksToWait.count());
+}
+
+template<typename T, size_t n>
 bool Queue<T, n>::receive(T& message, uint32_t ticksToWait) const
 {
     return xQueueReceive(mQueueHandle, &message, ticksToWait);
 }
 
 template<typename T, size_t n>
-uint32_t Queue<T, n>::messagesWaiting(void) const
+UBaseType_t Queue<T, n>::messagesWaiting(void) const
 {
     return uxQueueMessagesWaiting(mQueueHandle);
 }
 
 template<typename T, size_t n>
-uint32_t Queue<T, n>::spacesAvailable(void) const
+UBaseType_t Queue<T, n>::spacesAvailable(void) const
 {
     return uxQueueSpacesAvailable(mQueueHandle);
 }
@@ -205,6 +236,12 @@ Queue<T, 1>::~Queue(void)
 }
 
 template<typename T>
+bool Queue<T, 1>::peek(T& message, std::chrono::milliseconds ticksToWait) const
+{
+    return xQueuePeek(mQueueHandle, &message, ticksToWait.count());
+}
+
+template<typename T>
 bool Queue<T, 1>::peek(T& message, uint32_t ticksToWait) const
 {
     return xQueuePeek(mQueueHandle, &message, ticksToWait);
@@ -217,21 +254,27 @@ bool Queue<T, 1>::peekFromISR(T& message) const
 }
 
 template<typename T>
-bool Queue<T, 1>::overwrite(const T message)
+bool Queue<T, 1>::overwrite(const T& message)
 {
     return xQueueOverwrite(mQueueHandle, &message);
 }
 
 template<typename T>
-bool Queue<T, 1>::overwriteFromISR(T message)
+bool Queue<T, 1>::overwriteFromISR(const T& message)
 {
-    uint32_t highPriorityTaskWoken = 0;
+    BaseType_t highPriorityTaskWoken = 0;
 
     bool retValue = xQueueOverwriteFromISR(mQueueHandle, &message, &highPriorityTaskWoken);
     if (highPriorityTaskWoken) {
         ThisTask::yield();
     }
     return retValue;
+}
+
+template<typename T>
+bool Queue<T, 1>::receive(T& message, std::chrono::milliseconds ticksToWait) const
+{
+    return xQueueReceive(mQueueHandle, &message, ticksToWait.count());
 }
 
 template<typename T>
