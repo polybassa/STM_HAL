@@ -16,7 +16,6 @@
 #include "ModemDriver.h"
 #include "LockGuard.h"
 #include "trace.h"
-#include <cstring>
 
 using app::ModemDriver;
 
@@ -310,29 +309,6 @@ ModemDriver::ModemReturnCode ModemDriver::interpretResponse(const ParseResult& r
     default:
         return ModemReturnCode::TRY_AGAIN;
     }
-
-//    if (input.find("+USORF") != std::string::npos) {
-//        handleDataReception(input);
-//        return ModemReturnCode::TRY_AGAIN;
-//    } else if (input.find("+UUSORD") != std::string::npos) {
-//        handleDataReception(input);
-//        return ModemReturnCode::OK;
-//    } else if (input.find("+USOST") != std::string::npos) {
-//        return ModemReturnCode::TRY_AGAIN;
-//    } else if (input.find("OK") != std::string::npos) {
-//        return ModemReturnCode::OK;
-//    } else if (input.find("ERROR") != std::string::npos) {
-//        return ModemReturnCode::FAULT;
-//    } else if (input.find("@") != std::string::npos) {
-//        return ModemReturnCode::OK;
-//    } else if ((*input.data() == '\r') && (input.length() == 1)) {
-//        return ModemReturnCode::TRY_AGAIN;
-//    } else if ((*input.data() == '\n') && (input.length() == 1)) {
-//        return ModemReturnCode::TRY_AGAIN;
-//    } else {
-//        Trace(ZONE_ERROR, "Couldn't parse \r\n%s\r\n", input.data());
-//        return ModemReturnCode::TRY_AGAIN;
-//    }
 }
 
 ModemDriver::ParseResult ModemDriver::parseResponse(std::string_view input) const
@@ -364,17 +340,21 @@ void ModemDriver::handleDataReception(std::string_view input)
     auto strings = splitDataString(input);
 
     if (strings.size() == 6) {
-        int result = std::atoi(strings[4].data());
+        size_t result = static_cast<size_t>(std::atoi(strings[4].data()));
+        result %= BUFFERSIZE;
         mModemBuffer -= result;
+
         auto data = strings[5];
         if (data.length() > 2) {
             auto first = data.find_first_of('"') + 1;
             auto last = data.find_last_of('"');
+
             mDataString = std::string(data.data() + first, last - first);
             Trace(ZONE_INFO, "GOT data %s \r\n", mDataString.c_str());
         }
     } else if (strings.size() == 3) {
-        int result = std::atoi(strings[2].data());
+        size_t result = static_cast<size_t>(std::atoi(strings[2].data()));
+        result %= BUFFERSIZE;
         mModemBuffer = result;
     } else {
         Trace(ZONE_ERROR, "Malformed GSM data \r\n");
