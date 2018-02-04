@@ -182,6 +182,15 @@ BaseType_t xStreamBufferIsEmpty(StreamBufferHandle_t xStreamBuffer)
     return it == it_end;
 }
 
+BaseType_t xStreamBufferReset(StreamBufferHandle_t xStreamBuffer)
+{
+    g_streamBufferReceiveIterators[g_counterOfReturnedStreamBufferHandles] =
+        g_streamBufferMemorys[g_counterOfReturnedStreamBufferHandles].begin();
+    g_streamBufferSendIterators[g_counterOfReturnedStreamBufferHandles] =
+        g_streamBufferMemorys[g_counterOfReturnedStreamBufferHandles].begin();
+    return pdTRUE;
+}
+
 QueueHandle_t xQueueGenericCreate(const UBaseType_t uxQueueLength,
                                   const UBaseType_t uxItemSize,
                                   const uint8_t     ucQueueType)
@@ -240,9 +249,9 @@ int ut_DeepSleep(void)
     CHECK(false == g_taskStarted);
 
     app::ModemDriver driver(hal::Factory<hal::UsartWithDma>::get<hal::Usart::MODEM_COM>(),
-                            hal::Factory<hal::Gpio>::get<hal::Gpio::MODEM_1>(),
-                            hal::Factory<hal::Gpio>::get<hal::Gpio::MODEM_2>(),
-                            hal::Factory<hal::Gpio>::get<hal::Gpio::MODEM_3>());
+                            hal::Factory<hal::Gpio>::get<hal::Gpio::MODEM_RESET>(),
+                            hal::Factory<hal::Gpio>::get<hal::Gpio::MODEM_POWER>(),
+                            hal::Factory<hal::Gpio>::get<hal::Gpio::MODEM_SUPPLY>());
 
     os::DeepSleepController::enterGlobalDeepSleep();
 
@@ -259,9 +268,9 @@ int ut_SplitDataString(void)
     TestCaseBegin();
 
     app::ModemDriver driver(hal::Factory<hal::UsartWithDma>::get<hal::Usart::MODEM_COM>(),
-                            hal::Factory<hal::Gpio>::get<hal::Gpio::MODEM_1>(),
-                            hal::Factory<hal::Gpio>::get<hal::Gpio::MODEM_2>(),
-                            hal::Factory<hal::Gpio>::get<hal::Gpio::MODEM_3>());
+                            hal::Factory<hal::Gpio>::get<hal::Gpio::MODEM_RESET>(),
+                            hal::Factory<hal::Gpio>::get<hal::Gpio::MODEM_POWER>(),
+                            hal::Factory<hal::Gpio>::get<hal::Gpio::MODEM_SUPPLY>());
 
     app::ModemDriverTester tester(driver);
     {
@@ -312,68 +321,6 @@ int ut_SplitDataString(void)
     TestCaseEnd();
 }
 
-int ut_InterruptHandler(void)
-{
-    TestCaseBegin();
-
-    g_counterOfReturnedStreamBufferHandles = -1;
-    std::string teststring = "+USORF: 18,\"108.217.247.74\",220,15,\"0123456789qwert\"\r";
-    g_semaphoreGiven = false;
-
-    app::ModemDriver driver(hal::Factory<hal::UsartWithDma>::get<hal::Usart::MODEM_COM>(),
-                            hal::Factory<hal::Gpio>::get<hal::Gpio::MODEM_1>(),
-                            hal::Factory<hal::Gpio>::get<hal::Gpio::MODEM_2>(),
-                            hal::Factory<hal::Gpio>::get<hal::Gpio::MODEM_3>());
-
-    for (auto c : teststring) {
-        app::ModemDriver::ModemDriverInterruptHandler(static_cast<uint8_t>(c));
-    }
-
-    CHECK(g_semaphoreGiven == true);
-
-    std::string readback_str(teststring.length(), '\x00');
-
-    auto x = xStreamBufferReceive(reinterpret_cast<void*>(0), readback_str.data(), readback_str.size(), 0);
-
-    CHECK_MEMCMP(teststring.c_str(), readback_str.c_str(), teststring.length());
-    CHECK(teststring.length() == readback_str.length());
-    CHECK(teststring == readback_str);
-    CHECK(x == teststring.length());
-
-    TestCaseEnd();
-}
-
-int ut_InterruptHandler2(void)
-{
-    TestCaseBegin();
-
-    g_counterOfReturnedStreamBufferHandles = -1;
-    std::string teststring = "+USORF: 18,\"108.217.247.74\",220,15,\"0123456789qwert\"";
-    g_semaphoreGiven = false;
-
-    app::ModemDriver driver(hal::Factory<hal::UsartWithDma>::get<hal::Usart::MODEM_COM>(),
-                            hal::Factory<hal::Gpio>::get<hal::Gpio::MODEM_1>(),
-                            hal::Factory<hal::Gpio>::get<hal::Gpio::MODEM_2>(),
-                            hal::Factory<hal::Gpio>::get<hal::Gpio::MODEM_3>());
-
-    for (auto c : teststring) {
-        app::ModemDriver::ModemDriverInterruptHandler(static_cast<uint8_t>(c));
-    }
-
-    CHECK(g_semaphoreGiven == false);
-
-    std::string readback_str(teststring.length(), '\x00');
-
-    auto x = xStreamBufferReceive(reinterpret_cast<void*>(0), readback_str.data(), readback_str.size(), 0);
-
-    CHECK_MEMCMP(teststring.c_str(), readback_str.c_str(), teststring.length());
-    CHECK(teststring.length() == readback_str.length());
-    CHECK(teststring == readback_str);
-    CHECK(x == teststring.length());
-
-    TestCaseEnd();
-}
-
 int ut_SendRecvUSORF(void)
 {
     TestCaseBegin();
@@ -383,9 +330,9 @@ int ut_SendRecvUSORF(void)
     g_semaphoreGiven = false;
 
     app::ModemDriver driver(hal::Factory<hal::UsartWithDma>::get<hal::Usart::MODEM_COM>(),
-                            hal::Factory<hal::Gpio>::get<hal::Gpio::MODEM_1>(),
-                            hal::Factory<hal::Gpio>::get<hal::Gpio::MODEM_2>(),
-                            hal::Factory<hal::Gpio>::get<hal::Gpio::MODEM_3>());
+                            hal::Factory<hal::Gpio>::get<hal::Gpio::MODEM_RESET>(),
+                            hal::Factory<hal::Gpio>::get<hal::Gpio::MODEM_POWER>(),
+                            hal::Factory<hal::Gpio>::get<hal::Gpio::MODEM_SUPPLY>());
 
     for (auto c : teststring) {
         app::ModemDriver::ModemDriverInterruptHandler(static_cast<uint8_t>(c));
@@ -422,9 +369,9 @@ int ut_SendRecvERROR(void)
     g_semaphoreGiven = false;
 
     app::ModemDriver driver(hal::Factory<hal::UsartWithDma>::get<hal::Usart::MODEM_COM>(),
-                            hal::Factory<hal::Gpio>::get<hal::Gpio::MODEM_1>(),
-                            hal::Factory<hal::Gpio>::get<hal::Gpio::MODEM_2>(),
-                            hal::Factory<hal::Gpio>::get<hal::Gpio::MODEM_3>());
+                            hal::Factory<hal::Gpio>::get<hal::Gpio::MODEM_RESET>(),
+                            hal::Factory<hal::Gpio>::get<hal::Gpio::MODEM_POWER>(),
+                            hal::Factory<hal::Gpio>::get<hal::Gpio::MODEM_SUPPLY>());
 
     for (auto c : teststring) {
         app::ModemDriver::ModemDriverInterruptHandler(static_cast<uint8_t>(c));
@@ -450,8 +397,6 @@ int main(int argc, const char* argv[])
     UnitTestMainBegin();
     RunTest(true, ut_DeepSleep);
     RunTest(true, ut_SplitDataString);
-    RunTest(true, ut_InterruptHandler);
-    RunTest(true, ut_InterruptHandler2);
     RunTest(true, ut_SendRecvUSORF);
     RunTest(true, ut_SendRecvERROR);
     UnitTestMainEnd();

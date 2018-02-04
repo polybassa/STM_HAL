@@ -20,6 +20,7 @@
 #include "DeepSleepInterface.h"
 #include "os_StreamBuffer.h"
 #include "Semaphore.h"
+#include "os_Queue.h"
 #include "UsartWithDma.h"
 #include "Gpio.h"
 #include <string>
@@ -37,11 +38,10 @@ class ModemDriver final :
     virtual void enterDeepSleep(void) override;
     virtual void exitDeepSleep(void) override;
 
-    static constexpr uint32_t STACKSIZE = 1024;
-    static os::StreamBuffer<uint8_t, 1024> InputBuffer;
-    static os::StreamBuffer<uint8_t, 1024> OutputBuffer;
-
-    static os::Semaphore InputAvailable;
+    static constexpr uint32_t STACKSIZE = 4096;
+    static constexpr size_t BUFFERSIZE = 512;
+    static os::StreamBuffer<uint8_t, BUFFERSIZE> InputBuffer;
+    static os::StreamBuffer<uint8_t, BUFFERSIZE> OutputBuffer;
 
     enum class ModemState
     {
@@ -61,6 +61,19 @@ class ModemDriver final :
         RECEIVEFROMSERVER = 13,
     };
 
+    enum class ParseResult
+    {
+        USORF,
+        UUSORD,
+        USOST,
+        OK,
+        ERROR,
+        PROMPT,
+        NEWLINE,
+        CARRIAGE_RETURN,
+        UNKNOWN
+    };
+
     enum class ModemReturnCode
     {
         TIMEOUT = -1,
@@ -70,28 +83,33 @@ class ModemDriver final :
     };
 
     os::TaskInterruptable mModemTxTask;
-
     std::string mDataString;
 
     const hal::UsartWithDma& mInterface;
     const hal::Gpio& mModemReset;
     const hal::Gpio& mModemPower;
     const hal::Gpio& mModemSupplyVoltage;
+
     size_t mErrorCount = 0;
     int mModemBuffer = 0;
     ModemState mState = ModemState::STARTMODEM;
+    std::array<char, BUFFERSIZE> mLine;
 
     void modemTxTaskFunction(const bool&);
 
     void modemOn(void) const;
     void modemOff(void) const;
-    void modemReset(void) const;
+    void modemReset(void);
 
-    ModemReturnCode modemSendRecv(std::string_view, std::chrono::milliseconds timeout = std::chrono::seconds(2));
-    ModemReturnCode parseResponse(std::string_view input);
+    ModemReturnCode modemStartup(void);
+
+    ModemReturnCode modemSendRecv(std::string_view, std::chrono::milliseconds timeout = std::chrono::milliseconds(8000));
+    ParseResult parseResponse(std::string_view input) const;
+    ModemReturnCode interpretResponse(const ParseResult& response, std::string_view input);
+
     void handleDataReception(std::string_view input);
     const std::vector<std::string> splitDataString(std::string_view input) const;
-
+    std::string_view readLineFromInput(std::chrono::milliseconds timeout);
     void handleError(void);
 
 public:

@@ -24,37 +24,21 @@
 
 using app::ModemDriver;
 
-#define IP "151.236.10.216"
-#define PORT "60017"
+#define IP "195.34.89.241"
+#define PORT "7"
 
 #define CMD_USOST_BEGIN "AT+USOST=0,\"" IP "\"," PORT ","
-#define CMD_USOST "AT+USOST=0,\"" IP "\"," PORT ",1\r"
+#define CMD_USOST "AT+USOST=0,\"" IP "\"," PORT ",6\r"
 #define CMD_USOCO "AT+USOCO=0,\"" IP "\"," PORT "\r"
 
 static const int __attribute__((unused)) g_DebugZones = ZONE_ERROR | ZONE_WARNING | ZONE_VERBOSE | ZONE_INFO;
-static constexpr const size_t SLC_MTU = 32;
 
-os::StreamBuffer<uint8_t, 1024> ModemDriver::InputBuffer;
-os::StreamBuffer<uint8_t, 1024> ModemDriver::OutputBuffer;
-
-os::Semaphore ModemDriver::InputAvailable;
+os::StreamBuffer<uint8_t, ModemDriver::BUFFERSIZE> ModemDriver::InputBuffer;
+os::StreamBuffer<uint8_t, ModemDriver::BUFFERSIZE> ModemDriver::OutputBuffer;
 
 void ModemDriver::ModemDriverInterruptHandler(uint8_t data)
 {
-    static bool insideSubString = false;
-
-    //received message contains "
-    if (data == '"') {
-        insideSubString = (insideSubString == false) ? true : false;
-    }
-
     InputBuffer.sendFromISR(data);
-
-    const bool terminationFound = (data == '\r') || (data == '\n') || (data == 0);
-    const bool promptFound = (data == '@');
-    if ((!insideSubString && terminationFound) || (promptFound)) {
-        InputAvailable.giveFromISR();
-    }
 }
 
 ModemDriver::ModemDriver(const hal::UsartWithDma& interface,
@@ -89,193 +73,42 @@ void ModemDriver::exitDeepSleep(void)
 
 void ModemDriver::modemTxTaskFunction(const bool& join)
 {
-    mState = ModemState::STARTMODEM;
-    size_t numberOfBytesToSend = 0;
-    uint32_t timeOfLastUdpSend = 0;
     do {
-        switch (mState) {
-        case ModemState::STARTMODEM:
-            modemReset();
-            mErrorCount = 0;
+        if (modemStartup() != ModemReturnCode::OK) {
+            continue;
+        }
 
-            switch (modemSendRecv("ATE0V1\r")) {
-            case ModemReturnCode::OK:
-                mState = ModemState::TRANSLATEERROR;
-                break;
+        mState = ModemState::WAITFORRB;
+        size_t numberOfBytesToSend = 0;
+        uint32_t timeOfLastUdpSend = 0;
 
-            case ModemReturnCode::TRY_AGAIN:
-            case ModemReturnCode::TIMEOUT:
-            case ModemReturnCode::FAULT:
-                handleError();
-                break;
-            }
-
-            break;
-
-        case ModemState::TRANSLATEERROR:
-
-            switch (modemSendRecv("AT+CMEE=2\r")) {
-            case ModemReturnCode::OK:
-                mState = ModemState::CONFIGGPRSCLASS;
-                break;
-
-            case ModemReturnCode::TIMEOUT:
-            case ModemReturnCode::TRY_AGAIN:
-            case ModemReturnCode::FAULT:
-                mState = ModemState::STARTMODEM;
-                handleError();
-                break;
-            }
-
-            break;
-
-        case ModemState::CONFIGGPRSCLASS:
-
-            switch (modemSendRecv("AT+CGCLASS=\"B\"\r")) {
-            case ModemReturnCode::TIMEOUT:
-                mState = ModemState::STARTMODEM;
-                break;
-
-            case ModemReturnCode::OK:
-                mState = ModemState::ATTACHGPRS;
-                break;
-
-            case ModemReturnCode::TRY_AGAIN:
-            case ModemReturnCode::FAULT:
-                os::ThisTask::sleep(std::chrono::seconds(1));
-                handleError();
-
-                break;
-            }
-
-            break;
-
-        case ModemState::ATTACHGPRS:
-
-            switch (modemSendRecv("AT+CGATT=1\r")) {
-            case ModemReturnCode::TIMEOUT:
-                mState = ModemState::STARTMODEM;
-                break;
-
-            case ModemReturnCode::OK:
-                mState = ModemState::ALLOWUDP;
-                break;
-
-            case ModemReturnCode::TRY_AGAIN:
-            case ModemReturnCode::FAULT:
-                os::ThisTask::sleep(std::chrono::seconds(1));
-                handleError();
-
-                break;
-            }
-
-            break;
-
-        case ModemState::ALLOWUDP:
-
-            switch (modemSendRecv("AT+UPSDA=0,3\r")) {
-            case ModemReturnCode::TIMEOUT:
-                mState = ModemState::STARTMODEM;
-                break;
-
-            case ModemReturnCode::OK:
-                mState = ModemState::SETUDPSOCKET;
-                break;
-
-            case ModemReturnCode::TRY_AGAIN:
-            case ModemReturnCode::FAULT:
-                handleError();
-
-                break;
-            }
-
-            break;
-
-        case ModemState::SETUDPSOCKET:
-
-            switch (modemSendRecv("AT+USOCR=17\r")) {
-            case ModemReturnCode::TIMEOUT:
-                mState = ModemState::STARTMODEM;
-                break;
-
-            case ModemReturnCode::OK:
-                mState = ModemState::DECLAREHOST;
-                break;
-
-            case ModemReturnCode::TRY_AGAIN:
-            case ModemReturnCode::FAULT:
-                handleError();
-
-                break;
-            }
-
-            break;
-
-        case ModemState::DECLAREHOST:
-
-            switch (modemSendRecv(CMD_USOCO)) {
-            case ModemReturnCode::TIMEOUT:
-                mState = ModemState::STARTMODEM;
-                break;
-
-            case ModemReturnCode::OK:
-                mState = ModemState::WAITFORRB;
-                break;
-
-            case ModemReturnCode::TRY_AGAIN:
-            case ModemReturnCode::FAULT:
-                handleError();
-
-                break;
-            }
-
-            break;
-
-        case ModemState::WAITFORRB:
-
-            if (OutputBuffer.isEmpty()) {
-                if (os::Task::getTickCount() - timeOfLastUdpSend >= 1000) {
-                    mState = ModemState::SENDHELLO;
+        while (mState >= ModemState::WAITFORRB) {
+            switch (mState) {
+            case ModemState::WAITFORRB:
+                if (OutputBuffer.isEmpty()) {
+                    if (os::Task::getTickCount() - timeOfLastUdpSend >= 1000) {
+                        mState = ModemState::SENDHELLO;
+                    } else {
+                        modemSendRecv("", std::chrono::milliseconds(1000));
+                        if (mModemBuffer > 0) {
+                            mState = ModemState::RECEIVEFROMSERVER;
+                        }
+                    }
                 } else {
-                    mState = ModemState::CHECKFROMSERVER;
+                    numberOfBytesToSend = OutputBuffer.bytesAvailable();
+                    mState = ModemState::SENDDATALENGTH;
                 }
-            } else {
-                numberOfBytesToSend = OutputBuffer.bytesAvailable();
-                mState = ModemState::SENDDATALENGTH;
-            }
-            break;
-
-        case ModemState::SENDHELLO:
-
-            switch (modemSendRecv(CMD_USOST)) {
-            case ModemReturnCode::TIMEOUT:
-                mState = ModemState::STARTMODEM;
                 break;
 
-            case ModemReturnCode::OK:
-                mState = ModemState::SENDHELLOSTRING;
-                break;
+            case ModemState::SENDHELLO:
 
-            case ModemReturnCode::TRY_AGAIN:
-            case ModemReturnCode::FAULT:
-                handleError();
-
-                break;
-            }
-
-            break;
-
-        case ModemState::SENDDATALENGTH:
-            {
-                std::string cmd = CMD_USOST_BEGIN + std::to_string(numberOfBytesToSend) + "\r";
-
-                switch (modemSendRecv(cmd)) {
+                switch (modemSendRecv(CMD_USOST)) {
                 case ModemReturnCode::TIMEOUT:
                     mState = ModemState::STARTMODEM;
                     break;
 
                 case ModemReturnCode::OK:
-                    mState = ModemState::SENDDATASTRING;
+                    mState = ModemState::SENDHELLOSTRING;
                     break;
 
                 case ModemReturnCode::TRY_AGAIN:
@@ -286,37 +119,35 @@ void ModemDriver::modemTxTaskFunction(const bool& join)
                 }
 
                 break;
-            }
 
-        case ModemState::SENDHELLOSTRING:
+            case ModemState::SENDDATALENGTH:
+                {
+                    std::string cmd = CMD_USOST_BEGIN + std::to_string(numberOfBytesToSend) + "\r";
 
-            timeOfLastUdpSend = os::Task::getTickCount();
+                    switch (modemSendRecv(cmd)) {
+                    case ModemReturnCode::TIMEOUT:
+                        mState = ModemState::STARTMODEM;
+                        break;
 
-            switch (modemSendRecv("\r")) {
-            case ModemReturnCode::TIMEOUT:
-                mState = ModemState::STARTMODEM;
-                break;
+                    case ModemReturnCode::OK:
+                        mState = ModemState::SENDDATASTRING;
+                        break;
 
-            case ModemReturnCode::OK:
-                mState = ModemState::CHECKFROMSERVER;
-                break;
+                    case ModemReturnCode::TRY_AGAIN:
+                    case ModemReturnCode::FAULT:
+                        handleError();
 
-            case ModemReturnCode::TRY_AGAIN:
-            case ModemReturnCode::FAULT:
-                handleError();
+                        break;
+                    }
 
-                break;
-            }
+                    break;
+                }
 
-            break;
+            case ModemState::SENDHELLOSTRING:
 
-        case ModemState::SENDDATASTRING:
-            {
                 timeOfLastUdpSend = os::Task::getTickCount();
-                std::string output(numberOfBytesToSend, '\x00');
-                OutputBuffer.receive(output.data(), output.size(), 1);
 
-                switch (modemSendRecv(output)) {
+                switch (modemSendRecv("HELLO\r")) {
                 case ModemReturnCode::TIMEOUT:
                     mState = ModemState::STARTMODEM;
                     break;
@@ -328,57 +159,120 @@ void ModemDriver::modemTxTaskFunction(const bool& join)
                 case ModemReturnCode::TRY_AGAIN:
                 case ModemReturnCode::FAULT:
                     handleError();
+
                     break;
                 }
-            }
 
-            break;
-
-        case ModemState::CHECKFROMSERVER:
-
-            switch (modemSendRecv("AT+USORF=0,0\r")) {
-            case ModemReturnCode::TIMEOUT:
-                mState = ModemState::STARTMODEM;
                 break;
 
-            case ModemReturnCode::OK:
-                if (mModemBuffer > 0) {
-                    mState = ModemState::RECEIVEFROMSERVER;
-                } else {
-                    mState = ModemState::WAITFORRB;
+            case ModemState::SENDDATASTRING:
+                {
+                    timeOfLastUdpSend = os::Task::getTickCount();
+                    std::string output(numberOfBytesToSend, '\x00');
+                    OutputBuffer.receive(output.data(), output.size(), 1);
+
+                    switch (modemSendRecv(output)) {
+                    case ModemReturnCode::TIMEOUT:
+                        mState = ModemState::STARTMODEM;
+                        break;
+
+                    case ModemReturnCode::OK:
+                        mState = ModemState::CHECKFROMSERVER;
+                        break;
+
+                    case ModemReturnCode::TRY_AGAIN:
+                    case ModemReturnCode::FAULT:
+                        handleError();
+                        break;
+                    }
                 }
+
                 break;
 
-            case ModemReturnCode::TRY_AGAIN:
-            case ModemReturnCode::FAULT:
-                handleError();
+            case ModemState::CHECKFROMSERVER:
+
+                switch (modemSendRecv("AT+USORF=0,0\r", std::chrono::milliseconds(4000))) {
+                case ModemReturnCode::TIMEOUT:
+                    mState = ModemState::STARTMODEM;
+                    break;
+
+                case ModemReturnCode::OK:
+                    if (mModemBuffer > 0) {
+                        mState = ModemState::RECEIVEFROMSERVER;
+                    } else {
+                        mState = ModemState::WAITFORRB;
+                    }
+                    break;
+
+                case ModemReturnCode::TRY_AGAIN:
+                case ModemReturnCode::FAULT:
+                    handleError();
+
+                    break;
+                }
+
+                break;
+
+            case ModemState::RECEIVEFROMSERVER:
+
+                switch (modemSendRecv("AT+USORF=0," + std::to_string(mModemBuffer) + "\r")) {
+                case ModemReturnCode::TIMEOUT:
+                    mState = ModemState::STARTMODEM;
+                    break;
+
+                case ModemReturnCode::OK:
+                    mState = ModemState::CHECKFROMSERVER;
+                    break;
+
+                case ModemReturnCode::TRY_AGAIN:
+                case ModemReturnCode::FAULT:
+                    handleError();
+
+                    break;
+                }
 
                 break;
             }
-
-            break;
-
-        case ModemState::RECEIVEFROMSERVER:
-
-            switch (modemSendRecv("AT+USORF=0,40\r")) {
-            case ModemReturnCode::TIMEOUT:
-                mState = ModemState::STARTMODEM;
-                break;
-
-            case ModemReturnCode::OK:
-                mState = ModemState::CHECKFROMSERVER;
-                break;
-
-            case ModemReturnCode::TRY_AGAIN:
-            case ModemReturnCode::FAULT:
-                handleError();
-
-                break;
-            }
-
-            break;
         }
     } while (!join);
+}
+
+ModemDriver::ModemReturnCode ModemDriver::modemStartup(void)
+{
+    modemReset();
+
+    if (modemSendRecv("ATE0V1\r", std::chrono::seconds(10)) != ModemReturnCode::OK) {
+        return ModemReturnCode::FAULT;
+    }
+    InputBuffer.reset();
+
+    if (modemSendRecv("AT+CMEE=2\r") != ModemReturnCode::OK) {
+        return ModemReturnCode::FAULT;
+    }
+    os::ThisTask::sleep(std::chrono::seconds(5));
+    InputBuffer.reset();
+
+    if (modemSendRecv("AT+CGCLASS=\"B\"\r", std::chrono::seconds(10)) != ModemReturnCode::OK) {
+        return ModemReturnCode::FAULT;
+    }
+    InputBuffer.reset();
+
+    if (modemSendRecv("AT+CGATT=1\r", std::chrono::seconds(10)) != ModemReturnCode::OK) {
+        return ModemReturnCode::FAULT;
+    }
+
+    if (modemSendRecv("AT+UPSDA=0,3\r") != ModemReturnCode::OK) {
+        return ModemReturnCode::FAULT;
+    }
+    if (modemSendRecv("AT+USOCR=17\r") != ModemReturnCode::OK) {
+        return ModemReturnCode::FAULT;
+    }
+
+    if (modemSendRecv(CMD_USOCO) != ModemReturnCode::OK) {
+        return ModemReturnCode::FAULT;
+    }
+
+    return ModemReturnCode::OK;
 }
 
 void ModemDriver::modemOn(void) const
@@ -393,57 +287,135 @@ void ModemDriver::modemOff(void) const
     mModemSupplyVoltage = false;
 }
 
-void ModemDriver::modemReset(void) const
+void ModemDriver::modemReset(void)
 {
     modemOff();
+    InputBuffer.reset();
+    mErrorCount = 0;
     os::ThisTask::sleep(std::chrono::milliseconds(1000));
     modemOn();
     os::ThisTask::sleep(std::chrono::milliseconds(1000));
 }
 
+std::string_view ModemDriver::readLineFromInput(std::chrono::milliseconds timeout)
+{
+    bool insideSubString = false;
+    uint8_t data;
+    size_t lineEndIndex = 0;
+    while (InputBuffer.receive(data, timeout.count()) && lineEndIndex < mLine.size()) {
+        mLine[lineEndIndex++] = static_cast<char>(data);
+
+        if (data == '"') {
+            insideSubString = (insideSubString == false) ? true : false;
+        }
+
+        const bool terminationFound = (data == '\r') || (data == '\n') || (data == 0) || (data == '@');
+
+        if (!insideSubString && terminationFound) {
+            break;
+        }
+    }
+    return std::string_view(mLine.data(), lineEndIndex);
+}
+
 ModemDriver::ModemReturnCode ModemDriver::modemSendRecv(std::string_view str, std::chrono::milliseconds timeout)
 {
-    ModemReturnCode ret = ModemReturnCode::TRY_AGAIN;
-
+    Trace(ZONE_VERBOSE, "Send: %s\r\n", str.data());
     mInterface.send(str);
+
+    ModemReturnCode ret = ModemReturnCode::TRY_AGAIN;
     while (ret == ModemReturnCode::TRY_AGAIN) {
-        if (!InputAvailable.take(timeout)) {
+        std::string_view response = readLineFromInput(timeout);
+        if (response.length() == 0) {
             return ModemReturnCode::TIMEOUT;
         }
-        auto length = InputBuffer.bytesAvailable();
-        std::string input(length, '\x00');
-        if (!InputBuffer.receive(input.data(), input.size(), timeout.count())) {
-            return ModemReturnCode::TIMEOUT;
-        }
-        ret = parseResponse(std::string_view(reinterpret_cast<const char*>(input.data()), input.size()));
+
+        auto parserResult = parseResponse(response);
+        ret = interpretResponse(parserResult, response);
     }
+    Trace(ZONE_VERBOSE, " Return: %d\r\n", static_cast<size_t>(ret));
 
     return ModemReturnCode(ret);
 }
 
-ModemDriver::ModemReturnCode ModemDriver::parseResponse(std::string_view input)
+ModemDriver::ModemReturnCode ModemDriver::interpretResponse(const ParseResult& response, std::string_view input)
 {
-    if (input.find("+USORF") != std::string::npos) {
-        handleDataReception(input);
-        return ModemReturnCode::TRY_AGAIN;
-    } else if (input.find("+UUSORF") != std::string::npos) {
-        handleDataReception(input);
-        return ModemReturnCode::TRY_AGAIN;
-    } else if (input.find("OK") != std::string::npos) {
-        return ModemReturnCode::OK;
-    } else if (input.find("ERROR") != std::string::npos) {
+    switch (response) {
+    case ParseResult::ERROR:
         return ModemReturnCode::FAULT;
-    } else if (input.find("@") != std::string::npos) {
+
+    case ParseResult::UUSORD:
+        handleDataReception(input);
+
+    case ParseResult::PROMPT:
+    case ParseResult::OK:
         return ModemReturnCode::OK;
-    } else {
-        Trace(ZONE_ERROR, "Couldn't parse \"%s\"\r\n", input);
+
+    case ParseResult::USORF:
+        handleDataReception(input);
+
+    case ParseResult::USOST:
+    case ParseResult::NEWLINE:
+    case ParseResult::CARRIAGE_RETURN:
+    case ParseResult::UNKNOWN:
         return ModemReturnCode::TRY_AGAIN;
+
+    default:
+        return ModemReturnCode::TRY_AGAIN;
+    }
+
+//    if (input.find("+USORF") != std::string::npos) {
+//        handleDataReception(input);
+//        return ModemReturnCode::TRY_AGAIN;
+//    } else if (input.find("+UUSORD") != std::string::npos) {
+//        handleDataReception(input);
+//        return ModemReturnCode::OK;
+//    } else if (input.find("+USOST") != std::string::npos) {
+//        return ModemReturnCode::TRY_AGAIN;
+//    } else if (input.find("OK") != std::string::npos) {
+//        return ModemReturnCode::OK;
+//    } else if (input.find("ERROR") != std::string::npos) {
+//        return ModemReturnCode::FAULT;
+//    } else if (input.find("@") != std::string::npos) {
+//        return ModemReturnCode::OK;
+//    } else if ((*input.data() == '\r') && (input.length() == 1)) {
+//        return ModemReturnCode::TRY_AGAIN;
+//    } else if ((*input.data() == '\n') && (input.length() == 1)) {
+//        return ModemReturnCode::TRY_AGAIN;
+//    } else {
+//        Trace(ZONE_ERROR, "Couldn't parse \r\n%s\r\n", input.data());
+//        return ModemReturnCode::TRY_AGAIN;
+//    }
+}
+
+ModemDriver::ParseResult ModemDriver::parseResponse(std::string_view input) const
+{
+    if (input.find("+USORF") != std::string_view::npos) {
+        return ParseResult::USORF;
+    } else if (input.find("+UUSORD") != std::string_view::npos) {
+        return ParseResult::UUSORD;
+    } else if (input.find("+USOST") != std::string_view::npos) {
+        return ParseResult::USOST;
+    } else if (input.find("OK") != std::string_view::npos) {
+        return ParseResult::OK;
+    } else if (input.find("ERROR") != std::string_view::npos) {
+        return ParseResult::ERROR;
+    } else if (input.find("@") != std::string_view::npos) {
+        return ParseResult::PROMPT;
+    } else if ((*input.data() == '\r') && (input.length() == 1)) {
+        return ParseResult::CARRIAGE_RETURN;
+    } else if ((*input.data() == '\n') && (input.length() == 1)) {
+        return ParseResult::NEWLINE;
+    } else {
+        Trace(ZONE_ERROR, "Couldn't parse \r\n%s\r\n", input.data());
+        return ParseResult::UNKNOWN;
     }
 }
 
 void ModemDriver::handleDataReception(std::string_view input)
 {
     auto strings = splitDataString(input);
+
     if (strings.size() == 6) {
         mModemBuffer -= std::stoi(strings[4]);
         auto data = strings[5];
@@ -451,8 +423,9 @@ void ModemDriver::handleDataReception(std::string_view input)
             auto first = data.find_first_of('"') + 1;
             auto last = data.find_last_of('"');
             mDataString = std::string(data.c_str() + first, last - first);
+            Trace(ZONE_INFO, "GOT data %s \r\n", mDataString.c_str());
         }
-    } else if (strings.size() == 2) {
+    } else if (strings.size() == 3) {
         mModemBuffer = std::stoi(strings[2]);
     } else {
         Trace(ZONE_ERROR, "Malformed GSM data \r\n");
@@ -481,9 +454,9 @@ const std::vector<std::string> ModemDriver::splitDataString(std::string_view inp
 
 void ModemDriver::handleError(void)
 {
-    Trace(ZONE_ERROR, "Error in current State\n");
+    Trace(ZONE_ERROR, "Error in current State\r\n");
 
-    if (mErrorCount == 10) {
+    if (mErrorCount == 20) {
         mState = ModemState::STARTMODEM;
         mErrorCount = 0;
     }
