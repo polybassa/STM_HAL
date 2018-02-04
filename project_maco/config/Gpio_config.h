@@ -29,9 +29,9 @@ enum Description {
     USART3_TX,
     USART3_RX,
     // ===PORTC===
-    MODEM_1,
-    MODEM_2,
-    MODEM_3,
+    MODEM_RESET,
+    MODEM_POWER,
+    MODEM_SUPPLY,
     // ===PORTD===
     // ===PORTE===
     // ===PORTF===
@@ -83,13 +83,13 @@ static constexpr const std::array<const Gpio, Gpio::__ENUM__SIZE + 1> Container 
            GPIO_InitTypeDef {GPIO_Pin_11, GPIO_Speed_50MHz, GPIO_Mode_IN_FLOATING},
            GPIO_PinSource11),
       // ===================PORTC=================
-      Gpio(Gpio::MODEM_1,
+      Gpio(Gpio::MODEM_RESET,
            GPIOC_BASE,
            GPIO_InitTypeDef {GPIO_Pin_7, GPIO_Speed_50MHz, GPIO_Mode_Out_PP}),
-      Gpio(Gpio::MODEM_2,
+      Gpio(Gpio::MODEM_POWER,
            GPIOC_BASE,
            GPIO_InitTypeDef {GPIO_Pin_8, GPIO_Speed_50MHz, GPIO_Mode_Out_PP}),
-      Gpio(Gpio::MODEM_3,
+      Gpio(Gpio::MODEM_SUPPLY,
            GPIOC_BASE,
            GPIO_InitTypeDef {GPIO_Pin_9, GPIO_Speed_50MHz, GPIO_Mode_Out_PP}),
       // ===================PORTD=================

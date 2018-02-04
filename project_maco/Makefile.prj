@@ -16,7 +16,7 @@ endif
 ifneq (,$(filter debug_firmware firmware,$(MAKECMDGOALS)))
 
 DEFINES+=-DUSE_FREERTOS
-DEFINES+=-DHSE_VALUE=8000000
+DEFINES+=-DHSE_VALUE=12000000
 
 # Where to find source files that do not live in this directory.
 VPATH+=${ROOT}/sources
@@ -50,8 +50,7 @@ IPATH+=${ROOT}/sources/hal_stm32f10x
 IPATH+=${ROOT}/sources/os
 IPATH+=${ROOT}/sources/dev
 IPATH+=${ROOT}/sources/utility
-
-IPATH+=${ROOT}/definitions
+IPATH+=${ROOT}/sources/app
 IPATH+=${RTOS_SOURCE_DIR}/include
 IPATH+=${RTOS_SOURCE_DIR}
 IPATH+=${RTOS_SOURCE_DIR}/portable/GCC/ARM_CM3
@@ -92,7 +91,7 @@ ${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/TaskInterruptable.o
 ${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/ModemDriver.o
 
 #PMD TestApps
-${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/TestGpio.o
+#${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/TestGpio.o
 
 # device
 ${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/startup_stm32f10x_hd.o
