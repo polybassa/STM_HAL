@@ -280,13 +280,13 @@ int ut_SplitDataString(void)
         auto cmd = ret[0];
         CHECK(cmd == "+USORF");
         auto socket = ret[1];
-        CHECK(std::stoi(socket) == 18);
+        CHECK(socket == " 18");
         auto ip = ret[2];
         CHECK(ip == "\"108.217.247.74\"");
         auto port = ret[3];
-        CHECK(std::stoi(port) == 220);
+        CHECK(port == "220");
         auto len = ret[4];
-        CHECK(std::stoi(len) == 15);
+        CHECK(len == "15");
         auto data = ret[5];
         CHECK(data == "\"0123456789qwert\"");
     }
@@ -297,9 +297,9 @@ int ut_SplitDataString(void)
         auto cmd = ret[0];
         CHECK(cmd == "+UUSORF");
         auto socket = ret[1];
-        CHECK(std::stoi(socket) == 18);
+        CHECK(socket == " 18");
         auto len = ret[2];
-        CHECK(std::stoi(len) == 15);
+        CHECK(len == "15");
     }
     {
         auto ret = tester.splitDataString("+USORF: 18,\"108.217.247.74\",220,15,\"\x30\x31\x32\x00\"");
@@ -308,13 +308,13 @@ int ut_SplitDataString(void)
         auto cmd = ret[0];
         CHECK(cmd == "+USORF");
         auto socket = ret[1];
-        CHECK(std::stoi(socket) == 18);
+        CHECK(socket == " 18");
         auto ip = ret[2];
         CHECK(ip == "\"108.217.247.74\"");
         auto port = ret[3];
-        CHECK(std::stoi(port) == 220);
+        CHECK(port == "220");
         auto len = ret[4];
-        CHECK(std::stoi(len) == 15);
+        CHECK(len == "15");
         auto data = ret[5];
         CHECK(data == "\"012\x00\"");
     }

@@ -17,10 +17,6 @@
 #include "LockGuard.h"
 #include "trace.h"
 #include <cstring>
-#include <sstream>
-#include <string>
-#include <algorithm>
-#include <ostream>
 
 using app::ModemDriver;
 
@@ -368,16 +364,18 @@ void ModemDriver::handleDataReception(std::string_view input)
     auto strings = splitDataString(input);
 
     if (strings.size() == 6) {
-        mModemBuffer -= std::stoi(strings[4]);
+        int result = std::atoi(strings[4].data());
+        mModemBuffer -= result;
         auto data = strings[5];
         if (data.length() > 2) {
             auto first = data.find_first_of('"') + 1;
             auto last = data.find_last_of('"');
-            mDataString = std::string(data.c_str() + first, last - first);
+            mDataString = std::string(data.data() + first, last - first);
             Trace(ZONE_INFO, "GOT data %s \r\n", mDataString.c_str());
         }
     } else if (strings.size() == 3) {
-        mModemBuffer = std::stoi(strings[2]);
+        int result = std::atoi(strings[2].data());
+        mModemBuffer = result;
     } else {
         Trace(ZONE_ERROR, "Malformed GSM data \r\n");
     }
@@ -389,17 +387,29 @@ void ModemDriver::handleDataReception(std::string_view input)
  * It is also possible that the response is only 2 pieces
  * +USORF: SOCKET_IDX,DATA_LEN
  * This indicates only how much data is in the buffer*/
-const std::vector<std::string> ModemDriver::splitDataString(std::string_view input) const
+const std::vector<std::string_view> ModemDriver::splitDataString(std::string_view input) const
 {
-    std::vector<std::string> strings;
-    std::string inputString = std::string(input.data(), input.length());
-    std::istringstream iss(inputString);
-    std::string s;
-    if (getline(iss, s, ':')) {strings.push_back(s); }
-    for (auto i = 0; i < 4 && getline(iss, s, ','); i++) {
-        strings.push_back(s);
+    std::vector<std::string_view> strings;
+
+    size_t startindex = 0;
+    size_t endindex = input.find(':');
+    if (endindex == std::string_view::npos) {
+        return strings;
     }
-    if (getline(iss, s)) {strings.push_back(s); }
+    strings.emplace_back(input.data() + startindex, endindex);
+
+    for (auto i = 0; i < 4; i++) {
+        startindex = endindex + 1;
+        endindex = input.find(',', startindex);
+        if (endindex == std::string_view::npos) {
+            strings.emplace_back(input.data() + startindex, input.length() - startindex);
+            return strings;
+        }
+        strings.emplace_back(input.data() + startindex, endindex - startindex);
+    }
+    endindex++;
+    strings.emplace_back(input.data() + endindex, input.length() - endindex);
+
     return strings;
 }
 

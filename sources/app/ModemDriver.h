@@ -19,14 +19,11 @@
 #include "TaskInterruptable.h"
 #include "DeepSleepInterface.h"
 #include "os_StreamBuffer.h"
-#include "Semaphore.h"
-#include "os_Queue.h"
 #include "UsartWithDma.h"
 #include "Gpio.h"
 #include <string>
 #include <string_view>
 #include <vector>
-#include <sstream>
 
 namespace app
 {
@@ -109,7 +106,7 @@ class ModemDriver final :
     ModemReturnCode interpretResponse(const ParseResult& response, std::string_view input);
 
     void handleDataReception(std::string_view input);
-    const std::vector<std::string> splitDataString(std::string_view input) const;
+    const std::vector<std::string_view> splitDataString(std::string_view input) const;
     std::string_view readLineFromInput(std::chrono::milliseconds timeout);
     void handleError(void);
 
