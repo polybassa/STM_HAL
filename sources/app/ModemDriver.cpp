@@ -89,6 +89,7 @@ void ModemDriver::modemTxTaskFunction(const bool& join)
                         }
                     } else {
                         // wait a second for new input data
+                        Trace(ZONE_INFO, "SLEEP until UUSORD\r\n");
 
                         modemSendRecv("", std::chrono::milliseconds(1000));
                         if (mModemBuffer > 0) {
@@ -177,9 +178,10 @@ ModemDriver::ModemReturnCode ModemDriver::sendHelloMessage(void)
         return ModemReturnCode::FAULT;
     }
 
-    if (modemSendRecv("HELLO\r") != ModemReturnCode::OK) {
+    if (modemSendRecv("HELLOO") != ModemReturnCode::OK) {
         return ModemReturnCode::FAULT;
     }
+
     return ModemReturnCode::OK;
 }
 
@@ -291,6 +293,7 @@ ModemDriver::ModemReturnCode ModemDriver::interpretResponse(const ParseResult& r
         return ModemReturnCode::FAULT;
 
     case ParseResult::UUSORD:
+    case ParseResult::UUSORF:
         handleDataReception(input);
 
     case ParseResult::PROMPT:
@@ -315,6 +318,8 @@ ModemDriver::ParseResult ModemDriver::parseResponse(std::string_view input) cons
 {
     if (input.find("+USORF") != std::string_view::npos) {
         return ParseResult::USORF;
+    } else if (input.find("+UUSORF") != std::string_view::npos) {
+        return ParseResult::UUSORF;
     } else if (input.find("+UUSORD") != std::string_view::npos) {
         return ParseResult::UUSORD;
     } else if (input.find("+USOST") != std::string_view::npos) {
@@ -330,13 +335,15 @@ ModemDriver::ParseResult ModemDriver::parseResponse(std::string_view input) cons
     } else if ((*input.data() == '\n') && (input.length() == 1)) {
         return ParseResult::NEWLINE;
     } else {
-        Trace(ZONE_ERROR, "Couldn't parse \r\n%s\r\n", input.data());
+        Trace(ZONE_ERROR, "Couldn't parse \r\n%s\r\n", std::string(input.data(), input.length()).c_str());
         return ParseResult::UNKNOWN;
     }
 }
 
 void ModemDriver::handleDataReception(std::string_view input)
 {
+    Trace(ZONE_ERROR, "Parse \r\n%s\r\n", std::string(input.data(), input.length()).c_str());
+
     auto strings = splitDataString(input);
 
     if (strings.size() == 6) {
@@ -356,6 +363,7 @@ void ModemDriver::handleDataReception(std::string_view input)
         size_t result = static_cast<size_t>(std::atoi(strings[2].data()));
         result %= BUFFERSIZE;
         mModemBuffer = result;
+        Trace(ZONE_INFO, "ModemBuffer %d\r\n", result);
     } else {
         Trace(ZONE_ERROR, "Malformed GSM data \r\n");
     }

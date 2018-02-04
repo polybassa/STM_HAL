@@ -61,6 +61,7 @@ class ModemDriver final :
     enum class ParseResult
     {
         USORF,
+        UUSORF,
         UUSORD,
         USOST,
         OK,
