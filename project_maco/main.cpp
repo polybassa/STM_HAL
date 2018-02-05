@@ -54,11 +54,6 @@ int main(void)
     TraceInit();
     Trace(ZONE_INFO, "Version: %s \r\n", VERSION.c_str());
 
-    auto modem = new app::ModemDriver(hal::Factory<hal::UsartWithDma>::get<hal::Usart::MODEM_COM>(),
-                                      hal::Factory<hal::Gpio>::get<hal::Gpio::MODEM_RESET>(),
-                                      hal::Factory<hal::Gpio>::get<hal::Gpio::MODEM_POWER>(),
-                                      hal::Factory<hal::Gpio>::get<hal::Gpio::MODEM_SUPPLY>());
-
     os::Task::startScheduler();
 
     while (1) {}

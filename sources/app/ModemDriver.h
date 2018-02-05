@@ -27,22 +27,20 @@
 
 namespace app
 {
-struct ModemDriverTester;
-
 class ModemDriver final :
     private os::DeepSleepModule
 {
     virtual void enterDeepSleep(void) override;
     virtual void exitDeepSleep(void) override;
 
-    static constexpr uint32_t STACKSIZE = 4096;
+    static constexpr size_t STACKSIZE = 4096;
     static constexpr size_t BUFFERSIZE = 512;
     static constexpr size_t ERROR_THRESHOLD = 20;
     static os::StreamBuffer<uint8_t, BUFFERSIZE> InputBuffer;
-    static os::StreamBuffer<uint8_t, BUFFERSIZE> OutputBuffer;
+    static os::StreamBuffer<uint8_t, BUFFERSIZE> SendBuffer;
+    static os::StreamBuffer<uint8_t, BUFFERSIZE> ReceiveBuffer;
 
     os::TaskInterruptable mModemTxTask;
-    std::string mDataString;
 
     const hal::UsartWithDma& mInterface;
     const hal::Gpio& mModemReset;
@@ -54,6 +52,8 @@ class ModemDriver final :
 
     std::function<bool(uint8_t&,
                        std::chrono::milliseconds)> mRecv;
+
+    std::function<void(std::string_view)> mReceiveCallback;
 
     size_t mErrorCount = 0;
 
@@ -80,7 +80,11 @@ public:
 
     static void ModemDriverInterruptHandler(uint8_t);
 
-    friend struct ModemDriverTester;
+    size_t send(std::string_view, const uint32_t ticksToWait = portMAX_DELAY) const;
+    size_t receive(uint8_t *, size_t, uint32_t ticksToWait = portMAX_DELAY) const;
+
+    void registerReceiveCallback(std::function<void(std::string_view)> );
+    void unregisterReceiveCallback(void);
 };
 }
 

@@ -93,6 +93,8 @@ ${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/AT_Cmd.o
 
 #PMD TestApps
 #${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/TestGpio.o
+${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/TestModem.o
+
 
 # device
 ${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/startup_stm32f10x_hd.o

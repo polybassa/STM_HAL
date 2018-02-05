@@ -21,7 +21,7 @@ using app::BasicAtCmd;
 using app::ReceiveAtCmd;
 using app::SendAtCmd;
 
-static const int __attribute__((unused)) g_DebugZones = ZONE_ERROR | ZONE_WARNING | ZONE_VERBOSE | ZONE_INFO;
+static const int __attribute__((unused)) g_DebugZones = 0; //ZONE_ERROR | ZONE_WARNING | ZONE_VERBOSE | ZONE_INFO;
 
 std::array<char, AtCmd::BUFFERSIZE> AtCmd::ReceiveBuffer;
 

@@ -20,10 +20,11 @@
 
 using app::ModemDriver;
 
-static const int __attribute__((unused)) g_DebugZones = ZONE_ERROR | ZONE_WARNING | ZONE_VERBOSE | ZONE_INFO;
+static const int __attribute__((unused)) g_DebugZones = 0; //ZONE_ERROR | ZONE_WARNING | ZONE_VERBOSE | ZONE_INFO;
 
 os::StreamBuffer<uint8_t, ModemDriver::BUFFERSIZE> ModemDriver::InputBuffer;
-os::StreamBuffer<uint8_t, ModemDriver::BUFFERSIZE> ModemDriver::OutputBuffer;
+os::StreamBuffer<uint8_t, ModemDriver::BUFFERSIZE> ModemDriver::SendBuffer;
+os::StreamBuffer<uint8_t, ModemDriver::BUFFERSIZE> ModemDriver::ReceiveBuffer;
 
 void ModemDriver::ModemDriverInterruptHandler(uint8_t data)
 {
@@ -77,10 +78,21 @@ void ModemDriver::modemTxTaskFunction(const bool& join)
 
         uint32_t timeOfLastUdpSend = 0;
 
-        app::ReceiveAtCmd receiveCmd(mSend, mRecv, std::chrono::seconds(1));
+        app::ReceiveAtCmd receiveCmd(mSend, mRecv, std::chrono::milliseconds(150));
         app::SendAtCmd sendCmd(mSend, mRecv, std::chrono::milliseconds(1000));
 
         while (mErrorCount < ERROR_THRESHOLD) {
+            if (SendBuffer.bytesAvailable()) {
+                std::string tmpSendStr(SendBuffer.bytesAvailable(), '\x00');
+                SendBuffer.receive(tmpSendStr.data(), tmpSendStr.length(), 1000);
+                InputBuffer.reset();
+                if (!sendCmd.process(tmpSendStr)) {
+                    handleError();
+                } else {
+                    timeOfLastUdpSend = os::Task::getTickCount();
+                }
+            }
+
             if (os::Task::getTickCount() - timeOfLastUdpSend >= 1000) {
                 InputBuffer.reset();
                 if (!sendCmd.process("HELLO")) {
@@ -90,8 +102,12 @@ void ModemDriver::modemTxTaskFunction(const bool& join)
                 }
             } else {
                 // wait a second for new input data
-                Trace(ZONE_INFO, "SLEEP until RECV\r\n");
-                if (receiveCmd.process(mDataString, false)) {
+                std::string receiveString;
+                if (receiveCmd.process(receiveString, false)) {
+                    if (mReceiveCallback) {
+                        mReceiveCallback(receiveString);
+                    }
+                    ReceiveBuffer.send(receiveString.data(), receiveString.length(), 1000);
                     Trace(ZONE_INFO, "Data received\r\n");
                 }
             }
@@ -156,4 +172,29 @@ void ModemDriver::handleError(void)
         mErrorCount = 0;
     }
     mErrorCount++;
+}
+
+size_t ModemDriver::send(std::string_view message, const uint32_t ticksToWait) const
+{
+    if (SendBuffer.send(message.data(), message.length(), ticksToWait)) {
+        return message.length();
+    }
+    return 0;
+}
+
+size_t ModemDriver::receive(uint8_t* message, size_t length, uint32_t ticksToWait) const
+{
+    if (ReceiveBuffer.receive(reinterpret_cast<char*>(message), length, ticksToWait)) {
+        return length;
+    }
+    return 0;
+}
+
+void ModemDriver::registerReceiveCallback(std::function<void(std::string_view)> f)
+{
+    mReceiveCallback = f;
+}
+void ModemDriver::unregisterReceiveCallback(void)
+{
+    mReceiveCallback = nullptr;
 }
