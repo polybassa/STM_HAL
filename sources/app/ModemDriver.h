@@ -37,48 +37,9 @@ class ModemDriver final :
 
     static constexpr uint32_t STACKSIZE = 4096;
     static constexpr size_t BUFFERSIZE = 512;
+    static constexpr size_t ERROR_THRESHOLD = 20;
     static os::StreamBuffer<uint8_t, BUFFERSIZE> InputBuffer;
     static os::StreamBuffer<uint8_t, BUFFERSIZE> OutputBuffer;
-
-    enum class ModemState
-    {
-        STARTMODEM = 0,
-        TRANSLATEERROR = 1,
-        CONFIGGPRSCLASS = 2,
-        ATTACHGPRS = 3,
-        ALLOWUDP = 4,
-        SETUDPSOCKET = 5,
-        DECLAREHOST = 6,
-        WAITFORRB = 7,
-        SENDHELLO = 8,
-        SENDDATALENGTH = 9,
-        SENDHELLOSTRING = 10,
-        SENDDATASTRING = 11,
-        CHECKFROMSERVER = 12,
-        RECEIVEFROMSERVER = 13,
-    };
-
-    enum class ParseResult
-    {
-        USORF,
-        UUSORF,
-        UUSORD,
-        USOST,
-        OK,
-        ERROR,
-        PROMPT,
-        NEWLINE,
-        CARRIAGE_RETURN,
-        UNKNOWN
-    };
-
-    enum class ModemReturnCode
-    {
-        TIMEOUT = -1,
-        OK = 0,
-        FAULT = 1,
-        TRY_AGAIN = 2
-    };
 
     os::TaskInterruptable mModemTxTask;
     std::string mDataString;
@@ -88,10 +49,13 @@ class ModemDriver final :
     const hal::Gpio& mModemPower;
     const hal::Gpio& mModemSupplyVoltage;
 
+    std::function<size_t(std::string_view,
+                         std::chrono::milliseconds)> mSend;
+
+    std::function<bool(uint8_t&,
+                       std::chrono::milliseconds)> mRecv;
+
     size_t mErrorCount = 0;
-    int mModemBuffer = 0;
-    ModemState mState = ModemState::STARTMODEM;
-    std::array<char, BUFFERSIZE> mLine;
 
     void modemTxTaskFunction(const bool&);
 
@@ -99,16 +63,8 @@ class ModemDriver final :
     void modemOff(void) const;
     void modemReset(void);
 
-    ModemReturnCode modemStartup(void);
-    ModemReturnCode sendHelloMessage(void);
-
-    ModemReturnCode modemSendRecv(std::string_view, std::chrono::milliseconds timeout = std::chrono::milliseconds(8000));
-    ParseResult parseResponse(std::string_view input) const;
-    ModemReturnCode interpretResponse(const ParseResult& response, std::string_view input);
-
-    void handleDataReception(std::string_view input);
-    const std::vector<std::string_view> splitDataString(std::string_view input) const;
-    std::string_view readLineFromInput(std::chrono::milliseconds timeout);
+    bool modemStartup(void);
+    bool sendHelloMessage(void);
     void handleError(void);
 
 public:
@@ -126,34 +82,6 @@ public:
 
     friend struct ModemDriverTester;
 };
-#if defined(UNITTEST)
-class ModemDriverTester
-{
-    ModemDriver& mTestee;
-public:
-
-    template<class ... Args>
-    decltype(auto) splitDataString(Args && ... args)
-    {
-        return mTestee.splitDataString(std::forward<Args>(args) ...);
-    }
-
-    template<class ... Args>
-    decltype(auto) modemSendRecv(Args && ... args)
-    {
-        return static_cast<int>(mTestee.modemSendRecv(std::forward<Args>(args) ...));
-    }
-
-    decltype(auto) getDataString(void)
-    {
-        return mTestee.mDataString;
-    }
-
-    ModemDriverTester(ModemDriver& testee) :
-        mTestee(testee){}
-private:
-};
-#endif
 }
 
 #endif /* SOURCES_PMD_MODEMDRIVER_H_ */

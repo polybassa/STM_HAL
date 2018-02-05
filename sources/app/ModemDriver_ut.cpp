@@ -18,7 +18,7 @@
 #include <iostream>
 #include <cstring>
 #include "unittest.h"
-#include "ModemDriver.h"
+#include "AT_Cmd.h"
 
 #define NUM_TEST_LOOPS 255
 
@@ -291,7 +291,7 @@ int ut_SplitDataString(void)
         CHECK(data == "\"0123456789qwert\"");
     }
     {
-        auto ret = tester.splitDataString("+UUSORF: 18,15");
+        auto ret = tester.splitDataString("+UUSORF: 18,15\r");
 
         CHECK(ret.size() == 3);
         auto cmd = ret[0];
@@ -302,7 +302,7 @@ int ut_SplitDataString(void)
         CHECK(len == "15");
     }
     {
-        auto ret = tester.splitDataString("+USORF: 18,\"108.217.247.74\",220,15,\"\x30\x31\x32\x00\"");
+        auto ret = tester.splitDataString("+USORF: 18,\"108.217.247.74\",220,15,\"\x30\x31\x32\x00\"\n");
 
         CHECK(ret.size() == 6);
         auto cmd = ret[0];

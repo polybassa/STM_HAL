@@ -35,12 +35,10 @@ ${BINDIR}/DebugInterface_ut.bin: ${OBJDIR}/Mutex.o
 
 ####################################ModemDriver############################################
 
-${BINDIR}/ModemDriver_ut.bin: DEFINES+=-DDEBUG
-${BINDIR}/ModemDriver_ut.bin: DEFINES+=-DUNITTEST
-${BINDIR}/ModemDriver_ut.bin: ${OBJDIR}/ModemDriver_ut.o 
-${BINDIR}/ModemDriver_ut.bin: ${OBJDIR}/ModemDriver.o
-${BINDIR}/ModemDriver_ut.bin: ${OBJDIR}/DeepSleepInterface.o 
-${BINDIR}/ModemDriver_ut.bin: ${OBJDIR}/Semaphore.o
+${BINDIR}/AT_Cmd_ut.bin: DEFINES+=-DDEBUG
+${BINDIR}/AT_Cmd_ut.bin: DEFINES+=-DUNITTEST
+${BINDIR}/AT_Cmd_ut.bin: ${OBJDIR}/AT_Cmd.o
+
 
 
 ################################################################################
@@ -51,7 +49,7 @@ test: clean-all ${BINDIR} ${OBJDIR} test_binarys
 	-@${GENHTML} ${OBJDIR}/cov.info -o ${COVERAGEDIR}
 
 TESTS=${BINDIR}/DebugInterface_ut.bin
-TESTS+=${BINDIR}/ModemDriver_ut.bin
+#TESTS+=${BINDIR}/AT_Cmd_ut.bin
 
 test_binarys: ${TESTS}  
 	@echo "-------------------------------------------------------------"

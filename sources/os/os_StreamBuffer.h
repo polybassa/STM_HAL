@@ -18,6 +18,7 @@
 
 #include "FreeRTOS.h"
 #include "stream_buffer.h"
+#include "os_Task.h"
 
 namespace os
 {
