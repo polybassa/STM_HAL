@@ -78,7 +78,7 @@ void ModemDriver::modemTxTaskFunction(const bool& join)
 
         uint32_t timeOfLastUdpSend = 0;
 
-        app::ReceiveAtCmd receiveCmd(mSend, mRecv, std::chrono::milliseconds(150));
+        app::ReceiveAtCmd receiveCmd(mSend, mRecv, std::chrono::milliseconds(700));
         app::SendAtCmd sendCmd(mSend, mRecv, std::chrono::milliseconds(1000));
 
         while (mErrorCount < ERROR_THRESHOLD) {
@@ -135,7 +135,7 @@ bool ModemDriver::modemStartup(void)
             return false;
         }
         InputBuffer.reset();
-        os::ThisTask::sleep(std::chrono::milliseconds(1000));
+        os::ThisTask::sleep(std::chrono::milliseconds(2000));
     }
 
     return true;

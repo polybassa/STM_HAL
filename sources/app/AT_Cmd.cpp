@@ -76,6 +76,7 @@ bool AtCmd::waitForErrorOrOk(void) const
         auto result = parseResponse(response);
         if (result == AtCmd::ParseResult::OK) {
             Trace(ZONE_VERBOSE, "OK\r\n");
+            os::ThisTask::sleep(std::chrono::milliseconds(40));
             return true;
         }
         if (result == AtCmd::ParseResult::ERROR) {
