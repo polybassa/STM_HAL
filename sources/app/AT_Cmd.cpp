@@ -21,7 +21,7 @@ using app::BasicAtCmd;
 using app::ReceiveAtCmd;
 using app::SendAtCmd;
 
-static const int __attribute__((unused)) g_DebugZones = ZONE_ERROR | ZONE_WARNING | ZONE_VERBOSE; // | ZONE_INFO;
+static const int __attribute__((unused)) g_DebugZones = ZONE_ERROR | ZONE_WARNING | ZONE_VERBOSE | ZONE_INFO;
 
 std::array<char, AtCmd::BUFFERSIZE> AtCmd::ReceiveBuffer;
 
@@ -222,7 +222,7 @@ bool ReceiveAtCmd::process(std::string& receivedData, bool poll) const
 
     Trace(ZONE_INFO, "DataLength %d\r\n", datalength);
 
-    auto datastring = readMultipleBytes(datalength);
+    auto datastring = readMultipleBytes(datalength + 2);
     if (datastring.length() < datalength) {
         return false;
     }

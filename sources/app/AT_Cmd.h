@@ -22,8 +22,8 @@
 #include <chrono>
 #include <vector>
 
-#define AT_CMD_IP "195.34.89.241"
-#define AT_CMD_PORT "7"
+#define AT_CMD_IP "91.7.46.108"
+#define AT_CMD_PORT "60017"
 
 #define AT_CMD_USOST "AT+USOST=0,\"" AT_CMD_IP "\"," AT_CMD_PORT ","
 #define AT_CMD_USOCO "AT+USOCO=0,\"" AT_CMD_IP "\"," AT_CMD_PORT "\r"
