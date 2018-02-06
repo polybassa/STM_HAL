@@ -48,7 +48,7 @@ int ut_ATParser(void)
         return 0;
     };
 
-    app::AtParser parser(send, recv);
+    app::ATParser parser(send, recv);
 
     parser.parse();
 

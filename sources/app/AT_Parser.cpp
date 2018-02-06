@@ -18,15 +18,46 @@
 #include <vector>
 #include <iostream>
 
-using app::AtParser;
+using app::AT;
+using app::ATCmd;
+using app::ATCmdOK_ERROR;
+using app::ATParser;
 
 static const int __attribute__((unused)) g_DebugZones = ZONE_ERROR | ZONE_WARNING | ZONE_VERBOSE | ZONE_INFO;
 
-std::array<char, AtParser::BUFFERSIZE> AtParser::ReceiveBuffer;
-std::function<void(void)> AtParser::placeholder1;
-std::function<void(void)> AtParser::placeholder2;
+bool AT::isCommandFinished(void) const
+{
+    return mCommandFinished;
+}
 
-bool AtParser::parse(void) const
+void AT::okReceived(void) const
+{
+    printf("%s OK\n", mName.data());
+}
+void AT::errorReceived(void) const
+{
+    printf("%s ERROR\n", mName.data());
+}
+AT::ReturnType AT::onResponseMatch(AT::ReceiveFunction&) const
+{
+    printf("Hello from %s\n", mName.data());
+    return ReturnType::WAITING;
+}
+
+AT::ReturnType ATCmdOK_ERROR::onResponseMatch(AT::ReceiveFunction&) const
+{
+    if (mWaitingCmd) {
+        mWaitingCmd();
+        return ReturnType::FINISHED;
+    }
+    return ReturnType::ERROR;
+}
+
+std::array<char, ATParser::BUFFERSIZE> ATParser::ReceiveBuffer;
+std::function<void(void)> ATParser::placeholder1;
+std::function<void(void)> ATParser::placeholder2;
+
+bool ATParser::parse(void) const
 {
     auto allResponses = getAllResponses();
 

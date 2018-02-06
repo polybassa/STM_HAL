@@ -25,6 +25,8 @@
 
 namespace app
 {
+class ATParser;
+
 struct AT {
     using ReceiveFunction = std::function<size_t(uint8_t*, const size_t, std::chrono::milliseconds)>;
     using SendFunction = std::function<size_t(std::string_view, std::chrono::milliseconds)>;
@@ -39,29 +41,25 @@ struct AT {
     const std::string_view mName;
     const std::string_view mResponse;
 
-    ReturnType onResponseMatch(AT::ReceiveFunction&) const
-    {
-        printf("Hello from %s\n", mName.data());
-        return ReturnType::WAITING;
-    }
-
-    void okReceived(void) const
-    {
-        printf("%s OK\n", mName.data());
-    }
-    void errorReceived(void) const
-    {
-        printf("%s ERROR\n", mName.data());
-    }
+    bool isCommandFinished(void) const;
 
     AT(std::string_view name, std::string_view response) :
         mName(name), mResponse(response) {};
+
+protected:
+
+    bool mCommandFinished = false;
+
+    void okReceived(void) const;
+    void errorReceived(void) const;
+    ReturnType onResponseMatch(AT::ReceiveFunction&) const;
+
+    friend class ATParser;
 };
 
 class ATCmd :
     public AT
 {
-    bool mCommandFinished = false;
     const std::string_view mRequest;
 
 public:
@@ -71,25 +69,21 @@ public:
         mRequest(request) {};
 };
 
-struct ATCmdOK_ERROR :
-    public AT {
+class ATCmdOK_ERROR final :
+    public AT
+{
     std::function<void(void)>& mWaitingCmd;
+    ReturnType onResponseMatch(AT::ReceiveFunction&) const;
 
-    ReturnType onResponseMatch(AT::ReceiveFunction&) const
-    {
-        if (mWaitingCmd) {
-            mWaitingCmd();
-            return ReturnType::FINISHED;
-        }
-        return ReturnType::ERROR;
-    }
-
-    ATCmdOK_ERROR(std::string_view name, std::string_view response, std::function<void(void)>& waitingCmdCallback) :
+public:
+    ATCmdOK_ERROR(std::string_view name, std::string_view response, std::function<void(void)> &waitingCmdCallback) :
         AT(name, response), mWaitingCmd(waitingCmdCallback) {};
+
+    friend class ATParser;
 };
 
-struct AtParser {
-    AtParser(AT::SendFunction&         send,
+struct ATParser {
+    ATParser(AT::SendFunction&         send,
              AT::ReceiveFunction&      receive,
              std::chrono::milliseconds timeout = std::chrono::milliseconds(6000)) :
         mSend(send), mReceive(receive), mTimeout(timeout) {}
@@ -110,7 +104,7 @@ protected:
     std::function<void(void)>& mWaitingCmdOk = placeholder1;
     std::function<void(void)>& mWaitingCmdError = placeholder2;
 
-    std::tuple<const ATCmd, const ATCmd, const ATCmd, const ATCmdOK_ERROR, const ATCmdOK_ERROR> SupportedAtCmds {
+    std::tuple<ATCmd, ATCmd, ATCmd, ATCmdOK_ERROR, ATCmdOK_ERROR> SupportedAtCmds {
         ATCmd("CMD_1", "REQ1", "RESP1"),
         ATCmd("CMD_2", "REQ2", "RESP2"),
         ATCmd("CMD_3", "REQ3", "REsp3"),
