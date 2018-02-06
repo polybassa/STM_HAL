@@ -33,21 +33,14 @@ os::TaskEndless modemTest("MODEM_Test", 1024, os::Task::Priority::LOW, [] (const
                                                                 hal::Factory<hal::Gpio>::get<hal::Gpio::MODEM_POWER>(),
                                                                 hal::Factory<hal::Gpio>::get<hal::Gpio::MODEM_SUPPLY>());
 
-                              modem->registerReceiveCallback([&](std::string_view data)
-                                                             {
-                                                                 Trace(ZONE_INFO, "Received %s\r\n", std::string(
-                                                                                                                 data.
-                                                                                                                 data(),
-                                                                                                                 data.
-                                                                                                                 length(
-                                                                                                                        ))
-                                                                       .c_str());
-                                                                 debug.send(reinterpret_cast<const uint8_t*>("data:"),
-                                                                            5);
-                                                                 debug.send(
-                                                                            reinterpret_cast<const uint8_t*>(data.data()),
-                                                                            data.length());
-                                                             });
+                              auto callback = [&](std::string_view data)
+                              {
+                                  auto str = std::string(data.data(), data.length());
+                                  Trace(ZONE_INFO, "Received %s\r\n", str.c_str());
+                                  debug.send(reinterpret_cast<const uint8_t*>("data:"), 5);
+                                  debug.send(reinterpret_cast<const uint8_t*>(data.data()), data.length());
+                              };
+                              modem->registerReceiveCallback(callback);
 
                               while (true) {
                                   os::ThisTask::sleep(std::chrono::milliseconds(300));

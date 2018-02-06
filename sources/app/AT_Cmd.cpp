@@ -15,6 +15,7 @@
 
 #include "AT_Cmd.h"
 #include "trace.h"
+#include "os_Task.h"
 
 using app::AtCmd;
 using app::BasicAtCmd;
@@ -29,7 +30,7 @@ std::string_view AtCmd::readLine(void) const
 {
     uint8_t data;
     size_t lineEndIndex = 0;
-    while (mReceive(data, mTimeout) && lineEndIndex < ReceiveBuffer.size()) {
+    while (mReceive(&data, 1, mTimeout) && lineEndIndex < ReceiveBuffer.size()) {
         ReceiveBuffer[lineEndIndex++] = static_cast<char>(data);
         const bool terminationFound = (data == '\r') || (data == '\n') || (data == 0);
 
@@ -100,7 +101,7 @@ std::string_view SendAtCmd::readUntilPrompt(void) const
 {
     uint8_t data;
     size_t lineEndIndex = 0;
-    while (mReceive(data, mTimeout) && lineEndIndex < ReceiveBuffer.size()) {
+    while (mReceive(&data, 1, mTimeout) && lineEndIndex < ReceiveBuffer.size()) {
         ReceiveBuffer[lineEndIndex++] = static_cast<char>(data);
         const bool terminationFound = (data == '@');
         Trace(ZONE_INFO, "Read: 0x%02X \r\n", data);
@@ -221,7 +222,7 @@ bool ReceiveAtCmd::process(std::string& receivedData, bool poll) const
 
     size_t datalength = std::stoi(std::string(datalengthstring.data(), datalengthstring.length()));
 
-    Trace(ZONE_INFO, "DataLength %d\r\n", datalength);
+    Trace(ZONE_INFO, "DataLength %lu\r\n", datalength);
 
     auto datastring = readMultipleBytes(datalength + 2);
     if (datastring.length() < datalength) {
@@ -240,7 +241,7 @@ std::string_view ReceiveAtCmd::readAtCmd(void) const
 {
     uint8_t data;
     size_t lineEndIndex = 0;
-    while (mReceive(data, mTimeout) && lineEndIndex < ReceiveBuffer.size()) {
+    while (mReceive(&data, 1, mTimeout) && lineEndIndex < ReceiveBuffer.size()) {
         ReceiveBuffer[lineEndIndex++] = static_cast<char>(data);
 
         const bool terminationFound = (data == ':');
@@ -256,7 +257,7 @@ std::string_view ReceiveAtCmd::readUntilComma(void) const
 {
     uint8_t data;
     size_t lineEndIndex = 0;
-    while (mReceive(data, mTimeout) && lineEndIndex < ReceiveBuffer.size()) {
+    while (mReceive(&data, 1, mTimeout) && lineEndIndex < ReceiveBuffer.size()) {
         const bool terminationFound = (data == ',');
 
         if (terminationFound) {
@@ -277,7 +278,7 @@ std::string_view ReceiveAtCmd::readMultipleBytes(size_t numberOfBytes) const
 {
     uint8_t data;
     size_t lineEndIndex = 0;
-    while (mReceive(data, mTimeout) && lineEndIndex < ReceiveBuffer.size()) {
+    while (mReceive(&data, 1, mTimeout) && lineEndIndex < ReceiveBuffer.size()) {
         ReceiveBuffer[lineEndIndex++] = static_cast<char>(data);
         Trace(ZONE_INFO, "Read_multiple: 0x%02X \r\n", data);
 
@@ -287,7 +288,7 @@ std::string_view ReceiveAtCmd::readMultipleBytes(size_t numberOfBytes) const
             break;
         }
     }
-    Trace(ZONE_INFO, "Read_multiple finish %d : %d \r\n", numberOfBytes, lineEndIndex);
+    Trace(ZONE_INFO, "Read_multiple finish %lu : %lu \r\n", numberOfBytes, lineEndIndex);
 
     return std::string_view(ReceiveBuffer.data(), lineEndIndex);
 }

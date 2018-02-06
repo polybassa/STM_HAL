@@ -24,6 +24,7 @@
 #include <string>
 #include <string_view>
 #include <vector>
+#include "AT_Cmd.h"
 
 namespace app
 {
@@ -47,11 +48,8 @@ class ModemDriver final :
     const hal::Gpio& mModemPower;
     const hal::Gpio& mModemSupplyVoltage;
 
-    std::function<size_t(std::string_view,
-                         std::chrono::milliseconds)> mSend;
-
-    std::function<bool(uint8_t&,
-                       std::chrono::milliseconds)> mRecv;
+    AtCmd::SendFunction mSend;
+    AtCmd::ReceiveFunction mRecv;
 
     std::function<void(std::string_view)> mReceiveCallback;
 

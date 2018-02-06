@@ -30,13 +30,19 @@
 
 namespace app
 {
-class AtCmd
-{
+struct AtCmd {
+    using ReceiveFunction = std::function<size_t(uint8_t*, const size_t, std::chrono::milliseconds)>;
+    using SendFunction = std::function<size_t(std::string_view, std::chrono::milliseconds)>;
+
+    AtCmd(SendFunction&             send,
+          ReceiveFunction&          receive,
+          std::chrono::milliseconds timeout = std::chrono::milliseconds(6000)) :
+        mSend(send), mReceive(receive), mTimeout(timeout){}
+
 protected:
     static constexpr const size_t BUFFERSIZE = 512;
-
-    std::function<size_t(std::string_view, std::chrono::milliseconds)>& mSend;
-    std::function<bool(uint8_t&, std::chrono::milliseconds)>& mReceive;
+    const SendFunction& mSend;
+    const ReceiveFunction& mReceive;
     std::chrono::milliseconds mTimeout;
 
     static std::array<char, BUFFERSIZE> ReceiveBuffer;
@@ -58,12 +64,6 @@ protected:
     std::string_view readLine(void) const;
     AtCmd::ParseResult parseResponse(std::string_view input) const;
     bool waitForErrorOrOk(void) const;
-
-public:
-    AtCmd(std::function<size_t(std::string_view, std::chrono::milliseconds)>& send,
-          std::function<bool(uint8_t&, std::chrono::milliseconds)>& receive,
-          std::chrono::milliseconds timeout = std::chrono::milliseconds(6000)) :
-        mSend(send), mReceive(receive), mTimeout(timeout){}
 };
 
 class BasicAtCmd :
@@ -74,9 +74,9 @@ protected:
     std::string_view mRequest;
 
 public:
-    BasicAtCmd(std::string_view request,
-               std::function<size_t(std::string_view, std::chrono::milliseconds)>& send,
-               std::function<bool(uint8_t&, std::chrono::milliseconds)>& receive,
+    BasicAtCmd(std::string_view          request,
+               SendFunction&             send,
+               ReceiveFunction&          receive,
                std::chrono::milliseconds timeout = std::chrono::milliseconds(6000)) :
         AtCmd(send, receive, timeout), mRequest(request){}
 

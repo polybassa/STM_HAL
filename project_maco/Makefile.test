@@ -38,7 +38,8 @@ ${BINDIR}/DebugInterface_ut.bin: ${OBJDIR}/Mutex.o
 ${BINDIR}/AT_Cmd_ut.bin: DEFINES+=-DDEBUG
 ${BINDIR}/AT_Cmd_ut.bin: DEFINES+=-DUNITTEST
 ${BINDIR}/AT_Cmd_ut.bin: ${OBJDIR}/AT_Cmd.o
-
+${BINDIR}/AT_Cmd_ut.bin: ${OBJDIR}/AT_Parser.o
+${BINDIR}/AT_Cmd_ut.bin: ${OBJDIR}/AT_Cmd_ut.o
 
 
 ################################################################################
@@ -49,7 +50,7 @@ test: clean-all ${BINDIR} ${OBJDIR} test_binarys
 	-@${GENHTML} ${OBJDIR}/cov.info -o ${COVERAGEDIR}
 
 TESTS=${BINDIR}/DebugInterface_ut.bin
-#TESTS+=${BINDIR}/AT_Cmd_ut.bin
+TESTS+=${BINDIR}/AT_Cmd_ut.bin
 
 test_binarys: ${TESTS}  
 	@echo "-------------------------------------------------------------"

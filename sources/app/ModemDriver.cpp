@@ -54,8 +54,8 @@ ModemDriver::ModemDriver(const hal::UsartWithDma& interface,
         return mInterface.send(in, timeout.count());
     };
 
-    mRecv = [&](uint8_t & output, std::chrono::milliseconds timeout)->bool {
-        return InputBuffer.receive(output, timeout.count());
+    mRecv = [&](uint8_t * output, const size_t length, std::chrono::milliseconds timeout)->bool {
+        return InputBuffer.receive(reinterpret_cast<char*>(output), length, timeout.count());
     };
 }
 

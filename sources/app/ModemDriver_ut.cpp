@@ -237,7 +237,7 @@ BaseType_t xQueueReceiveFromISR(QueueHandle_t xQueue, void* const pvBuffer, Base
 }
 //-------------------------TESTCASES-------------------------
 
-int ut_DeepSleep(void)
+int ut_ATParser(void)
 {
     TestCaseBegin();
 
@@ -395,7 +395,7 @@ int ut_SendRecvERROR(void)
 int main(int argc, const char* argv[])
 {
     UnitTestMainBegin();
-    RunTest(true, ut_DeepSleep);
+    RunTest(true, ut_ATParser);
     RunTest(true, ut_SplitDataString);
     RunTest(true, ut_SendRecvUSORF);
     RunTest(true, ut_SendRecvERROR);
