@@ -16,20 +16,26 @@
 #ifndef SOURCES_UTILITY_FOR_EACH_TUPLE_H_
 #define SOURCES_UTILITY_FOR_EACH_TUPLE_H_
 
+#include <cstddef>
 #include <tuple>
 #include <utility>
 
-template<std::size_t I = 0, typename FuncT, typename ... Tp>
-inline typename std::enable_if<I == sizeof ... (Tp), void>::type
-for_each(std::tuple<Tp ...>&, FuncT) // Unused arguments are given no names.
-{ }
-
-template<std::size_t I = 0, typename FuncT, typename ... Tp>
-inline typename std::enable_if < I<sizeof ... (Tp), void>::type
-for_each(std::tuple<Tp ...>& t, FuncT f)
+template<typename Tuple, typename F, std::size_t ... Indices>
+void for_each_impl(Tuple && tuple, F && f, std::index_sequence<Indices ...> )
 {
-    f(std::get<I>(t));
-    for_each<I + 1, FuncT, Tp ...>(t, f);
+    using swallow = int[];
+    (void)swallow {
+        1,
+        (f(std::get<Indices>(std::forward<Tuple>(tuple))), void(), int {}) ...
+    };
+}
+
+template<typename Tuple, typename F>
+void for_each(Tuple && tuple, F && f)
+{
+    constexpr std::size_t N = std::tuple_size<std::remove_reference_t<Tuple> >::value;
+    for_each_impl(std::forward<Tuple>(tuple), std::forward<F>(f),
+                  std::make_index_sequence<N> {});
 }
 
 template<size_t index, typename ... args>
