@@ -41,9 +41,6 @@ struct AT {
     using ReceiveFunction = std::function<size_t(uint8_t*, const size_t, std::chrono::milliseconds)>;
     using SendFunction = std::function<size_t(std::string_view, std::chrono::milliseconds)>;
 
-    static constexpr const std::string_view DEFAULT_IP = AT_CMD_IP;
-    static constexpr const std::string_view DEFAULT_PORT = AT_CMD_PORT;
-
     enum class ReturnType
     {
         FINISHED,
@@ -100,8 +97,8 @@ class ATCmdUSOST final :
     public ATCmd
 {
     size_t mSocket = 0;
-    std::string mIp = std::string(DEFAULT_IP.data(), DEFAULT_IP.length());
-    std::string mPort = std::string(DEFAULT_PORT.data(), DEFAULT_PORT.length());
+    std::string mIp = AT_CMD_IP;
+    std::string mPort = AT_CMD_PORT;
     std::string_view mData;
     SendFunction& mSendFunction;
     bool mWaitingForPrompt = false;
@@ -118,8 +115,8 @@ class ATCmdUSORF final :
     public ATCmd
 {
     size_t mSocket = 0;
-    std::string mIp = std::string(DEFAULT_IP.data(), DEFAULT_IP.length());
-    std::string mPort = std::string(DEFAULT_PORT.data(), DEFAULT_PORT.length());
+    std::string mIp = AT_CMD_IP;
+    std::string mPort = AT_CMD_PORT;
     std::string mData;
     SendFunction& mSendFunction;
     virtual ReturnType onResponseMatch(void) override;

@@ -109,6 +109,7 @@ SIZE=${ARM_SIZE}
 else 
 # The flags passed to the compiler when we are not using arm-none-eabi tools.
 CFLAGS= -pedantic \
+		-pthread \
 		-fprofile-arcs \
 		-ftest-coverage \
         -std=c11 \
@@ -119,6 +120,7 @@ CFLAGS= -pedantic \
 
 CPPFLAGS= \
     --coverage \
+    -pthread \
     -std=c++17 \
     -Wall \
     -Wno-deprecated-register \
@@ -126,7 +128,7 @@ CPPFLAGS= \
     -c \
     -g
 
-LDFLAGS+= 	-lpthread \
+LDFLAGS+= -pthread \
 		-std=c++17 \
 		-lcrypto \
 		--coverage 
