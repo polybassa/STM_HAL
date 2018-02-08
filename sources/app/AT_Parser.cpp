@@ -28,35 +28,17 @@ using app::ATParser;
 
 static const int __attribute__((unused)) g_DebugZones = ZONE_ERROR | ZONE_WARNING | ZONE_VERBOSE | ZONE_INFO;
 
-bool AT::isCommandFinished(void) const
-{
-    return mCommandFinished;
-}
-
 void AT::okReceived(void)
 {
     Trace(ZONE_INFO, "%s OK\n", mName.data());
-    while (true) {
-        ;
-    }
+    while (true) {}
 }
 void AT::errorReceived(void)
 {
     Trace(ZONE_INFO, "%s ERROR\n", mName.data());
-    while (true) {
-        ;
-    }
+    while (true) {}
 }
 AT::ReturnType AT::onResponseMatch(void)
-{
-    Trace(ZONE_INFO, "Hello from %s\n", mName.data());
-    while (true) {
-        ;
-    }
-    return ReturnType::WAITING;
-}
-
-AT::ReturnType ATCmd::onResponseMatch(void)
 {
     Trace(ZONE_INFO, "Hello from %s\n", mName.data());
     return ReturnType::WAITING;
@@ -64,37 +46,24 @@ AT::ReturnType ATCmd::onResponseMatch(void)
 
 AT::ReturnType ATCmd::send(AT::SendFunction& sendFunction, std::chrono::milliseconds timeout)
 {
-    auto ret = send(sendFunction);
-    if (ret != AT::ReturnType::WAITING) {
-        return ret;
-    }
-    if (mSendDone.take(timeout)) {
-        Trace(ZONE_INFO, "Send Done %s\n", mName.data());
-
-        return ReturnType::FINISHED;
-    }
-    return ReturnType::ERROR;
-}
-
-AT::ReturnType ATCmd::send(AT::SendFunction& sendFunction)
-{
     mCommandSuccess = false;
-    mCommandFinished = false;
 
     if (mParser.mWaitingCmd) {
         Trace(ZONE_INFO, "Parser not ready\n");
         return ReturnType::TRY_AGAIN;
     }
 
-    if (sendFunction(mRequest, mTimeout) != mRequest.length()) {
+    if (sendFunction(mRequest, timeout) != mRequest.length()) {
         Trace(ZONE_ERROR, "Couldn't send\n");
         return ReturnType::ERROR;
     }
-    Trace(ZONE_ERROR, "%s send\n", mName.data());
-
     mParser.mWaitingCmd = this->shared_from_this();
 
-    return ReturnType::WAITING;
+    if (mSendDone.take(timeout) && mCommandSuccess) {
+        Trace(ZONE_INFO, "Send Done %s\n", mName.data());
+        return ReturnType::FINISHED;
+    }
+    return ReturnType::ERROR;
 }
 
 bool ATCmd::wasExecutionSuccessful(void) const
@@ -105,21 +74,18 @@ bool ATCmd::wasExecutionSuccessful(void) const
 void ATCmd::okReceived(void)
 {
     Trace(ZONE_INFO, "ATCMD: %s OK\n", mName.data());
-    mCommandFinished = true;
     mCommandSuccess = true;
     mSendDone.give();
 }
 void ATCmd::errorReceived(void)
 {
     Trace(ZONE_INFO, "ATCMD: %s ERROR\n", mName.data());
-    mCommandFinished = true;
     mCommandSuccess = false;
     mSendDone.give();
 }
 
 AT::ReturnType ATCmdUSOST::send(std::string_view data, std::chrono::milliseconds timeout)
 {
-    Trace(ZONE_INFO, "SEND\r\n");
     mData = data;
     std::string request = "AT+USOST=" + std::to_string(mSocket) +
                           ",\"" + mIp + "\"," + mPort + "," +
@@ -128,7 +94,10 @@ AT::ReturnType ATCmdUSOST::send(std::string_view data, std::chrono::milliseconds
     mWaitingForPrompt = true;
     auto ret = ATCmd::send(mSendFunction, timeout);
     mWaitingForPrompt = false;
-    return ret;
+    if ((ret == AT::ReturnType::FINISHED) && mCommandSuccess) {
+        return AT::ReturnType::FINISHED;
+    }
+    return AT::ReturnType::ERROR;
 }
 
 AT::ReturnType ATCmdUSOST::onResponseMatch(void)
@@ -137,7 +106,7 @@ AT::ReturnType ATCmdUSOST::onResponseMatch(void)
         return ReturnType::ERROR;
     }
     Trace(ZONE_INFO, "Got prompt %s\n", mName.data());
-    if (mSendFunction(mData, mTimeout) != mData.length()) {
+    if (mSendFunction(mData, std::chrono::milliseconds(100)) != mData.length()) {
         Trace(ZONE_ERROR, "Couldn't send data\n");
         return ReturnType::ERROR;
     }
@@ -242,24 +211,23 @@ bool ATParser::parse(std::chrono::milliseconds timeout)
 {
     size_t currentPos = 0;
     auto possibleResponses = mRegisteredATCommands;
-    Trace(ZONE_INFO, "Start Parser.. reset waiting cmd\r\n");
+    Trace(ZONE_INFO, "Start Parser and reset waiting cmd\r\n");
+    mWaitingCmd.reset();
 
     while (true) {
         if (mReceive(reinterpret_cast<uint8_t*>(ReceiveBuffer.data() + currentPos++), 1, timeout) != 1) {
             Trace(ZONE_INFO, "Parser Timeout\r\n");
-
             return false;
         }
 
         std::string_view currentData(ReceiveBuffer.data(), currentPos);
 
         //Trace(ZONE_INFO, "Search area: %s\n", std::string(currentData.data(), currentData.length()).c_str());
-
+        // this vector copy operations should be optimized
         decltype(possibleResponses) sievedResponses;
 
         for (auto atcmd : possibleResponses) {
-            auto str = atcmd->mResponse;
-            if (currentData == str.substr(0, currentPos)) {
+            if (currentData == atcmd->mResponse.substr(0, currentPos)) {
                 sievedResponses.push_back(atcmd);
             }
         }
@@ -268,9 +236,7 @@ bool ATParser::parse(std::chrono::milliseconds timeout)
         if (possibleResponses.size() > 1) { continue; }
 
         if (possibleResponses.size() == 1) {
-            //match
             auto match = possibleResponses[0];
-
             if (currentPos < match->mResponse.length()) {
                 continue;
             }
@@ -285,15 +251,15 @@ bool ATParser::parse(std::chrono::milliseconds timeout)
                 Trace(ZONE_ERROR, "Error occured \r\n");
                 break;
 
+            case AT::ReturnType::TRY_AGAIN:
+                break;
+
             case AT::ReturnType::FINISHED:
                 break;
             }
         }
-
-        //nothing found
         currentPos = 0;
         possibleResponses = mRegisteredATCommands;
-        //Trace(ZONE_INFO, "reload\n");
     }
 
     return true;
@@ -347,6 +313,7 @@ std::string_view ATParser::getInputUntilComma(std::chrono::milliseconds timeout)
 
     return std::string_view(ReceiveBuffer.data(), currentPos);
 }
+
 std::string_view ATParser::getBytesFromInput(size_t numberOfBytes, std::chrono::milliseconds timeout) const
 {
     uint8_t data;

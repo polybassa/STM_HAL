@@ -37,9 +37,8 @@ ${BINDIR}/DebugInterface_ut.bin: ${OBJDIR}/Mutex.o
 
 ${BINDIR}/AT_Cmd_ut.bin: DEFINES+=-DDEBUG
 ${BINDIR}/AT_Cmd_ut.bin: DEFINES+=-DUNITTEST
-${BINDIR}/AT_Cmd_ut.bin: ${OBJDIR}/AT_Cmd.o
 ${BINDIR}/AT_Cmd_ut.bin: ${OBJDIR}/AT_Parser.o
-${BINDIR}/AT_Cmd_ut.bin: ${OBJDIR}/AT_Cmd_ut.o
+${BINDIR}/AT_Cmd_ut.bin: ${OBJDIR}/AT_Parser_ut.o
 
 
 ################################################################################

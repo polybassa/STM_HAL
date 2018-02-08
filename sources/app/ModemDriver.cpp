@@ -60,19 +60,27 @@ ModemDriver::ModemDriver(const hal::UsartWithDma& interface,
     mRecv([&](uint8_t * output, const size_t length, std::chrono::milliseconds timeout)->bool {
               return InputBuffer.receive(reinterpret_cast<char*>(output), length, timeout.count());
           }),
-    mParser(mRecv)
+    mParser(mRecv),
+    mATUSOST(std::shared_ptr<app::ATCmdUSOST>(new app::ATCmdUSOST(mSend, mParser))),
+    mATUSORF(std::shared_ptr<app::ATCmdUSORF>(new app::ATCmdUSORF(mSend, mParser)))
 {
     mInterface.mUsart.enableNonBlockingReceive(ModemDriverInterruptHandler);
 
-    mStartupCommands = {
-        std::shared_ptr<app::ATCmd>(new app::ATCmd("ATE0V1", "ATE0V1\r", "", mParser)),
-        std::shared_ptr<app::ATCmd>(new app::ATCmd("AT+CMEE", "AT+CMEE=2\r", "", mParser)),
-        std::shared_ptr<app::ATCmd>(new app::ATCmd("AT+CGCLASS", "AT+CGCLASS=\"B\"\r", "", mParser)),
-        std::shared_ptr<app::ATCmd>(new app::ATCmd("AT+CGGATT", "AT+CGATT=1\r", "", mParser)),
-        std::shared_ptr<app::ATCmd>(new app::ATCmd("AT+UPSDA", "AT+UPSDA=0,3\r", "", mParser)),
-        std::shared_ptr<app::ATCmd>(new app::ATCmd("AT+USOCR", "AT+USOCR=17\r", "", mParser)),
-        std::shared_ptr<app::ATCmd>(new app::ATCmd("AT+USOCO", AT_CMD_USOCO, "", mParser)),
+    mParser.registerAtCommand(std::shared_ptr<app::AT>(new app::ATCmdOK(mParser)));
+    mParser.registerAtCommand(std::shared_ptr<app::AT>(new app::ATCmdERROR(mParser)));
+
+    std::function<void(size_t, size_t)> urcCallback = [this](size_t socket, size_t bytes)
+    {
+        this->mNumberOfBytesForReceive.overwrite(bytes);
     };
+
+    auto atuusorf = std::shared_ptr<app::ATCmdURC>(new app::ATCmdURC("UUSORF", "+UUSORF: ", mParser, urcCallback));
+    auto atuusord = std::shared_ptr<app::ATCmdURC>(new app::ATCmdURC("UUSORD", "+UUSORD: ", mParser, urcCallback));
+
+    mParser.registerAtCommand(mATUSOST);
+    mParser.registerAtCommand(mATUSORF);
+    mParser.registerAtCommand(atuusorf);
+    mParser.registerAtCommand(atuusord);
 }
 
 void ModemDriver::enterDeepSleep(void)
@@ -92,60 +100,24 @@ void ModemDriver::modemTxTaskFunction(const bool& join)
 {
     os::ThisTask::sleep(std::chrono::milliseconds(500));
 
-    size_t dataToRecv = 0;
-
-    auto atusost = std::shared_ptr<app::ATCmdUSOST>(new app::ATCmdUSOST(mSend, mParser));
-    auto atusorf = std::shared_ptr<app::ATCmdUSORF>(new app::ATCmdUSORF(mSend, mParser));
-
-    std::function<void(size_t, size_t)> urcCallback = [&](size_t socket, size_t bytes)
-    {
-        dataToRecv = bytes;
-    };
-
-    auto atuusorf = std::shared_ptr<app::ATCmdURC>(new app::ATCmdURC("UUSORF", "+UUSORF: ", mParser, urcCallback));
-    auto atuusord = std::shared_ptr<app::ATCmdURC>(new app::ATCmdURC("UUSORD", "+UUSORD: ", mParser, urcCallback));
-
-    mParser.registerAtCommand(atusost);
-    mParser.registerAtCommand(atusorf);
-    mParser.registerAtCommand(atuusorf);
-    mParser.registerAtCommand(atuusord);
-
     do {
+        modemReset();
+
         if (!modemStartup()) {
             continue;
         }
 
-        uint32_t timeOfLastUdpSend = 0;
-
         while (mErrorCount < ERROR_THRESHOLD) {
             if (SendBuffer.bytesAvailable()) {
-                std::string tmpSendStr(SendBuffer.bytesAvailable(), '\x00');
-                SendBuffer.receive(tmpSendStr.data(), tmpSendStr.length(), 1000);
-
-                auto ret = atusost->send(tmpSendStr, std::chrono::milliseconds(1000));
-
-                if (ret == AT::ReturnType::ERROR) {
-                    handleError();
-                } else if (ret == AT::ReturnType::FINISHED) {
-                    timeOfLastUdpSend = os::Task::getTickCount();
-                }
+                sendData();
             }
 
-            if (os::Task::getTickCount() - timeOfLastUdpSend >= 1000) {
+            if (os::Task::getTickCount() - mTimeOfLastUdpSend >= 1000) {
                 SendBuffer.send("HELLO ", 6, std::chrono::milliseconds(100).count());
             }
-
-            if (dataToRecv) {
-                size_t bytes = dataToRecv;
-                dataToRecv = 0;
-                auto ret = atusorf->send(bytes, std::chrono::milliseconds(1000));
-                if (ret == AT::ReturnType::FINISHED) {
-                    if (mReceiveCallback) {
-                        mReceiveCallback(atusorf->getData());
-                    }
-                    ReceiveBuffer.send(atusorf->getData().data(), atusorf->getData().length(), 1000);
-                    Trace(ZONE_INFO, "Data received\r\n");
-                }
+            size_t bytes = 0;
+            if (mNumberOfBytesForReceive.receive(bytes, std::chrono::milliseconds(0))) {
+                receiveData(bytes);
             }
         }
     } while (!join);
@@ -153,22 +125,25 @@ void ModemDriver::modemTxTaskFunction(const bool& join)
 
 void ModemDriver::parserTaskFunction(const bool& join)
 {
-    modemReset();
-
     do {
-        InputBuffer.reset();
-        auto x = mParser.parse(std::chrono::milliseconds(5000));
-        os::ThisTask::sleep(std::chrono::milliseconds(2000));
+        auto x = mParser.parse(std::chrono::milliseconds(10000));
         Trace(ZONE_INFO, "Parser terminated with %d\r\n", x);
     } while (!join);
 }
 
 bool ModemDriver::modemStartup(void)
 {
-    mParser.registerAtCommand(std::shared_ptr<app::AT>(new app::ATCmdOK(mParser)));
-    mParser.registerAtCommand(std::shared_ptr<app::AT>(new app::ATCmdERROR(mParser)));
+    std::array<std::shared_ptr<app::ATCmd>, 7> startupCommands = {
+        std::shared_ptr<app::ATCmd>(new app::ATCmd("ATE0V1", "ATE0V1\r", "", mParser)),
+        std::shared_ptr<app::ATCmd>(new app::ATCmd("AT+CMEE", "AT+CMEE=2\r", "", mParser)),
+        std::shared_ptr<app::ATCmd>(new app::ATCmd("AT+CGCLASS", "AT+CGCLASS=\"B\"\r", "", mParser)),
+        std::shared_ptr<app::ATCmd>(new app::ATCmd("AT+CGGATT", "AT+CGATT=1\r", "", mParser)),
+        std::shared_ptr<app::ATCmd>(new app::ATCmd("AT+UPSDA", "AT+UPSDA=0,3\r", "", mParser)),
+        std::shared_ptr<app::ATCmd>(new app::ATCmd("AT+USOCR", "AT+USOCR=17\r", "", mParser)),
+        std::shared_ptr<app::ATCmd>(new app::ATCmd("AT+USOCO", AT_CMD_USOCO, "", mParser)),
+    };
 
-    for (const auto& cmd : mStartupCommands) {
+    for (const auto& cmd : startupCommands) {
         os::ThisTask::sleep(std::chrono::milliseconds(2000));
         if ((cmd->send(mSend, std::chrono::milliseconds(10000)) != AT::ReturnType::FINISHED) ||
             (cmd->wasExecutionSuccessful() == false))
@@ -176,7 +151,6 @@ bool ModemDriver::modemStartup(void)
             return false;
         }
     }
-
     return true;
 }
 
@@ -205,12 +179,36 @@ void ModemDriver::modemReset(void)
 void ModemDriver::handleError(void)
 {
     Trace(ZONE_ERROR, "Error\r\n");
-    InputBuffer.reset();
-
-    if (mErrorCount == ERROR_THRESHOLD) {
+    if (mErrorCount >= ERROR_THRESHOLD) {
         mErrorCount = 0;
     }
     mErrorCount++;
+}
+
+void ModemDriver::sendData(void)
+{
+    std::string tmpSendStr(SendBuffer.bytesAvailable(), '\x00');
+    SendBuffer.receive(tmpSendStr.data(), tmpSendStr.length(), 1000);
+
+    auto ret = mATUSOST->send(tmpSendStr, std::chrono::milliseconds(1000));
+
+    if (ret == AT::ReturnType::ERROR) {
+        handleError();
+    } else if (ret == AT::ReturnType::FINISHED) {
+        mTimeOfLastUdpSend = os::Task::getTickCount();
+    }
+}
+
+void ModemDriver::receiveData(size_t bytes)
+{
+    auto ret = mATUSORF->send(bytes, std::chrono::milliseconds(1000));
+    if (ret == AT::ReturnType::FINISHED) {
+        if (mReceiveCallback) {
+            mReceiveCallback(mATUSORF->getData());
+        }
+        ReceiveBuffer.send(mATUSORF->getData().data(), mATUSORF->getData().length(), 1000);
+        Trace(ZONE_INFO, "Data received\r\n");
+    }
 }
 
 size_t ModemDriver::send(std::string_view message, const uint32_t ticksToWait) const

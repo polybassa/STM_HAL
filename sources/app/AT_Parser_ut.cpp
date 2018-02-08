@@ -14,7 +14,6 @@
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>. */
 
 #include "unittest.h"
-#include "AT_Cmd.h"
 #include "AT_Parser.h"
 #include <condition_variable>
 #include <thread>
@@ -74,14 +73,17 @@ int ut_ATParserBasicTest(void)
 {
     TestCaseBegin();
 
-    static std::string testString = "\rRESP2\rOK\rERROR\rOK\r\nPES";
-    static auto pos = testString.begin();
+    static std::string testString = " ";
 
     std::function<size_t(uint8_t*, const size_t, std::chrono::milliseconds)> recv =
     [&](uint8_t * data, const size_t length, std::chrono::milliseconds)->size_t {
         size_t i = 0;
+        static auto pos = testString.begin();
+
         for ( ; i < length && pos != testString.end(); i++) {
             *data = *pos++;
+            os::ThisTask::sleep(std::chrono::milliseconds(100));
+            printf(".");
         }
         return i;
     };
@@ -105,25 +107,40 @@ int ut_ATParserBasicTest(void)
     parser.registerAtCommand(testee4);
     parser.registerAtCommand(testee5);
 
-    auto ret = std::dynamic_pointer_cast<app::ATCmd>(testee2)->send(send);
+    std::thread t0 = std::thread([&]
+                                 {
+                                     for (auto i = 0; i < 20; i++) {
+                                         parser.parse();
+                                         os::ThisTask::sleep(std::chrono::milliseconds(50));
+                                     }
+                                     printf("t0end\r\n");
+                                 });
+    os::ThisTask::sleep(std::chrono::milliseconds(100));
 
-    CHECK(ret == app::AT::ReturnType::WAITING);
+    std::thread t1 = std::thread([&]
+                                 {
+                                     auto ret =
+                                         std::dynamic_pointer_cast<app::ATCmd>(testee2)->send(send,
+                                                                                              std::chrono::milliseconds(
+                                                                                                                        2));
+                                     CHECK(ret == app::AT::ReturnType::FINISHED);
 
-    ret = std::dynamic_pointer_cast<app::ATCmd>(testee3)->send(send);
+                                     ret =
+                                         std::dynamic_pointer_cast<app::ATCmd>(testee3)->send(send,
+                                                                                              std::chrono::milliseconds(
+                                                                                                                        1));
+                                     CHECK(ret == app::AT::ReturnType::FINISHED);
+                                 });
 
-    CHECK(ret == app::AT::ReturnType::TRY_AGAIN);
+    testString += "\rRESP2\rOK\rERROR\rOK\r\nPES";
+    os::ThisTask::sleep(std::chrono::milliseconds(100));
 
-    CHECK(testee2->isCommandFinished() == false)
+    testString += "\r\nOK\r\n";
 
-    parser.parse();
+    t1.join();
+    t0.join();
+    printf("T1End\r\n");
 
-    CHECK(testee2->isCommandFinished() == true)
-
-    ret = std::dynamic_pointer_cast<app::ATCmd>(testee3)->send(send);
-
-    CHECK(ret == app::AT::ReturnType::WAITING);
-
-    CHECK(true == true);
     TestCaseEnd();
 }
 
@@ -179,9 +196,6 @@ int ut_ATParserURCTest(void)
     parser.registerAtCommand(testee5);
 
     parser.parse();
-
-    auto ret = std::dynamic_pointer_cast<app::ATCmd>(testee3)->send(send);
-    CHECK(ret == app::AT::ReturnType::WAITING);
 
     CHECK(urc1sock == 1);
     CHECK(urc2sock == 4711);
@@ -258,8 +272,8 @@ int ut_ATParserUSOSTTest(void)
 int main(int argc, const char* argv[])
 {
     UnitTestMainBegin();
-    RunTest(true, ut_ATParserBasicTest);
-    RunTest(true, ut_ATParserURCTest);
-    RunTest(true, ut_ATParserUSOSTTest);
+    RunTest(false, ut_ATParserBasicTest);
+    RunTest(false, ut_ATParserURCTest);
+    RunTest(false, ut_ATParserUSOSTTest);
     UnitTestMainEnd();
 }

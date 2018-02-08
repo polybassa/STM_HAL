@@ -55,19 +55,13 @@ struct AT {
     const std::string_view mName;
     const std::string_view mResponse;
     ATParser& mParser;
-    const std::chrono::milliseconds mTimeout;
-
-    bool isCommandFinished(void) const;
 
 protected:
 
-    bool mCommandFinished = false;
-
-    AT(std::string_view          name,
-       std::string_view          response,
-       ATParser&                 parser,
-       std::chrono::milliseconds timeout = std::chrono::milliseconds(5000)) :
-        mName(name), mResponse(response), mParser(parser), mTimeout(timeout){};
+    AT(const std::string_view name,
+       const std::string_view response,
+       ATParser&              parser) :
+        mName(name), mResponse(response), mParser(parser){};
     virtual ~AT(void){};
 
     virtual void okReceived(void);
@@ -87,18 +81,16 @@ protected:
     std::string_view mRequest;
     os::Semaphore mSendDone;
 
-    virtual void okReceived(void)  override;
-    virtual void errorReceived(void)  override;
-    virtual ReturnType onResponseMatch(void) override;
+    virtual void okReceived(void) override;
+    virtual void errorReceived(void) override;
 
 public:
 
     ATCmd(std::string_view name, std::string_view request, std::string_view response, ATParser& parser) :
         AT(name, response, parser),
-        mRequest(request), mSendDone(os::Semaphore()) {};
+        mRequest(request), mSendDone() {};
     virtual ~ATCmd(void){};
 
-    ReturnType send(SendFunction& sendFunction);
     ReturnType send(SendFunction& sendFunction, std::chrono::milliseconds timeout);
 
     bool wasExecutionSuccessful(void) const;
@@ -148,12 +140,11 @@ class ATCmdURC final :
     public AT
 {
     virtual ReturnType onResponseMatch(void) override;
-
-    std::function<void(size_t, size_t)>& mUrcReceivedCallback;
+    const std::function<void(size_t, size_t)>& mUrcReceivedCallback;
 
 public:
-    ATCmdURC(std::string_view name, std::string_view response, ATParser & parser,
-             std::function<void(size_t, size_t)> &callback) :
+    ATCmdURC(const std::string_view name, const std::string_view response, ATParser & parser,
+             const std::function<void(size_t, size_t)> &callback) :
         AT(name, response, parser), mUrcReceivedCallback(callback) {}
 };
 
@@ -184,7 +175,7 @@ public:
 struct ATParser {
     static constexpr const size_t BUFFERSIZE = 512;
 
-    ATParser(AT::ReceiveFunction& receive) :
+    ATParser(const AT::ReceiveFunction& receive) :
         mReceive(receive) {}
 
     bool parse(std::chrono::milliseconds timeout = std::chrono::milliseconds(10000));
@@ -197,7 +188,7 @@ struct ATParser {
 protected:
     static std::array<char, BUFFERSIZE> ReceiveBuffer;
 
-    AT::ReceiveFunction& mReceive;
+    const AT::ReceiveFunction& mReceive;
     std::vector<std::shared_ptr<AT> > mRegisteredATCommands;
     std::shared_ptr<AT> mWaitingCmd;
 

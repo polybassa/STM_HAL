@@ -19,11 +19,11 @@
 #include "TaskInterruptable.h"
 #include "DeepSleepInterface.h"
 #include "os_StreamBuffer.h"
+#include "os_Queue.h"
 #include "UsartWithDma.h"
 #include "Gpio.h"
 #include <string>
 #include <string_view>
-#include <vector>
 #include <array>
 #include "AT_Parser.h"
 
@@ -53,10 +53,14 @@ class ModemDriver final :
     AT::SendFunction mSend;
     AT::ReceiveFunction mRecv;
     ATParser mParser;
+    os::Queue<size_t, 1> mNumberOfBytesForReceive;
+
+    const std::shared_ptr<app::ATCmdUSOST> mATUSOST;
+    const std::shared_ptr<app::ATCmdUSORF> mATUSORF;
 
     std::function<void(std::string_view)> mReceiveCallback;
     size_t mErrorCount = 0;
-    std::array<std::shared_ptr<app::ATCmd>, 7> mStartupCommands;
+    size_t mTimeOfLastUdpSend = 0;
 
     void modemTxTaskFunction(const bool&);
     void parserTaskFunction(const bool&);
@@ -66,8 +70,10 @@ class ModemDriver final :
     void modemReset(void);
     bool modemStartup(void);
 
-    bool sendHelloMessage(void);
     void handleError(void);
+
+    void sendData(void);
+    void receiveData(size_t);
 
 public:
     ModemDriver(const hal::UsartWithDma & interface,
