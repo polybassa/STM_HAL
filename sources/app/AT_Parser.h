@@ -21,115 +21,189 @@
 #include <functional>
 #include <chrono>
 #include <vector>
-#include "for_each_tuple.h"
+#include <memory>
+#include "Semaphore.h"
+
+#define AT_CMD_IP "91.7.35.73"
+#define AT_CMD_PORT "60017"
+
+#define AT_CMD_USOST "AT+USOST=0,\"" AT_CMD_IP "\"," AT_CMD_PORT ","
+#define AT_CMD_USOCO "AT+USOCO=0,\"" AT_CMD_IP "\"," AT_CMD_PORT "\r"
 
 namespace app
 {
 class ATParser;
+class ATCmd;
+class ATCmdOK;
+class ATCmdERROR;
 
 struct AT {
     using ReceiveFunction = std::function<size_t(uint8_t*, const size_t, std::chrono::milliseconds)>;
     using SendFunction = std::function<size_t(std::string_view, std::chrono::milliseconds)>;
 
+    static constexpr const std::string_view DEFAULT_IP = AT_CMD_IP;
+    static constexpr const std::string_view DEFAULT_PORT = AT_CMD_PORT;
+
     enum class ReturnType
     {
         FINISHED,
         WAITING,
-        ERROR
+        ERROR,
+        TRY_AGAIN
     };
 
     const std::string_view mName;
     const std::string_view mResponse;
+    ATParser& mParser;
+    const std::chrono::milliseconds mTimeout;
 
     bool isCommandFinished(void) const;
-
-    AT(std::string_view name, std::string_view response) :
-        mName(name), mResponse(response) {};
 
 protected:
 
     bool mCommandFinished = false;
 
-    void okReceived(void) const;
-    void errorReceived(void) const;
-    ReturnType onResponseMatch(AT::ReceiveFunction&) const;
+    AT(std::string_view          name,
+       std::string_view          response,
+       ATParser&                 parser,
+       std::chrono::milliseconds timeout = std::chrono::milliseconds(5000)) :
+        mName(name), mResponse(response), mParser(parser), mTimeout(timeout){};
+    virtual ~AT(void){};
+
+    virtual void okReceived(void);
+    virtual void errorReceived(void);
+    virtual ReturnType onResponseMatch(void);
 
     friend class ATParser;
+    friend class ATCmdERROR;
+    friend class ATCmdOK;
 };
 
 class ATCmd :
-    public AT
+    public AT, public std::enable_shared_from_this<ATCmd>
 {
-    const std::string_view mRequest;
+protected:
+    bool mCommandSuccess = false;
+    std::string_view mRequest;
+    os::Semaphore mSendDone;
+
+    virtual void okReceived(void)  override;
+    virtual void errorReceived(void)  override;
+    virtual ReturnType onResponseMatch(void) override;
 
 public:
 
-    ATCmd(std::string_view name, std::string_view request, std::string_view response) :
-        AT(name, response),
-        mRequest(request) {};
+    ATCmd(std::string_view name, std::string_view request, std::string_view response, ATParser& parser) :
+        AT(name, response, parser),
+        mRequest(request), mSendDone(os::Semaphore()) {};
+    virtual ~ATCmd(void){};
+
+    ReturnType send(SendFunction& sendFunction);
+    ReturnType send(SendFunction& sendFunction, std::chrono::milliseconds timeout);
+
+    bool wasExecutionSuccessful(void) const;
 };
 
-class ATCmdOK_ERROR final :
-    public AT
+class ATCmdUSOST final :
+    public ATCmd
 {
-    std::function<void(void)>& mWaitingCmd;
-    ReturnType onResponseMatch(AT::ReceiveFunction&) const;
+    size_t mSocket = 0;
+    std::string mIp = std::string(DEFAULT_IP.data(), DEFAULT_IP.length());
+    std::string mPort = std::string(DEFAULT_PORT.data(), DEFAULT_PORT.length());
+    std::string_view mData;
+    SendFunction& mSendFunction;
+    bool mWaitingForPrompt = false;
+    virtual ReturnType onResponseMatch(void) override;
 
 public:
-    ATCmdOK_ERROR(std::string_view name, std::string_view response, std::function<void(void)> &waitingCmdCallback) :
-        AT(name, response), mWaitingCmd(waitingCmdCallback) {};
+    ATCmdUSOST(SendFunction & send, ATParser & parser) :
+        ATCmd("AT+USOST", "", "@", parser), mSendFunction(send){}
 
+    ReturnType send(std::string_view data, std::chrono::milliseconds timeout);
+};
+
+class ATCmdUSORF final :
+    public ATCmd
+{
+    size_t mSocket = 0;
+    std::string mIp = std::string(DEFAULT_IP.data(), DEFAULT_IP.length());
+    std::string mPort = std::string(DEFAULT_PORT.data(), DEFAULT_PORT.length());
+    std::string mData;
+    SendFunction& mSendFunction;
+    virtual ReturnType onResponseMatch(void) override;
+
+public:
+    ATCmdUSORF(SendFunction & send, ATParser & parser) :
+        ATCmd("AT+USORF", "", "+USORF:", parser), mSendFunction(send){}
+
+    ReturnType send(size_t bytesToRead, std::chrono::milliseconds timeout);
+
+    const std::string& getData(void) const
+    {
+        return mData;
+    }
+};
+
+class ATCmdURC final :
+    public AT
+{
+    virtual ReturnType onResponseMatch(void) override;
+
+    std::function<void(size_t, size_t)>& mUrcReceivedCallback;
+
+public:
+    ATCmdURC(std::string_view name, std::string_view response, ATParser & parser,
+             std::function<void(size_t, size_t)> &callback) :
+        AT(name, response, parser), mUrcReceivedCallback(callback) {}
+};
+
+class ATCmdOK final :
+    public AT
+{
+    ReturnType onResponseMatch(void) override;
+
+public:
+    ATCmdOK(ATParser & parser) :
+        AT("CMD_OK", "OK\r", parser) {};
+    virtual ~ATCmdOK(void){};
+    friend class ATParser;
+};
+
+class ATCmdERROR final :
+    public AT
+{
+    ReturnType onResponseMatch(void) override;
+
+public:
+    ATCmdERROR(ATParser & parser) :
+        AT("CMD_ERROR", "ERROR\r", parser) {};
+    virtual ~ATCmdERROR(void){};
     friend class ATParser;
 };
 
 struct ATParser {
-    ATParser(AT::SendFunction&         send,
-             AT::ReceiveFunction&      receive,
-             std::chrono::milliseconds timeout = std::chrono::milliseconds(6000)) :
-        mSend(send), mReceive(receive), mTimeout(timeout) {}
+    static constexpr const size_t BUFFERSIZE = 512;
 
-    bool parse(void) const;
+    ATParser(AT::ReceiveFunction& receive) :
+        mReceive(receive) {}
+
+    bool parse(std::chrono::milliseconds timeout = std::chrono::milliseconds(10000));
+    void registerAtCommand(std::shared_ptr<AT> cmd);
+    std::string_view getLineFromInput(std::chrono::milliseconds timeout = std::chrono::milliseconds(500)) const;
+    std::string_view getInputUntilComma(std::chrono::milliseconds timeout = std::chrono::milliseconds(500)) const;
+    std::string_view getBytesFromInput(size_t                    numberOfBytes,
+                                       std::chrono::milliseconds timeout = std::chrono::milliseconds(500)) const;
 
 protected:
-    static constexpr const size_t BUFFERSIZE = 512;
-    AT::SendFunction& mSend;
-    AT::ReceiveFunction& mReceive;
-    std::chrono::milliseconds mTimeout;
-
     static std::array<char, BUFFERSIZE> ReceiveBuffer;
 
-    static std::function<void(void)> placeholder1;
-    static std::function<void(void)> placeholder2;
+    AT::ReceiveFunction& mReceive;
+    std::vector<std::shared_ptr<AT> > mRegisteredATCommands;
+    std::shared_ptr<AT> mWaitingCmd;
 
-    std::function<void(void)>& mWaitingCmdOk = placeholder1;
-    std::function<void(void)>& mWaitingCmdError = placeholder2;
-
-    std::tuple<ATCmd, ATCmd, ATCmd, ATCmdOK_ERROR, ATCmdOK_ERROR> SupportedAtCmds {
-        ATCmd("CMD_1", "REQ1", "RESP1"),
-        ATCmd("CMD_2", "REQ2", "RESP2"),
-        ATCmd("CMD_3", "REQ3", "REsp3"),
-        ATCmdOK_ERROR("CMD_OK", "OK\r", mWaitingCmdOk),
-        ATCmdOK_ERROR("CMD_ERROR", "ERROR\r", mWaitingCmdError)
-    };
-
-    template<typename ... types>
-    decltype(auto) getAllResponses(void) const
-    {
-        std::vector<std::tuple<std::string_view, std::function<AT::ReturnType(AT::ReceiveFunction&)>,
-                               std::function<void(void)>, std::function<void(void)> > > possibleResponses;
-
-        for_each(SupportedAtCmds, [&possibleResponses](const auto & x){
-                     possibleResponses.push_back(std::make_tuple(
-                                                                 x.mResponse,
-                                                                 [&x](AT::ReceiveFunction & recv)->AT::ReturnType
-                                                                 {
-                                                                     return x.onResponseMatch(recv);
-                                                                 },
-                                                                 [&x] {x.okReceived(); },
-                                                                 [&x] {x.errorReceived(); }));
-                 });
-        return possibleResponses;
-    }
+    friend class ATCmdOK;
+    friend class ATCmdERROR;
+    friend class ATCmd;
 };
 }
 

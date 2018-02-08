@@ -176,7 +176,7 @@ bool ReceiveAtCmd::process(std::string& receivedData, bool poll) const
         return false;
     }
 
-    size_t availableBytes = std::stoi(std::string(responseParts[2].data(), responseParts[2].length()));
+    size_t availableBytes = std::stoul(std::string(responseParts[2].data(), responseParts[2].length()));
 
     if (availableBytes == 0) {
         return false;
@@ -220,7 +220,7 @@ bool ReceiveAtCmd::process(std::string& receivedData, bool poll) const
         return false;
     }
 
-    size_t datalength = std::stoi(std::string(datalengthstring.data(), datalengthstring.length()));
+    size_t datalength = std::stoul(std::string(datalengthstring.data(), datalengthstring.length()));
 
     Trace(ZONE_INFO, "DataLength %lu\r\n", datalength);
 

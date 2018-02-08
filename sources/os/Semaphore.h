@@ -37,7 +37,7 @@ public:
 
     bool take(void) const {return this->take(portMAX_DELAY); }
     template<class rep, class period>
-    bool take(const std::chrono::duration<rep, period>& d)
+    bool take(const std::chrono::duration<rep, period>& d) const
     {
         return take(std::chrono::duration_cast<std::chrono::milliseconds>(d).count() / portTICK_RATE_MS);
     }

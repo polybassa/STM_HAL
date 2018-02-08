@@ -19,10 +19,11 @@
 #include "UsartWithDma.h"
 #include "trace.h"
 #include "ModemDriver.h"
+#include "AT_Parser.h"
 
-static const int __attribute__((unused)) g_DebugZones = 0; // ZONE_ERROR | ZONE_WARNING | ZONE_VERBOSE | ZONE_INFO;
+static const int __attribute__((unused)) g_DebugZones = ZONE_ERROR | ZONE_WARNING | ZONE_VERBOSE | ZONE_INFO;
 
-os::TaskEndless modemTest("MODEM_Test", 1024, os::Task::Priority::LOW, [] (const bool&){
+os::TaskEndless modemTest("MODEM_Test", 4096, os::Task::Priority::LOW, [] (const bool&){
                               constexpr const hal::Usart& debug =
                                   hal::Factory<hal::Usart>::get<hal::Usart::DEBUG_IF>();
 
@@ -37,10 +38,12 @@ os::TaskEndless modemTest("MODEM_Test", 1024, os::Task::Priority::LOW, [] (const
                               {
                                   auto str = std::string(data.data(), data.length());
                                   Trace(ZONE_INFO, "Received %s\r\n", str.c_str());
-                                  debug.send(reinterpret_cast<const uint8_t*>("data:"), 5);
-                                  debug.send(reinterpret_cast<const uint8_t*>(data.data()), data.length());
                               };
                               modem->registerReceiveCallback(callback);
+                              os::ThisTask::sleep(std::chrono::milliseconds(300));
+                              os::ThisTask::sleep(std::chrono::milliseconds(300));
+                              os::ThisTask::sleep(std::chrono::milliseconds(300));
+                              Trace(ZONE_INFO, "Startup\r\n");
 
                               while (true) {
                                   os::ThisTask::sleep(std::chrono::milliseconds(300));
@@ -52,6 +55,5 @@ os::TaskEndless modemTest("MODEM_Test", 1024, os::Task::Priority::LOW, [] (const
                                   Trace(ZONE_INFO, "loop\r\n");
 
                                   os::ThisTask::sleep(std::chrono::milliseconds(300));
-                                  debug.send(reinterpret_cast<const uint8_t*>("Hello "), 6);
                               }
                           });

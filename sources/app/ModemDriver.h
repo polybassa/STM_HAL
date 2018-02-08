@@ -24,7 +24,8 @@
 #include <string>
 #include <string_view>
 #include <vector>
-#include "AT_Cmd.h"
+#include <array>
+#include "AT_Parser.h"
 
 namespace app
 {
@@ -42,26 +43,29 @@ class ModemDriver final :
     static os::StreamBuffer<uint8_t, BUFFERSIZE> ReceiveBuffer;
 
     os::TaskInterruptable mModemTxTask;
+    os::TaskInterruptable mParserTask;
 
     const hal::UsartWithDma& mInterface;
     const hal::Gpio& mModemReset;
     const hal::Gpio& mModemPower;
     const hal::Gpio& mModemSupplyVoltage;
 
-    AtCmd::SendFunction mSend;
-    AtCmd::ReceiveFunction mRecv;
+    AT::SendFunction mSend;
+    AT::ReceiveFunction mRecv;
+    ATParser mParser;
 
     std::function<void(std::string_view)> mReceiveCallback;
-
     size_t mErrorCount = 0;
+    std::array<std::shared_ptr<app::ATCmd>, 7> mStartupCommands;
 
     void modemTxTaskFunction(const bool&);
+    void parserTaskFunction(const bool&);
 
     void modemOn(void) const;
     void modemOff(void) const;
     void modemReset(void);
-
     bool modemStartup(void);
+
     bool sendHelloMessage(void);
     void handleError(void);
 

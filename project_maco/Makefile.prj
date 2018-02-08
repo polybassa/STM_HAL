@@ -90,6 +90,7 @@ ${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/TaskInterruptable.o
 # App Layer
 ${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/ModemDriver.o
 ${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/AT_Cmd.o
+${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/AT_Parser.o
 
 #PMD TestApps
 #${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/TestGpio.o
