@@ -69,6 +69,69 @@ bool os::Semaphore::take(uint32_t ticksToWait) const
 
 //-------------------------TESTCASES-------------------------
 
+int ut_BasicTest(void)
+{
+    TestCaseBegin();
+
+    std::condition_variable cv;
+    std::mutex cv_m;
+    int i = 0;
+
+    auto waits = [&](int j)
+    {
+        printf("Sleep %d\r\n", j);
+
+        std::unique_lock<std::mutex> lk(cv_m);
+        cv.wait(lk, [&] {return j == i;
+                });
+        printf("Hello %d\r\n", j);
+    };
+
+    auto signals = [&]
+    {
+        printf("Signal");
+
+        std::this_thread::sleep_for(std::chrono::seconds(1));
+        {
+            std::lock_guard<std::mutex> lk(cv_m);
+        }
+        cv.notify_all();
+
+        std::this_thread::sleep_for(std::chrono::seconds(1));
+
+        {
+            std::lock_guard<std::mutex> lk(cv_m);
+            i = 1;
+        }
+        cv.notify_all();
+        std::this_thread::sleep_for(std::chrono::seconds(1));
+
+        {
+            std::lock_guard<std::mutex> lk(cv_m);
+            i = 2;
+        }
+        cv.notify_all();
+        std::this_thread::sleep_for(std::chrono::seconds(1));
+
+        {
+            std::lock_guard<std::mutex> lk(cv_m);
+            i = 3;
+        }
+        cv.notify_all();
+        std::this_thread::sleep_for(std::chrono::seconds(1));
+    };
+
+    std::thread t1(waits, 1), t2(waits, 2), t3(waits, 3), t4(signals);
+    printf("Wait \r\n");
+
+    t1.join();
+    t2.join();
+    t3.join();
+    t4.join();
+
+    TestCaseEnd();
+}
+
 int ut_ATParserBasicTest(void)
 {
     TestCaseBegin();
@@ -272,6 +335,7 @@ int ut_ATParserUSOSTTest(void)
 int main(int argc, const char* argv[])
 {
     UnitTestMainBegin();
+    RunTest(true, ut_BasicTest);
     RunTest(false, ut_ATParserBasicTest);
     RunTest(false, ut_ATParserURCTest);
     RunTest(false, ut_ATParserUSOSTTest);

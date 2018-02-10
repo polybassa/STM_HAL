@@ -211,8 +211,12 @@ bool ATParser::parse(std::chrono::milliseconds timeout)
 {
     size_t currentPos = 0;
     auto possibleResponses = mRegisteredATCommands;
-    Trace(ZONE_INFO, "Start Parser and reset waiting cmd\r\n");
-    mWaitingCmd.reset();
+    Trace(ZONE_INFO, "Start Parser\r\n");
+
+    if (mWaitingCmd) {
+        Trace(ZONE_INFO, "Toogle Error on waiting cmd\r\n");
+        mWaitingCmd->errorReceived();
+    }
 
     while (true) {
         if (mReceive(reinterpret_cast<uint8_t*>(ReceiveBuffer.data() + currentPos++), 1, timeout) != 1) {
