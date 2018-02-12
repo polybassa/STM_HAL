@@ -264,7 +264,7 @@ int ut_UndervoltageTest(void)
     TestCaseEnd();
 }
 
-int ut_DeepSleep(void)
+int ut_ATParser(void)
 {
     TestCaseBegin();
 
@@ -324,6 +324,6 @@ int main(int argc, const char* argv[])
     RunTest(true, ut_LoadAndDischargeBattery);
     RunTest(true, ut_OvercurrentTest);
     RunTest(true, ut_UndervoltageTest);
-    RunTest(true, ut_DeepSleep);
+    RunTest(true, ut_ATParser);
     UnitTestMainEnd();
 }
