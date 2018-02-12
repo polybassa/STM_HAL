@@ -5,7 +5,7 @@ IPATH+=${ROOT}/sources/os
 IPATH+=${ROOT}/sources/dev
 IPATH+=${ROOT}/sources/interface
 IPATH+=${ROOT}/sources/utility
-IPATH+=${ROOT}/sources/hal
+IPATH+=${ROOT}/sources/hal_stm32f30x
 IPATH+=${RTOS_SOURCE_DIR}/include
 IPATH+=${RTOS_SOURCE_DIR}/portable/GCC/ARM_CM4F
 IPATH+=${ROOT}/libraries/STM32F30x_StdPeriph_Driver/inc
@@ -23,7 +23,7 @@ VPATH+=${ROOT}/sources/dev
 VPATH+=${ROOT}/sources/os
 VPATH+=${ROOT}/sources/app
 VPATH+=${ROOT}/sources/interface
-VPATH+=${ROOT}/sources/hal
+VPATH+=${ROOT}/sources/hal_stm32f30x
 
 ####################################DebugInterface############################################
 

@@ -51,7 +51,14 @@ extern "C" {
 #include <stdint.h>
 #include <sys/time.h>
 #include <unistd.h>
+
+#if defined (STM32F303xC) || defined (STM32F334x8) || defined (STM32F302x8) || defined (STM32F303xE)
 #include "stm32f30x.h"
+#endif
+#if defined (STM32F10X_LD) || defined (STM32F10X_LD_VL) || defined (STM32F10X_MD) || defined (STM32F10X_HD) || \
+    defined (STM32F10X_HD_VL) || defined (STM32F10X_XL) || defined (STM32F10X_CL)
+#include "stm32f10x.h"
+#endif
 /*
  | module variables
  */

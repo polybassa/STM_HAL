@@ -68,6 +68,7 @@ Notes:
 #ifndef SYSVIEW_FREERTOS_H
 #define SYSVIEW_FREERTOS_H
 
+
 #include "SEGGER_SYSVIEW.h"
 
 /*********************************************************************
@@ -195,9 +196,11 @@ Notes:
 #define apiID_VEVENTGROUPDELETE                   (103u)
 #define apiID_UXEVENTGROUPGETNUMBER               (104u)
 
+#ifdef SYSVIEW
+
 #define traceTASK_NOTIFY_TAKE()                                       SEGGER_SYSVIEW_RecordU32x2(apiID_OFFSET + apiID_ULTASKNOTIFYTAKE, xClearCountOnExit, xTicksToWait)
 #define traceTASK_DELAY()                                             SEGGER_SYSVIEW_RecordU32(apiID_OFFSET + apiID_VTASKDELAY, xTicksToDelay)
-#define traceTASK_DELAY_UNTIL()                                       SEGGER_SYSVIEW_RecordVoid(apiID_OFFSET + apiID_VTASKDELAYUNTIL)
+#define traceTASK_DELAY_UNTIL(x)                                      SEGGER_SYSVIEW_RecordVoid(apiID_OFFSET + apiID_VTASKDELAYUNTIL)
 #define traceTASK_DELETE( pxTCB )                                     SEGGER_SYSVIEW_RecordU32(apiID_OFFSET + apiID_VTASKDELETE, SEGGER_SYSVIEW_ShrinkId((U32)pxTCB))
 #define traceTASK_NOTIFY_GIVE_FROM_ISR()                              SEGGER_SYSVIEW_RecordU32x2(apiID_OFFSET + apiID_VTASKNOTIFYGIVEFROMISR, SEGGER_SYSVIEW_ShrinkId((U32)pxTCB), (U32)pxHigherPriorityTaskWoken)
 #define traceTASK_PRIORITY_INHERIT( pxTCB, uxPriority )               SEGGER_SYSVIEW_RecordU32(apiID_OFFSET + apiID_VTASKPRIORITYINHERIT, (U32)pxMutexHolder)
@@ -310,6 +313,8 @@ void SYSVIEW_RecordU32x5  (unsigned Id, U32 Para0, U32 Para1, U32 Para2, U32 Par
 
 #ifdef __cplusplus
 }
+#endif
+
 #endif
 
 #endif

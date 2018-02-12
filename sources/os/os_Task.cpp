@@ -14,9 +14,18 @@
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>. */
 
 #include "os_Task.h"
+
+#if defined (STM32F303xC) || defined (STM32F334x8) || defined (STM32F302x8) || defined (STM32F303xE)
 #include "stm32f30x_it.h"
 #include "stm32f30x_misc.h"
 #include "system_stm32f30x.h"
+#endif
+#if defined (STM32F10X_LD) || defined (STM32F10X_LD_VL) || defined (STM32F10X_MD) || defined (STM32F10X_HD) || \
+    defined (STM32F10X_HD_VL) || defined (STM32F10X_XL)
+#include "stm32f10x_it.h"
+#include "misc.h"
+#include "system_stm32f10x.h"
+#endif
 
 using os::Task;
 

@@ -22,15 +22,25 @@
 #define ZONE_VERBOSE 0x00000008
 
 #if defined(UNITTEST)
-#define Trace(ZONE, ...)
+#define Trace(ZONE, ...) do { \
+        if (g_DebugZones & (ZONE)) { \
+            printf("%s:%u: ", __FILE__, __LINE__); \
+            printf(__VA_ARGS__); \
+        } \
+} while (0)
 #define TraceInit()
 #else
 
 #if defined(DEBUG)
+#if defined(USART_DEBUG)
+#include "DebugInterface.h"
+
+static dev::DebugInterface terminal;
+#else
 #include "RealTimeDebugInterface.h"
 
 static dev::RealTimeDebugInterface& terminal = dev::RealTimeDebugInterface::instance();
-
+#endif
 #define Trace(ZONE, ...) do { \
         if (g_DebugZones & (ZONE)) { \
             terminal.printf("%s:%u: ", __FILE__, __LINE__); \
