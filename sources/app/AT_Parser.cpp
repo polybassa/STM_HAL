@@ -26,7 +26,7 @@ using app::ATCmdUSORF;
 using app::ATCmdUSOST;
 using app::ATParser;
 
-static const int __attribute__((unused)) g_DebugZones = ZONE_ERROR | ZONE_WARNING | ZONE_VERBOSE | ZONE_INFO;
+static const int __attribute__((unused)) g_DebugZones = 0; // ZONE_ERROR | ZONE_WARNING | ZONE_VERBOSE | ZONE_INFO;
 
 void AT::okReceived(void)
 {
@@ -60,7 +60,6 @@ AT::ReturnType ATCmd::send(AT::SendFunction& sendFunction, std::chrono::millisec
     mParser.mWaitingCmd = this->shared_from_this();
 
     if (mSendDone.take(timeout) && mCommandSuccess) {
-        Trace(ZONE_INFO, "Send Done %s\n", mName.data());
         return ReturnType::FINISHED;
     }
     return ReturnType::ERROR;
@@ -105,7 +104,6 @@ AT::ReturnType ATCmdUSOST::onResponseMatch(void)
     if (!mWaitingForPrompt) {
         return ReturnType::ERROR;
     }
-    Trace(ZONE_INFO, "Got prompt %s\n", mName.data());
     if (mSendFunction(mData, std::chrono::milliseconds(100)) != mData.length()) {
         Trace(ZONE_ERROR, "Couldn't send data\n");
         return ReturnType::ERROR;
@@ -151,8 +149,6 @@ AT::ReturnType ATCmdUSORF::onResponseMatch(void)
     }
     auto bytesAvailable = std::stoul(std::string(bytesAvailablestring.data(), bytesAvailablestring.length()));
 
-    Trace(ZONE_INFO, "DataLength %lu\r\n", bytesAvailable);
-
     auto datastring = mParser.getBytesFromInput(bytesAvailable + 2);
     if (datastring.length() < bytesAvailable) {
         return ReturnType::ERROR;
@@ -185,9 +181,7 @@ AT::ReturnType ATCmdURC::onResponseMatch(void)
 
 AT::ReturnType ATCmdOK::onResponseMatch(void)
 {
-    Trace(ZONE_INFO, "OK Match\r\n");
     if (mParser.mWaitingCmd) {
-        Trace(ZONE_INFO, "Not Expired\r\n");
         mParser.mWaitingCmd->okReceived();
         mParser.mWaitingCmd.reset();
         return ReturnType::FINISHED;
