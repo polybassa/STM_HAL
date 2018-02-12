@@ -35,7 +35,7 @@ class ModemDriver final :
     virtual void enterDeepSleep(void) override;
     virtual void exitDeepSleep(void) override;
 
-    static constexpr size_t STACKSIZE = 4096;
+    static constexpr size_t STACKSIZE = 2048;
     static constexpr size_t BUFFERSIZE = 512;
     static constexpr size_t ERROR_THRESHOLD = 20;
     static os::StreamBuffer<uint8_t, BUFFERSIZE> InputBuffer;
@@ -90,6 +90,8 @@ public:
 
     size_t send(std::string_view, const uint32_t ticksToWait = portMAX_DELAY) const;
     size_t receive(uint8_t *, size_t, uint32_t ticksToWait = portMAX_DELAY) const;
+
+    size_t bytesAvailable(void) const;
 
     void registerReceiveCallback(std::function<void(std::string_view)> );
     void unregisterReceiveCallback(void);

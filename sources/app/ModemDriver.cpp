@@ -145,7 +145,7 @@ bool ModemDriver::modemStartup(void)
 
     for (const auto& cmd : startupCommands) {
         os::ThisTask::sleep(std::chrono::milliseconds(2000));
-        if ((cmd->send(mSend, std::chrono::milliseconds(10000)) != AT::ReturnType::FINISHED) ||
+        if ((cmd->send(mSend, std::chrono::milliseconds(10000)) != AT::Return_t::FINISHED) ||
             (cmd->wasExecutionSuccessful() == false))
         {
             return false;
@@ -192,9 +192,9 @@ void ModemDriver::sendData(void)
 
     auto ret = mATUSOST->send(tmpSendStr, std::chrono::milliseconds(1000));
 
-    if (ret == AT::ReturnType::ERROR) {
+    if (ret == AT::Return_t::ERROR) {
         handleError();
-    } else if (ret == AT::ReturnType::FINISHED) {
+    } else if (ret == AT::Return_t::FINISHED) {
         mTimeOfLastUdpSend = os::Task::getTickCount();
     }
 }
@@ -202,11 +202,12 @@ void ModemDriver::sendData(void)
 void ModemDriver::receiveData(size_t bytes)
 {
     auto ret = mATUSORF->send(bytes, std::chrono::milliseconds(1000));
-    if (ret == AT::ReturnType::FINISHED) {
+    if (ret == AT::Return_t::FINISHED) {
         if (mReceiveCallback) {
             mReceiveCallback(mATUSORF->getData());
+        } else {
+            ReceiveBuffer.send(mATUSORF->getData().data(), mATUSORF->getData().length(), 1000);
         }
-        ReceiveBuffer.send(mATUSORF->getData().data(), mATUSORF->getData().length(), 1000);
         Trace(ZONE_INFO, "Data received\r\n");
     }
 }
@@ -225,6 +226,11 @@ size_t ModemDriver::receive(uint8_t* message, size_t length, uint32_t ticksToWai
         return length;
     }
     return 0;
+}
+
+size_t ModemDriver::bytesAvailable(void) const
+{
+    return ReceiveBuffer.bytesAvailable();
 }
 
 void ModemDriver::registerReceiveCallback(std::function<void(std::string_view)> f)
