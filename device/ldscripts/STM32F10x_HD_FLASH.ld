@@ -36,14 +36,15 @@ ENTRY(Reset_Handler)
 _estack = 0x20009FFF;    /* end of 64K RAM */
 
 /* Generate a link error if heap and stack don't fit into RAM */
-_Min_Heap_Size = 0x3000;      /* required amount of heap  */
+_Min_Heap_Size = 0x4000;      /* required amount of heap  */
 _Min_Stack_Size = 0x4000; /* required amount of stack */
 
 /* Specify the memory areas */
 MEMORY
 {
   FLASH (rx)      : ORIGIN = 0x08000000, LENGTH = 512K
-  RAM (xrw)       : ORIGIN = 0x20000000, LENGTH = 64K
+  RCE_RAM (xrw)   : ORIGIN = 0x20000000, LENGTH = 1K
+  RAM (xrw)       : ORIGIN = 0x20000400, LENGTH = 63K
   MEMORY_B1 (rx)  : ORIGIN = 0x60000000, LENGTH = 0K
 }
 
@@ -130,21 +131,30 @@ SECTIONS
     KEEP (*(SORT(.fini_array.*)))
     PROVIDE_HIDDEN (__fini_array_end = .);
   } >FLASH
-
+  
+  .rce :{
+    . = ALIGN(4);
+    _rce_start = .;
+  	KEEP(*(.rce))
+  	KEEP(*(.rce*))
+  	. = . + 5;
+  	. = ALIGN(0x400);
+  	_rce_end = .;
+  } >RCE_RAM
+  
   /* used by the startup to initialize data */
-  _sidata = .;
+  _sidata = LOADADDR(.data);
 
   /* Initialized data sections goes into RAM, load LMA copy after code */
-  .data : AT ( _sidata )
+  .data :
   {
     . = ALIGN(4);
     _sdata = .;        /* create a global symbol at data start */
     *(.data)           /* .data sections */
     *(.data*)          /* .data* sections */
-
     . = ALIGN(4);
     _edata = .;        /* define a global symbol at data end */
-  } >RAM
+  } >RAM AT> FLASH
 
   /* Uninitialized data section */
   . = ALIGN(4);
@@ -168,11 +178,16 @@ SECTIONS
   /* User_heap_stack section, used to check that there is enough RAM left */
   ._user_heap_stack :
   {
-    . = ALIGN(4);
+      . = ALIGN(4);
+	PROVIDE(__heap_start = .);
+    PROVIDE ( end = . );
+    PROVIDE ( _end = . );
     . = . + _Min_Heap_Size;
     . = . + _Min_Stack_Size;
     . = ALIGN(4);
+	PROVIDE(__heap_end = .);
   } >RAM
+ 
 
   /* MEMORY_bank1 section, code must be located here explicitly            */
   /* Example: extern int foo(void) __attribute__ ((section (".mb1text"))); */

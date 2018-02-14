@@ -134,7 +134,7 @@ int ut_BasicTest(void)
         }
         auto ret =
             std::dynamic_pointer_cast<app::ATCmd>(testee3)->send(send, std::chrono::milliseconds(2000));
-        CHECK(ret == app::AT::ReturnType::FINISHED);
+        CHECK(ret == app::AT::Return_t::FINISHED);
     };
 
     auto send2 = [&](int j = 0)
@@ -149,7 +149,7 @@ int ut_BasicTest(void)
         }
         auto ret =
             std::dynamic_pointer_cast<app::ATCmd>(testee2)->send(send, std::chrono::milliseconds(2000));
-        CHECK(ret == app::AT::ReturnType::FINISHED);
+        CHECK(ret == app::AT::Return_t::FINISHED);
     };
 
     auto parse = [&](int j = 1)
@@ -342,7 +342,7 @@ int ut_USOSTTest(void)
         }
         auto ret =
             std::dynamic_pointer_cast<app::ATCmd>(testee3)->send(send, std::chrono::milliseconds(2000));
-        CHECK(ret == app::AT::ReturnType::FINISHED);
+        CHECK(ret == app::AT::Return_t::FINISHED);
     };
 
     auto send2 = [&](int j = 0)
@@ -356,7 +356,7 @@ int ut_USOSTTest(void)
             Trace(ZONE_INFO, "Hello %d\r\n", j);
         }
         auto ret = std::dynamic_pointer_cast<app::ATCmdUSOST>(testee1)->send("hello", std::chrono::milliseconds(1000));
-        CHECK(ret == app::AT::ReturnType::FINISHED);
+        CHECK(ret == app::AT::Return_t::FINISHED);
     };
 
     auto parse = [&](int j = 1)
@@ -480,7 +480,7 @@ int ut_TimeoutTest(void)
         }
         auto ret =
             std::dynamic_pointer_cast<app::ATCmd>(testee3)->send(send, std::chrono::milliseconds(2000));
-        CHECK(ret == app::AT::ReturnType::TRY_AGAIN);
+        CHECK(ret == app::AT::Return_t::TRY_AGAIN);
     };
 
     auto send2 = [&](int j = 0)
@@ -494,7 +494,7 @@ int ut_TimeoutTest(void)
         }
         auto ret =
             std::dynamic_pointer_cast<app::ATCmd>(testee2)->send(send, std::chrono::milliseconds(2000));
-        CHECK(ret == app::AT::ReturnType::ERROR);
+        CHECK(ret == app::AT::Return_t::ERROR);
     };
 
     auto parse = [&](int j = 1)

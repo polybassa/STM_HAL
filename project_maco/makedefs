@@ -148,7 +148,7 @@ LDSCRIPT = ${ROOT}/device/ldscripts/STM32F303VC_FLASH.ld
 endif
 
 ifeq (${DEVICE}, STM32F10X_HD)
-LDSCRIPT = ${ROOT}/device/ldscripts/STM32F303VC_FLASH.ld
+LDSCRIPT = ${ROOT}/device/ldscripts/STM32F10x_HD_FLASH.ld
 endif
 
 # Add the include file paths to AFLAGS and CFLAGS.
@@ -187,8 +187,9 @@ ${BINDIR}/%.a:
 
 ${BINDIR}/%.elf:
 	 @${CPP} -T ${LDSCRIPT} ${LDFLAGS} ${LIBPATHS} -o ${@} $(filter %.o %.a, ${?}) ${LIBRARYS} 
-	 @${OBJCOPY} -O binary ${@} ${@:.elf=.bin}
-	 @${OBJCOPY} -O ihex ${@} ${@:.elf=.hex}
+	 @${OBJCOPY} -O binary --remove-section=.rce ${@} ${@:.elf=.bin}
+	 @${OBJCOPY} -O binary --only-section=.rce ${@} ${@:.elf=.rce}
+	 @${OBJCOPY} -O ihex --remove-section=.rce ${@} ${@:.elf=.hex}
 	 @${PREFIX}objdump -D ${@} > ${@:.elf=.lst}
 	 @echo LD ${@} for ${DEVICE}
 	 @${SIZE} ${@}

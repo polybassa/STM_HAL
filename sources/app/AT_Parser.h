@@ -24,7 +24,7 @@
 #include <memory>
 #include "Semaphore.h"
 
-#define AT_CMD_IP "91.7.35.73"
+#define AT_CMD_IP "91.7.34.61"
 #define AT_CMD_PORT "60017"
 
 #define AT_CMD_USOST "AT+USOST=0,\"" AT_CMD_IP "\"," AT_CMD_PORT ","
@@ -41,7 +41,7 @@ struct AT {
     using ReceiveFunction = std::function<size_t(uint8_t*, const size_t, std::chrono::milliseconds)>;
     using SendFunction = std::function<size_t(std::string_view, std::chrono::milliseconds)>;
 
-    enum class ReturnType
+    enum class Return_t
     {
         FINISHED,
         WAITING,
@@ -63,7 +63,7 @@ protected:
 
     virtual void okReceived(void);
     virtual void errorReceived(void);
-    virtual ReturnType onResponseMatch(void);
+    virtual Return_t onResponseMatch(void);
 
     friend class ATParser;
     friend class ATCmdERROR;
@@ -88,7 +88,7 @@ public:
         mRequest(request), mSendDone() {};
     virtual ~ATCmd(void){};
 
-    ReturnType send(SendFunction& sendFunction, std::chrono::milliseconds timeout);
+    Return_t send(SendFunction& sendFunction, std::chrono::milliseconds timeout);
 
     bool wasExecutionSuccessful(void) const;
 };
@@ -102,13 +102,13 @@ class ATCmdUSOST final :
     std::string_view mData;
     SendFunction& mSendFunction;
     bool mWaitingForPrompt = false;
-    virtual ReturnType onResponseMatch(void) override;
+    virtual Return_t onResponseMatch(void) override;
 
 public:
     ATCmdUSOST(SendFunction & send, ATParser & parser) :
         ATCmd("AT+USOST", "", "@", parser), mSendFunction(send){}
 
-    ReturnType send(std::string_view data, std::chrono::milliseconds timeout);
+    Return_t send(std::string_view data, std::chrono::milliseconds timeout);
 };
 
 class ATCmdUSORF final :
@@ -119,13 +119,13 @@ class ATCmdUSORF final :
     std::string mPort = AT_CMD_PORT;
     std::string mData;
     SendFunction& mSendFunction;
-    virtual ReturnType onResponseMatch(void) override;
+    virtual Return_t onResponseMatch(void) override;
 
 public:
     ATCmdUSORF(SendFunction & send, ATParser & parser) :
         ATCmd("AT+USORF", "", "+USORF:", parser), mSendFunction(send){}
 
-    ReturnType send(size_t bytesToRead, std::chrono::milliseconds timeout);
+    Return_t send(size_t bytesToRead, std::chrono::milliseconds timeout);
 
     const std::string& getData(void) const
     {
@@ -136,7 +136,7 @@ public:
 class ATCmdURC final :
     public AT
 {
-    virtual ReturnType onResponseMatch(void) override;
+    virtual Return_t onResponseMatch(void) override;
     const std::function<void(size_t, size_t)>& mUrcReceivedCallback;
 
 public:
@@ -148,7 +148,7 @@ public:
 class ATCmdOK final :
     public AT
 {
-    ReturnType onResponseMatch(void) override;
+    Return_t onResponseMatch(void) override;
 
 public:
     ATCmdOK(ATParser & parser) :
@@ -160,7 +160,7 @@ public:
 class ATCmdERROR final :
     public AT
 {
-    ReturnType onResponseMatch(void) override;
+    Return_t onResponseMatch(void) override;
 
 public:
     ATCmdERROR(ATParser & parser) :
@@ -174,6 +174,8 @@ struct ATParser {
 
     ATParser(const AT::ReceiveFunction& receive) :
         mReceive(receive) {}
+
+    void reset(void);
 
     bool parse(std::chrono::milliseconds timeout = std::chrono::milliseconds(10000));
     void registerAtCommand(std::shared_ptr<AT> cmd);

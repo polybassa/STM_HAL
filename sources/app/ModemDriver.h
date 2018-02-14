@@ -54,9 +54,10 @@ class ModemDriver final :
     AT::ReceiveFunction mRecv;
     ATParser mParser;
     os::Queue<size_t, 1> mNumberOfBytesForReceive;
+    std::function<void(size_t, size_t)> mUrcCallback;
 
-    const std::shared_ptr<app::ATCmdUSOST> mATUSOST;
-    const std::shared_ptr<app::ATCmdUSORF> mATUSORF;
+    std::shared_ptr<app::ATCmdUSOST> mATUSOST;
+    std::shared_ptr<app::ATCmdUSORF> mATUSORF;
 
     std::function<void(std::string_view)> mReceiveCallback;
     size_t mErrorCount = 0;
@@ -88,8 +89,10 @@ public:
 
     static void ModemDriverInterruptHandler(uint8_t);
 
-    size_t send(std::string_view, const uint32_t ticksToWait = portMAX_DELAY) const;
-    size_t receive(uint8_t *, size_t, uint32_t ticksToWait = portMAX_DELAY) const;
+    size_t send(std::string_view, const uint32_t ticksToWait = portMAX_DELAY);
+    size_t receive(uint8_t *, size_t, uint32_t ticksToWait = portMAX_DELAY);
+
+    size_t bytesAvailable(void) const;
 
     void registerReceiveCallback(std::function<void(std::string_view)> );
     void unregisterReceiveCallback(void);

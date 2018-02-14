@@ -26,7 +26,7 @@ using app::ATCmdUSORF;
 using app::ATCmdUSOST;
 using app::ATParser;
 
-static const int __attribute__((unused)) g_DebugZones = 0; // ZONE_ERROR | ZONE_WARNING | ZONE_VERBOSE | ZONE_INFO;
+static const int __attribute__((unused)) g_DebugZones = ZONE_ERROR | ZONE_WARNING | ZONE_VERBOSE | ZONE_INFO;
 
 void AT::okReceived(void)
 {
@@ -38,31 +38,31 @@ void AT::errorReceived(void)
     Trace(ZONE_INFO, "%s ERROR\n", mName.data());
     while (true) {}
 }
-AT::ReturnType AT::onResponseMatch(void)
+AT::Return_t AT::onResponseMatch(void)
 {
     Trace(ZONE_INFO, "Hello from %s\n", mName.data());
-    return ReturnType::WAITING;
+    return Return_t::WAITING;
 }
 
-AT::ReturnType ATCmd::send(AT::SendFunction& sendFunction, std::chrono::milliseconds timeout)
+AT::Return_t ATCmd::send(AT::SendFunction& sendFunction, std::chrono::milliseconds timeout)
 {
     mCommandSuccess = false;
 
     if (mParser.mWaitingCmd) {
         Trace(ZONE_INFO, "Parser not ready\n");
-        return ReturnType::TRY_AGAIN;
+        return Return_t::TRY_AGAIN;
     }
 
     if (sendFunction(mRequest, timeout) != mRequest.length()) {
         Trace(ZONE_ERROR, "Couldn't send\n");
-        return ReturnType::ERROR;
+        return Return_t::ERROR;
     }
     mParser.mWaitingCmd = this->shared_from_this();
 
     if (mSendDone.take(timeout) && mCommandSuccess) {
-        return ReturnType::FINISHED;
+        return Return_t::FINISHED;
     }
-    return ReturnType::ERROR;
+    return Return_t::ERROR;
 }
 
 bool ATCmd::wasExecutionSuccessful(void) const
@@ -83,7 +83,7 @@ void ATCmd::errorReceived(void)
     mSendDone.give();
 }
 
-AT::ReturnType ATCmdUSOST::send(std::string_view data, std::chrono::milliseconds timeout)
+AT::Return_t ATCmdUSOST::send(std::string_view data, std::chrono::milliseconds timeout)
 {
     mData = data;
     std::string request = "AT+USOST=" + std::to_string(mSocket) +
@@ -93,28 +93,28 @@ AT::ReturnType ATCmdUSOST::send(std::string_view data, std::chrono::milliseconds
     mWaitingForPrompt = true;
     auto ret = ATCmd::send(mSendFunction, timeout);
     mWaitingForPrompt = false;
-    if ((ret == AT::ReturnType::FINISHED) && mCommandSuccess) {
-        return AT::ReturnType::FINISHED;
+    if ((ret == AT::Return_t::FINISHED) && mCommandSuccess) {
+        return AT::Return_t::FINISHED;
     }
-    return AT::ReturnType::ERROR;
+    return AT::Return_t::ERROR;
 }
 
-AT::ReturnType ATCmdUSOST::onResponseMatch(void)
+AT::Return_t ATCmdUSOST::onResponseMatch(void)
 {
     if (!mWaitingForPrompt) {
-        return ReturnType::ERROR;
+        return Return_t::ERROR;
     }
     if (mSendFunction(mData, std::chrono::milliseconds(100)) != mData.length()) {
         Trace(ZONE_ERROR, "Couldn't send data\n");
-        return ReturnType::ERROR;
+        return Return_t::ERROR;
     }
-    return ReturnType::WAITING;
+    return Return_t::WAITING;
 }
 
-AT::ReturnType ATCmdUSORF::send(size_t bytesToRead, std::chrono::milliseconds timeout)
+AT::Return_t ATCmdUSORF::send(size_t bytesToRead, std::chrono::milliseconds timeout)
 {
     if ((bytesToRead > ATParser::BUFFERSIZE) || (bytesToRead == 0)) {
-        return ReturnType::ERROR;
+        return Return_t::ERROR;
     }
     Trace(ZONE_INFO, "SEND\r\n");
     std::string request = "AT+USORF=" + std::to_string(mSocket) + "," + std::to_string(bytesToRead) + "\r";
@@ -123,35 +123,35 @@ AT::ReturnType ATCmdUSORF::send(size_t bytesToRead, std::chrono::milliseconds ti
     return ret;
 }
 
-AT::ReturnType ATCmdUSORF::onResponseMatch(void)
+AT::Return_t ATCmdUSORF::onResponseMatch(void)
 {
     auto socketstring = mParser.getInputUntilComma();
     if (socketstring.length() == 0) {
-        return AT::ReturnType::ERROR;
+        return AT::Return_t::ERROR;
     }
     mSocket = std::stoul(std::string(socketstring.data(), socketstring.length()));
 
     auto ipstring = mParser.getInputUntilComma();
     if (ipstring.length() == 0) {
-        return AT::ReturnType::ERROR;
+        return AT::Return_t::ERROR;
     }
     mIp = std::string(ipstring.data(), ipstring.length());
 
     auto portstring = mParser.getInputUntilComma();
     if (portstring.length() == 0) {
-        return AT::ReturnType::ERROR;
+        return AT::Return_t::ERROR;
     }
     mPort = std::string(portstring.data(), portstring.length());
 
     auto bytesAvailablestring = mParser.getInputUntilComma();
     if (bytesAvailablestring.length() == 0) {
-        return AT::ReturnType::ERROR;
+        return AT::Return_t::ERROR;
     }
     auto bytesAvailable = std::stoul(std::string(bytesAvailablestring.data(), bytesAvailablestring.length()));
 
     auto datastring = mParser.getBytesFromInput(bytesAvailable + 2);
     if (datastring.length() < bytesAvailable) {
-        return ReturnType::ERROR;
+        return Return_t::ERROR;
     }
 
     auto first = datastring.find_first_of('"') + 1;
@@ -159,10 +159,10 @@ AT::ReturnType ATCmdUSORF::onResponseMatch(void)
 
     mData = std::string(datastring.data() + first, last - first);
 
-    return ReturnType::WAITING;
+    return Return_t::WAITING;
 }
 
-AT::ReturnType ATCmdURC::onResponseMatch(void)
+AT::Return_t ATCmdURC::onResponseMatch(void)
 {
     auto socketstring = mParser.getInputUntilComma();
     size_t socket = std::stoul(std::string(socketstring.data(), socketstring.length()));
@@ -172,45 +172,50 @@ AT::ReturnType ATCmdURC::onResponseMatch(void)
     size_t bytesAvailable = std::stoul(std::string(line.data(), line.length()));
 
     if (bytesAvailable > ATParser::BUFFERSIZE) {
-        return ReturnType::ERROR;
+        return Return_t::ERROR;
     }
 
     mUrcReceivedCallback(socket, bytesAvailable);
-    return ReturnType::FINISHED;
+    return Return_t::FINISHED;
 }
 
-AT::ReturnType ATCmdOK::onResponseMatch(void)
+AT::Return_t ATCmdOK::onResponseMatch(void)
 {
     if (mParser.mWaitingCmd) {
         mParser.mWaitingCmd->okReceived();
         mParser.mWaitingCmd.reset();
-        return ReturnType::FINISHED;
+        return Return_t::FINISHED;
     }
-    return ReturnType::ERROR;
+    return Return_t::ERROR;
 }
 
-AT::ReturnType ATCmdERROR::onResponseMatch(void)
+AT::Return_t ATCmdERROR::onResponseMatch(void)
 {
     if (mParser.mWaitingCmd) {
         mParser.mWaitingCmd->errorReceived();
         mParser.mWaitingCmd.reset();
-        return ReturnType::FINISHED;
+        return Return_t::FINISHED;
     }
-    return ReturnType::ERROR;
+    return Return_t::ERROR;
 }
 
 std::array<char, ATParser::BUFFERSIZE> ATParser::ReceiveBuffer;
+
+void ATParser::reset(void)
+{
+    if (mWaitingCmd) {
+        Trace(ZONE_INFO, "Toogle Error on waiting cmd\r\n");
+        mWaitingCmd->errorReceived();
+        mWaitingCmd.reset();
+    }
+}
 
 bool ATParser::parse(std::chrono::milliseconds timeout)
 {
     size_t currentPos = 0;
     auto possibleResponses = mRegisteredATCommands;
+    reset();
     Trace(ZONE_INFO, "Start Parser\r\n");
-
-    if (mWaitingCmd) {
-        Trace(ZONE_INFO, "Toogle Error on waiting cmd\r\n");
-        mWaitingCmd->errorReceived();
-    }
 
     while (true) {
         if (mReceive(reinterpret_cast<uint8_t*>(ReceiveBuffer.data() + currentPos++), 1, timeout) != 1) {
@@ -238,21 +243,22 @@ bool ATParser::parse(std::chrono::milliseconds timeout)
             if (currentPos < match->mResponse.length()) {
                 continue;
             }
-            Trace(ZONE_INFO, "MATCH: %s\n", match->mName.data());
+            //Trace(ZONE_INFO, "MATCH: %s\n", match->mName.data());
 
             switch (match->onResponseMatch()) {
-            case AT::ReturnType::WAITING:
+            case AT::Return_t::WAITING:
                 mWaitingCmd = match;
                 break;
 
-            case AT::ReturnType::ERROR:
-                Trace(ZONE_ERROR, "Error occured \r\n");
+            case AT::Return_t::ERROR:
+                //Trace(ZONE_ERROR, "Error occured \r\n");
                 break;
 
-            case AT::ReturnType::TRY_AGAIN:
+            case AT::Return_t::TRY_AGAIN:
                 break;
 
-            case AT::ReturnType::FINISHED:
+            case AT::Return_t::FINISHED:
+                //Trace(ZONE_ERROR, "ParserFinished %s \r\n", match->mName.data());
                 break;
             }
         }
