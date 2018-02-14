@@ -67,7 +67,7 @@ firmware: pre-build ${OBJDIR} ${BINDIR} ${BINDIR}/${PRJ_NAME}.elf post-build
 
 debug_firmware: pre-build ${OBJDIR} ${BINDIR} ${BINDIR}/${PRJ_NAME}.elf post-build
 	@echo DEBUG BUILD
-	
+		
 docu:
 	@@DOXYGEN@ ../docs/Doxyfile
 	

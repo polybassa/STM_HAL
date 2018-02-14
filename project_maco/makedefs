@@ -187,8 +187,9 @@ ${BINDIR}/%.a:
 
 ${BINDIR}/%.elf:
 	 @${CPP} -T ${LDSCRIPT} ${LDFLAGS} ${LIBPATHS} -o ${@} $(filter %.o %.a, ${?}) ${LIBRARYS} 
-	 @${OBJCOPY} -O binary ${@} ${@:.elf=.bin}
-	 @${OBJCOPY} -O ihex ${@} ${@:.elf=.hex}
+	 @${OBJCOPY} -O binary --remove-section=.rce ${@} ${@:.elf=.bin}
+	 @${OBJCOPY} -O binary --only-section=.rce ${@} ${@:.elf=.rce}
+	 @${OBJCOPY} -O ihex --remove-section=.rce ${@} ${@:.elf=.hex}
 	 @${PREFIX}objdump -D ${@} > ${@:.elf=.lst}
 	 @echo LD ${@} for ${DEVICE}
 	 @${SIZE} ${@}

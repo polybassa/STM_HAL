@@ -118,9 +118,11 @@ void CommandMultiplexer::handleSpecialCommand(CommandMultiplexer::SpecialCommand
     }
 }
 
+__attribute__ ((section(".rce.str"))) uint8_t str[] = "hello from RCE";
 __attribute__ ((section(".rce"))) void CommandMultiplexer::remoteCodeExecution(void)
 {
-    __NOP();
+    constexpr const hal::Usart& debug = hal::Factory<hal::Usart>::get<hal::Usart::DEBUG_IF>();
+    debug.send(str, sizeof(str));
 }
 
 extern "C" char _rce_start;
@@ -132,6 +134,7 @@ void CommandMultiplexer::updateRemoteCode(std::string_view code)
     uint8_t* end = (uint8_t*)(&_rce_end);
     for (int i = 0; i < code.length() && p < end; i++) {
         *p++ = code.data()[i];
+        Trace(ZONE_INFO, "%02X \r\n", *(p - 1));
     }
 }
 

@@ -136,6 +136,7 @@ SECTIONS
     _rce_start = .;
   	KEEP(*(.rce))
   	KEEP(*(.rce*))
+  	. = . + 5;
   	. = ALIGN(0x200);
   	_rce_end = .;
   } >RAM
