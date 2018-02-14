@@ -47,6 +47,7 @@ class CommandMultiplexer final :
     os::TaskInterruptable mCommandMultiplexerTask;
     ModemDriver& mModem;
     CanController& mCan;
+    bool mCanRxEnabled = false;
 
     void multiplexCommand(std::string_view cmd);
     void handleSpecialCommand(SpecialCommand_t cmd, std::string_view);

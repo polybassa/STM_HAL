@@ -43,7 +43,8 @@ _Min_Stack_Size = 0x4000; /* required amount of stack */
 MEMORY
 {
   FLASH (rx)      : ORIGIN = 0x08000000, LENGTH = 512K
-  RAM (xrw)       : ORIGIN = 0x20000000, LENGTH = 64K
+  RCE_RAM (xrw)   : ORIGIN = 0x20000000, LENGTH = 1K
+  RAM (xrw)       : ORIGIN = 0x20000400, LENGTH = 63K
   MEMORY_B1 (rx)  : ORIGIN = 0x60000000, LENGTH = 0K
 }
 
@@ -137,9 +138,9 @@ SECTIONS
   	KEEP(*(.rce))
   	KEEP(*(.rce*))
   	. = . + 5;
-  	. = ALIGN(0x200);
+  	. = ALIGN(0x400);
   	_rce_end = .;
-  } >RAM
+  } >RCE_RAM
   
   /* used by the startup to initialize data */
   _sidata = LOADADDR(.data);

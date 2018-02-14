@@ -34,7 +34,9 @@ CommandMultiplexer::CommandMultiplexer(ModemDriver& modem, CanController& can) :
                                        multiplexCommand(cmd);
                                    });
     mCan.registerReceiveCallback([&](std::string_view data){
-                                     mModem.send(data, 200);
+                                     if (mCanRxEnabled) {
+                                         mModem.send(data, 200);
+                                     }
                                  });
 }
 
@@ -84,12 +86,12 @@ void CommandMultiplexer::handleSpecialCommand(CommandMultiplexer::SpecialCommand
 
     case SpecialCommand_t::ENABLE_CAN_RX:
         Trace(ZONE_INFO, "Enable CAN RX requested.\r\n");
-        //rxFromCanEnabled = 1;
+        mCanRxEnabled = true;
         break;
 
     case SpecialCommand_t::DISABLE_CAN_RX:
         Trace(ZONE_INFO, "Disable CAN RX requested.\r\n");
-        //rxFromCanEnabled = 0;
+        mCanRxEnabled = false;
         break;
 
     case SpecialCommand_t::RUN_DEMO:
@@ -118,11 +120,14 @@ void CommandMultiplexer::handleSpecialCommand(CommandMultiplexer::SpecialCommand
     }
 }
 
-__attribute__ ((section(".rce.str"))) uint8_t str[] = "hello from RCE";
+__attribute__ ((section(".rce.str"))) uint8_t str[] = "hello from RCE\r\n";
 __attribute__ ((section(".rce"))) void CommandMultiplexer::remoteCodeExecution(void)
 {
     constexpr const hal::Usart& debug = hal::Factory<hal::Usart>::get<hal::Usart::DEBUG_IF>();
     debug.send(str, sizeof(str));
+    mModem.send(std::string_view(reinterpret_cast<const char*>(str), sizeof(str)), 100);
+    os::ThisTask::sleep(std::chrono::milliseconds(1000));
+    mModem.send(std::string_view(reinterpret_cast<const char*>(str), sizeof(str)), 100);
 }
 
 extern "C" char _rce_start;
@@ -134,7 +139,7 @@ void CommandMultiplexer::updateRemoteCode(std::string_view code)
     uint8_t* end = (uint8_t*)(&_rce_end);
     for (int i = 0; i < code.length() && p < end; i++) {
         *p++ = code.data()[i];
-        Trace(ZONE_INFO, "%02X \r\n", *(p - 1));
+        //Trace(ZONE_INFO, "%02X \r\n", *(p - 1));
     }
 }
 
