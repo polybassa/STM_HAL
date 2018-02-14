@@ -96,7 +96,7 @@ ${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/CommandMultiplexer.o
 
 #PMD TestApps
 #${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/TestGpio.o
-${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/TestModem.o
+#${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/TestModem.o
 
 
 # device

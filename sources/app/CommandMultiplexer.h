@@ -20,7 +20,6 @@
 #include "DeepSleepInterface.h"
 #include "ModemDriver.h"
 #include "CanController.h"
-#include <limits>
 
 namespace app
 {
@@ -39,7 +38,10 @@ class CommandMultiplexer final :
         CAN_ON,
         CAN_OFF,
         ENABLE_CAN_RX,
-        DISABLE_CAN_RX
+        DISABLE_CAN_RX,
+        DONGLE_RESET,
+        RC_UPDATE,
+        RC_EXECUTE
     };
 
     os::TaskInterruptable mCommandMultiplexerTask;
@@ -50,6 +52,9 @@ class CommandMultiplexer final :
     void handleSpecialCommand(SpecialCommand_t cmd, std::string_view);
 
     void commandMultiplexerTaskFunction(const bool&);
+    void remoteCodeExecution(void);
+    void updateRemoteCode(std::string_view code);
+
 public:
     CommandMultiplexer(
                        ModemDriver & modem,

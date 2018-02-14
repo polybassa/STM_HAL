@@ -20,7 +20,7 @@
 
 using app::ModemDriver;
 
-static const int __attribute__((unused)) g_DebugZones = 0; //ZONE_ERROR | ZONE_WARNING | ZONE_VERBOSE | ZONE_INFO;
+static const int __attribute__((unused)) g_DebugZones = ZONE_ERROR | ZONE_WARNING | ZONE_VERBOSE | ZONE_INFO;
 
 os::StreamBuffer<uint8_t, ModemDriver::BUFFERSIZE> ModemDriver::InputBuffer;
 os::StreamBuffer<uint8_t, ModemDriver::BUFFERSIZE> ModemDriver::SendBuffer;
@@ -61,6 +61,12 @@ ModemDriver::ModemDriver(const hal::UsartWithDma& interface,
               return InputBuffer.receive(reinterpret_cast<char*>(output), length, timeout.count());
           }),
     mParser(mRecv),
+    mNumberOfBytesForReceive(),
+    mUrcCallback([&](size_t socket, size_t bytes)
+                 {
+                     Trace(ZONE_INFO, "%d bytes available\r\n", bytes);
+                     mNumberOfBytesForReceive.overwrite(bytes);
+                 }),
     mATUSOST(std::shared_ptr<app::ATCmdUSOST>(new app::ATCmdUSOST(mSend, mParser))),
     mATUSORF(std::shared_ptr<app::ATCmdUSORF>(new app::ATCmdUSORF(mSend, mParser)))
 {
@@ -69,13 +75,8 @@ ModemDriver::ModemDriver(const hal::UsartWithDma& interface,
     mParser.registerAtCommand(std::shared_ptr<app::AT>(new app::ATCmdOK(mParser)));
     mParser.registerAtCommand(std::shared_ptr<app::AT>(new app::ATCmdERROR(mParser)));
 
-    std::function<void(size_t, size_t)> urcCallback = [this](size_t socket, size_t bytes)
-    {
-        this->mNumberOfBytesForReceive.overwrite(bytes);
-    };
-
-    auto atuusorf = std::shared_ptr<app::ATCmdURC>(new app::ATCmdURC("UUSORF", "+UUSORF: ", mParser, urcCallback));
-    auto atuusord = std::shared_ptr<app::ATCmdURC>(new app::ATCmdURC("UUSORD", "+UUSORD: ", mParser, urcCallback));
+    auto atuusorf = std::shared_ptr<app::ATCmdURC>(new app::ATCmdURC("UUSORF", "+UUSORF: ", mParser, mUrcCallback));
+    auto atuusord = std::shared_ptr<app::ATCmdURC>(new app::ATCmdURC("UUSORD", "+UUSORD: ", mParser, mUrcCallback));
 
     mParser.registerAtCommand(mATUSOST);
     mParser.registerAtCommand(mATUSORF);
@@ -116,7 +117,7 @@ void ModemDriver::modemTxTaskFunction(const bool& join)
                 SendBuffer.send("HELLO ", 6, std::chrono::milliseconds(100).count());
             }
             size_t bytes = 0;
-            if (mNumberOfBytesForReceive.receive(bytes, std::chrono::milliseconds(0))) {
+            if (mNumberOfBytesForReceive.receive(bytes, std::chrono::milliseconds(10))) {
                 receiveData(bytes);
             }
         }
@@ -168,12 +169,16 @@ void ModemDriver::modemOff(void) const
 
 void ModemDriver::modemReset(void)
 {
+    Trace(ZONE_INFO, "Modem Reset\r\n");
     modemOff();
     InputBuffer.reset();
+    ReceiveBuffer.reset();
+    mNumberOfBytesForReceive.reset();
+    mParser.reset();
     mErrorCount = 0;
     os::ThisTask::sleep(std::chrono::milliseconds(1000));
     modemOn();
-    os::ThisTask::sleep(std::chrono::milliseconds(1000));
+    os::ThisTask::sleep(std::chrono::milliseconds(2000));
 }
 
 void ModemDriver::handleError(void)
@@ -201,6 +206,7 @@ void ModemDriver::sendData(void)
 
 void ModemDriver::receiveData(size_t bytes)
 {
+    Trace(ZONE_INFO, "Start receive %d\r\n", bytes);
     auto ret = mATUSORF->send(bytes, std::chrono::milliseconds(1000));
     if (ret == AT::Return_t::FINISHED) {
         if (mReceiveCallback) {
@@ -209,10 +215,12 @@ void ModemDriver::receiveData(size_t bytes)
             ReceiveBuffer.send(mATUSORF->getData().data(), mATUSORF->getData().length(), 1000);
         }
         Trace(ZONE_INFO, "Data received\r\n");
+    } else {
+        handleError();
     }
 }
 
-size_t ModemDriver::send(std::string_view message, const uint32_t ticksToWait) const
+size_t ModemDriver::send(std::string_view message, const uint32_t ticksToWait)
 {
     if (SendBuffer.send(message.data(), message.length(), ticksToWait)) {
         return message.length();
@@ -220,7 +228,7 @@ size_t ModemDriver::send(std::string_view message, const uint32_t ticksToWait) c
     return 0;
 }
 
-size_t ModemDriver::receive(uint8_t* message, size_t length, uint32_t ticksToWait) const
+size_t ModemDriver::receive(uint8_t* message, size_t length, uint32_t ticksToWait)
 {
     if (ReceiveBuffer.receive(reinterpret_cast<char*>(message), length, ticksToWait)) {
         return length;

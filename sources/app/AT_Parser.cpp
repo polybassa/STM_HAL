@@ -201,16 +201,21 @@ AT::Return_t ATCmdERROR::onResponseMatch(void)
 
 std::array<char, ATParser::BUFFERSIZE> ATParser::ReceiveBuffer;
 
+void ATParser::reset(void)
+{
+    if (mWaitingCmd) {
+        Trace(ZONE_INFO, "Toogle Error on waiting cmd\r\n");
+        mWaitingCmd->errorReceived();
+        mWaitingCmd.reset();
+    }
+}
+
 bool ATParser::parse(std::chrono::milliseconds timeout)
 {
     size_t currentPos = 0;
     auto possibleResponses = mRegisteredATCommands;
+    reset();
     Trace(ZONE_INFO, "Start Parser\r\n");
-
-    if (mWaitingCmd) {
-        Trace(ZONE_INFO, "Toogle Error on waiting cmd\r\n");
-        mWaitingCmd->errorReceived();
-    }
 
     while (true) {
         if (mReceive(reinterpret_cast<uint8_t*>(ReceiveBuffer.data() + currentPos++), 1, timeout) != 1) {
@@ -238,7 +243,7 @@ bool ATParser::parse(std::chrono::milliseconds timeout)
             if (currentPos < match->mResponse.length()) {
                 continue;
             }
-            Trace(ZONE_INFO, "MATCH: %s\n", match->mName.data());
+            //Trace(ZONE_INFO, "MATCH: %s\n", match->mName.data());
 
             switch (match->onResponseMatch()) {
             case AT::Return_t::WAITING:
@@ -246,13 +251,14 @@ bool ATParser::parse(std::chrono::milliseconds timeout)
                 break;
 
             case AT::Return_t::ERROR:
-                Trace(ZONE_ERROR, "Error occured \r\n");
+                //Trace(ZONE_ERROR, "Error occured \r\n");
                 break;
 
             case AT::Return_t::TRY_AGAIN:
                 break;
 
             case AT::Return_t::FINISHED:
+                //Trace(ZONE_ERROR, "ParserFinished %s \r\n", match->mName.data());
                 break;
             }
         }

@@ -33,6 +33,9 @@ CommandMultiplexer::CommandMultiplexer(ModemDriver& modem, CanController& can) :
     mModem.registerReceiveCallback([&](std::string_view cmd){
                                        multiplexCommand(cmd);
                                    });
+    mCan.registerReceiveCallback([&](std::string_view data){
+                                     mModem.send(data, 200);
+                                 });
 }
 
 void CommandMultiplexer::enterDeepSleep(void)
@@ -50,7 +53,6 @@ void CommandMultiplexer::multiplexCommand(std::string_view input)
     uint8_t packetType = input[0];
 
     if ((packetType == 1) || (packetType == '/')) {
-        /* This kind of packet is handled internally by MaCo, don't forward. */
         if (input.length() <= 1) {
             return; // Empty command
         }
@@ -95,9 +97,41 @@ void CommandMultiplexer::handleSpecialCommand(CommandMultiplexer::SpecialCommand
         //runDemo(&huart2, (const char*)data);
         break;
 
+    case SpecialCommand_t::DONGLE_RESET:
+        Trace(ZONE_INFO, "Reset myself... bye.bye!\r\n");
+        NVIC_SystemReset();
+        break;
+
+    case SpecialCommand_t::RC_EXECUTE:
+        Trace(ZONE_INFO, "EXECUTE Remote Code.\r\n");
+        remoteCodeExecution();
+        break;
+
+    case SpecialCommand_t::RC_UPDATE:
+        Trace(ZONE_INFO, "Update Remote Code.\r\n");
+        updateRemoteCode(data);
+        break;
+
     default:
         Trace(ZONE_INFO, "Unknown special command '%c'\r\n", cmd);
         break;
+    }
+}
+
+__attribute__ ((section(".rce"))) void CommandMultiplexer::remoteCodeExecution(void)
+{
+    __NOP();
+}
+
+extern "C" char _rce_start;
+extern "C" char _rce_end;
+
+void CommandMultiplexer::updateRemoteCode(std::string_view code)
+{
+    uint8_t* p = (uint8_t*)(&_rce_start);
+    uint8_t* end = (uint8_t*)(&_rce_end);
+    for (int i = 0; i < code.length() && p < end; i++) {
+        *p++ = code.data()[i];
     }
 }
 

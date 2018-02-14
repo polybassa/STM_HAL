@@ -23,7 +23,7 @@
 
 static const int __attribute__((unused)) g_DebugZones = ZONE_ERROR | ZONE_WARNING | ZONE_VERBOSE | ZONE_INFO;
 
-os::TaskEndless modemTest("MODEM_Test", 4096, os::Task::Priority::LOW, [] (const bool&){
+os::TaskEndless modemTest("MODEM_Test", 2048, os::Task::Priority::LOW, [] (const bool&){
                               constexpr const hal::Usart& debug =
                                   hal::Factory<hal::Usart>::get<hal::Usart::DEBUG_IF>();
 

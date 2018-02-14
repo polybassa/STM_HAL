@@ -24,7 +24,7 @@
 #include <memory>
 #include "Semaphore.h"
 
-#define AT_CMD_IP "91.7.35.73"
+#define AT_CMD_IP "217.232.252.66"
 #define AT_CMD_PORT "60017"
 
 #define AT_CMD_USOST "AT+USOST=0,\"" AT_CMD_IP "\"," AT_CMD_PORT ","
@@ -174,6 +174,8 @@ struct ATParser {
 
     ATParser(const AT::ReceiveFunction& receive) :
         mReceive(receive) {}
+
+    void reset(void);
 
     bool parse(std::chrono::milliseconds timeout = std::chrono::milliseconds(10000));
     void registerAtCommand(std::shared_ptr<AT> cmd);

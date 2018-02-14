@@ -148,7 +148,7 @@ LDSCRIPT = ${ROOT}/device/ldscripts/STM32F303VC_FLASH.ld
 endif
 
 ifeq (${DEVICE}, STM32F10X_HD)
-LDSCRIPT = ${ROOT}/device/ldscripts/STM32F303VC_FLASH.ld
+LDSCRIPT = ${ROOT}/device/ldscripts/STM32F10x_HD_FLASH.ld
 endif
 
 # Add the include file paths to AFLAGS and CFLAGS.

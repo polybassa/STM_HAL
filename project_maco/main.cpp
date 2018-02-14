@@ -35,6 +35,8 @@
 
 /* APP LAYER INLCUDES */
 #include "ModemDriver.h"
+#include "CanController.h"
+#include "CommandMultiplexer.h"
 
 /* GLOBAL VARIABLES */
 static const int __attribute__((used)) g_DebugZones = ZONE_ERROR | ZONE_WARNING |
@@ -53,6 +55,17 @@ int main(void)
 
     TraceInit();
     Trace(ZONE_INFO, "Version: %s \r\n", VERSION.c_str());
+
+    auto modem = new app::ModemDriver(hal::Factory<hal::UsartWithDma>::get<hal::Usart::
+                                                                           MODEM_COM>(),
+                                      hal::Factory<hal::Gpio>::get<hal::Gpio::MODEM_RESET>(),
+                                      hal::Factory<hal::Gpio>::get<hal::Gpio::MODEM_POWER>(),
+                                      hal::Factory<hal::Gpio>::get<hal::Gpio::MODEM_SUPPLY>());
+
+    auto can = new app::CanController(hal::Factory<hal::UsartWithDma>::get<hal::Usart::SECCO_COM>(),
+                                      hal::Factory<hal::Gpio>::get<hal::Gpio::SECCO_PWR>());
+
+    auto mux = new app::CommandMultiplexer(*modem, *can);
 
     os::Task::startScheduler();
 
