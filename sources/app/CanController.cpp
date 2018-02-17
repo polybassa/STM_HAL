@@ -75,7 +75,8 @@ void CanController::taskFunction(const bool& join)
     do {
         if (mReceiveCallback) {
             if (FrameAvailable.take(std::chrono::milliseconds(100))) {
-                ReceiveBuffer.receive(tmpString.data(), ReceiveBuffer.bytesAvailable(), 100);
+                tmpString.resize(ReceiveBuffer.bytesAvailable());
+                ReceiveBuffer.receive(tmpString.data(), tmpString.size(), 100);
                 mReceiveCallback(tmpString);
             }
         }
@@ -198,17 +199,15 @@ bool CanController::flash(std::string_view data, const size_t address)
         return false;
     }
 
-    uint8_t buf[257];
-    size_t N = 0;
-    size_t dst = address;
-    size_t src_idx = 0;
-
     resetToBootloader();
 
     if (!connectToBootloader()) {
         return false;
     }
 
+    uint8_t N = 0;
+    size_t dst = address;
+    size_t src_idx = 0;
     size_t len = data.length();
 
     while (len > 0) {
@@ -221,13 +220,8 @@ bool CanController::flash(std::string_view data, const size_t address)
         if (!receiveResponseFromBootloader()) { return false; }
 
         Trace(ZONE_INFO, "Sending data to write... ");
-        if (len >= 256) {
-            N = 255;
-        } else {
-            N = len - 1;
-        }
-        buf[0] = N;
-        mInterface.send(buf, 1, 100);
+        N = len >= 256 ? 255 : len - 1;
+        mInterface.send(&N, 1, 100);
         sendToBootloaderWithChecksum(std::string_view(&data.data()[src_idx], N + 1), N);
         if (!receiveResponseFromBootloader()) { return false; }
 
