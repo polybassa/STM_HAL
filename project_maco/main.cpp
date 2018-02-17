@@ -63,7 +63,8 @@ int main(void)
                                       hal::Factory<hal::Gpio>::get<hal::Gpio::MODEM_SUPPLY>());
 
     auto can = new app::CanController(hal::Factory<hal::UsartWithDma>::get<hal::Usart::SECCO_COM>(),
-                                      hal::Factory<hal::Gpio>::get<hal::Gpio::SECCO_PWR>());
+                                      hal::Factory<hal::Gpio>::get<hal::Gpio::SECCO_PWR>(),
+                                      hal::Factory<hal::Gpio>::getAlternateFunctionGpio<hal::Gpio::USART2_TX>());
 
     auto mux = new app::CommandMultiplexer(*modem, *can);
 

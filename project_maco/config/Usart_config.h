@@ -46,7 +46,7 @@ static constexpr const std::array<const Usart, Usart::__ENUM__SIZE + 1> Containe
                                 USART_Mode_Rx | USART_Mode_Tx, USART_HardwareFlowControl_None}),
       Usart(Usart::SECCO_COM,
             USART2_BASE,
-            USART_InitTypeDef { 115200, USART_WordLength_8b, USART_StopBits_1, USART_Parity_No,
+            USART_InitTypeDef { 115200, USART_WordLength_9b, USART_StopBits_1, USART_Parity_Even,
                                 USART_Mode_Rx | USART_Mode_Tx, USART_HardwareFlowControl_None}),
       Usart(Usart::MODEM_COM,
             USART3_BASE,

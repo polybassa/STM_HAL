@@ -34,12 +34,29 @@ Gpio::operator bool() const
 
 void Gpio::operator=(const bool& state) const
 {
-    if ((mConfiguration.GPIO_Mode == GPIO_Mode_Out_OD) || (mConfiguration.GPIO_Mode == GPIO_Mode_Out_PP)) {
+    if ((mConfiguration.GPIO_Mode == GPIO_Mode_Out_OD) || (mConfiguration.GPIO_Mode == GPIO_Mode_Out_PP) ||
+        (mConfiguration.GPIO_Mode == GPIO_Mode_AF_PP))
+    {
         auto peripherie = reinterpret_cast<GPIO_TypeDef* const>(mPeripherie);
         GPIO_WriteBit(peripherie, static_cast<uint16_t>(mConfiguration.GPIO_Pin), static_cast<BitAction>(state));
     } else {
         Trace(ZONE_WARNING, "GPIO in wrong mode. You can only assign values to output gpios!");
     }
+}
+
+void Gpio::configureAsOutput(void) const
+{
+    if (mConfiguration.GPIO_Mode == GPIO_Mode_AF_PP) {
+        GPIO_InitTypeDef configuration = mConfiguration;
+        configuration.GPIO_Mode = GPIO_Mode_Out_OD;
+        configuration.GPIO_Speed = GPIO_Speed_2MHz;
+
+        GPIO_Init(reinterpret_cast<GPIO_TypeDef* const>(mPeripherie), &configuration);
+    }
+}
+void Gpio::restoreDefaultConfiguration(void) const
+{
+    initialize();
 }
 
 void Gpio::initialize(void) const

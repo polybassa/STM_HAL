@@ -37,8 +37,10 @@ struct Gpio {
     Gpio& operator=(Gpio &&) = delete;
 
     operator bool() const;
-
     void operator=(const bool& state) const;
+
+    void configureAsOutput(void) const;
+    void restoreDefaultConfiguration(void) const;
 
 private:
     constexpr Gpio(const Description&        desc,

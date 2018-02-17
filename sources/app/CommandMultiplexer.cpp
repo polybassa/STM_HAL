@@ -19,8 +19,7 @@
 using app::CommandMultiplexer;
 using app::ModemDriver;
 
-static const int __attribute__((unused)) g_DebugZones = ZONE_ERROR |
-                                                        ZONE_WARNING | ZONE_VERBOSE | ZONE_INFO;
+static const int __attribute__((unused)) g_DebugZones = ZONE_ERROR | ZONE_WARNING | ZONE_VERBOSE | ZONE_INFO;
 
 CommandMultiplexer::CommandMultiplexer(ModemDriver& modem, CanController& can) :
     os::DeepSleepModule(), mCommandMultiplexerTask("CommandMultiplexer",
@@ -71,7 +70,7 @@ void CommandMultiplexer::handleSpecialCommand(CommandMultiplexer::SpecialCommand
     switch (cmd) {
     case SpecialCommand_t::FLASH_CAN_MCU:
         Trace(ZONE_INFO, "Flash CAN MCU requested.\r\n");
-        //flashSecCoFirmware(&huart2);
+        mCan.triggerFirmwareUpdate();
         break;
 
     case SpecialCommand_t::CAN_ON:
@@ -137,9 +136,9 @@ void CommandMultiplexer::updateRemoteCode(std::string_view code)
 {
     uint8_t* p = (uint8_t*)(&_rce_start);
     uint8_t* end = (uint8_t*)(&_rce_end);
-    for (int i = 0; i < code.length() && p < end; i++) {
+    for (size_t i = 0; i < code.length() && p < end; i++) {
         *p++ = code.data()[i];
-        //Trace(ZONE_INFO, "%02X \r\n", *(p - 1));
+        Trace(ZONE_INFO, "%02X \r\n", *(p - 1));
     }
 }
 

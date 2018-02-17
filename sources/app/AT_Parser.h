@@ -24,7 +24,7 @@
 #include <memory>
 #include "Semaphore.h"
 
-#define AT_CMD_IP "91.7.34.61"
+#define AT_CMD_IP "217.232.225.24"
 #define AT_CMD_PORT "60017"
 
 #define AT_CMD_USOST "AT+USOST=0,\"" AT_CMD_IP "\"," AT_CMD_PORT ","
