@@ -20,6 +20,7 @@
 
 ROOT=..
 RTOS_SOURCE_DIR=${ROOT}/libraries/FreeRTOS/Source_10_0_0
+PRJ_DIR=$(shell basename ${PRJ_PATH})
 OBJDIR?=obj
 BINDIR?=exe
 COVERAGEDIR?=testcoverage
@@ -156,13 +157,22 @@ AFLAGS+=${patsubst %,-I%,${subst :, ,${IPATH}}}
 CFLAGS+=${patsubst %,-I%,${subst :, ,${IPATH}}}
 CPPFLAGS+=${patsubst %,-I%,${subst :, ,${IPATH}}}
 
-${OBJDIR}/versionfile.o: ${ROOT}/project/versionfile.txt
+${OBJDIR}/versionfile.o: versionfile.txt
 	 @${OBJCOPY} \
 	 --rename-section .data=.version,contents,alloc,load,readonly,data \
 	 --input binary --output elf32-littlearm --binary-architecture arm ${<} ${@}
-	 @${OBJCOPY} --redefine-sym _binary____project_versionfile_txt_start=_version_start ${@}
-	 @${OBJCOPY} --redefine-sym _binary____project_versionfile_txt_end=_version_end ${@}
-	 @${OBJCOPY} --redefine-sym _binary____project_versionfile_txt_size=_version_size ${@}
+	 @${OBJCOPY} --redefine-sym _binary_versionfile_txt_start=_version_start ${@}
+	 @${OBJCOPY} --redefine-sym _binary_versionfile_txt_end=_version_end ${@}
+	 @${OBJCOPY} --redefine-sym _binary_versionfile_txt_size=_version_size ${@}
+	 @echo OBJ ${@}
+	 
+${OBJDIR}/binaryfile.o: binaryfile.bin
+	 @${OBJCOPY} \
+	 --rename-section .data=.binary,contents,alloc,load,readonly,data \
+	 --input binary --output elf32-littlearm --binary-architecture arm ${<} ${@}
+	 @${OBJCOPY} --redefine-sym _binary_binaryfile_bin_start=_binary_start ${@}
+	 @${OBJCOPY} --redefine-sym _binary_binaryfile_bin_end=_binary_end ${@}
+	 @${OBJCOPY} --redefine-sym _binary_binaryfile_bin_size=_binary_size ${@}
 	 @echo OBJ ${@}
 
 ${OBJDIR}/%.o: %.cpp

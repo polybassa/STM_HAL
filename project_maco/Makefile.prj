@@ -66,6 +66,7 @@ IPATH+=${ROOT}/libraries/SystemView_Src_V240a/Config
 # PMD firmware
 ${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/main.o
 ${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/versionfile.o
+${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/binaryfile.o
 
 # HAL Layer
 ${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/Gpio.o
