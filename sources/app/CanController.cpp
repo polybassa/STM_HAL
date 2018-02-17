@@ -163,17 +163,12 @@ bool CanController::eraseChip(void)
     Trace(ZONE_INFO, "Sending erase... ");
     auto ret = sendCommandToBootloader("\x43");
     if (ret) {
-        Trace(ZONE_INFO, "ACK.\r\n");
         Trace(ZONE_INFO, "Sending global erase... ");
         if (!sendCommandToBootloader("\xFF")) { return false; }
-        Trace(ZONE_INFO, "ACK.\r\n");
     } else {
-        Trace(ZONE_INFO, "NACK.\r\n");
         Trace(ZONE_INFO, "Sending readout unprotect command... ");
         if (!sendCommandToBootloader("\x92")) { return false; }
-        Trace(ZONE_INFO, "ACK... ");
         if (!receiveResponseFromBootloader()) { return false; }
-        Trace(ZONE_INFO, "ACK.\r\n");
     }
     return true;
 }
