@@ -21,13 +21,13 @@ using app::ModemDriver;
 
 static const int __attribute__((unused)) g_DebugZones = ZONE_ERROR | ZONE_WARNING | ZONE_VERBOSE | ZONE_INFO;
 
-CommandMultiplexer::CommandMultiplexer(ModemDriver& modem, CanController& can) :
+CommandMultiplexer::CommandMultiplexer(ModemDriver& modem, CanController& can, DemoExecuter& demo) :
     os::DeepSleepModule(), mCommandMultiplexerTask("CommandMultiplexer",
                                                    CommandMultiplexer::STACKSIZE, os::Task::Priority::HIGH,
                                                    [this](const bool& join)
                                                    {
                                                        commandMultiplexerTaskFunction(join);
-                                                   }), mModem(modem), mCan(can)
+                                                   }), mModem(modem), mCan(can), mDemo(demo)
 {
     mModem.registerReceiveCallback([&](std::string_view cmd){
                                        multiplexCommand(cmd);
@@ -71,19 +71,19 @@ void CommandMultiplexer::handleSpecialCommand(CommandMultiplexer::SpecialCommand
     case SpecialCommand_t::FLASH_CAN_MCU:
         Trace(ZONE_INFO, "Flash CAN MCU requested.\r\n");
         mCan.triggerFirmwareUpdate();
-        mModem.send("Triggerd FW Update\r\n");
+        mModem.send("/Triggerd FW Update\r\n");
         break;
 
     case SpecialCommand_t::CAN_ON:
         Trace(ZONE_INFO, "CAN ON requested.\r\n");
         mCan.on();
-        mModem.send("CAN ON\r\n");
+        mModem.send("/CAN ON\r\n");
         break;
 
     case SpecialCommand_t::CAN_OFF:
         Trace(ZONE_INFO, "CAN OFF requested.\r\n");
         mCan.off();
-        mModem.send("CAN OFF\r\n");
+        mModem.send("/CAN OFF\r\n");
         break;
 
     case SpecialCommand_t::ENABLE_CAN_RX:
@@ -98,7 +98,7 @@ void CommandMultiplexer::handleSpecialCommand(CommandMultiplexer::SpecialCommand
 
     case SpecialCommand_t::RUN_DEMO:
         Trace(ZONE_INFO, "Run demo requested.\r\n");
-        //runDemo(&huart2, (const char*)data);
+        mDemo.runDemo(data);
         break;
 
     case SpecialCommand_t::DONGLE_RESET:

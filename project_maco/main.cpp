@@ -37,6 +37,7 @@
 #include "ModemDriver.h"
 #include "CanController.h"
 #include "CommandMultiplexer.h"
+#include "DemoExecuter.h"
 
 /* GLOBAL VARIABLES */
 static const int __attribute__((used)) g_DebugZones = ZONE_ERROR | ZONE_WARNING |
@@ -66,7 +67,8 @@ int main(void)
                                       hal::Factory<hal::Gpio>::get<hal::Gpio::SECCO_PWR>(),
                                       hal::Factory<hal::Gpio>::getAlternateFunctionGpio<hal::Gpio::USART2_TX>());
 
-    auto mux = new app::CommandMultiplexer(*modem, *can);
+    auto demo = new app::DemoExecuter(*can);
+    auto mux = new app::CommandMultiplexer(*modem, *can, *demo);
 
     os::Task::startScheduler();
 

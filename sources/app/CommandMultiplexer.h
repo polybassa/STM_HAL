@@ -20,6 +20,7 @@
 #include "DeepSleepInterface.h"
 #include "ModemDriver.h"
 #include "CanController.h"
+#include "DemoExecuter.h"
 
 namespace app
 {
@@ -47,6 +48,7 @@ class CommandMultiplexer final :
     os::TaskInterruptable mCommandMultiplexerTask;
     ModemDriver& mModem;
     CanController& mCan;
+    DemoExecuter& mDemo;
     bool mCanRxEnabled = false;
 
     void multiplexCommand(std::string_view cmd);
@@ -59,7 +61,8 @@ class CommandMultiplexer final :
 public:
     CommandMultiplexer(
                        ModemDriver & modem,
-                       CanController & can);
+                       CanController & can,
+                       DemoExecuter & demo);
 
     CommandMultiplexer(const CommandMultiplexer &) = delete;
     CommandMultiplexer(CommandMultiplexer &&) = delete;
