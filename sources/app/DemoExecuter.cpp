@@ -20,8 +20,7 @@
 using app::CanController;
 using app::DemoExecuter;
 
-static const int __attribute__((unused)) g_DebugZones = ZONE_ERROR |
-                                                        ZONE_WARNING | ZONE_VERBOSE | ZONE_INFO;
+static const int __attribute__((unused)) g_DebugZones = ZONE_ERROR | ZONE_WARNING | ZONE_VERBOSE | ZONE_INFO;
 
 DemoExecuter::DemoExecuter(CanController& can) :
     os::DeepSleepModule(), mDemoExecuterTask("DemoExecuter",

@@ -65,10 +65,12 @@ ModemDriver::ModemDriver(const hal::UsartWithDma& interface,
     mUrcCallback([&](size_t socket, size_t bytes)
                  {
                      Trace(ZONE_INFO, "%d bytes available\r\n", bytes);
-                     mNumberOfBytesForReceive.overwrite(bytes);
+                     if (bytes) {
+                         mNumberOfBytesForReceive.overwrite(bytes);
+                     }
                  }),
     mATUSOST(std::shared_ptr<app::ATCmdUSOST>(new app::ATCmdUSOST(mSend, mParser))),
-    mATUSORF(std::shared_ptr<app::ATCmdUSORF>(new app::ATCmdUSORF(mSend, mParser)))
+    mATUSORF(std::shared_ptr<app::ATCmdUSORF>(new app::ATCmdUSORF(mSend, mParser, mUrcCallback)))
 {
     mInterface.mUsart.enableNonBlockingReceive(ModemDriverInterruptHandler);
 
@@ -202,11 +204,15 @@ void ModemDriver::sendData(void)
     } else if (ret == AT::Return_t::FINISHED) {
         mTimeOfLastUdpSend = os::Task::getTickCount();
     }
+    mATUSORF->send(0, std::chrono::milliseconds(1000));
 }
 
 void ModemDriver::receiveData(size_t bytes)
 {
     Trace(ZONE_INFO, "Start receive %d\r\n", bytes);
+    if (bytes == 0) {
+        return;
+    }
     auto ret = mATUSORF->send(bytes, std::chrono::milliseconds(1000));
     if (ret == AT::Return_t::FINISHED) {
         if (mReceiveCallback) {

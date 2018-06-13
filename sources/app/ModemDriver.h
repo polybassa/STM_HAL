@@ -35,7 +35,7 @@ class ModemDriver final :
     virtual void enterDeepSleep(void) override;
     virtual void exitDeepSleep(void) override;
 
-    static constexpr size_t STACKSIZE = 4096;
+    static constexpr size_t STACKSIZE = 2048;
     static constexpr size_t BUFFERSIZE = 512;
     static constexpr size_t ERROR_THRESHOLD = 20;
     static os::StreamBuffer<uint8_t, BUFFERSIZE> InputBuffer;

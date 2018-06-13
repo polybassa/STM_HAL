@@ -26,7 +26,7 @@ using app::ATCmdUSORF;
 using app::ATCmdUSOST;
 using app::ATParser;
 
-static const int __attribute__((unused)) g_DebugZones = ZONE_ERROR | ZONE_WARNING | ZONE_VERBOSE | ZONE_INFO;
+static const int __attribute__((unused)) g_DebugZones = 0; //ZONE_ERROR | ZONE_WARNING | ZONE_VERBOSE | ZONE_INFO;
 
 void AT::okReceived(void)
 {
@@ -113,7 +113,7 @@ AT::Return_t ATCmdUSOST::onResponseMatch(void)
 
 AT::Return_t ATCmdUSORF::send(size_t bytesToRead, std::chrono::milliseconds timeout)
 {
-    if ((bytesToRead > ATParser::BUFFERSIZE) || (bytesToRead == 0)) {
+    if (bytesToRead > ATParser::BUFFERSIZE) {
         return Return_t::ERROR;
     }
     Trace(ZONE_INFO, "SEND\r\n");
@@ -131,35 +131,48 @@ AT::Return_t ATCmdUSORF::onResponseMatch(void)
     }
     mSocket = std::stoul(std::string(socketstring.data(), socketstring.length()));
 
-    auto ipstring = mParser.getInputUntilComma();
-    if (ipstring.length() == 0) {
-        return AT::Return_t::ERROR;
-    }
-    mIp = std::string(ipstring.data(), ipstring.length());
+    char termination = 0;
+    auto ipstring = mParser.getInputUntilComma(std::chrono::milliseconds(500), &termination);
 
-    auto portstring = mParser.getInputUntilComma();
-    if (portstring.length() == 0) {
-        return AT::Return_t::ERROR;
-    }
-    mPort = std::string(portstring.data(), portstring.length());
+    if (termination == ',') {
+        if (ipstring.length() == 0) {
+            return AT::Return_t::ERROR;
+        }
+        mIp = std::string(ipstring.data(), ipstring.length());
 
-    auto bytesAvailablestring = mParser.getInputUntilComma();
-    if (bytesAvailablestring.length() == 0) {
-        return AT::Return_t::ERROR;
-    }
-    auto bytesAvailable = std::stoul(std::string(bytesAvailablestring.data(), bytesAvailablestring.length()));
+        auto portstring = mParser.getInputUntilComma();
+        if (portstring.length() == 0) {
+            return AT::Return_t::ERROR;
+        }
+        mPort = std::string(portstring.data(), portstring.length());
 
-    auto datastring = mParser.getBytesFromInput(bytesAvailable + 2);
-    if (datastring.length() < bytesAvailable) {
+        auto bytesAvailablestring = mParser.getInputUntilComma();
+        if (bytesAvailablestring.length() == 0) {
+            return AT::Return_t::ERROR;
+        }
+        auto bytesAvailable = std::stoul(std::string(bytesAvailablestring.data(), bytesAvailablestring.length()));
+
+        auto datastring = mParser.getBytesFromInput(bytesAvailable + 2);
+        if (datastring.length() < bytesAvailable) {
+            return Return_t::ERROR;
+        }
+
+        auto first = datastring.find_first_of('"') + 1;
+        auto last = datastring.find_last_of('"');
+
+        mData = std::string(datastring.data() + first, last - first);
+
+        return Return_t::WAITING;
+    } else if (termination == '\r') {
+        auto bytesAvailablestring = ipstring;
+        auto bytesAvailable = std::stoul(std::string(bytesAvailablestring.data(), bytesAvailablestring.length()));
+        if (bytesAvailable) {
+            mUrcReceivedCallback(mSocket, bytesAvailable);
+        }
+        return Return_t::FINISHED;
+    } else {
         return Return_t::ERROR;
     }
-
-    auto first = datastring.find_first_of('"') + 1;
-    auto last = datastring.find_last_of('"');
-
-    mData = std::string(datastring.data() + first, last - first);
-
-    return Return_t::WAITING;
 }
 
 AT::Return_t ATCmdURC::onResponseMatch(void)
@@ -225,7 +238,7 @@ bool ATParser::parse(std::chrono::milliseconds timeout)
 
         std::string_view currentData(ReceiveBuffer.data(), currentPos);
 
-        //Trace(ZONE_INFO, "Search area: %s\n", std::string(currentData.data(), currentData.length()).c_str());
+        Trace(ZONE_INFO, "parse: %s\n", std::string(currentData.data(), currentData.length()).c_str());
         // this vector copy operations should be optimized
         decltype(possibleResponses) sievedResponses;
 
@@ -243,7 +256,7 @@ bool ATParser::parse(std::chrono::milliseconds timeout)
             if (currentPos < match->mResponse.length()) {
                 continue;
             }
-            //Trace(ZONE_INFO, "MATCH: %s\n", match->mName.data());
+            Trace(ZONE_INFO, "MATCH: %s\n", match->mName.data());
 
             switch (match->onResponseMatch()) {
             case AT::Return_t::WAITING:
@@ -251,14 +264,14 @@ bool ATParser::parse(std::chrono::milliseconds timeout)
                 break;
 
             case AT::Return_t::ERROR:
-                //Trace(ZONE_ERROR, "Error occured \r\n");
+                Trace(ZONE_ERROR, "Error occured \r\n");
                 break;
 
             case AT::Return_t::TRY_AGAIN:
                 break;
 
             case AT::Return_t::FINISHED:
-                //Trace(ZONE_ERROR, "ParserFinished %s \r\n", match->mName.data());
+                Trace(ZONE_ERROR, "ParserFinished %s \r\n", match->mName.data());
                 break;
             }
         }
@@ -296,7 +309,7 @@ std::string_view ATParser::getLineFromInput(std::chrono::milliseconds timeout) c
     return std::string_view(ReceiveBuffer.data(), currentPos);
 }
 
-std::string_view ATParser::getInputUntilComma(std::chrono::milliseconds timeout) const
+std::string_view ATParser::getInputUntilComma(std::chrono::milliseconds timeout, char* termination) const
 {
     uint8_t data;
     size_t currentPos = 0;
@@ -307,9 +320,12 @@ std::string_view ATParser::getInputUntilComma(std::chrono::milliseconds timeout)
             return "";
         }
 
-        const bool terminationFound = (data == ',');
+        const bool terminationFound = (data == ',') || (data == '\r');
 
         if (terminationFound || isalpha(data)) {
+            if (termination != nullptr) {
+                *termination = data;
+            }
             break;
         }
         ReceiveBuffer[currentPos++] = data;

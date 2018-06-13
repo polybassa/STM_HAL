@@ -119,11 +119,12 @@ class ATCmdUSORF final :
     std::string mPort = AT_CMD_PORT;
     std::string mData;
     SendFunction& mSendFunction;
+    const std::function<void(size_t, size_t)>& mUrcReceivedCallback;
     virtual Return_t onResponseMatch(void) override;
 
 public:
-    ATCmdUSORF(SendFunction & send, ATParser & parser) :
-        ATCmd("AT+USORF", "", "+USORF:", parser), mSendFunction(send){}
+    ATCmdUSORF(SendFunction & send, ATParser & parser, const std::function<void(size_t, size_t)> &callback) :
+        ATCmd("AT+USORF", "", "+USORF:", parser), mSendFunction(send), mUrcReceivedCallback(callback){}
 
     Return_t send(size_t bytesToRead, std::chrono::milliseconds timeout);
 
@@ -180,7 +181,8 @@ struct ATParser {
     bool parse(std::chrono::milliseconds timeout = std::chrono::milliseconds(10000));
     void registerAtCommand(std::shared_ptr<AT> cmd);
     std::string_view getLineFromInput(std::chrono::milliseconds timeout = std::chrono::milliseconds(500)) const;
-    std::string_view getInputUntilComma(std::chrono::milliseconds timeout = std::chrono::milliseconds(500)) const;
+    std::string_view getInputUntilComma(std::chrono::milliseconds timeout = std::chrono::milliseconds(500),
+                                        char*                     termination = nullptr) const;
     std::string_view getBytesFromInput(size_t                    numberOfBytes,
                                        std::chrono::milliseconds timeout = std::chrono::milliseconds(500)) const;
 
