@@ -45,7 +45,7 @@ ModemDriver::ModemDriver(const hal::UsartWithDma& interface,
                  }),
     mParserTask("ParserTask",
                 ModemDriver::STACKSIZE,
-                os::Task::Priority::HIGH,
+                os::Task::Priority::VERY_HIGH,
                 [this](const bool& join)
                 {
                     parserTaskFunction(join);
@@ -55,6 +55,7 @@ ModemDriver::ModemDriver(const hal::UsartWithDma& interface,
     mModemPower(powerPin),
     mModemSupplyVoltage(supplyPin),
     mSend([&](std::string_view in, std::chrono::milliseconds timeout)->size_t {
+              os::ThisTask::sleep(std::chrono::milliseconds(40));
               return mInterface.send(in, timeout.count());
           }),
     mRecv([&](uint8_t * output, const size_t length, std::chrono::milliseconds timeout)->bool {

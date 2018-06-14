@@ -26,7 +26,7 @@ using app::ATCmdUSORF;
 using app::ATCmdUSOST;
 using app::ATParser;
 
-static const int __attribute__((unused)) g_DebugZones = 0; //ZONE_ERROR | ZONE_WARNING | ZONE_VERBOSE | ZONE_INFO;
+static const int __attribute__((unused)) g_DebugZones = ZONE_ERROR | ZONE_INFO; //ZONE_ERROR | ZONE_WARNING | ZONE_VERBOSE | ZONE_INFO;
 
 void AT::okReceived(void)
 {
@@ -232,13 +232,13 @@ bool ATParser::parse(std::chrono::milliseconds timeout)
 
     while (true) {
         if (mReceive(reinterpret_cast<uint8_t*>(ReceiveBuffer.data() + currentPos++), 1, timeout) != 1) {
-            Trace(ZONE_INFO, "Parser Timeout\r\n");
+            Trace(ZONE_ERROR, "Parser Timeout\r\n");
             return false;
         }
 
         std::string_view currentData(ReceiveBuffer.data(), currentPos);
 
-        Trace(ZONE_INFO, "parse: %s\n", std::string(currentData.data(), currentData.length()).c_str());
+        Trace(ZONE_VERBOSE, "parse: %s\n", std::string(currentData.data(), currentData.length()).c_str());
         // this vector copy operations should be optimized
         decltype(possibleResponses) sievedResponses;
 

@@ -193,7 +193,6 @@ void DemoExecuter::DemoExecuterTaskFunction(const bool& join)
                 break;
             }
         }
-        os::ThisTask::sleep(mExecutionInterval);
     } while (!join);
 }
 
