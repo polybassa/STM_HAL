@@ -21,6 +21,8 @@
 
 static const int __attribute__((unused)) g_DebugZones = 0; //ZONE_ERROR | ZONE_WARNING | ZONE_VERBOSE | ZONE_INFO;
 
+using os::Mutex;
+
 #define NUM_TEST_LOOPS 255
 
 //--------------------------BUFFERS--------------------------
@@ -70,6 +72,54 @@ bool os::Semaphore::take(uint32_t ticksToWait) const
 
     x->take();
     return true;
+}
+
+Mutex::Mutex(void) :
+    mMutexHandle((SemaphoreHandle_t) new int)
+{
+    this->give();
+}
+
+Mutex::Mutex(Mutex && rhs) :
+    mMutexHandle(rhs.mMutexHandle)
+{
+    rhs.mMutexHandle = nullptr;
+}
+
+Mutex& Mutex::operator=(Mutex && rhs)
+{
+    mMutexHandle = rhs.mMutexHandle;
+    rhs.mMutexHandle = nullptr;
+    return *this;
+}
+
+Mutex::~Mutex(void)
+{
+    delete (int*)mMutexHandle;
+}
+
+bool Mutex::take(uint32_t ticksToWait) const
+{
+    if (*this && (*(reinterpret_cast<int*>(mMutexHandle)) == 1)) {
+        *(reinterpret_cast<int*>(mMutexHandle)) = 0;
+        return true;
+    }
+
+    return false;
+}
+
+bool Mutex::give(void) const
+{
+    if (*this) {
+        *(reinterpret_cast<int*>(mMutexHandle)) = 1;
+        return true;
+    }
+    return false;
+}
+
+Mutex::operator bool() const
+{
+    return mMutexHandle != nullptr;
 }
 
 //-------------------------TESTCASES-------------------------

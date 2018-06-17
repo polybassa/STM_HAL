@@ -23,6 +23,7 @@
 #include <vector>
 #include <memory>
 #include "Semaphore.h"
+#include "Mutex.h"
 
 #define AT_CMD_IP "95.143.172.237"
 #define AT_CMD_PORT "64487"
@@ -192,6 +193,7 @@ protected:
     const AT::ReceiveFunction& mReceive;
     std::vector<std::shared_ptr<AT> > mRegisteredATCommands;
     std::shared_ptr<AT> mWaitingCmd;
+    os::Mutex mSendingMutex;
 
     friend class ATCmdOK;
     friend class ATCmdERROR;

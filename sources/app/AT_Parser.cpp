@@ -16,6 +16,7 @@
 #include "AT_Parser.h"
 #include "trace.h"
 #include <vector>
+#include "LockGuard.h"
 
 using app::AT;
 using app::ATCmd;
@@ -47,6 +48,12 @@ AT::Return_t AT::onResponseMatch(void)
 AT::Return_t ATCmd::send(AT::SendFunction& sendFunction, std::chrono::milliseconds timeout)
 {
     mCommandSuccess = false;
+
+    os::LockGuard<os::Mutex> lock(mParser.mSendingMutex, std::chrono::milliseconds(10).count());
+    if (!lock) {
+        Trace(ZONE_INFO, "Parser not ready for sending\n");
+        return Return_t::TRY_AGAIN;
+    }
 
     if (mParser.mWaitingCmd) {
         Trace(ZONE_INFO, "Parser not ready\n");
@@ -220,6 +227,7 @@ void ATParser::reset(void)
         Trace(ZONE_INFO, "Toogle Error on waiting cmd\r\n");
         mWaitingCmd->errorReceived();
         mWaitingCmd.reset();
+        mSendingMutex.give();
     }
 }
 
