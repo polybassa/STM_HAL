@@ -30,15 +30,16 @@ void Spi::initialize() const
     SPI_Init(reinterpret_cast<SPI_TypeDef*>(mPeripherie), &mConfiguration);
 
     if (mConfiguration.SPI_NSS == SPI_NSS_Hard) {
-        SPI_NSSPulseModeCmd(reinterpret_cast<SPI_TypeDef*>(mPeripherie),
-                            ENABLE);
+//        SPI_NSSPulseModeCmd(reinterpret_cast<SPI_TypeDef*>(mPeripherie),
+//                            ENABLE); // TODO seems to be obsolete for STM32F4
         SPI_SSOutputCmd(reinterpret_cast<SPI_TypeDef*>(mPeripherie), ENABLE);
-        SPI_RxFIFOThresholdConfig(reinterpret_cast<SPI_TypeDef*>(mPeripherie), SPI_RxFIFOThreshold_QF);
+//        SPI_RxFIFOThresholdConfig(reinterpret_cast<SPI_TypeDef*>(mPeripherie), SPI_RxFIFOThreshold_QF);
+        // TODO seems to be obsolete for STM32F4
     }
     SPI_Cmd(reinterpret_cast<SPI_TypeDef*>(mPeripherie), ENABLE);
 }
 
-size_t Spi::send(uint8_t const* const data, const size_t length) const
+size_t Spi::send(uint16_t const* const data, const size_t length) const
 {
     if (data == nullptr) {
         return 0;
@@ -55,9 +56,9 @@ size_t Spi::send(uint8_t const* const data, const size_t length) const
     return bytesSend;
 }
 
-void Spi::send(const uint8_t data) const
+void Spi::send(const uint16_t data) const
 {
-    SPI_SendData8(reinterpret_cast<SPI_TypeDef*>(mPeripherie), data);
+    SPI_I2S_SendData(reinterpret_cast<SPI_TypeDef*>(mPeripherie), data);
 }
 
 bool Spi::isReadyToReceive(void) const
@@ -66,14 +67,14 @@ bool Spi::isReadyToReceive(void) const
                                        reinterpret_cast<SPI_TypeDef*>(mPeripherie), SPI_I2S_FLAG_RXNE);
 }
 
-size_t Spi::receive(uint8_t* const data, const size_t length) const
+size_t Spi::receive(uint16_t* const data, const size_t length) const
 {
     if (data == nullptr) {
         return 0;
     }
     os::LockGuard<os::Mutex> lock(InterfaceAvailableMutex[static_cast<size_t>(mDescription)]);
 
-    constexpr const uint8_t defaultValueForSend = 0xff;
+    constexpr const uint16_t defaultValueForSend = 0xff;
     size_t bytesSend = 0;
     while ((size_t)bytesSend < length) {
         if (this->isReadyToSend()) {
@@ -87,9 +88,9 @@ size_t Spi::receive(uint8_t* const data, const size_t length) const
     return bytesSend;
 }
 
-uint8_t Spi::receive(void) const
+uint16_t Spi::receive(void) const
 {
-    return SPI_ReceiveData8(reinterpret_cast<SPI_TypeDef*>(mPeripherie));
+    return SPI_I2S_ReceiveData(reinterpret_cast<SPI_TypeDef*>(mPeripherie));
 }
 
 bool Spi::isReadyToSend(void) const

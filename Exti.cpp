@@ -17,7 +17,7 @@
 #include "trace.h"
 #include <cstring>
 #include <limits>
-#include "stm32f30x_it.h"
+#include "stm32f4xx_it.h"
 
 static const int __attribute__((unused)) g_DebugZones = ZONE_ERROR | ZONE_WARNING | ZONE_VERBOSE | ZONE_INFO;
 
@@ -42,7 +42,7 @@ void EXTI1_IRQHandler(void)
 #endif
 }
 
-void EXTI2_TSC_IRQHandler(void)
+void EXTI2_IRQHandler(void)
 {
 #if EXTI2_INTERRUPT_ENABLED
     constexpr const Exti& exti = hal::Factory<Exti>::getByExtiLine<EXTI_Line2>();
@@ -146,7 +146,7 @@ IRQn Exti::getIRQChannel(const EXTI_InitTypeDef& config) const
         return IRQn::EXTI1_IRQn;
 
     case EXTI_Line2:
-        return IRQn::EXTI2_TS_IRQn;
+        return IRQn::EXTI2_IRQn;
 
     case EXTI_Line3:
         return IRQn::EXTI3_IRQn;

@@ -25,15 +25,10 @@ using hal::Factory;
 
 void Crc::initialize(void) const
 {
-    CRC_DeInit();
-    CRC_ReverseInputDataSelect(mReverseInputSelection);
-    CRC_ReverseOutputDataCmd(mReverseOutputSelection);
-    CRC_SetInitRegister(mInitialValue);
-    CRC_PolynomialSizeSelect(mPolynomialSize);
-    CRC_SetPolynomial(mPolynomial);
+    CRC_ResetDR();
 }
 
-uint8_t Crc::getCrc(uint8_t const* const data, const size_t length) const
+uint32_t Crc::getCrc(uint8_t const* const data, const size_t length) const
 {
     if ((data == nullptr) || (length == 0)) {
         Trace(ZONE_WARNING, "Invalid parameters\r\n");
@@ -44,8 +39,9 @@ uint8_t Crc::getCrc(uint8_t const* const data, const size_t length) const
 
     CRC_ResetDR();
     for (size_t i = 0; i < length; i++) {
-        CRC_CalcCRC8bits(data[i]);
+        CRC_CalcCRC(data[i]);
     }
+
     return CRC_GetCRC();
 }
 

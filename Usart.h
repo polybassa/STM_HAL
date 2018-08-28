@@ -24,6 +24,16 @@
 #include "stm32f4xx_rcc.h"
 #include "hal_Factory.h"
 
+// ================================================================================================
+// Added preprocessor macros that are not part of the stm32f4 std periph lib,
+// but of those for the other stm32fx controllers.
+#define IS_USART_ALL_PERIPH_BASE(PERIPH) (((PERIPH) == USART1_BASE) || \
+                                          ((PERIPH) == USART2_BASE) || \
+                                          ((PERIPH) == USART3_BASE) || \
+                                          ((PERIPH) == UART4_BASE) || \
+                                          ((PERIPH) == UART5_BASE))
+// ================================================================================================
+
 extern "C" {
 void USART1_IRQHandler(void);
 void USART2_IRQHandler(void);
@@ -88,14 +98,13 @@ struct Usart {
 private:
     constexpr Usart(const enum Description&  desc,
                     const uint32_t&          peripherie,
-                    const USART_InitTypeDef& conf,
-                    const bool               txPinActiveLevelInversion = false) :
+                    const USART_InitTypeDef& conf) :
         mDescription(desc), mPeripherie(peripherie),
-        mConfiguration(conf), mTxPinActiveLevelInversion(txPinActiveLevelInversion) {}
+        mConfiguration(conf) {}
 
     const uint32_t mPeripherie;
     const USART_InitTypeDef mConfiguration;
-    const bool mTxPinActiveLevelInversion;
+    // const bool mTxPinActiveLevelInversion;	//TODO semms like the stm32f4 cannot do level inversion
     mutable bool mInitalized = false;
 
     void initialize(void) const;

@@ -63,12 +63,14 @@ void UART5_IRQHandler(void)
 
 void Usart::USART_IRQHandler(const Usart& peripherie)
 {
-    if (USART_GetITStatus(reinterpret_cast<USART_TypeDef*>(peripherie.mPeripherie), USART_IT_RTO)) {
-        if (Usart::ReceiveTimeoutInterruptCallbacks[peripherie.mDescription]) {
-            Usart::ReceiveTimeoutInterruptCallbacks[peripherie.mDescription]();
-        }
-        USART_ClearITPendingBit(reinterpret_cast<USART_TypeDef*>(peripherie.mPeripherie), USART_IT_RTO);
-    } else if (USART_GetITStatus(reinterpret_cast<USART_TypeDef*>(peripherie.mPeripherie), USART_IT_RXNE)) {
+    // TODO: it seems like this interrupt does not exist anymore
+//    if (USART_GetITStatus(reinterpret_cast<USART_TypeDef*>(peripherie.mPeripherie), USART_IT_RTO)) {
+//        if (Usart::ReceiveTimeoutInterruptCallbacks[peripherie.mDescription]) {
+//            Usart::ReceiveTimeoutInterruptCallbacks[peripherie.mDescription]();
+//        }
+//        USART_ClearITPendingBit(reinterpret_cast<USART_TypeDef*>(peripherie.mPeripherie), USART_IT_RTO);
+//    } else
+    if (USART_GetITStatus(reinterpret_cast<USART_TypeDef*>(peripherie.mPeripherie), USART_IT_RXNE)) {
         if (Usart::ReceiveInterruptCallbacks[peripherie.mDescription]) {
             uint8_t databyte =
                 static_cast<uint8_t>(USART_ReceiveData(reinterpret_cast<USART_TypeDef*>(peripherie.mPeripherie)));
@@ -85,11 +87,6 @@ void Usart::initialize() const
 {
     USART_DeInit(reinterpret_cast<USART_TypeDef*>(mPeripherie));
     USART_Init(reinterpret_cast<USART_TypeDef*>(mPeripherie), &mConfiguration);
-
-    if (mTxPinActiveLevelInversion) {
-        USART_InvPinCmd(reinterpret_cast<USART_TypeDef*>(mPeripherie), USART_InvPin_Tx, ENABLE);
-        USART_InvPinCmd(reinterpret_cast<USART_TypeDef*>(mPeripherie), USART_InvPin_Rx, ENABLE);
-    }
 
     USART_Cmd(reinterpret_cast<USART_TypeDef*>(mPeripherie), ENABLE);
     mInitalized = true;
@@ -138,9 +135,9 @@ void Usart::setBaudRate(const size_t baudRate) const
 void Usart::enableReceiveTimeout(std::function<void(void)> callback, const size_t bitsUntilTimeout) const
 {
     ReceiveTimeoutInterruptCallbacks[mDescription] = callback;
-
-    USART_SetReceiverTimeOut(reinterpret_cast<USART_TypeDef*>(mPeripherie), bitsUntilTimeout);
-    USART_ReceiverTimeOutCmd(reinterpret_cast<USART_TypeDef*>(mPeripherie), ENABLE);
+    // TODO timeouts are also not available the stm32f4 seems to be pretty limited
+//    USART_SetReceiverTimeOut(reinterpret_cast<USART_TypeDef*>(mPeripherie), bitsUntilTimeout);
+//    USART_ReceiverTimeOutCmd(reinterpret_cast<USART_TypeDef*>(mPeripherie), ENABLE);
     enableReceiveTimeoutIT_Flag();
 }
 
@@ -163,19 +160,19 @@ void Usart::disableReceiveTimeout(void) const
 {
     ReceiveTimeoutInterruptCallbacks[mDescription] = nullptr;
 
-    USART_ReceiverTimeOutCmd(reinterpret_cast<USART_TypeDef*>(mPeripherie), DISABLE);
+//    USART_ReceiverTimeOutCmd(reinterpret_cast<USART_TypeDef*>(mPeripherie), DISABLE);
     disableReceiveTimeoutIT_Flag();
 }
 
 void Usart::enableReceiveTimeoutIT_Flag(void) const
 {
-    USART_ClearITPendingBit(reinterpret_cast<USART_TypeDef*>(mPeripherie), USART_IT_RTO);
-    USART_ITConfig(reinterpret_cast<USART_TypeDef*>(mPeripherie), USART_IT_RTO, ENABLE);
+//    USART_ClearITPendingBit(reinterpret_cast<USART_TypeDef*>(mPeripherie), USART_IT_RTO);
+//    USART_ITConfig(reinterpret_cast<USART_TypeDef*>(mPeripherie), USART_IT_RTO, ENABLE);
 }
 
 void Usart::disableReceiveTimeoutIT_Flag(void) const
 {
-    USART_ITConfig(reinterpret_cast<USART_TypeDef*>(mPeripherie), USART_IT_RTO, DISABLE);
+//    USART_ITConfig(reinterpret_cast<USART_TypeDef*>(mPeripherie), USART_IT_RTO, DISABLE);
 }
 
 void Usart::send(const uint16_t data) const

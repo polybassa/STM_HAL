@@ -24,6 +24,15 @@
 #include "hal_Factory.h"
 #include "Mutex.h"
 
+// ================================================================================================
+// Added preprocessor macros that are not part of the stm32f4 std periph lib,
+// but of those for the other stm32fx controllers.
+#define IS_SPI_ALL_PERIPH_BASE(PERIPH) (((PERIPH) == SPI1_BASE) || \
+                                        ((PERIPH) == SPI2_BASE) || \
+                                        ((PERIPH) == SPI3_BASE) || \
+                                        ((PERIPH) == SPI4_BASE))
+// ================================================================================================
+
 namespace hal
 {
 struct Spi {
@@ -38,17 +47,17 @@ struct Spi {
     Spi& operator=(Spi &&) = delete;
 
     template<size_t n>
-    size_t receive(std::array<uint8_t, n>&) const;
+    size_t receive(std::array<uint16_t, n>&) const;
 
     template<size_t n>
-    size_t send(const std::array<uint8_t, n>&) const;
+    size_t send(const std::array<uint16_t, n>&) const;
 
-    void send(const uint8_t) const;
-    size_t send(uint8_t const* const, const size_t) const;
+    void send(const uint16_t) const; // TODO API change, check for correctness
+    size_t send(uint16_t const* const, const size_t) const;
     bool isReadyToSend(void) const;
 
-    uint8_t receive(void) const;
-    size_t receive(uint8_t* const, const size_t) const;
+    uint16_t receive(void) const;    // TODO API change, check for correctness
+    size_t receive(uint16_t* const, const size_t) const;
     bool isReadyToReceive(void) const;
 
 private:
@@ -99,7 +108,7 @@ public:
         static_assert(IS_SPI_CPHA(Container[index].mConfiguration.SPI_CPHA), "Invalid");
         static_assert(IS_SPI_CPOL(Container[index].mConfiguration.SPI_CPOL), "Invalid");
         static_assert(IS_SPI_CRC_POLYNOMIAL(Container[index].mConfiguration.SPI_CRCPolynomial), "Invalid");
-        static_assert(IS_SPI_DATA_SIZE(Container[index].mConfiguration.SPI_DataSize), "Invalid");
+        static_assert(IS_SPI_DATASIZE(Container[index].mConfiguration.SPI_DataSize), "Invalid");
         static_assert(IS_SPI_DIRECTION_MODE(Container[index].mConfiguration.SPI_Direction), "Invalid");
         static_assert(IS_SPI_FIRST_BIT(Container[index].mConfiguration.SPI_FirstBit), "Invalid");
         static_assert(IS_SPI_MODE(Container[index].mConfiguration.SPI_Mode), "Invalid");

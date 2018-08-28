@@ -23,6 +23,24 @@
 #include "stm32f4xx_rcc.h"
 #include "hal_Factory.h"
 
+// ================================================================================================
+#define IS_TIM_ALL_PERIPH_BASE(PERIPH) ( \
+                                        ((PERIPH) == TIM1_BASE) || \
+                                        ((PERIPH) == TIM2_BASE) || \
+                                        ((PERIPH) == TIM3_BASE) || \
+                                        ((PERIPH) == TIM4_BASE) || \
+                                        ((PERIPH) == TIM5_BASE) || \
+                                        ((PERIPH) == TIM6_BASE) || \
+                                        ((PERIPH) == TIM7_BASE) || \
+                                        ((PERIPH) == TIM8_BASE) || \
+                                        ((PERIPH) == TIM9_BASE) || \
+                                        ((PERIPH) == TIM10_BASE) || \
+                                        ((PERIPH) == TIM11_BASE) || \
+                                        ((PERIPH) == TIM12_BASE) || \
+                                        ((PERIPH) == TIM13_BASE) || \
+                                        ((PERIPH) == TIM14_BASE))
+// ================================================================================================
+
 namespace dev
 {
 struct SensorBLDC;
@@ -57,7 +75,8 @@ private:
     constexpr Tim(const enum Description&        desc,
                   const uint32_t&                peripherie,
                   const TIM_TimeBaseInitTypeDef& conf) :
-        mDescription(desc), mPeripherie(peripherie),
+        mDescription(desc),
+        mPeripherie(peripherie),
         mConfiguration(conf) {}
 
     const uint32_t mPeripherie;
@@ -87,16 +106,19 @@ class Factory<Tim>
             if ((clock == RCC_APB1Periph_TIM2) ||
                 (clock == RCC_APB1Periph_TIM3) ||
                 (clock == RCC_APB1Periph_TIM4) ||
+                (clock == RCC_APB1Periph_TIM5) ||
                 (clock == RCC_APB1Periph_TIM6) ||
-                (clock == RCC_APB1Periph_TIM7))
+                (clock == RCC_APB1Periph_TIM7) ||
+                (clock == RCC_APB1Periph_TIM12) ||
+                (clock == RCC_APB1Periph_TIM13) ||
+                (clock == RCC_APB1Periph_TIM14))
             {
                 RCC_APB1PeriphClockCmd(clock, ENABLE);
             } else if ((clock == RCC_APB2Periph_TIM1) ||
                        (clock == RCC_APB2Periph_TIM8) ||
-                       (clock == RCC_APB2Periph_TIM15) ||
-                       (clock == RCC_APB2Periph_TIM16) ||
-                       (clock == RCC_APB2Periph_TIM17) ||
-                       (clock == RCC_APB2Periph_TIM20))
+                       (clock == RCC_APB2Periph_TIM9) ||
+                       (clock == RCC_APB2Periph_TIM10) ||
+                       (clock == RCC_APB2Periph_TIM11))
             {
                 RCC_APB2PeriphClockCmd(clock, ENABLE);
             }
@@ -109,54 +131,57 @@ class Factory<Tim>
             if (tim.mDescription != Tim::__ENUM__SIZE) {
                 tim.initialize();
 
-                switch (tim.mPeripherie) {
-                case TIM1_BASE:
-                    tim.mClockFrequency = clocks.TIM1CLK_Frequency;
-                    break;
+                tim.mClockFrequency = clocks.SYSCLK_Frequency;
 
-                case TIM2_BASE:
-                    tim.mClockFrequency = clocks.TIM2CLK_Frequency;
-                    break;
-
-                case TIM3_BASE:
-                    tim.mClockFrequency = clocks.TIM3CLK_Frequency;
-                    break;
-
-                case TIM4_BASE: // TODO validate frequency
-                    tim.mClockFrequency = clocks.TIM3CLK_Frequency;
-                    break;
-
-                case TIM6_BASE: // TODO validate frequency
-                    tim.mClockFrequency = clocks.TIM3CLK_Frequency;
-                    break;
-
-                case TIM7_BASE: // TODO validate frequency
-                    tim.mClockFrequency = clocks.TIM3CLK_Frequency;
-                    break;
-
-                case TIM8_BASE:
-                    tim.mClockFrequency = clocks.TIM8CLK_Frequency;
-                    break;
-
-                case TIM15_BASE:
-                    tim.mClockFrequency = clocks.TIM15CLK_Frequency;
-                    break;
-
-                case TIM16_BASE:
-                    tim.mClockFrequency = clocks.TIM16CLK_Frequency;
-                    break;
-
-                case TIM17_BASE:
-                    tim.mClockFrequency = clocks.TIM17CLK_Frequency;
-                    break;
-
-                case TIM20_BASE:
-                    tim.mClockFrequency = clocks.TIM20CLK_Frequency;
-                    break;
-
-                default:
-                    tim.mClockFrequency = 0;
-                }
+                // TODO what is a reasonable clock source?
+//                switch (tim.mPeripherie) {
+//                case TIM1_BASE:
+//                    tim.mClockFrequency = clocks.TIM1CLK_Frequency;
+//                    break;
+//
+//                case TIM2_BASE:
+//                    tim.mClockFrequency = clocks.TIM2CLK_Frequency;
+//                    break;
+//
+//                case TIM3_BASE:
+//                    tim.mClockFrequency = clocks.TIM3CLK_Frequency;
+//                    break;
+//
+//                case TIM4_BASE: // TODO validate frequency
+//                    tim.mClockFrequency = clocks.TIM3CLK_Frequency;
+//                    break;
+//
+//                case TIM6_BASE: // TODO validate frequency
+//                    tim.mClockFrequency = clocks.TIM3CLK_Frequency;
+//                    break;
+//
+//                case TIM7_BASE: // TODO validate frequency
+//                    tim.mClockFrequency = clocks.TIM3CLK_Frequency;
+//                    break;
+//
+//                case TIM8_BASE:
+//                    tim.mClockFrequency = clocks.TIM8CLK_Frequency;
+//                    break;
+//
+//                case TIM15_BASE:
+//                    tim.mClockFrequency = clocks.TIM15CLK_Frequency;
+//                    break;
+//
+//                case TIM16_BASE:
+//                    tim.mClockFrequency = clocks.TIM16CLK_Frequency;
+//                    break;
+//
+//                case TIM17_BASE:
+//                    tim.mClockFrequency = clocks.TIM17CLK_Frequency;
+//                    break;
+//
+//                case TIM20_BASE:
+//                    tim.mClockFrequency = clocks.TIM20CLK_Frequency;
+//                    break;
+//
+//                default:
+//                    tim.mClockFrequency = 0;
+//                }
             }
         }
     }

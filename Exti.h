@@ -28,10 +28,20 @@
 #include "Gpio.h"
 #include "hal_Factory.h"
 
+// ================================================================================================
+// Macro definitions
+// TODO maybe add a check for the validity of the PIN_SOURCE
+//static_assert(IS_GPIO_PIN_SOURCE(pinSource), "Invalid Pin Source");
+#define PIN_SOURCE_TO_EXTI_LINE(PIN_SOURCE) (((uint32_t)1) << (PIN_SOURCE))
+// TODO implement me
+// static_assert(IS_EXTI_LINE(extiLine), "Invalid Line");
+//#define EXTI_LINE_TO_PIN_SOURCE(EXTI_LINE)
+// ================================================================================================
+
 extern "C" {
 void EXTI0_IRQHandler(void);
 void EXTI1_IRQHandler(void);
-void EXTI2_TSC_IRQHandler(void);
+void EXTI2_IRQHandler(void);
 void EXTI3_IRQHandler(void);
 void EXTI4_IRQHandler(void);
 void EXTI9_5_IRQHandler(void);
@@ -63,8 +73,8 @@ private:
         mDescription(desc), mGpio(gpio),
         mConfiguration(EXTI_InitTypeDef
                        {
-                           gpio
-                           .mPinSource, EXTI_Mode_Interrupt,
+                           PIN_SOURCE_TO_EXTI_LINE((uint32_t)gpio.mPinSource),
+                           EXTI_Mode_Interrupt,
                            trigger,
                            DISABLE
                        }),
@@ -109,7 +119,7 @@ class Factory<Exti>
     template<uint32_t Exti_Line, enum Exti::Description index>
     static constexpr const Exti& getByExtiLine(void)
     {
-        return (Container[index]).mGpio.mPinSource ==
+        return (Container[index]).mConfiguration.EXTI_Line ==
                Exti_Line ? Container[index] : getByExtiLine<Exti_Line,
                                                             static_cast<enum Exti::Description>(index - 1)>();
     }
@@ -121,10 +131,11 @@ public:
     {
         static_assert(IS_EXTI_MODE(Container[index].mConfiguration.EXTI_Mode), "Invalid Mode");
         static_assert(IS_EXTI_PIN_SOURCE(Container[index].mGpio.mPinSource), "Invalid PinSource");
-        static_assert(IS_EXTI_LINE_ALL(Container[index].mConfiguration.EXTI_Line), "Invalid Line");
+        static_assert(IS_EXTI_LINE(Container[index].mConfiguration.EXTI_Line), "Invalid Line");
         static_assert(IS_EXTI_TRIGGER(Container[index].mConfiguration.EXTI_Trigger), "Invalid Trigger");
-        static_assert(Container[index].mConfiguration.EXTI_Line == Container[index].mGpio.mPinSource,
-                      "Exti declaration in the wrong place. EXTI_LINE must be equal gpio pin Source");
+        static_assert(Container[index].mConfiguration.EXTI_Line ==
+                      PIN_SOURCE_TO_EXTI_LINE(Container[index].mGpio.mPinSource),
+                      "Exti declaration in the wrong place. EXTI_LINE must be compatible to gpio pin Source");
 
         static_assert(
                       Container[index].mDescription ==
@@ -140,7 +151,8 @@ public:
     template<uint32_t Exti_Line>
     static constexpr const Exti& getByExtiLine(void)
     {
-        static_assert(IS_EXTI_LINE_EXT(Exti_Line), "Invalid Line ");
+        // TODO is this check double performed?
+        static_assert(IS_EXTI_LINE(Exti_Line), "Invalid Line ");
         return getByExtiLine<Exti_Line,
                              static_cast<enum Exti::Description>(Exti::Description::__ENUM__SIZE - 1)>();
     }

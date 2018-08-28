@@ -34,29 +34,13 @@ struct Crc {
     Crc& operator=(const Crc&) = delete;
     Crc& operator=(Crc &&) = delete;
 
-    uint8_t getCrc(uint8_t const* const data, const size_t length) const;
+    uint32_t getCrc(uint8_t const* const data, const size_t length) const;
 
 private:
-    constexpr Crc(const enum Description desc,
-                  const uint32_t         polynomialSize,
-                  const uint32_t         reverseInputSelection,
-                  const bool             reverseOutputSelection,
-                  const uint32_t         initialValue,
-                  const uint32_t         polynomial) :
-        mDescription(std::move(desc)),
-        mPolynomialSize(std::move(polynomialSize)),
-        mReverseInputSelection(std::move(reverseInputSelection)),
-        mReverseOutputSelection(reverseOutputSelection ==
-                                true ? ENABLE : DISABLE),
-        mInitialValue(std::move(initialValue)),
-        mPolynomial(std::move(polynomial)) {}
+    constexpr Crc(const enum Description desc) :
+        mDescription(std::move(desc)) {}
 
     const enum Description mDescription;
-    const uint32_t mPolynomialSize;
-    const uint32_t mReverseInputSelection;
-    const FunctionalState mReverseOutputSelection;
-    const uint32_t mInitialValue;
-    const uint32_t mPolynomial;
 
     void initialize(void) const;
 
@@ -72,9 +56,9 @@ class Factory<Crc>
 
     Factory(void)
     {
-        RCC_AHBPeriphClockCmd(RCC_AHBPeriph_CRC, ENABLE);
+        RCC_AHB1PeriphClockCmd(RCC_AHB1Periph_CRC, ENABLE);
 
-        CRC_DeInit();
+//        CRC_DeInit(); // TODO probably not needed?
 
         Container[Crc::SYSTEM_CRC].initialize();
     }
@@ -84,8 +68,8 @@ public:
     template<enum Crc::Description index>
     static constexpr const Crc& get(void)
     {
-        static_assert(IS_CRC_REVERSE_INPUT_DATA(Container[index].mReverseInputSelection), "Invalid");
-        static_assert(IS_CRC_POL_SIZE(Container[index].mPolynomialSize), "Invalid");
+//        static_assert(IS_CRC_REVERSE_INPUT_DATA(Container[index].mReverseInputSelection), "Invalid");
+//        static_assert(IS_CRC_POL_SIZE(Container[index].mPolynomialSize), "Invalid");
 
         static_assert(index != Crc::Description::__ENUM__SIZE, "__ENUM__SIZE is not accessible");
         static_assert(Container[index].mDescription == index, "Wrong mapping between Description and Container");

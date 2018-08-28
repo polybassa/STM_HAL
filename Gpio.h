@@ -23,6 +23,22 @@
 #include "stm32f4xx_rcc.h"
 #include "hal_Factory.h"
 
+// ================================================================================================
+// Added preprocessor macros that are not part of the stm32f4 std periph lib,
+// but of those for the other stm32fx controllers.
+#define IS_GPIO_ALL_PERIPH_BASE(PERIPH) (((PERIPH) == GPIOA_BASE) || \
+                                         ((PERIPH) == GPIOB_BASE) || \
+                                         ((PERIPH) == GPIOC_BASE) || \
+                                         ((PERIPH) == GPIOD_BASE) || \
+                                         ((PERIPH) == GPIOE_BASE) || \
+                                         ((PERIPH) == GPIOF_BASE) || \
+                                         ((PERIPH) == GPIOG_BASE) || \
+                                         ((PERIPH) == GPIOH_BASE) || \
+                                         ((PERIPH) == GPIOI_BASE) || \
+                                         ((PERIPH) == GPIOJ_BASE) || \
+                                         ((PERIPH) == GPIOK_BASE))
+// ================================================================================================
+
 namespace hal
 {
 struct Exti;
@@ -70,26 +86,29 @@ class Factory<Gpio>
 {
 #include "Gpio_config.h"
 
-    static constexpr const std::array<const uint32_t, 8> Clocks =
+    static constexpr const std::array<const uint32_t, 11> Clocks =
     { {
-          RCC_AHBPeriph_GPIOA,
-          RCC_AHBPeriph_GPIOB,
-          RCC_AHBPeriph_GPIOC,
-          RCC_AHBPeriph_GPIOD,
-          RCC_AHBPeriph_GPIOE,
-          RCC_AHBPeriph_GPIOF,
-          RCC_AHBPeriph_GPIOG,
-          RCC_AHBPeriph_GPIOH
+          RCC_AHB1ENR_GPIOAEN,
+          RCC_AHB1ENR_GPIOBEN,
+          RCC_AHB1ENR_GPIOCEN,
+          RCC_AHB1ENR_GPIODEN,
+          RCC_AHB1ENR_GPIOEEN,
+          RCC_AHB1ENR_GPIOFEN,
+          RCC_AHB1ENR_GPIOGEN,
+          RCC_AHB1ENR_GPIOHEN,
+          RCC_AHB1ENR_GPIOIEN,
+          RCC_AHB1ENR_GPIOJEN,
+          RCC_AHB1ENR_GPIOKEN
       } };
 
     Factory(void)
     {
         for (const auto& clock : Clocks) {
-            RCC_AHBPeriphClockCmd(clock, ENABLE);
+            RCC_AHB1PeriphClockCmd(clock, ENABLE);
 
             // Alternative way of GPIO_DeInit(X)
-            RCC_AHBPeriphResetCmd(clock, ENABLE);
-            RCC_AHBPeriphResetCmd(clock, DISABLE);
+            RCC_AHB1PeriphResetCmd(clock, ENABLE);
+            RCC_AHB1PeriphResetCmd(clock, DISABLE);
         }
         for (const auto& gpio : Container) {
             if (gpio.mDescription != Gpio::__ENUM__SIZE) {
@@ -101,7 +120,7 @@ class Factory<Gpio>
     static constexpr const Gpio& getGpio(void)
     {
         static_assert(IS_GPIO_ALL_PERIPH_BASE(Container[index].mPeripherie), "Invalid Peripheries ");
-        static_assert(IS_GPIO_PIN(Container[index].mConfiguration.GPIO_Speed), "Invalid Speed");
+        static_assert(IS_GPIO_SPEED(Container[index].mConfiguration.GPIO_Speed), "Invalid Speed");
         static_assert(IS_GPIO_OTYPE(Container[index].mConfiguration.GPIO_OType), "Invalid OType");
         static_assert(IS_GPIO_PUPD(Container[index].mConfiguration.GPIO_PuPd), "Invalid PuPd value ");
         static_assert((Container[index].mConfiguration.GPIO_Mode != GPIO_Mode_AF) ||
