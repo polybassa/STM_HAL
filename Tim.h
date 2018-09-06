@@ -132,56 +132,6 @@ class Factory<Tim>
                 tim.initialize();
 
                 tim.mClockFrequency = clocks.SYSCLK_Frequency;
-
-                // TODO what is a reasonable clock source?
-//                switch (tim.mPeripherie) {
-//                case TIM1_BASE:
-//                    tim.mClockFrequency = clocks.TIM1CLK_Frequency;
-//                    break;
-//
-//                case TIM2_BASE:
-//                    tim.mClockFrequency = clocks.TIM2CLK_Frequency;
-//                    break;
-//
-//                case TIM3_BASE:
-//                    tim.mClockFrequency = clocks.TIM3CLK_Frequency;
-//                    break;
-//
-//                case TIM4_BASE: // TODO validate frequency
-//                    tim.mClockFrequency = clocks.TIM3CLK_Frequency;
-//                    break;
-//
-//                case TIM6_BASE: // TODO validate frequency
-//                    tim.mClockFrequency = clocks.TIM3CLK_Frequency;
-//                    break;
-//
-//                case TIM7_BASE: // TODO validate frequency
-//                    tim.mClockFrequency = clocks.TIM3CLK_Frequency;
-//                    break;
-//
-//                case TIM8_BASE:
-//                    tim.mClockFrequency = clocks.TIM8CLK_Frequency;
-//                    break;
-//
-//                case TIM15_BASE:
-//                    tim.mClockFrequency = clocks.TIM15CLK_Frequency;
-//                    break;
-//
-//                case TIM16_BASE:
-//                    tim.mClockFrequency = clocks.TIM16CLK_Frequency;
-//                    break;
-//
-//                case TIM17_BASE:
-//                    tim.mClockFrequency = clocks.TIM17CLK_Frequency;
-//                    break;
-//
-//                case TIM20_BASE:
-//                    tim.mClockFrequency = clocks.TIM20CLK_Frequency;
-//                    break;
-//
-//                default:
-//                    tim.mClockFrequency = 0;
-//                }
             }
         }
     }
@@ -197,6 +147,14 @@ public:
         static_assert(index != Tim::Description::__ENUM__SIZE, "__ENUM__SIZE is not accessible");
         static_assert(index < Container[index + 1].mDescription, "Incorrect order of Tims in TimFactory");
         static_assert(Container[index].mDescription == index, "Wrong mapping between Description and Container");
+
+        // configuration
+        static_assert(Container[index].mConfiguration.TIM_Prescaler >= 0x0000, "TIM Period under 0x0000");
+        static_assert(Container[index].mConfiguration.TIM_Prescaler <= 0xFFFF, "TIM Period over 0xFFFF");
+        static_assert(Container[index].mConfiguration.TIM_Period >= 0x0000, "TIM Period under 0x0000");
+        static_assert(Container[index].mConfiguration.TIM_Period <= 0xFFFF, "TIM Period over 0xFFFF");
+        static_assert(Container[index].mConfiguration.TIM_RepetitionCounter >= 0x00, "TIM Period under 0x00");
+        static_assert(Container[index].mConfiguration.TIM_RepetitionCounter <= 0xFF, "TIM Period over 0xFF");
 
         return Container[index];
     }
