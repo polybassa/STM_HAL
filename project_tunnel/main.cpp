@@ -34,18 +34,11 @@
 /* COM LAYER INCLUDES */
 
 /* APP LAYER INLCUDES */
-#include "ModemDriver.h"
-#include "CanController.h"
-#include "CommandMultiplexer.h"
-#include "DemoExecuter.h"
+#include "ModemTunnel.h"
 
 /* GLOBAL VARIABLES */
 static const int __attribute__((used)) g_DebugZones = ZONE_ERROR | ZONE_WARNING |
                                                       ZONE_VERBOSE | ZONE_INFO;
-
-extern char _version_start;
-extern char _version_end;
-const std::string VERSION(&_version_start, (&_version_end - &_version_start));
 
 int main(void)
 {
@@ -54,21 +47,12 @@ int main(void)
     hal::initFactory<hal::Factory<hal::Dma> >();
     hal::initFactory<hal::Factory<hal::UsartWithDma> >();
 
-    TraceInit();
-    Trace(ZONE_INFO, "Version: %s \r\n", VERSION.c_str());
-
-    auto modem = new app::ModemDriver(hal::Factory<hal::UsartWithDma>::get<hal::Usart::
+    auto modem = new app::ModemTunnel(hal::Factory<hal::UsartWithDma>::get<hal::Usart::DEBUG_IF>(),
+                                      hal::Factory<hal::UsartWithDma>::get<hal::Usart::
                                                                            MODEM_COM>(),
                                       hal::Factory<hal::Gpio>::get<hal::Gpio::MODEM_RESET>(),
                                       hal::Factory<hal::Gpio>::get<hal::Gpio::MODEM_POWER>(),
                                       hal::Factory<hal::Gpio>::get<hal::Gpio::MODEM_SUPPLY>());
-
-    auto can = new app::CanController(hal::Factory<hal::UsartWithDma>::get<hal::Usart::SECCO_COM>(),
-                                      hal::Factory<hal::Gpio>::get<hal::Gpio::SECCO_PWR>(),
-                                      hal::Factory<hal::Gpio>::getAlternateFunctionGpio<hal::Gpio::USART2_TX>());
-
-    auto demo = new app::DemoExecuter(*can);
-    auto mux = new app::CommandMultiplexer(*modem, *can, *demo);
 
     os::Task::startScheduler();
 
