@@ -1,0 +1,137 @@
+ifeq ($(MAKECMDGOALS),debug_firmware)
+DEFINES+=-DDEBUG
+DEFINES+=-DUSART_DEBUG
+DEFINES+=-g
+DEFINES+=-O0
+DEFINES+=-DUSE_FULL_ASSERT
+LDFLAGS+=-O0
+LDFLAGS+=-u _printf_float
+endif
+
+ifeq ($(MAKECMDGOALS),firmware)
+DEFINES+=-O3
+LDFLAGS+=-O3
+endif
+
+ifneq (,$(filter debug_firmware firmware,$(MAKECMDGOALS)))
+
+DEFINES+=-DUSE_FREERTOS
+DEFINES+=-DHSE_VALUE=12000000
+
+# Where to find source files that do not live in this directory.
+VPATH+=${ROOT}/sources
+VPATH+=${ROOT}/sources/hal_stm32f10x
+VPATH+=${ROOT}/sources/os
+VPATH+=${ROOT}/sources/dev
+VPATH+=${ROOT}/sources/app
+VPATH+=${RTOS_SOURCE_DIR}
+VPATH+=${RTOS_SOURCE_DIR}/portable/MemMang
+VPATH+=${RTOS_SOURCE_DIR}/portable/GCC/ARM_CM3
+VPATH+=${ROOT}/libraries/CMSIS/Source
+VPATH+=${ROOT}/libraries/CMSIS/Device/ST/STM32F10x
+VPATH+=${ROOT}/libraries/STM32F10x_StdPeriph_Driver/src
+
+VPATH+=${ROOT}/libraries/SystemView_Src_V240a/SEGGER
+VPATH+=${ROOT}/libraries/SystemView_Src_V240a/OS
+VPATH+=${ROOT}/libraries/SystemView_Src_V240a/Config
+
+VPATH+=${ROOT}/device
+
+VPATH+=${PRJ_PATH}
+VPATH+=${PRJ_PATH}/apps
+
+
+# Where to find header files that do not live in the source directory.
+IPATH=${ROOT}/sources
+IPATH+=${PRJ_PATH}
+IPATH+=${PRJ_PATH}/config
+IPATH+=${PRJ_PATH}/apps
+IPATH+=${ROOT}/sources/hal_stm32f10x
+IPATH+=${ROOT}/sources/os
+IPATH+=${ROOT}/sources/dev
+IPATH+=${ROOT}/sources/utility
+IPATH+=${ROOT}/sources/app
+IPATH+=${RTOS_SOURCE_DIR}/include
+IPATH+=${RTOS_SOURCE_DIR}
+IPATH+=${RTOS_SOURCE_DIR}/portable/GCC/ARM_CM3
+IPATH+=${ROOT}/libraries/CMSIS/Include
+IPATH+=${ROOT}/libraries/CMSIS/Device/ST/STM32F10x
+IPATH+=${ROOT}/libraries/STM32F10x_StdPeriph_Driver/inc
+IPATH+=${ROOT}/libraries
+
+IPATH+=${ROOT}/libraries/SystemView_Src_V240a/SEGGER
+IPATH+=${ROOT}/libraries/SystemView_Src_V240a/OS
+IPATH+=${ROOT}/libraries/SystemView_Src_V240a/Config
+
+# PMD firmware
+${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/main.o
+${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/versionfile.o
+${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/binaryfile.o
+
+# HAL Layer
+${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/Gpio.o
+${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/Usart.o
+${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/Dma.o
+${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/UsartWithDma.o
+
+
+# DEV Layer
+${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/DebugInterface.o
+
+# OS Layer
+${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/CountingSemaphore.o
+${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/DeepSleepInterface.o
+${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/Mutex.o
+${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/RecursiveMutex.o
+${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/Semaphore.o
+${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/os_Task.o
+${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/TaskEndless.o
+${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/TaskInterruptable.o
+
+# App Layer
+${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/ModemDriver.o
+${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/AT_Parser.o
+${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/CanController.o
+${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/CommandMultiplexer.o
+${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/DemoExecuter.o
+
+#PMD TestApps
+#${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/TestGpio.o
+#${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/TestModem.o
+
+
+# device
+${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/startup_stm32f10x_hd.o
+${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/system_stm32f10x.o
+${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/syscalls.o
+${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/stm32f10x_it.o
+
+# driverlib
+${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/stm32f10x_rcc.o
+${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/stm32f10x_pwr.o
+#${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/stm32f10x_rtc.o
+${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/stm32f10x_gpio.o
+${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/stm32f10x_usart.o
+#${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/stm32f10x_spi.o
+${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/stm32f10x_dma.o
+${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/misc.o
+#${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/stm32f10x_exti.o
+#${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/stm32f10x_tim.o
+#${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/stm32f10x_adc.o
+#${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/stm32f10x_crc.o
+#${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/stm32f10x_i2c.o
+
+# freeRTOS
+${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/croutine.o
+${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/list.o
+${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/queue.o
+${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/stream_buffer.o
+${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/tasks.o
+${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/port.o
+${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/heap_3.o
+${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/event_groups.o
+
+# SEGGER_SYSVIEW
+${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/SEGGER_RTT.o
+${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/SEGGER_RTT_printf.o
+endif
