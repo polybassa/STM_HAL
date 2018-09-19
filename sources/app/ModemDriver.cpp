@@ -71,20 +71,18 @@ ModemDriver::ModemDriver(const hal::UsartWithDma& interface,
                      }
                  }),
     mATUSOST(std::shared_ptr<app::ATCmdUSOST>(new app::ATCmdUSOST(mSend, mParser))),
-    mATUSORF(std::shared_ptr<app::ATCmdUSORF>(new app::ATCmdUSORF(mSend, mParser, mUrcCallback)))
+    mATUSORF(std::shared_ptr<app::ATCmdUSORF>(new app::ATCmdUSORF(mSend, mParser, mUrcCallback))),
+    mATUUSORF(std::shared_ptr<app::ATCmdURC>(new app::ATCmdURC("UUSORF", "+UUSORF: ", mParser, mUrcCallback))),
+    mATUUSORD(std::shared_ptr<app::ATCmdURC>(new app::ATCmdURC("UUSORD", "+UUSORD: ", mParser, mUrcCallback)))
 {
     mInterface.mUsart.enableNonBlockingReceive(ModemDriverInterruptHandler);
 
     mParser.registerAtCommand(std::shared_ptr<app::AT>(new app::ATCmdOK(mParser)));
     mParser.registerAtCommand(std::shared_ptr<app::AT>(new app::ATCmdERROR(mParser)));
-
-    auto atuusorf = std::shared_ptr<app::ATCmdURC>(new app::ATCmdURC("UUSORF", "+UUSORF: ", mParser, mUrcCallback));
-    auto atuusord = std::shared_ptr<app::ATCmdURC>(new app::ATCmdURC("UUSORD", "+UUSORD: ", mParser, mUrcCallback));
-
     mParser.registerAtCommand(mATUSOST);
     mParser.registerAtCommand(mATUSORF);
-    mParser.registerAtCommand(atuusorf);
-    mParser.registerAtCommand(atuusord);
+    mParser.registerAtCommand(mATUUSORF);
+    mParser.registerAtCommand(mATUUSORD);
 }
 
 void ModemDriver::enterDeepSleep(void)
@@ -137,14 +135,15 @@ void ModemDriver::parserTaskFunction(const bool& join)
 
 bool ModemDriver::modemStartup(void)
 {
-    std::array<std::shared_ptr<app::ATCmd>, 7> startupCommands = {
+    std::array<std::shared_ptr<app::ATCmd>, 6> startupCommands = {
+        std::shared_ptr<app::ATCmd>(new app::ATCmd("ATZ", "ATZ\r", "", mParser)),
         std::shared_ptr<app::ATCmd>(new app::ATCmd("ATE0V1", "ATE0V1\r", "", mParser)),
         std::shared_ptr<app::ATCmd>(new app::ATCmd("AT+CMEE", "AT+CMEE=2\r", "", mParser)),
         std::shared_ptr<app::ATCmd>(new app::ATCmd("AT+CGCLASS", "AT+CGCLASS=\"B\"\r", "", mParser)),
         std::shared_ptr<app::ATCmd>(new app::ATCmd("AT+CGGATT", "AT+CGATT=1\r", "", mParser)),
         std::shared_ptr<app::ATCmd>(new app::ATCmd("AT+UPSDA", "AT+UPSDA=0,3\r", "", mParser)),
-        std::shared_ptr<app::ATCmd>(new app::ATCmd("AT+USOCR", "AT+USOCR=17\r", "", mParser)),
-        std::shared_ptr<app::ATCmd>(new app::ATCmd("AT+USOCO", AT_CMD_USOCO, "", mParser)),
+        //std::shared_ptr<app::ATCmd>(new app::ATCmd("AT+USOCR", "AT+USOCR=17\r", "", mParser)), //probably not necessary, since udp only communication is used
+        //std::shared_ptr<app::ATCmd>(new app::ATCmd("AT+USOCO", AT_CMD_USOCO, "", mParser)),  //probably not necessary since udp only communication is used
     };
 
     for (const auto& cmd : startupCommands) {

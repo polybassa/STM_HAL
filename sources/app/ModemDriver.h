@@ -58,6 +58,8 @@ class ModemDriver final :
 
     std::shared_ptr<app::ATCmdUSOST> mATUSOST;
     std::shared_ptr<app::ATCmdUSORF> mATUSORF;
+    std::shared_ptr<app::ATCmdURC> mATUUSORF;
+    std::shared_ptr<app::ATCmdURC> mATUUSORD;
 
     std::function<void(std::string_view)> mReceiveCallback;
     size_t mErrorCount = 0;

@@ -92,9 +92,18 @@ void ATCmd::errorReceived(void)
 
 AT::Return_t ATCmdUSOST::send(std::string_view data, std::chrono::milliseconds timeout)
 {
+    return this->send(data, mIp, mPort, timeout);
+}
+
+AT::Return_t ATCmdUSOST::send(std::string_view          data,
+                              std::string_view          ip,
+                              std::string_view          port,
+                              std::chrono::milliseconds timeout)
+{
     mData = data;
     std::string request = "AT+USOST=" + std::to_string(mSocket) +
-                          ",\"" + mIp + "\"," + mPort + "," +
+                          ",\"" +
+                          std::string(ip.data(), ip.length()) + "\"," + std::string(port.data(), port.length()) + "," +
                           std::to_string(data.length()) + "\r";
     mRequest = request;
     mWaitingForPrompt = true;
