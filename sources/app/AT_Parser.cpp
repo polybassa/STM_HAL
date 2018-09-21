@@ -17,6 +17,7 @@
 #include "trace.h"
 #include <vector>
 #include "LockGuard.h"
+#include "binascii.h"
 
 using app::AT;
 using app::ATCmd;
@@ -28,7 +29,7 @@ using app::ATCmdUSORF;
 using app::ATCmdUSOST;
 using app::ATParser;
 
-static const int __attribute__((unused)) g_DebugZones = 0; //ZONE_ERROR | ZONE_INFO; //ZONE_ERROR | ZONE_WARNING | ZONE_VERBOSE | ZONE_INFO;
+static constexpr const int __attribute__((unused)) g_DebugZones = 0; // ZONE_ERROR | ZONE_WARNING | ZONE_VERBOSE | ZONE_INFO;
 
 void AT::okReceived(void)
 {
@@ -46,7 +47,7 @@ AT::Return_t AT::onResponseMatch(void)
     return Return_t::WAITING;
 }
 
-AT::Return_t ATCmd::send(AT::SendFunction& sendFunction, std::chrono::milliseconds timeout)
+AT::Return_t ATCmd::send(AT::SendFunction& sendFunction, const std::chrono::milliseconds timeout)
 {
     mCommandSuccess = false;
 
@@ -60,7 +61,7 @@ AT::Return_t ATCmd::send(AT::SendFunction& sendFunction, std::chrono::millisecon
         Trace(ZONE_INFO, "Parser not ready\n");
         return Return_t::TRY_AGAIN;
     }
-
+    Trace(ZONE_INFO, "sending: %s\r\n", mRequest.data());
     if (sendFunction(mRequest, timeout) != mRequest.length()) {
         Trace(ZONE_ERROR, "Couldn't send\n");
         return Return_t::ERROR;
@@ -101,11 +102,26 @@ AT::Return_t ATCmdUSOST::send(std::string_view          data,
                               std::string_view          port,
                               std::chrono::milliseconds timeout)
 {
+    return this->send(mSocket, ip, port, data, timeout);
+}
+
+AT::Return_t ATCmdUSOST::send(const size_t              socket,
+                              std::string_view          ip,
+                              std::string_view          port,
+                              std::string_view          data,
+                              std::chrono::milliseconds timeout)
+{
+    if (data.length() == 0) {
+        Trace(ZONE_VERBOSE, "Nodata %d\r\n", data.length());
+        return AT::Return_t::FINISHED;
+    }
     mData = data;
-    std::string request = "AT+USOST=" + std::to_string(mSocket) +
-                          ",\"" +
-                          std::string(ip.data(), ip.length()) + "\"," + std::string(port.data(), port.length()) + "," +
+    std::string request = "AT+USOST=" +
+                          std::to_string(socket) + ",\"" +
+                          std::string(ip.data(), ip.length()) + "\"," +
+                          std::string(port.data(), port.length()) + "," +
                           std::to_string(data.length()) + "\r";
+
     mRequest = request;
     mWaitingForPrompt = true;
     auto ret = ATCmd::send(mSendFunction, timeout);
@@ -133,11 +149,11 @@ AT::Return_t ATCmdUSORF::send(size_t bytesToRead, std::chrono::milliseconds time
     if (bytesToRead > ATParser::BUFFERSIZE) {
         return Return_t::ERROR;
     }
-    Trace(ZONE_INFO, "SEND\r\n");
-    std::string request = "AT+USORF=" + std::to_string(mSocket) + "," + std::to_string(bytesToRead) + "\r";
-    mRequest = request;
-    auto ret = ATCmd::send(mSendFunction, timeout);
-    return ret;
+    Trace(ZONE_INFO, "SEND USORF\r\n");
+    mRequest = std::string("AT+USORF=" +
+                           std::to_string(mSocket) + "," +
+                           std::to_string(bytesToRead) + "\r");
+    return ATCmd::send(mSendFunction, timeout);
 }
 
 AT::Return_t ATCmdUSORF::onResponseMatch(void)
@@ -227,6 +243,7 @@ AT::Return_t ATCmdUPSND::onResponseMatch(void)
 
     return Return_t::FINISHED;
 }
+
 AT::Return_t ATCmdURC::onResponseMatch(void)
 {
     char termination = 0;

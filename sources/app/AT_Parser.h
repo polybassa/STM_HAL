@@ -29,9 +29,6 @@
 #define AT_CMD_IP "95.143.172.237"
 #define AT_CMD_PORT "64487"
 
-//#define AT_CMD_USOST "AT+USOST=0,\"" AT_CMD_IP "\"," AT_CMD_PORT ","
-//#define AT_CMD_USOCO "AT+USOCO=0,\"" AT_CMD_IP "\"," AT_CMD_PORT "\r"
-
 namespace app
 {
 class ATParser;
@@ -112,6 +109,11 @@ public:
 
     Return_t send(std::string_view data, std::chrono::milliseconds timeout);
     Return_t send(std::string_view data, std::string_view ip, std::string_view port, std::chrono::milliseconds timeout);
+    Return_t send(const size_t              socket,
+                  std::string_view          ip,
+                  std::string_view          port,
+                  std::string_view          data,
+                  std::chrono::milliseconds timeout);
 };
 
 class ATCmdUSORF final :
