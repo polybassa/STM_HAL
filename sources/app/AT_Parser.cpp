@@ -61,7 +61,7 @@ AT::Return_t ATCmd::send(AT::SendFunction& sendFunction, const std::chrono::mill
         Trace(ZONE_INFO, "Parser not ready\n");
         return Return_t::TRY_AGAIN;
     }
-    Trace(ZONE_INFO, "sending: %s\r\n", mRequest.data());
+    Trace(ZONE_VERBOSE, "sending: %s\r\n", mRequest.data());
     if (sendFunction(mRequest, timeout) != mRequest.length()) {
         Trace(ZONE_ERROR, "Couldn't send\n");
         return Return_t::ERROR;
@@ -112,7 +112,7 @@ AT::Return_t ATCmdUSOST::send(const size_t              socket,
                               std::chrono::milliseconds timeout)
 {
     if (data.length() == 0) {
-        Trace(ZONE_VERBOSE, "Nodata %d\r\n", data.length());
+        Trace(ZONE_WARNING, "Nodata %d\r\n", data.length());
         return AT::Return_t::FINISHED;
     }
     mData = data;
@@ -210,7 +210,6 @@ AT::Return_t ATCmdUSORF::onResponseMatch(void)
 
 AT::Return_t ATCmdUPSND::send(const size_t socket, const size_t parameter, const std::chrono::milliseconds timeout)
 {
-    Trace(ZONE_INFO, "SEND UPSND\r\n");
     mRequest = std::string("AT+UPSND=" +
                            std::to_string(socket) + "," +
                            std::to_string(parameter) + "\r");
@@ -314,7 +313,7 @@ bool ATParser::parse(std::chrono::milliseconds timeout)
 
         std::string_view currentData(ReceiveBuffer.data(), currentPos);
 
-        Trace(ZONE_INFO, "parse: %s\n", std::string(currentData.data(), currentData.length()).c_str());
+        Trace(ZONE_VERBOSE, "parse: %s\n", std::string(currentData.data(), currentData.length()).c_str());
         // this vector copy operations should be optimized
         decltype(possibleResponses) sievedResponses;
 
@@ -347,7 +346,7 @@ bool ATParser::parse(std::chrono::milliseconds timeout)
                 break;
 
             case AT::Return_t::FINISHED:
-                Trace(ZONE_ERROR, "ParserFinished %s \r\n", match->mName.data());
+                Trace(ZONE_INFO, "ParserFinished %s \r\n", match->mName.data());
                 break;
             }
         }
