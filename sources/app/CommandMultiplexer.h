@@ -17,6 +17,7 @@
 #define SOURCES_PMD_COMMANDMULTIPLEXER_H_
 
 #include <string_view>
+
 #include "TaskInterruptable.h"
 #include "DeepSleepInterface.h"
 #include "ModemDriver.h"

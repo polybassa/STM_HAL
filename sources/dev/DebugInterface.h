@@ -27,7 +27,7 @@ class DebugInterface
     static constexpr auto& interface = hal::Factory<hal::Usart>::get<hal::Usart::DEBUG_IF>();
 
 #if defined(DEBUG)
-    static const size_t INTERNAL_BUFFER_SIZE = 512;
+    static const size_t INTERNAL_BUFFER_SIZE = 1024;
     static os::Mutex PrintMutex;
     static std::array<uint8_t, INTERNAL_BUFFER_SIZE> printBuffer;
 #endif

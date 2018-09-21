@@ -237,7 +237,7 @@ void ModemDriver::sendData(void)
 void ModemDriver::sendDataOverDns(void)
 {
     static constexpr const size_t MAX_PAYLOAD_LENGTH = 24;
-    static short counter = 700;
+    static short counter = 900;
 
     counter++;
     counter %= 999;
@@ -275,12 +275,7 @@ void ModemDriver::receiveData(size_t bytes)
     }
     auto ret = mATUSORF->send(bytes, std::chrono::milliseconds(1000));
     if (ret == AT::Return_t::FINISHED) {
-        if (mReceiveCallback) {
-            mReceiveCallback(mATUSORF->getData());
-        } else {
-            ReceiveBuffer.send(mATUSORF->getData().data(), mATUSORF->getData().length(), 1000);
-        }
-        Trace(ZONE_INFO, "Data received\r\n");
+        storeReceivedData(mATUSORF->getData());
     } else {
         handleError();
     }
@@ -301,24 +296,30 @@ void ModemDriver::receiveDataOverDns(size_t bytes)
             return;
         }
 
-        auto rawdata = data.substr(94, 14);
-        rawdata += data.substr(122, 14);
-        rawdata += data.substr(150, 14);
-        rawdata += data.substr(192, 14);
+        constexpr const auto FRAMEINDICES = {94, 122, 150, 178};
+        static constexpr const size_t FRAMELENGTH = 14;
+        std::string rawdata("\x00", FRAMELENGTH * FRAMEINDICES.size());
 
-        std::string requestHex;
-        hexlify(requestHex, rawdata);
-        Trace(ZONE_VERBOSE, "RECVED %s\r\n,", requestHex.c_str());
-
-        if (mReceiveCallback) {
-            mReceiveCallback(rawdata);
-        } else {
-            ReceiveBuffer.send(rawdata.data(), rawdata.length(), 1000);
+        for (const auto idx : FRAMEINDICES) {
+            const auto rawdata1 = data.substr(idx, FRAMELENGTH);
+            const auto rawdata1Idx = static_cast<size_t>(data[idx + FRAMELENGTH]) - 1 % 4;
+            rawdata.replace(rawdata1Idx * FRAMELENGTH, FRAMELENGTH, rawdata1);
         }
-        Trace(ZONE_INFO, "Data received\r\n");
+
+        storeReceivedData(rawdata);
     } else {
         handleError();
     }
+}
+
+void ModemDriver::storeReceivedData(const std::string& data)
+{
+    if (mReceiveCallback) {
+        mReceiveCallback(data);
+    } else {
+        ReceiveBuffer.send(data.data(), data.length(), 1000);
+    }
+    Trace(ZONE_INFO, "Data stored\r\n");
 }
 
 size_t ModemDriver::send(std::string_view message, const uint32_t ticksToWait)
@@ -339,7 +340,7 @@ size_t ModemDriver::receive(uint8_t* message, size_t length, uint32_t ticksToWai
 
 const std::string& ModemDriver::getDns(void)
 {
-    auto ret = mATUPSND->send(0, 1, std::chrono::milliseconds(1000));
+    const auto ret = mATUPSND->send(0, 1, std::chrono::milliseconds(1000));
 
     if (ret == AT::Return_t::ERROR) {
         handleError();

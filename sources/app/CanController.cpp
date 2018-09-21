@@ -83,7 +83,6 @@ void CanController::taskFunction(const bool& join)
 
         if (mIsPerformingFirmwareUpdate) {
             Trace(ZONE_INFO, "START FLASH... \r\n");
-
             flashSecCoFirmware();
         } else {
             os::ThisTask::sleep(std::chrono::milliseconds(500));
@@ -95,11 +94,12 @@ void CanController::flashSecCoFirmware(void)
 {
     mWasFirmwareUpdateSuccessful = false;
 
-    auto ret = flash(std::string_view(reinterpret_cast<char*>(&_binary_start),
-                                      reinterpret_cast<char*>(&_binary_end) - reinterpret_cast<char*>(&_binary_start)),
-                     0x8000000);
+    mWasFirmwareUpdateSuccessful = flash(std::string_view(
+                                                          reinterpret_cast<char*>(&_binary_start),
+                                                          reinterpret_cast<char*>(&_binary_end) -
+                                                          reinterpret_cast<char*>(&_binary_start)),
+                                         0x8000000);
 
-    mWasFirmwareUpdateSuccessful = ret;
     mIsPerformingFirmwareUpdate = false;
 }
 
@@ -120,7 +120,10 @@ bool CanController::sendCommandToBootloader(std::string_view cmd)
 size_t CanController::sendToBootloaderWithChecksum(std::string_view data, uint8_t initvalue)
 {
     uint8_t sum = initvalue;
-    std::for_each(data.begin(), data.end(), [&sum](const auto & d){
+    std::for_each(
+                  data.begin(),
+                  data.end(),
+                  [&sum](const auto & d){
                       sum ^= d;
                   });
 
@@ -177,7 +180,9 @@ bool CanController::sendGoCommand(const uint32_t goAddress)
 {
     Trace(ZONE_INFO, "Sending go command... ");
 
-    if (!sendCommandToBootloader("\x21")) { return false; }
+    if (!sendCommandToBootloader("\x21")) {
+        return false;
+    }
 
     Trace(ZONE_INFO, "Sending go address... ");
     auto dst_be = swap(goAddress);
@@ -231,7 +236,6 @@ bool CanController::flash(std::string_view data, const size_t address)
 void CanController::resetToBootloader(void)
 {
     Trace(ZONE_INFO, "Rebooting target. \r\n");
-
     off();
     mUsartTxPin.configureAsOutput();
     mUsartTxPin = false;

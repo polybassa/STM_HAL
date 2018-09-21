@@ -85,6 +85,7 @@ class ModemDriver final :
 
     void receiveData(size_t);
     void receiveDataOverDns(size_t);
+    void storeReceivedData(const std::string&);
 
 public:
     ModemDriver(const hal::UsartWithDma & interface,

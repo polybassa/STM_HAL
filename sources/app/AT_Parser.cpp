@@ -314,7 +314,7 @@ bool ATParser::parse(std::chrono::milliseconds timeout)
 
         std::string_view currentData(ReceiveBuffer.data(), currentPos);
 
-        Trace(ZONE_VERBOSE, "parse: %s\n", std::string(currentData.data(), currentData.length()).c_str());
+        Trace(ZONE_INFO, "parse: %s\n", std::string(currentData.data(), currentData.length()).c_str());
         // this vector copy operations should be optimized
         decltype(possibleResponses) sievedResponses;
 
