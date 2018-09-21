@@ -54,16 +54,21 @@ class ModemDriver final :
     AT::ReceiveFunction mRecv;
     ATParser mParser;
     os::Queue<size_t, 1> mNumberOfBytesForReceive;
-    std::function<void(size_t, size_t)> mUrcCallback;
+    std::function<void(size_t, size_t)> mUrcCallbackReceive;
+    std::function<void(size_t, size_t)> mUrcCallbackClose;
 
     std::shared_ptr<app::ATCmdUSOST> mATUSOST;
     std::shared_ptr<app::ATCmdUSORF> mATUSORF;
     std::shared_ptr<app::ATCmdURC> mATUUSORF;
     std::shared_ptr<app::ATCmdURC> mATUUSORD;
+    std::shared_ptr<app::ATCmdURC> mATUUPSDD;
+    std::shared_ptr<app::ATCmdURC> mATUUSOCL;
+    std::shared_ptr<app::ATCmdUPSND> mATUPSND;
 
     std::function<void(std::string_view)> mReceiveCallback;
     size_t mErrorCount = 0;
     size_t mTimeOfLastUdpSend = 0;
+    const bool mUseDnsTunnel = false;
 
     void modemTxTaskFunction(const bool&);
     void parserTaskFunction(const bool&);
@@ -76,13 +81,17 @@ class ModemDriver final :
     void handleError(void);
 
     void sendData(void);
+    void sendDataOverDns(void);
+
     void receiveData(size_t);
+    void receiveDataOverDns(size_t);
 
 public:
     ModemDriver(const hal::UsartWithDma & interface,
                 const hal::Gpio & resetPin,
                 const hal::Gpio & powerPin,
-                const hal::Gpio & supplyPin);
+                const hal::Gpio & supplyPin,
+                const bool useDnsTunnel = false);
 
     ModemDriver(const ModemDriver &) = delete;
     ModemDriver(ModemDriver &&) = delete;
@@ -93,6 +102,7 @@ public:
 
     size_t send(std::string_view, const uint32_t ticksToWait = portMAX_DELAY);
     size_t receive(uint8_t *, size_t, uint32_t ticksToWait = portMAX_DELAY);
+    const std::string& getDns(void);
 
     size_t bytesAvailable(void) const;
 
