@@ -137,6 +137,37 @@ public:
     }
 };
 
+class ATCmdUPSND final :
+    public ATCmd
+{
+    size_t mSocket = 0;
+    size_t mParameter = 0;
+    SendFunction& mSendFunction;
+    std::string mData;
+    virtual Return_t onResponseMatch(void) override;
+
+public:
+    ATCmdUPSND(SendFunction & send, ATParser & parser) :
+        ATCmd("AT+UPSND", "", "+UPSND:", parser), mSendFunction(send){}
+
+    Return_t send(const size_t socket, const size_t parameter, const std::chrono::milliseconds timeout);
+
+    const std::string& getData(void) const
+    {
+        return mData;
+    }
+
+    size_t getParameter(void) const
+    {
+        return mParameter;
+    }
+
+    size_t getSocket(void) const
+    {
+        return mSocket;
+    }
+};
+
 class ATCmdURC final :
     public AT
 {

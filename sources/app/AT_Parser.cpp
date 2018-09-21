@@ -22,6 +22,7 @@ using app::AT;
 using app::ATCmd;
 using app::ATCmdERROR;
 using app::ATCmdOK;
+using app::ATCmdUPSND;
 using app::ATCmdURC;
 using app::ATCmdUSORF;
 using app::ATCmdUSOST;
@@ -191,10 +192,51 @@ AT::Return_t ATCmdUSORF::onResponseMatch(void)
     }
 }
 
-AT::Return_t ATCmdURC::onResponseMatch(void)
+AT::Return_t ATCmdUPSND::send(const size_t socket, const size_t parameter, const std::chrono::milliseconds timeout)
+{
+    Trace(ZONE_INFO, "SEND UPSND\r\n");
+    mRequest = std::string("AT+UPSND=" +
+                           std::to_string(socket) + "," +
+                           std::to_string(parameter) + "\r");
+    return ATCmd::send(mSendFunction, timeout);
+}
+
+AT::Return_t ATCmdUPSND::onResponseMatch(void)
 {
     auto socketstring = mParser.getInputUntilComma();
+    if (socketstring.length() == 0) {
+        return AT::Return_t::ERROR;
+    }
+    mSocket = std::stoul(std::string(socketstring.data(), socketstring.length()));
+
+    auto parameterstring = mParser.getInputUntilComma();
+    if (parameterstring.length() == 0) {
+        return AT::Return_t::ERROR;
+    }
+    mParameter = std::stoul(std::string(parameterstring.data(), parameterstring.length()));
+
+    auto datastring = mParser.getInputUntilComma();
+    if (datastring.length() == 0) {
+        return AT::Return_t::ERROR;
+    }
+
+    auto first = datastring.find_first_of('"') + 1;
+    auto last = datastring.find_last_of('"');
+
+    mData = std::string(datastring.data() + first, last - first);
+
+    return Return_t::FINISHED;
+}
+AT::Return_t ATCmdURC::onResponseMatch(void)
+{
+    char termination = 0;
+    auto socketstring = mParser.getInputUntilComma(std::chrono::milliseconds(50), &termination);
     size_t socket = std::stoul(std::string(socketstring.data(), socketstring.length()));
+
+    if (termination == '\r') {
+        mUrcReceivedCallback(socket, 0);
+        return Return_t::FINISHED;
+    }
 
     std::string_view line = mParser.getLineFromInput();
 
