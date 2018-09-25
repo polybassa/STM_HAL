@@ -34,6 +34,8 @@
 /* COM LAYER INCLUDES */
 
 /* APP LAYER INLCUDES */
+#include "CanTunnel.h"
+#include "CanController.h"
 #include "ModemTunnel.h"
 
 /* GLOBAL VARIABLES */
@@ -47,12 +49,27 @@ int main(void)
     hal::initFactory<hal::Factory<hal::Dma> >();
     hal::initFactory<hal::Factory<hal::UsartWithDma> >();
 
-    auto modem = new app::ModemTunnel(hal::Factory<hal::UsartWithDma>::get<hal::Usart::DEBUG_IF>(),
-                                      hal::Factory<hal::UsartWithDma>::get<hal::Usart::
-                                                                           MODEM_COM>(),
-                                      hal::Factory<hal::Gpio>::get<hal::Gpio::MODEM_RESET>(),
-                                      hal::Factory<hal::Gpio>::get<hal::Gpio::MODEM_POWER>(),
-                                      hal::Factory<hal::Gpio>::get<hal::Gpio::MODEM_SUPPLY>());
+    static constexpr const bool DEBUG_2_MODEM_TUNNEL = false;
+
+    static constexpr const bool DEBUG_2_CAN_TUNNEL = !DEBUG_2_MODEM_TUNNEL;
+
+    if (DEBUG_2_MODEM_TUNNEL) {
+        auto modem = new app::ModemTunnel(hal::Factory<hal::UsartWithDma>::get<hal::Usart::DEBUG_IF>(),
+                                          hal::Factory<hal::UsartWithDma>::get<hal::Usart::
+                                                                               MODEM_COM>(),
+                                          hal::Factory<hal::Gpio>::get<hal::Gpio::MODEM_RESET>(),
+                                          hal::Factory<hal::Gpio>::get<hal::Gpio::MODEM_POWER>(),
+                                          hal::Factory<hal::Gpio>::get<hal::Gpio::MODEM_SUPPLY>());
+    }
+
+    if (DEBUG_2_CAN_TUNNEL) {
+        auto can = new app::CanController(hal::Factory<hal::UsartWithDma>::get<hal::Usart::SECCO_COM>(),
+                                          hal::Factory<hal::Gpio>::get<hal::Gpio::SECCO_PWR>(),
+                                          hal::Factory<hal::Gpio>::getAlternateFunctionGpio<hal::Gpio::USART2_TX>());
+
+        auto tunnel = new app::CanTunnel(hal::Factory<hal::UsartWithDma>::get<hal::Usart::DEBUG_IF>(),
+                                         *can);
+    }
 
     os::Task::startScheduler();
 
