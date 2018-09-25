@@ -31,13 +31,19 @@ class CanTunnel final :
     virtual void exitDeepSleep(void) override;
 
     static constexpr size_t STACKSIZE = 1024;
+    static constexpr size_t BUFFERSIZE = 128;
 
-    os::TaskInterruptable mTunnelTask;
+    static os::StreamBuffer<uint8_t, BUFFERSIZE> CanReceiveBuffer;
+    static os::StreamBuffer<uint8_t, BUFFERSIZE> TunnelReceiveBuffer;
+
+    os::TaskInterruptable mTunnelTxTask;
+    os::TaskInterruptable mCanTxTask;
 
     const hal::UsartWithDma& mTunnelInterface;
     app::CanController& mCanInterface;
 
-    void tunnelTaskFunction(const bool&);
+    void tunnelTxTaskFunction(const bool&);
+    void canTxTaskFunction(const bool&);
 
 public:
     CanTunnel(const hal::UsartWithDma & tunnelInterface,
@@ -47,8 +53,6 @@ public:
     CanTunnel(CanTunnel &&) = delete;
     CanTunnel& operator=(const CanTunnel&) = delete;
     CanTunnel& operator=(CanTunnel &&) = delete;
-
-    static void TunnelInterruptHandler(uint8_t);
 };
 }
 

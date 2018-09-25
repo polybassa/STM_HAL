@@ -28,6 +28,8 @@
 
 namespace app
 {
+class CanTunnel;
+
 class CanController final :
     private os::DeepSleepModule
 {
@@ -86,6 +88,8 @@ public:
 
     void registerReceiveCallback(std::function<void(std::string_view)> );
     void unregisterReceiveCallback(void);
+
+    friend CanTunnel;
 };
 }
 
