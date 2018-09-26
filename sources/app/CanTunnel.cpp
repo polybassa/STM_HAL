@@ -57,11 +57,11 @@ void CanTunnel::exitDeepSleep(void)
 void CanTunnel::tunnelTxTaskFunction(const bool& join)
 {
     uint8_t doFlashing = 0;
-    mTunnelInterface.send(std::string("\r\Press 1 for flashing seco, anything else to boot!\r\n"), 100);
+    mTunnelInterface.send(std::string("\r\nPress 1 for flashing seco, anything else to boot!\r\n"), 100);
     mTunnelInterface.mUsart.receive(&doFlashing, 1);
 
     if (doFlashing == '1') {
-        mTunnelInterface.send(std::string("\r\FLASHING SECO\r\n"), 100);
+        mTunnelInterface.send(std::string("\r\nFLASHING SECO\r\n"), 100);
         os::ThisTask::sleep(std::chrono::milliseconds(500));
         mCanInterface.on();
         mCanInterface.triggerFirmwareUpdate();
