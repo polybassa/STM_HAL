@@ -13,8 +13,8 @@
  *  You should have received a copy of the GNU General Public License
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>. */
 
-#ifndef __STM32F10X_IT_H
-#define __STM32F10X_IT_H
+#ifndef __STM32F4XX_IT_H
+#define __STM32F4XX_IT_H
 
 #ifdef __cplusplus
 extern "C" {
@@ -33,4 +33,4 @@ void DebugMon_Handler(void);
 }
 #endif
 
-#endif /* __STM32F10X_IT_H */
+#endif /* __STM32F4XX_IT_H */
