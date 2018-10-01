@@ -63,7 +63,8 @@ int main(void)
                                                                            MODEM_COM>(),
                                       hal::Factory<hal::Gpio>::get<hal::Gpio::MODEM_RESET>(),
                                       hal::Factory<hal::Gpio>::get<hal::Gpio::MODEM_POWER>(),
-                                      hal::Factory<hal::Gpio>::get<hal::Gpio::MODEM_SUPPLY>(), true);
+                                      hal::Factory<hal::Gpio>::get<hal::Gpio::MODEM_SUPPLY>(),
+                                      app::ModemDriver::Protocol::TCP);
 
     auto can = new app::CanController(hal::Factory<hal::UsartWithDma>::get<hal::Usart::SECCO_COM>(),
                                       hal::Factory<hal::Gpio>::get<hal::Gpio::SECCO_PWR>(),
