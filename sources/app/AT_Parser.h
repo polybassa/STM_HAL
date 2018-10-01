@@ -25,9 +25,11 @@
 #include <memory>
 #include "Semaphore.h"
 #include "Mutex.h"
+#include "Endpoint.h"
 
-#define AT_CMD_IP "95.143.172.237"
-#define AT_CMD_PORT "64487"
+#define AT_CMD_IP ENDPOINT_IP
+#define AT_CMD_PORT ENDPOINT_PORT
+#define AT_CMD_USOCO "AT+USOCO=0,\"" ENDPOINT_IP "\"," ENDPOINT_PORT "\r"
 
 namespace app
 {
@@ -116,6 +118,25 @@ public:
                   std::chrono::milliseconds timeout);
 };
 
+class ATCmdUSOWR final :
+    public ATCmd
+{
+    size_t mSocket = 0;
+    std::string_view mData;
+    SendFunction& mSendFunction;
+    bool mWaitingForPrompt = false;
+    virtual Return_t onResponseMatch(void) override;
+
+public:
+    ATCmdUSOWR(SendFunction & send, ATParser & parser) :
+        ATCmd("AT+USOWR", "", "@", parser), mSendFunction(send){}
+
+    Return_t send(std::string_view data, std::chrono::milliseconds timeout);
+    Return_t send(const size_t              socket,
+                  std::string_view          data,
+                  std::chrono::milliseconds timeout);
+};
+
 class ATCmdUSORF final :
     public ATCmd
 {
@@ -130,6 +151,27 @@ class ATCmdUSORF final :
 public:
     ATCmdUSORF(SendFunction & send, ATParser & parser, const std::function<void(size_t, size_t)> &callback) :
         ATCmd("AT+USORF", "", "+USORF:", parser), mSendFunction(send), mUrcReceivedCallback(callback){}
+
+    Return_t send(size_t bytesToRead, std::chrono::milliseconds timeout);
+
+    const std::string& getData(void) const
+    {
+        return mData;
+    }
+};
+
+class ATCmdUSORD final :
+    public ATCmd
+{
+    size_t mSocket = 0;
+    std::string mData;
+    SendFunction& mSendFunction;
+    const std::function<void(size_t, size_t)>& mUrcReceivedCallback;
+    virtual Return_t onResponseMatch(void) override;
+
+public:
+    ATCmdUSORD(SendFunction & send, ATParser & parser, const std::function<void(size_t, size_t)> &callback) :
+        ATCmd("AT+USORD", "", "+USORD:", parser), mSendFunction(send), mUrcReceivedCallback(callback){}
 
     Return_t send(size_t bytesToRead, std::chrono::milliseconds timeout);
 

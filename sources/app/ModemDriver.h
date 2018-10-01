@@ -36,7 +36,7 @@ class ModemDriver final :
     virtual void exitDeepSleep(void) override;
 
     static constexpr size_t STACKSIZE = 2048;
-    static constexpr size_t BUFFERSIZE = 512;
+    static constexpr size_t BUFFERSIZE = 1024;
     static constexpr size_t ERROR_THRESHOLD = 20;
     static os::StreamBuffer<uint8_t, BUFFERSIZE> InputBuffer;
     static os::StreamBuffer<uint8_t, BUFFERSIZE> SendBuffer;
@@ -58,7 +58,9 @@ class ModemDriver final :
     std::function<void(size_t, size_t)> mUrcCallbackClose;
 
     std::shared_ptr<app::ATCmdUSOST> mATUSOST;
+    std::shared_ptr<app::ATCmdUSOWR> mATUSOWR;
     std::shared_ptr<app::ATCmdUSORF> mATUSORF;
+    std::shared_ptr<app::ATCmdUSORD> mATUSORD;
     std::shared_ptr<app::ATCmdURC> mATUUSORF;
     std::shared_ptr<app::ATCmdURC> mATUUSORD;
     std::shared_ptr<app::ATCmdURC> mATUUPSDD;
@@ -68,7 +70,6 @@ class ModemDriver final :
     std::function<void(std::string_view)> mReceiveCallback;
     size_t mErrorCount = 0;
     size_t mTimeOfLastUdpSend = 0;
-    const bool mUseDnsTunnel = false;
 
     void modemTxTaskFunction(const bool&);
     void parserTaskFunction(const bool&);
@@ -80,31 +81,38 @@ class ModemDriver final :
 
     void handleError(void);
 
-    void sendData(void);
+    void sendDataOverUdp(void);
     void sendDataOverDns(void);
+    void sendDataOverTcp(void);
 
-    void receiveData(size_t);
+    void receiveDataOverUdp(size_t);
     void receiveDataOverDns(size_t);
+    void receiveDataOverTcp(size_t);
+
     void storeReceivedData(const std::string&);
 
 public:
+    enum class Protocol { UDP, TCP, DNS };
+
     ModemDriver(const hal::UsartWithDma & interface,
                 const hal::Gpio & resetPin,
                 const hal::Gpio & powerPin,
                 const hal::Gpio & supplyPin,
-                const bool useDnsTunnel = false);
+                const Protocol = Protocol::UDP);
 
     ModemDriver(const ModemDriver &) = delete;
     ModemDriver(ModemDriver &&) = delete;
     ModemDriver& operator=(const ModemDriver&) = delete;
     ModemDriver& operator=(ModemDriver &&) = delete;
 
+    const Protocol mProtocol;
+
     static void ModemDriverInterruptHandler(uint8_t);
 
     size_t send(std::string_view, const uint32_t ticksToWait = portMAX_DELAY);
     size_t receive(uint8_t *, size_t, uint32_t ticksToWait = portMAX_DELAY);
-    const std::string& getDns(void);
 
+    const std::string& getDns(void);
     size_t bytesAvailable(void) const;
 
     void registerReceiveCallback(std::function<void(std::string_view)> );

@@ -21,7 +21,7 @@
 
 using app::ModemDriver;
 
-static const int __attribute__((unused)) g_DebugZones = ZONE_ERROR | ZONE_WARNING | ZONE_VERBOSE | ZONE_INFO;
+static const int __attribute__((unused)) g_DebugZones = 0; //ZONE_ERROR | ZONE_WARNING | ZONE_VERBOSE | ZONE_INFO;
 
 os::StreamBuffer<uint8_t, ModemDriver::BUFFERSIZE> ModemDriver::InputBuffer;
 os::StreamBuffer<uint8_t, ModemDriver::BUFFERSIZE> ModemDriver::SendBuffer;
@@ -36,7 +36,7 @@ ModemDriver::ModemDriver(const hal::UsartWithDma& interface,
                          const hal::Gpio&         resetPin,
                          const hal::Gpio&         powerPin,
                          const hal::Gpio&         supplyPin,
-                         const bool               useDnsTunnel) :
+                         const Protocol           protocol) :
     os::DeepSleepModule(),
     mModemTxTask("ModemTxTask",
                  ModemDriver::STACKSIZE,
@@ -57,7 +57,7 @@ ModemDriver::ModemDriver(const hal::UsartWithDma& interface,
     mModemPower(powerPin),
     mModemSupplyVoltage(supplyPin),
     mSend([&](std::string_view in, std::chrono::milliseconds timeout)->size_t {
-              os::ThisTask::sleep(std::chrono::milliseconds(40));
+              os::ThisTask::sleep(std::chrono::milliseconds(60));
               return mInterface.send(in, timeout.count());
           }),
     mRecv([&](uint8_t * output, const size_t length, std::chrono::milliseconds timeout)->bool {
@@ -75,24 +75,32 @@ ModemDriver::ModemDriver(const hal::UsartWithDma& interface,
     mUrcCallbackClose([&](size_t socket, size_t bytes)
                       {
                           Trace(ZONE_INFO, "Socket closed\r\n");
-                          this->modemReset();
+                          // produce error to force TX-Task to restart modem
+                          mErrorCount = ERROR_THRESHOLD;
                       }),
 
     mATUSOST(std::shared_ptr<app::ATCmdUSOST>(new app::ATCmdUSOST(mSend, mParser))),
+    mATUSOWR(std::shared_ptr<app::ATCmdUSOWR>(new app::ATCmdUSOWR(mSend, mParser))),
     mATUSORF(std::shared_ptr<app::ATCmdUSORF>(new app::ATCmdUSORF(mSend, mParser, mUrcCallbackReceive))),
+    mATUSORD(std::shared_ptr<app::ATCmdUSORD>(new app::ATCmdUSORD(mSend, mParser, mUrcCallbackReceive))),
     mATUUSORF(std::shared_ptr<app::ATCmdURC>(new app::ATCmdURC("UUSORF", "+UUSORF: ", mParser, mUrcCallbackReceive))),
     mATUUSORD(std::shared_ptr<app::ATCmdURC>(new app::ATCmdURC("UUSORD", "+UUSORD: ", mParser, mUrcCallbackReceive))),
     mATUUPSDD(std::shared_ptr<app::ATCmdURC>(new app::ATCmdURC("UUPSDD", "+UUPSDD: ", mParser, mUrcCallbackClose))),
     mATUUSOCL(std::shared_ptr<app::ATCmdURC>(new app::ATCmdURC("UUSOCL", "+UUSOCL: ", mParser, mUrcCallbackClose))),
     mATUPSND(std::shared_ptr<app::ATCmdUPSND>(new app::ATCmdUPSND(mSend, mParser))),
-    mUseDnsTunnel(useDnsTunnel)
+    mProtocol(protocol)
 {
     mInterface.mUsart.enableNonBlockingReceive(ModemDriverInterruptHandler);
 
     mParser.registerAtCommand(std::shared_ptr<app::AT>(new app::ATCmdOK(mParser)));
     mParser.registerAtCommand(std::shared_ptr<app::AT>(new app::ATCmdERROR(mParser)));
-    mParser.registerAtCommand(mATUSOST);
+    if ((mProtocol == Protocol::UDP) || (mProtocol == Protocol::DNS)) {
+        mParser.registerAtCommand(mATUSOST);
+    } else {
+        mParser.registerAtCommand(mATUSOWR);
+    }
     mParser.registerAtCommand(mATUSORF);
+    mParser.registerAtCommand(mATUSORD);
     mParser.registerAtCommand(mATUUSORF);
     mParser.registerAtCommand(mATUUSORD);
     mParser.registerAtCommand(mATUUPSDD);
@@ -121,27 +129,46 @@ void ModemDriver::modemTxTaskFunction(const bool& join)
         modemReset();
 
         if (!modemStartup()) {
+            Trace(ZONE_VERBOSE, "ERROR modemStartup\r\n");
             continue;
         }
 
+        SendBuffer.send("ONLINE ", 6, std::chrono::milliseconds(100).count());
+
         while (mErrorCount < ERROR_THRESHOLD) {
             if (SendBuffer.bytesAvailable()) {
-                if (mUseDnsTunnel) {
+                switch (mProtocol) {
+                case Protocol::UDP:
+                    sendDataOverUdp();
+                    break;
+
+                case Protocol::TCP:
+                    sendDataOverTcp();
+                    break;
+
+                case Protocol::DNS:
                     sendDataOverDns();
-                } else {
-                    sendData();
+                    break;
                 }
             }
 
-            if (os::Task::getTickCount() - mTimeOfLastUdpSend >= 3000) {
+            if ((mProtocol != Protocol::TCP) && (os::Task::getTickCount() - mTimeOfLastUdpSend >= 3000)) {
                 SendBuffer.send("HELLO ", 6, std::chrono::milliseconds(100).count());
             }
             size_t bytes = 0;
             if (mNumberOfBytesForReceive.receive(bytes, std::chrono::milliseconds(10))) {
-                if (mUseDnsTunnel) {
+                switch (mProtocol) {
+                case Protocol::UDP:
+                    receiveDataOverUdp(bytes);
+                    break;
+
+                case Protocol::TCP:
+                    receiveDataOverTcp(bytes);
+                    break;
+
+                case Protocol::DNS:
                     receiveDataOverDns(bytes);
-                } else {
-                    receiveData(bytes);
+                    break;
                 }
             }
         }
@@ -151,34 +178,43 @@ void ModemDriver::modemTxTaskFunction(const bool& join)
 void ModemDriver::parserTaskFunction(const bool& join)
 {
     do {
-        auto x = mParser.parse(std::chrono::milliseconds(10000));
+        auto x = mParser.parse(std::chrono::milliseconds(15000));
         Trace(ZONE_INFO, "Parser terminated with %d\r\n", x);
     } while (!join);
 }
 
 bool ModemDriver::modemStartup(void)
 {
-    std::array<std::shared_ptr<app::ATCmd>, 7> startupCommands = {
+    std::array<std::shared_ptr<app::ATCmd>, 8> startupCommands = {
         std::shared_ptr<app::ATCmd>(new app::ATCmd("ATZ", "ATZ\r", "", mParser)),
         std::shared_ptr<app::ATCmd>(new app::ATCmd("ATE0V1", "ATE0V1\r", "", mParser)),
         std::shared_ptr<app::ATCmd>(new app::ATCmd("AT+CMEE", "AT+CMEE=2\r", "", mParser)),
         std::shared_ptr<app::ATCmd>(new app::ATCmd("AT+CGCLASS", "AT+CGCLASS=\"B\"\r", "", mParser)),
         std::shared_ptr<app::ATCmd>(new app::ATCmd("AT+CGGATT", "AT+CGATT=1\r", "", mParser)),
         std::shared_ptr<app::ATCmd>(new app::ATCmd("AT+UPSDA", "AT+UPSDA=0,3\r", "", mParser)),
-        std::shared_ptr<app::ATCmd>(new app::ATCmd("AT+USOCR", "AT+USOCR=17\r", "", mParser)),
     };
+
+    if (mProtocol == Protocol::TCP) {
+        startupCommands[6] = std::shared_ptr<app::ATCmd>(new app::ATCmd("AT+USOCR", "AT+USOCR=6\r", "", mParser));
+    } else {
+        startupCommands[6] = std::shared_ptr<app::ATCmd>(new app::ATCmd("AT+USOCR", "AT+USOCR=17\r", "", mParser));
+    }
+    startupCommands[7] = std::shared_ptr<app::ATCmd>(new app::ATCmd("AT+USOCO", AT_CMD_USOCO, "",
+                                                                    mParser));
 
     for (const auto& cmd : startupCommands) {
         os::ThisTask::sleep(std::chrono::milliseconds(2000));
-        if ((cmd->send(mSend, std::chrono::milliseconds(10000)) != AT::Return_t::FINISHED) ||
+        Trace(ZONE_VERBOSE, "Executing startup cmd\r\n");
+        if ((cmd->send(mSend, std::chrono::milliseconds(16000)) != AT::Return_t::FINISHED) ||
             (cmd->wasExecutionSuccessful() == false))
         {
+            Trace(ZONE_VERBOSE, "Executing startup cmd--> ERROR\r\n");
             return false;
         }
+        Trace(ZONE_VERBOSE, "Executing startup cmd--> SUCCESS\r\n");
     }
-    if (mUseDnsTunnel) {
+    if (mProtocol == Protocol::DNS) {
         os::ThisTask::sleep(std::chrono::milliseconds(3000));
-
         this->getDns();
     }
     return true;
@@ -219,7 +255,7 @@ void ModemDriver::handleError(void)
     mErrorCount++;
 }
 
-void ModemDriver::sendData(void)
+void ModemDriver::sendDataOverUdp(void)
 {
     std::string tmpSendStr(SendBuffer.bytesAvailable(), '\x00');
     SendBuffer.receive(tmpSendStr.data(), tmpSendStr.length(), 1000);
@@ -232,6 +268,21 @@ void ModemDriver::sendData(void)
         mTimeOfLastUdpSend = os::Task::getTickCount();
     }
     mATUSORF->send(0, std::chrono::milliseconds(1000));
+}
+
+void ModemDriver::sendDataOverTcp(void)
+{
+    std::string tmpSendStr(SendBuffer.bytesAvailable(), '\x00');
+    SendBuffer.receive(tmpSendStr.data(), tmpSendStr.length(), 1000);
+
+    auto ret = mATUSOWR->send(tmpSendStr, std::chrono::milliseconds(5000));
+
+    if (ret == AT::Return_t::ERROR) {
+        handleError();
+    } else if (ret == AT::Return_t::FINISHED) {
+        mTimeOfLastUdpSend = os::Task::getTickCount();
+    }
+    mATUSORD->send(0, std::chrono::milliseconds(1000));
 }
 
 void ModemDriver::sendDataOverDns(void)
@@ -267,7 +318,7 @@ void ModemDriver::sendDataOverDns(void)
     mATUSORF->send(0, std::chrono::milliseconds(1000));
 }
 
-void ModemDriver::receiveData(size_t bytes)
+void ModemDriver::receiveDataOverUdp(size_t bytes)
 {
     Trace(ZONE_INFO, "Start receive %d\r\n", bytes);
     if (bytes == 0) {
@@ -276,6 +327,20 @@ void ModemDriver::receiveData(size_t bytes)
     auto ret = mATUSORF->send(bytes, std::chrono::milliseconds(1000));
     if (ret == AT::Return_t::FINISHED) {
         storeReceivedData(mATUSORF->getData());
+    } else {
+        handleError();
+    }
+}
+
+void ModemDriver::receiveDataOverTcp(size_t bytes)
+{
+    Trace(ZONE_INFO, "Start receive %d\r\n", bytes);
+    if (bytes == 0) {
+        return;
+    }
+    auto ret = mATUSORD->send(bytes, std::chrono::milliseconds(1000));
+    if (ret == AT::Return_t::FINISHED) {
+        storeReceivedData(mATUSORD->getData());
     } else {
         handleError();
     }
