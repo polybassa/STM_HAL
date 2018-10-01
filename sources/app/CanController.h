@@ -37,7 +37,7 @@ class CanController final :
     virtual void exitDeepSleep(void) override;
 
     static constexpr size_t STACKSIZE = 1024;
-    static constexpr size_t BUFFERSIZE = 128;
+    static constexpr size_t BUFFERSIZE = 1024;
     static os::StreamBuffer<uint8_t, BUFFERSIZE> ReceiveBuffer;
     static os::Semaphore FrameAvailable;
 

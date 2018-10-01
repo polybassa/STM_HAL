@@ -49,7 +49,7 @@ int main(void)
     hal::initFactory<hal::Factory<hal::Dma> >();
     hal::initFactory<hal::Factory<hal::UsartWithDma> >();
 
-    static constexpr const bool DEBUG_2_MODEM_TUNNEL = false;
+    static constexpr const bool DEBUG_2_MODEM_TUNNEL = true;
 
     static constexpr const bool DEBUG_2_CAN_TUNNEL = !DEBUG_2_MODEM_TUNNEL;
 

@@ -19,7 +19,7 @@
 using app::CommandMultiplexer;
 using app::ModemDriver;
 
-static const int __attribute__((unused)) g_DebugZones = ZONE_ERROR | ZONE_WARNING | ZONE_VERBOSE | ZONE_INFO;
+static const int __attribute__((used)) g_DebugZones = 0; // ZONE_ERROR | ZONE_WARNING | ZONE_VERBOSE | ZONE_INFO;
 
 CommandMultiplexer::CommandMultiplexer(ModemDriver& modem, CanController& can, DemoExecuter& demo) :
     os::DeepSleepModule(), mCommandMultiplexerTask("CommandMultiplexer",
@@ -53,7 +53,7 @@ void CommandMultiplexer::multiplexCommand(std::string_view input)
 {
     uint8_t packetType = input[0];
 
-    if ((packetType == 1) || (packetType == '/')) {
+    if ((packetType == 1) || (packetType == '$')) {
         if (input.length() <= 1) {
             return; // Empty command
         }
@@ -71,19 +71,19 @@ void CommandMultiplexer::handleSpecialCommand(CommandMultiplexer::SpecialCommand
     case SpecialCommand_t::FLASH_CAN_MCU:
         Trace(ZONE_INFO, "Flash CAN MCU requested.\r\n");
         mCan.triggerFirmwareUpdate();
-        mModem.send("/Triggerd FW Update\r\n");
+        mModem.send("$Triggerd FW Update\r\n");
         break;
 
     case SpecialCommand_t::CAN_ON:
         Trace(ZONE_INFO, "CAN ON requested.\r\n");
         mCan.on();
-        mModem.send("/CAN ON\r\n");
+        mModem.send("$CAN ON\r\n");
         break;
 
     case SpecialCommand_t::CAN_OFF:
         Trace(ZONE_INFO, "CAN OFF requested.\r\n");
         mCan.off();
-        mModem.send("/CAN OFF\r\n");
+        mModem.send("$CAN OFF\r\n");
         break;
 
     case SpecialCommand_t::ENABLE_CAN_RX:
