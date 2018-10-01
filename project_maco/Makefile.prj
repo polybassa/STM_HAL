@@ -9,8 +9,8 @@ LDFLAGS+=-u _printf_float
 endif
 
 ifeq ($(MAKECMDGOALS),firmware)
-DEFINES+=-O3
-LDFLAGS+=-O3
+DEFINES+=-Os
+LDFLAGS+=-Os
 endif
 
 ifneq (,$(filter debug_firmware firmware,$(MAKECMDGOALS)))
