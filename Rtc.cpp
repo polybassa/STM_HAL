@@ -14,8 +14,8 @@
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>. */
 
 #include "Rtc.h"
-#include "stm32f30x.h"
-#include "stm32f30x_pwr.h"
+#include "stm32f4xx.h"
+#include "stm32f4xx_pwr.h"
 #include "trace.h"
 
 static const int __attribute__((unused)) g_DebugZones = ZONE_ERROR |
@@ -85,6 +85,7 @@ void Rtc::set(const time_point& time) noexcept
 
 void Rtc::set(RTC_TimeTypeDef& rtcTime, RTC_DateTypeDef& rtcDate) noexcept
 {
+    PWR_BackupAccessCmd(ENABLE);
     RTC_WriteProtectionCmd(DISABLE);
     RTC_EnterInitMode();
 
@@ -93,6 +94,7 @@ void Rtc::set(RTC_TimeTypeDef& rtcTime, RTC_DateTypeDef& rtcDate) noexcept
 
     RTC_ExitInitMode();
     RTC_WriteProtectionCmd(ENABLE);
+    PWR_BackupAccessCmd(DISABLE);
 }
 
 void Rtc::completeReset(void) const
@@ -102,7 +104,7 @@ void Rtc::completeReset(void) const
 
     RCC_BackupResetCmd(ENABLE);
     RCC_BackupResetCmd(DISABLE);
-    if (mClockSource != RCC_RTCCLKSource_HSE_Div32) {
+    if ((mClockSource == RCC_RTCCLKSource_LSE) || (mClockSource == RCC_RTCCLKSource_LSI)) {
         PWR_BackupAccessCmd(DISABLE);
     }
 }
@@ -115,6 +117,7 @@ void Rtc::initialize() const
         RCC_LSICmd(ENABLE);
         while (RCC_GetFlagStatus(RCC_FLAG_LSIRDY) == RESET) {}
     }
+    PWR_BackupAccessCmd(ENABLE);
     RCC_RTCCLKConfig(mClockSource);
     RCC_RTCCLKCmd(ENABLE);
 
@@ -124,6 +127,7 @@ void Rtc::initialize() const
 
     RTC_Init(&mConfiguration);
     RTC_WriteProtectionCmd(ENABLE);
+    PWR_BackupAccessCmd(DISABLE);
 }
 
 constexpr const std::array<const Rtc, Rtc::__ENUM__SIZE> hal::Factory<Rtc>::Container;
