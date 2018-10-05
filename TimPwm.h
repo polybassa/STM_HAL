@@ -81,6 +81,8 @@ public:
         static_assert(IS_TIM_OCN_POLARITY(Container[index].mOcConfiguration.TIM_OCNPolarity), "Invalid Parameter ");
         static_assert(IS_TIM_OCIDLE_STATE(Container[index].mOcConfiguration.TIM_OCIdleState), "Invalid Parameter ");
         static_assert(IS_TIM_OCNIDLE_STATE(Container[index].mOcConfiguration.TIM_OCNIdleState), "Invalid Parameter ");
+        static_assert(Container[index].mOcConfiguration.TIM_Pulse >= 0x0000, "Pulse is smaller than 0x0000");
+        static_assert(Container[index].mOcConfiguration.TIM_Pulse <= 0xFFFF, "Pulse is grater than 0xFFFF");
 
         static_assert(Container[index].mTim.mDescription != Tim::Description::__ENUM__SIZE, "Invalid Tim Object");
         static_assert(index != Pwm::Description::__ENUM__SIZE, "__ENUM__SIZE is not accessible");
