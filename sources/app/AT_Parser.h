@@ -52,14 +52,17 @@ struct AT {
 
     const std::string_view mName;
     const std::string_view mResponse;
-    ATParser& mParser;
+
+    ATParser* mParser;
 
 protected:
 
     AT(const std::string_view name,
-       const std::string_view response,
-       ATParser&              parser) :
-        mName(name), mResponse(response), mParser(parser){};
+       const std::string_view response) :
+        mName(name), mResponse(response)
+    {
+        mParser = nullptr;
+    };
     virtual ~AT(void){};
 
     virtual void okReceived(void);
@@ -84,8 +87,8 @@ protected:
 
 public:
 
-    ATCmd(std::string_view name, std::string_view request, std::string_view response, ATParser& parser) :
-        AT(name, response, parser),
+    ATCmd(std::string_view name, std::string_view request, std::string_view response) :
+        AT(name, response),
         mRequest(request), mSendDone() {};
     virtual ~ATCmd(void){};
 
@@ -106,8 +109,8 @@ class ATCmdUSOST final :
     virtual Return_t onResponseMatch(void) override;
 
 public:
-    ATCmdUSOST(SendFunction & send, ATParser & parser) :
-        ATCmd("AT+USOST", "", "@", parser), mSendFunction(send){}
+    ATCmdUSOST(SendFunction & send) :
+        ATCmd("AT+USOST", "", "@"), mSendFunction(send){}
 
     Return_t send(std::string_view data, std::chrono::milliseconds timeout);
     Return_t send(std::string_view data, std::string_view ip, std::string_view port, std::chrono::milliseconds timeout);
@@ -128,8 +131,8 @@ class ATCmdUSOWR final :
     virtual Return_t onResponseMatch(void) override;
 
 public:
-    ATCmdUSOWR(SendFunction & send, ATParser & parser) :
-        ATCmd("AT+USOWR", "", "@", parser), mSendFunction(send){}
+    ATCmdUSOWR(SendFunction & send) :
+        ATCmd("AT+USOWR", "", "@"), mSendFunction(send){}
 
     Return_t send(std::string_view data, std::chrono::milliseconds timeout);
     Return_t send(const size_t              socket,
@@ -149,8 +152,8 @@ class ATCmdUSORF final :
     virtual Return_t onResponseMatch(void) override;
 
 public:
-    ATCmdUSORF(SendFunction & send, ATParser & parser, const std::function<void(size_t, size_t)> &callback) :
-        ATCmd("AT+USORF", "", "+USORF:", parser), mSendFunction(send), mUrcReceivedCallback(callback){}
+    ATCmdUSORF(SendFunction & send, const std::function<void(size_t, size_t)> &callback) :
+        ATCmd("AT+USORF", "", "+USORF:"), mSendFunction(send), mUrcReceivedCallback(callback){}
 
     Return_t send(size_t bytesToRead, std::chrono::milliseconds timeout);
 
@@ -170,8 +173,8 @@ class ATCmdUSORD final :
     virtual Return_t onResponseMatch(void) override;
 
 public:
-    ATCmdUSORD(SendFunction & send, ATParser & parser, const std::function<void(size_t, size_t)> &callback) :
-        ATCmd("AT+USORD", "", "+USORD:", parser), mSendFunction(send), mUrcReceivedCallback(callback){}
+    ATCmdUSORD(SendFunction & send, const std::function<void(size_t, size_t)> &callback) :
+        ATCmd("AT+USORD", "", "+USORD:"), mSendFunction(send), mUrcReceivedCallback(callback){}
 
     Return_t send(size_t bytesToRead, std::chrono::milliseconds timeout);
 
@@ -191,8 +194,8 @@ class ATCmdUPSND final :
     virtual Return_t onResponseMatch(void) override;
 
 public:
-    ATCmdUPSND(SendFunction & send, ATParser & parser) :
-        ATCmd("AT+UPSND", "", "+UPSND:", parser), mSendFunction(send){}
+    ATCmdUPSND(SendFunction & send) :
+        ATCmd("AT+UPSND", "", "+UPSND:"), mSendFunction(send){}
 
     Return_t send(const size_t socket, const size_t parameter, const std::chrono::milliseconds timeout);
 
@@ -219,9 +222,9 @@ class ATCmdURC final :
     const std::function<void(size_t, size_t)>& mUrcReceivedCallback;
 
 public:
-    ATCmdURC(const std::string_view name, const std::string_view response, ATParser & parser,
+    ATCmdURC(const std::string_view name, const std::string_view response,
              const std::function<void(size_t, size_t)> &callback) :
-        AT(name, response, parser), mUrcReceivedCallback(callback) {}
+        AT(name, response), mUrcReceivedCallback(callback) {}
 };
 
 class ATCmdOK final :
@@ -230,8 +233,8 @@ class ATCmdOK final :
     Return_t onResponseMatch(void) override;
 
 public:
-    ATCmdOK(ATParser & parser) :
-        AT("CMD_OK", "OK\r", parser) {};
+    ATCmdOK(void) :
+        AT("CMD_OK", "OK\r") {};
     virtual ~ATCmdOK(void){};
     friend class ATParser;
 };
@@ -242,8 +245,8 @@ class ATCmdERROR final :
     Return_t onResponseMatch(void) override;
 
 public:
-    ATCmdERROR(ATParser & parser) :
-        AT("CMD_ERROR", "ERROR\r", parser) {};
+    ATCmdERROR(void) :
+        AT("CMD_ERROR", "ERROR\r") {};
     virtual ~ATCmdERROR(void){};
     friend class ATParser;
 };

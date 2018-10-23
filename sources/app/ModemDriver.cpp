@@ -79,21 +79,23 @@ ModemDriver::ModemDriver(const hal::UsartWithDma& interface,
                           mErrorCount = ERROR_THRESHOLD;
                       }),
 
-    mATUSOST(std::shared_ptr<app::ATCmdUSOST>(new app::ATCmdUSOST(mSend, mParser))),
-    mATUSOWR(std::shared_ptr<app::ATCmdUSOWR>(new app::ATCmdUSOWR(mSend, mParser))),
-    mATUSORF(std::shared_ptr<app::ATCmdUSORF>(new app::ATCmdUSORF(mSend, mParser, mUrcCallbackReceive))),
-    mATUSORD(std::shared_ptr<app::ATCmdUSORD>(new app::ATCmdUSORD(mSend, mParser, mUrcCallbackReceive))),
-    mATUUSORF(std::shared_ptr<app::ATCmdURC>(new app::ATCmdURC("UUSORF", "+UUSORF: ", mParser, mUrcCallbackReceive))),
-    mATUUSORD(std::shared_ptr<app::ATCmdURC>(new app::ATCmdURC("UUSORD", "+UUSORD: ", mParser, mUrcCallbackReceive))),
-    mATUUPSDD(std::shared_ptr<app::ATCmdURC>(new app::ATCmdURC("UUPSDD", "+UUPSDD: ", mParser, mUrcCallbackClose))),
-    mATUUSOCL(std::shared_ptr<app::ATCmdURC>(new app::ATCmdURC("UUSOCL", "+UUSOCL: ", mParser, mUrcCallbackClose))),
-    mATUPSND(std::shared_ptr<app::ATCmdUPSND>(new app::ATCmdUPSND(mSend, mParser))),
+    mATUSOST(std::shared_ptr<app::ATCmdUSOST>(new app::ATCmdUSOST(mSend))),
+    mATUSOWR(std::shared_ptr<app::ATCmdUSOWR>(new app::ATCmdUSOWR(mSend))),
+    mATUSORF(std::shared_ptr<app::ATCmdUSORF>(new app::ATCmdUSORF(mSend, mUrcCallbackReceive))),
+    mATUSORD(std::shared_ptr<app::ATCmdUSORD>(new app::ATCmdUSORD(mSend, mUrcCallbackReceive))),
+    mATUUSORF(std::shared_ptr<app::ATCmdURC>(new app::ATCmdURC("UUSORF", "+UUSORF: ", mUrcCallbackReceive))),
+    mATUUSORD(std::shared_ptr<app::ATCmdURC>(new app::ATCmdURC("UUSORD", "+UUSORD: ", mUrcCallbackReceive))),
+    mATUUPSDD(std::shared_ptr<app::ATCmdURC>(new app::ATCmdURC("UUPSDD", "+UUPSDD: ", mUrcCallbackClose))),
+    mATUUSOCL(std::shared_ptr<app::ATCmdURC>(new app::ATCmdURC("UUSOCL", "+UUSOCL: ", mUrcCallbackClose))),
+    mATUPSND(std::shared_ptr<app::ATCmdUPSND>(new app::ATCmdUPSND(mSend))),
     mProtocol(protocol)
 {
+    Trace(ZONE_VERBOSE, "Constructor \r\n");
+
     mInterface.mUsart.enableNonBlockingReceive(ModemDriverInterruptHandler);
 
-    mParser.registerAtCommand(std::shared_ptr<app::AT>(new app::ATCmdOK(mParser)));
-    mParser.registerAtCommand(std::shared_ptr<app::AT>(new app::ATCmdERROR(mParser)));
+    mParser.registerAtCommand(std::shared_ptr<app::AT>(new app::ATCmdOK()));
+    mParser.registerAtCommand(std::shared_ptr<app::AT>(new app::ATCmdERROR()));
     if ((mProtocol == Protocol::UDP) || (mProtocol == Protocol::DNS)) {
         mParser.registerAtCommand(mATUSOST);
     } else {
@@ -186,23 +188,24 @@ void ModemDriver::parserTaskFunction(const bool& join)
 bool ModemDriver::modemStartup(void)
 {
     std::array<std::shared_ptr<app::ATCmd>, 8> startupCommands = {
-        std::shared_ptr<app::ATCmd>(new app::ATCmd("ATZ", "ATZ\r", "", mParser)),
-        std::shared_ptr<app::ATCmd>(new app::ATCmd("ATE0V1", "ATE0V1\r", "", mParser)),
-        std::shared_ptr<app::ATCmd>(new app::ATCmd("AT+CMEE", "AT+CMEE=2\r", "", mParser)),
-        std::shared_ptr<app::ATCmd>(new app::ATCmd("AT+CGCLASS", "AT+CGCLASS=\"B\"\r", "", mParser)),
-        std::shared_ptr<app::ATCmd>(new app::ATCmd("AT+CGGATT", "AT+CGATT=1\r", "", mParser)),
-        std::shared_ptr<app::ATCmd>(new app::ATCmd("AT+UPSDA", "AT+UPSDA=0,3\r", "", mParser)),
+        std::shared_ptr<app::ATCmd>(new app::ATCmd("ATZ", "ATZ\r", "")),
+        std::shared_ptr<app::ATCmd>(new app::ATCmd("ATE0V1", "ATE0V1\r", "")),
+        std::shared_ptr<app::ATCmd>(new app::ATCmd("AT+CMEE", "AT+CMEE=2\r", "")),
+        std::shared_ptr<app::ATCmd>(new app::ATCmd("AT+CGCLASS", "AT+CGCLASS=\"B\"\r", "")),
+        std::shared_ptr<app::ATCmd>(new app::ATCmd("AT+CGGATT", "AT+CGATT=1\r", "")),
+        std::shared_ptr<app::ATCmd>(new app::ATCmd("AT+UPSDA", "AT+UPSDA=0,3\r", "")),
     };
 
     if (mProtocol == Protocol::TCP) {
-        startupCommands[6] = std::shared_ptr<app::ATCmd>(new app::ATCmd("AT+USOCR", "AT+USOCR=6\r", "", mParser));
+        startupCommands[6] = std::shared_ptr<app::ATCmd>(new app::ATCmd("AT+USOCR", "AT+USOCR=6\r", ""));
     } else {
-        startupCommands[6] = std::shared_ptr<app::ATCmd>(new app::ATCmd("AT+USOCR", "AT+USOCR=17\r", "", mParser));
+        startupCommands[6] = std::shared_ptr<app::ATCmd>(new app::ATCmd("AT+USOCR", "AT+USOCR=17\r", ""));
     }
-    startupCommands[7] = std::shared_ptr<app::ATCmd>(new app::ATCmd("AT+USOCO", AT_CMD_USOCO, "",
-                                                                    mParser));
+    startupCommands[7] = std::shared_ptr<app::ATCmd>(new app::ATCmd("AT+USOCO", AT_CMD_USOCO, ""));
 
     for (const auto& cmd : startupCommands) {
+        cmd->mParser = &mParser;
+
         os::ThisTask::sleep(std::chrono::milliseconds(2000));
         Trace(ZONE_VERBOSE, "Executing startup cmd\r\n");
         if ((cmd->send(mSend, std::chrono::milliseconds(16000)) != AT::Return_t::FINISHED) ||
