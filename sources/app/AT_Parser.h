@@ -22,7 +22,6 @@
 #include <functional>
 #include <chrono>
 #include <vector>
-#include <memory>
 #include "Semaphore.h"
 #include "Mutex.h"
 #include "Endpoint.h"
@@ -75,7 +74,7 @@ protected:
 };
 
 class ATCmd :
-    public AT, public std::enable_shared_from_this<ATCmd>
+    public AT
 {
 protected:
     bool mCommandSuccess = false;
@@ -100,20 +99,14 @@ public:
 class ATCmdUSOST final :
     public ATCmd
 {
-    size_t mSocket = 0;
-    std::string mIp = AT_CMD_IP;
-    std::string mPort = AT_CMD_PORT;
     std::string_view mData;
     SendFunction& mSendFunction;
-    bool mWaitingForPrompt = false;
     virtual Return_t onResponseMatch(void) override;
 
 public:
     ATCmdUSOST(SendFunction & send) :
         ATCmd("AT+USOST", "", "@"), mSendFunction(send){}
 
-    Return_t send(std::string_view data, std::chrono::milliseconds timeout);
-    Return_t send(std::string_view data, std::string_view ip, std::string_view port, std::chrono::milliseconds timeout);
     Return_t send(const size_t              socket,
                   std::string_view          ip,
                   std::string_view          port,
@@ -124,17 +117,14 @@ public:
 class ATCmdUSOWR final :
     public ATCmd
 {
-    size_t mSocket = 0;
     std::string_view mData;
     SendFunction& mSendFunction;
-    bool mWaitingForPrompt = false;
     virtual Return_t onResponseMatch(void) override;
 
 public:
     ATCmdUSOWR(SendFunction & send) :
         ATCmd("AT+USOWR", "", "@"), mSendFunction(send){}
 
-    Return_t send(std::string_view data, std::chrono::milliseconds timeout);
     Return_t send(const size_t              socket,
                   std::string_view          data,
                   std::chrono::milliseconds timeout);
@@ -155,7 +145,7 @@ public:
     ATCmdUSORF(SendFunction & send, const std::function<void(size_t, size_t)> &callback) :
         ATCmd("AT+USORF", "", "+USORF:"), mSendFunction(send), mUrcReceivedCallback(callback){}
 
-    Return_t send(size_t bytesToRead, std::chrono::milliseconds timeout);
+    Return_t send(size_t socket, size_t bytesToRead, std::chrono::milliseconds timeout);
 
     const std::string& getData(void) const
     {
@@ -176,7 +166,7 @@ public:
     ATCmdUSORD(SendFunction & send, const std::function<void(size_t, size_t)> &callback) :
         ATCmd("AT+USORD", "", "+USORD:"), mSendFunction(send), mUrcReceivedCallback(callback){}
 
-    Return_t send(size_t bytesToRead, std::chrono::milliseconds timeout);
+    Return_t send(size_t socket, size_t bytesToRead, std::chrono::milliseconds timeout);
 
     const std::string& getData(void) const
     {
@@ -213,6 +203,40 @@ public:
     {
         return mSocket;
     }
+};
+
+class ATCmdUSOCR final :
+    public ATCmd
+{
+    size_t mSocket = 0;
+    SendFunction& mSendFunction;
+    virtual Return_t onResponseMatch(void) override;
+
+public:
+    ATCmdUSOCR(SendFunction & send) :
+        ATCmd("AT+USOCR", "", "+USOCR:"), mSendFunction(send){}
+
+    Return_t send(const size_t protocol, const std::chrono::milliseconds timeout);
+
+    size_t getSocket(void) const
+    {
+        return mSocket;
+    }
+};
+
+class ATCmdUSOCO final :
+    public ATCmd
+{
+    SendFunction& mSendFunction;
+
+public:
+    ATCmdUSOCO(SendFunction & send) :
+        ATCmd("AT+USOCO", "", ""), mSendFunction(send) {}
+
+    Return_t send(size_t                    socket,
+                  std::string_view          ip,
+                  std::string_view          port,
+                  std::chrono::milliseconds timeout);
 };
 
 class ATCmdURC final :
@@ -255,12 +279,12 @@ struct ATParser {
     static constexpr const size_t BUFFERSIZE = 512;
 
     ATParser(const AT::ReceiveFunction& receive) :
-        mReceive(receive) {}
+        mReceive(receive), mWaitingCmd(nullptr) {}
 
     void reset(void);
-
+    void triggerMatch(AT* match);
     bool parse(std::chrono::milliseconds timeout = std::chrono::milliseconds(10000));
-    void registerAtCommand(std::shared_ptr<AT> cmd);
+    void registerAtCommand(AT& cmd);
     std::string_view getLineFromInput(std::chrono::milliseconds timeout = std::chrono::milliseconds(500)) const;
     std::string_view getInputUntilComma(std::chrono::milliseconds timeout = std::chrono::milliseconds(500),
                                         char*                     termination = nullptr) const;
@@ -271,9 +295,8 @@ protected:
     static std::array<char, BUFFERSIZE> ReceiveBuffer;
 
     const AT::ReceiveFunction& mReceive;
-    std::vector<std::shared_ptr<AT> > mRegisteredATCommands;
-    std::shared_ptr<AT> mWaitingCmd;
-    os::Mutex mSendingMutex;
+    std::vector<AT*> mRegisteredATCommands;
+    AT* mWaitingCmd;
 
     friend class ATCmdOK;
     friend class ATCmdERROR;

@@ -26,6 +26,7 @@
         if (g_DebugZones & (ZONE)) { \
             printf("%s:%u: ", __FILE__, __LINE__); \
             printf(__VA_ARGS__); \
+            fflush(stdout); \
         } \
 } while (0)
 #define TraceInit()

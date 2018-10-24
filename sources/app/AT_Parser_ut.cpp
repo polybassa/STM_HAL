@@ -159,17 +159,17 @@ int ut_BasicTest(void)
 
     app::ATParser parser(recv);
 
-    auto testee1 = std::shared_ptr<app::AT>(new app::ATCmd("CMD_1", "REQ1", "RESP1", parser));
-    auto testee2 = std::shared_ptr<app::AT>(new app::ATCmd("CMD_2", "REQ2", "RESP2", parser));
-    auto testee3 = std::shared_ptr<app::AT>(new app::ATCmd("CMD_3", "REQ3", "REsp3", parser));
-    auto testee4 = std::shared_ptr<app::AT>(new app::ATCmdOK(parser));
-    auto testee5 = std::shared_ptr<app::AT>(new app::ATCmdERROR(parser));
+    auto testee1 = std::shared_ptr<app::AT>(new app::ATCmd("CMD_1", "REQ1", "RESP1"));
+    auto testee2 = std::shared_ptr<app::AT>(new app::ATCmd("CMD_2", "REQ2", "RESP2"));
+    auto testee3 = std::shared_ptr<app::AT>(new app::ATCmd("CMD_3", "REQ3", "REsp3"));
+    auto testee4 = std::shared_ptr<app::AT>(new app::ATCmdOK());
+    auto testee5 = std::shared_ptr<app::AT>(new app::ATCmdERROR());
 
-    parser.registerAtCommand(testee1);
-    parser.registerAtCommand(testee2);
-    parser.registerAtCommand(testee3);
-    parser.registerAtCommand(testee4);
-    parser.registerAtCommand(testee5);
+    parser.registerAtCommand(*testee1.get());
+    parser.registerAtCommand(*testee2.get());
+    parser.registerAtCommand(*testee3.get());
+    parser.registerAtCommand(*testee4.get());
+    parser.registerAtCommand(*testee5.get());
 
     auto send1 = [&](int j = 2)
     {
@@ -303,17 +303,17 @@ int ut_ATParserURCTest(void)
 
     app::ATParser parser(recv);
 
-    auto testee1 = std::shared_ptr<app::AT>(new app::ATCmdURC("CMD_1", "UURC1:", parser, urc1Callback));
-    auto testee2 = std::shared_ptr<app::AT>(new app::ATCmdURC("CMD_2", "UURC2:", parser, urc2Callback));
-    auto testee3 = std::shared_ptr<app::AT>(new app::ATCmd("CMD_3", "REQ3", "REsp3", parser));
-    auto testee4 = std::shared_ptr<app::AT>(new app::ATCmdOK(parser));
-    auto testee5 = std::shared_ptr<app::AT>(new app::ATCmdERROR(parser));
+    auto testee1 = std::shared_ptr<app::AT>(new app::ATCmdURC("CMD_1", "UURC1:", urc1Callback));
+    auto testee2 = std::shared_ptr<app::AT>(new app::ATCmdURC("CMD_2", "UURC2:", urc2Callback));
+    auto testee3 = std::shared_ptr<app::AT>(new app::ATCmd("CMD_3", "REQ3", "REsp3"));
+    auto testee4 = std::shared_ptr<app::AT>(new app::ATCmdOK());
+    auto testee5 = std::shared_ptr<app::AT>(new app::ATCmdERROR());
 
-    parser.registerAtCommand(testee1);
-    parser.registerAtCommand(testee2);
-    parser.registerAtCommand(testee3);
-    parser.registerAtCommand(testee4);
-    parser.registerAtCommand(testee5);
+    parser.registerAtCommand(*testee1.get());
+    parser.registerAtCommand(*testee2.get());
+    parser.registerAtCommand(*testee3.get());
+    parser.registerAtCommand(*testee4.get());
+    parser.registerAtCommand(*testee5.get());
 
     parser.parse();
 
@@ -367,17 +367,19 @@ int ut_USOSTTest(void)
 
     app::ATParser parser(recv);
 
-    auto testee1 = std::shared_ptr<app::ATCmdUSOST>(new app::ATCmdUSOST(send, parser));
-    auto testee2 = std::shared_ptr<app::AT>(new app::ATCmd("CMD_2", "REQ2", "RESP2", parser));
-    auto testee3 = std::shared_ptr<app::AT>(new app::ATCmd("CMD_3", "REQ3", "REsp3", parser));
-    auto testee4 = std::shared_ptr<app::AT>(new app::ATCmdOK(parser));
-    auto testee5 = std::shared_ptr<app::AT>(new app::ATCmdERROR(parser));
+    auto testee1 = std::shared_ptr<app::ATCmdUSOST>(new app::ATCmdUSOST(send));
+    auto testee2 = std::shared_ptr<app::AT>(new app::ATCmd("CMD_2", "REQ2", "RESP2"));
+    auto testee3 = std::shared_ptr<app::AT>(new app::ATCmd("CMD_3", "REQ3", "REsp3"));
+    auto testee4 = std::shared_ptr<app::AT>(new app::ATCmdOK());
+    auto testee5 = std::shared_ptr<app::AT>(new app::ATCmdERROR());
+    auto testee6 = std::shared_ptr<app::ATCmdUSOWR>(new app::ATCmdUSOWR(send));
 
-    parser.registerAtCommand(std::dynamic_pointer_cast<app::AT>(testee1));
-    parser.registerAtCommand(testee2);
-    parser.registerAtCommand(testee3);
-    parser.registerAtCommand(testee4);
-    parser.registerAtCommand(testee5);
+    parser.registerAtCommand(*std::dynamic_pointer_cast<app::AT>(testee1).get());
+    parser.registerAtCommand(*std::dynamic_pointer_cast<app::AT>(testee6).get());
+    parser.registerAtCommand(*testee2.get());
+    parser.registerAtCommand(*testee3.get());
+    parser.registerAtCommand(*testee4.get());
+    parser.registerAtCommand(*testee5.get());
 
     auto send1 = [&](int j = 2)
     {
@@ -506,17 +508,17 @@ int ut_TimeoutTest(void)
 
     app::ATParser parser(recv);
 
-    auto testee1 = std::shared_ptr<app::AT>(new app::ATCmd("CMD_1", "REQ1", "RESP1", parser));
-    auto testee2 = std::shared_ptr<app::AT>(new app::ATCmd("CMD_2", "REQ2", "RESP2", parser));
-    auto testee3 = std::shared_ptr<app::AT>(new app::ATCmd("CMD_3", "REQ3", "REsp3", parser));
-    auto testee4 = std::shared_ptr<app::AT>(new app::ATCmdOK(parser));
-    auto testee5 = std::shared_ptr<app::AT>(new app::ATCmdERROR(parser));
+    auto testee1 = std::shared_ptr<app::AT>(new app::ATCmd("CMD_1", "REQ1", "RESP1"));
+    auto testee2 = std::shared_ptr<app::AT>(new app::ATCmd("CMD_2", "REQ2", "RESP2"));
+    auto testee3 = std::shared_ptr<app::AT>(new app::ATCmd("CMD_3", "REQ3", "REsp3"));
+    auto testee4 = std::shared_ptr<app::AT>(new app::ATCmdOK());
+    auto testee5 = std::shared_ptr<app::AT>(new app::ATCmdERROR());
 
-    parser.registerAtCommand(testee1);
-    parser.registerAtCommand(testee2);
-    parser.registerAtCommand(testee3);
-    parser.registerAtCommand(testee4);
-    parser.registerAtCommand(testee5);
+    parser.registerAtCommand(*testee1.get());
+    parser.registerAtCommand(*testee2.get());
+    parser.registerAtCommand(*testee3.get());
+    parser.registerAtCommand(*testee4.get());
+    parser.registerAtCommand(*testee5.get());
 
     auto send1 = [&](int j = 2)
     {

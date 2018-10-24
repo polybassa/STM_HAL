@@ -57,15 +57,17 @@ class ModemDriver final :
     std::function<void(size_t, size_t)> mUrcCallbackReceive;
     std::function<void(size_t, size_t)> mUrcCallbackClose;
 
-    std::shared_ptr<app::ATCmdUSOST> mATUSOST;
-    std::shared_ptr<app::ATCmdUSOWR> mATUSOWR;
-    std::shared_ptr<app::ATCmdUSORF> mATUSORF;
-    std::shared_ptr<app::ATCmdUSORD> mATUSORD;
-    std::shared_ptr<app::ATCmdURC> mATUUSORF;
-    std::shared_ptr<app::ATCmdURC> mATUUSORD;
-    std::shared_ptr<app::ATCmdURC> mATUUPSDD;
-    std::shared_ptr<app::ATCmdURC> mATUUSOCL;
-    std::shared_ptr<app::ATCmdUPSND> mATUPSND;
+    app::ATCmdOK mATOK;
+    app::ATCmdERROR mATERROR;
+    app::ATCmdUSOST mATUSOST;
+    app::ATCmdUSOWR mATUSOWR;
+    app::ATCmdUSORF mATUSORF;
+    app::ATCmdUSORD mATUSORD;
+    app::ATCmdURC mATUUSORF;
+    app::ATCmdURC mATUUSORD;
+    app::ATCmdURC mATUUPSDD;
+    app::ATCmdURC mATUUSOCL;
+    app::ATCmdUPSND mATUPSND;
 
     std::function<void(std::string_view)> mReceiveCallback;
     size_t mErrorCount = 0;
