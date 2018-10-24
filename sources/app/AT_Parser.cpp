@@ -33,7 +33,7 @@ using app::ATCmdUSOST;
 using app::ATCmdUSOWR;
 using app::ATParser;
 
-static constexpr const int __attribute__((unused)) g_DebugZones = ZONE_ERROR | ZONE_WARNING | ZONE_VERBOSE | ZONE_INFO;
+static constexpr const int __attribute__((unused)) g_DebugZones = 0; //ZONE_ERROR | ZONE_WARNING | ZONE_VERBOSE | ZONE_INFO;
 
 void AT::okReceived(void)
 {

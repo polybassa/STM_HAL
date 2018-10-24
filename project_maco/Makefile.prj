@@ -96,6 +96,7 @@ ${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/AT_Parser.o
 ${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/CanController.o
 ${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/CommandMultiplexer.o
 ${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/DemoExecuter.o
+${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/Socket.o
 
 #PMD TestApps
 #${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/TestGpio.o
