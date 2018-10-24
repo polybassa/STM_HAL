@@ -21,6 +21,7 @@
 #include <string_view>
 #include <array>
 #include "AT_Parser.h"
+#include "os_Queue.h"
 #include "ModemDriver.h"
 
 namespace app
@@ -33,11 +34,13 @@ protected:
     os::StreamBuffer<uint8_t, BUFFERSIZE> ReceiveBuffer;
 
     std::function<void(std::string_view)> mReceiveCallback;
+    os::Queue<size_t, 1> mNumberOfBytesForReceive;
 
     virtual void sendData(void) = 0;
     virtual void receiveData(size_t) = 0;
-    virtual bool startup() = 0;
+    virtual bool startup(void) = 0;
 
+    void checkAndReceiveData(void);
     void storeReceivedData(const std::string&);
 
     ATCmdUSOCR mATCmdUSOCR;

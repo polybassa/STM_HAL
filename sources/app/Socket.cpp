@@ -44,6 +44,15 @@ Socket::Socket(const Protocol                   protocol,
     parser.registerAtCommand(mATCmdUSOCO);
 }
 
+void Socket::checkAndReceiveData(void)
+{
+    size_t bytes = 0;
+
+    if (mNumberOfBytesForReceive.receive(bytes, std::chrono::milliseconds(10))) {
+        this->receiveData(bytes);
+    }
+}
+
 void Socket::storeReceivedData(const std::string& data)
 {
     if (mReceiveCallback) {
