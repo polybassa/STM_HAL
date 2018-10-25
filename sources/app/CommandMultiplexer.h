@@ -17,10 +17,10 @@
 #define SOURCES_PMD_COMMANDMULTIPLEXER_H_
 
 #include <string_view>
-
+#include <memory>
 #include "TaskInterruptable.h"
 #include "DeepSleepInterface.h"
-#include "ModemDriver.h"
+#include "Socket.h"
 #include "CanController.h"
 #include "DemoExecuter.h"
 
@@ -48,7 +48,8 @@ class CommandMultiplexer final :
     };
 
     os::TaskInterruptable mCommandMultiplexerTask;
-    ModemDriver& mModem;
+    std::shared_ptr<Socket> mCtrlSock;
+    std::shared_ptr<Socket> mDataSock;
     CanController& mCan;
     DemoExecuter& mDemo;
     bool mCanRxEnabled = false;
@@ -61,8 +62,8 @@ class CommandMultiplexer final :
     void updateRemoteCode(std::string_view code);
 
 public:
-    CommandMultiplexer(
-                       ModemDriver & modem,
+    CommandMultiplexer(std::shared_ptr<Socket> control,
+                       std::shared_ptr<Socket> data,
                        CanController & can,
                        DemoExecuter & demo);
 

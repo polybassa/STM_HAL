@@ -15,8 +15,6 @@
 
 #include "AT_Parser.h"
 #include "trace.h"
-#include <vector>
-#include "LockGuard.h"
 #include "binascii.h"
 
 using app::AT;
@@ -503,8 +501,8 @@ std::string_view ATParser::getLineFromInput(std::chrono::milliseconds timeout) c
     size_t currentPos = 0;
 
     while (true) {
-        if (1 != mReceive(reinterpret_cast<uint8_t*>(&data), 1, timeout)) {
-            // timeout
+        if (!mReceive(reinterpret_cast<uint8_t*>(&data), 1, timeout)) {
+            Trace(ZONE_ERROR, "Timeout\r\n");
             return "";
         }
         ReceiveBuffer[currentPos++] = data;
@@ -525,8 +523,8 @@ std::string_view ATParser::getInputUntilComma(std::chrono::milliseconds timeout,
     size_t currentPos = 0;
 
     while (true) {
-        if (1 != mReceive(reinterpret_cast<uint8_t*>(&data), 1, timeout)) {
-            // timeout
+        if (!mReceive(reinterpret_cast<uint8_t*>(&data), 1, timeout)) {
+            Trace(ZONE_ERROR, "Timeout\r\n");
             return "";
         }
 
@@ -554,8 +552,8 @@ std::string_view ATParser::getBytesFromInput(size_t numberOfBytes, std::chrono::
     }
 
     while (true) {
-        if (1 != mReceive(reinterpret_cast<uint8_t*>(&data), 1, timeout)) {
-            // timeout
+        if (!mReceive(reinterpret_cast<uint8_t*>(&data), 1, timeout)) {
+            Trace(ZONE_ERROR, "Timeout\r\n");
             return "";
         }
         ReceiveBuffer[currentPos++] = data;

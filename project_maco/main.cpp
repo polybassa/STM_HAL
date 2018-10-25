@@ -63,15 +63,17 @@ int main(void)
                                                                            MODEM_COM>(),
                                       hal::Factory<hal::Gpio>::get<hal::Gpio::MODEM_RESET>(),
                                       hal::Factory<hal::Gpio>::get<hal::Gpio::MODEM_POWER>(),
-                                      hal::Factory<hal::Gpio>::get<hal::Gpio::MODEM_SUPPLY>(),
-                                      app::ModemDriver::Protocol::TCP);
+                                      hal::Factory<hal::Gpio>::get<hal::Gpio::MODEM_SUPPLY>());
+
+    auto controlsocket = modem->getSocket(app::Socket::Protocol::TCP, ENDPOINT_IP, "62938");
+    auto datasocket = modem->getSocket(app::Socket::Protocol::TCP, ENDPOINT_IP, "62979");
 
     auto can = new app::CanController(hal::Factory<hal::UsartWithDma>::get<hal::Usart::SECCO_COM>(),
                                       hal::Factory<hal::Gpio>::get<hal::Gpio::SECCO_PWR>(),
                                       hal::Factory<hal::Gpio>::getAlternateFunctionGpio<hal::Gpio::USART2_TX>());
 
     auto demo = new app::DemoExecuter(*can);
-    auto mux = new app::CommandMultiplexer(*modem, *can, *demo);
+    auto mux = new app::CommandMultiplexer(controlsocket, datasocket, *can, *demo);
 
     os::Task::startScheduler();
 

@@ -23,7 +23,7 @@ using app::Socket;
 using app::TcpSocket;
 using app::UdpSocket;
 
-static const int __attribute__((unused)) g_DebugZones = 0; //ZONE_ERROR | ZONE_WARNING | ZONE_VERBOSE | ZONE_INFO;
+static const int __attribute__((unused)) g_DebugZones = ZONE_ERROR | ZONE_WARNING | ZONE_VERBOSE | ZONE_INFO;
 
 Socket::Socket(const Protocol                   protocol,
                ATParser&                        parser,
@@ -31,6 +31,7 @@ Socket::Socket(const Protocol                   protocol,
                std::string                      ip,
                std::string                      port,
                const std::function<void(void)>& errorCallback) :
+    mNumberOfBytesForReceive(),
     mATCmdUSOCR(send),
     mATCmdUSOCO(send),
     mSocket(0),
@@ -44,12 +45,32 @@ Socket::Socket(const Protocol                   protocol,
     parser.registerAtCommand(mATCmdUSOCO);
 }
 
+Socket::~Socket(void){}
+
+void Socket::reset(void)
+{
+    ReceiveBuffer.reset();
+    mNumberOfBytesForReceive.reset();
+    isOpen = false;
+}
+
 void Socket::checkAndReceiveData(void)
 {
     size_t bytes = 0;
 
-    if (mNumberOfBytesForReceive.receive(bytes, std::chrono::milliseconds(10))) {
+    if (isOpen && mNumberOfBytesForReceive.receive(bytes, std::chrono::milliseconds(10))) {
+        Trace(ZONE_VERBOSE, "receive\r\n");
+
         this->receiveData(bytes);
+    }
+}
+
+void Socket::checkAndSendData(void)
+{
+    if (isOpen && SendBuffer.bytesAvailable()) {
+        Trace(ZONE_VERBOSE, "send\r\n");
+
+        this->sendData();
     }
 }
 
@@ -112,6 +133,8 @@ TcpSocket::TcpSocket(ATParser& parser,
     parser.registerAtCommand(mATCmdUSORD);
 }
 
+TcpSocket::~TcpSocket(){}
+
 void TcpSocket::sendData(void)
 {
     std::string tmpSendStr(SendBuffer.bytesAvailable(), '\x00');
@@ -120,6 +143,7 @@ void TcpSocket::sendData(void)
     if (mATCmdUSOWR.send(mSocket, tmpSendStr, std::chrono::milliseconds(5000)) == AT::Return_t::ERROR) {
         mHandleError();
     }
+    mTimeOfLastSend = os::Task::getTickCount();
     mATCmdUSORD.send(mSocket, 0, std::chrono::milliseconds(1000));
 }
 
@@ -141,12 +165,20 @@ bool TcpSocket::startup()
     if (mATCmdUSOCR.send(6, std::chrono::seconds(2)) != AT::Return_t::FINISHED) {
         return false;
     }
-
     mSocket = mATCmdUSOCR.getSocket();
+    Trace(ZONE_VERBOSE, "Socket %d: created \r\n", mSocket);
+    isOpen = false;
+    return true;
+}
 
+bool TcpSocket::open(void)
+{
     if (mATCmdUSOCO.send(mSocket, mIP, mPort, std::chrono::seconds(2)) != AT::Return_t::FINISHED) {
         return false;
     }
+    isOpen = true;
+    Trace(ZONE_VERBOSE, "Socket %d: opened \r\n", mSocket);
+
     return true;
 }
 
@@ -164,6 +196,8 @@ UdpSocket::UdpSocket(ATParser& parser,
     parser.registerAtCommand(mATCmdUSORF);
 }
 
+UdpSocket::~UdpSocket(void){}
+
 void UdpSocket::sendData(void)
 {
     std::string tmpSendStr(SendBuffer.bytesAvailable(), '\x00');
@@ -172,6 +206,7 @@ void UdpSocket::sendData(void)
     if (mATCmdUSOST.send(mSocket, mIP, mPort, tmpSendStr, std::chrono::milliseconds(5000)) == AT::Return_t::ERROR) {
         mHandleError();
     }
+    mTimeOfLastSend = os::Task::getTickCount();
     mATCmdUSORF.send(mSocket, 0, std::chrono::milliseconds(1000));
 }
 
@@ -195,11 +230,16 @@ bool UdpSocket::startup()
     }
 
     mSocket = mATCmdUSOCR.getSocket();
+    isOpen = false;
+    return true;
+}
 
+bool UdpSocket::open(void)
+{
     if (mATCmdUSOCO.send(mSocket, mIP, mPort, std::chrono::seconds(2)) != AT::Return_t::FINISHED) {
         return false;
     }
-
+    isOpen = true;
     return true;
 }
 
@@ -212,6 +252,8 @@ DnsSocket::DnsSocket(ATParser& parser,
 {
     parser.registerAtCommand(mATCmdUPSND);
 }
+
+DnsSocket::~DnsSocket(void){}
 
 void DnsSocket::sendData(void)
 {
@@ -280,6 +322,9 @@ void DnsSocket::receiveData(size_t bytes)
 bool DnsSocket::startup()
 {
     if (!UdpSocket::startup()) {
+        return false;
+    }
+    if (!open()) {
         return false;
     }
     getDns();

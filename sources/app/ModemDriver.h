@@ -16,16 +16,18 @@
 #ifndef SOURCES_PMD_MODEMDRIVER_H_
 #define SOURCES_PMD_MODEMDRIVER_H_
 
+#include <string>
+#include <string_view>
+#include <array>
+#include <memory>
 #include "TaskInterruptable.h"
 #include "DeepSleepInterface.h"
 #include "os_StreamBuffer.h"
 #include "os_Queue.h"
 #include "UsartWithDma.h"
 #include "Gpio.h"
-#include <string>
-#include <string_view>
-#include <array>
 #include "AT_Parser.h"
+#include "Socket.h"
 
 namespace app
 {
@@ -39,8 +41,8 @@ class ModemDriver final :
     static constexpr size_t BUFFERSIZE = 1024;
     static constexpr size_t ERROR_THRESHOLD = 20;
     static os::StreamBuffer<uint8_t, BUFFERSIZE> InputBuffer;
-    static os::StreamBuffer<uint8_t, BUFFERSIZE> SendBuffer;
-    static os::StreamBuffer<uint8_t, BUFFERSIZE> ReceiveBuffer;
+
+    std::vector<std::shared_ptr<Socket> > mSockets;
 
     os::TaskInterruptable mModemTxTask;
     os::TaskInterruptable mParserTask;
@@ -53,25 +55,17 @@ class ModemDriver final :
     AT::SendFunction mSend;
     AT::ReceiveFunction mRecv;
     ATParser mParser;
-    os::Queue<size_t, 1> mNumberOfBytesForReceive;
     std::function<void(size_t, size_t)> mUrcCallbackReceive;
     std::function<void(size_t, size_t)> mUrcCallbackClose;
 
     app::ATCmdOK mATOK;
     app::ATCmdERROR mATERROR;
-    app::ATCmdUSOST mATUSOST;
-    app::ATCmdUSOWR mATUSOWR;
-    app::ATCmdUSORF mATUSORF;
-    app::ATCmdUSORD mATUSORD;
     app::ATCmdURC mATUUSORF;
     app::ATCmdURC mATUUSORD;
     app::ATCmdURC mATUUPSDD;
     app::ATCmdURC mATUUSOCL;
-    app::ATCmdUPSND mATUPSND;
 
-    std::function<void(std::string_view)> mReceiveCallback;
     size_t mErrorCount = 0;
-    size_t mTimeOfLastUdpSend = 0;
 
     void modemTxTaskFunction(const bool&);
     void parserTaskFunction(const bool&);
@@ -83,42 +77,20 @@ class ModemDriver final :
 
     void handleError(void);
 
-    void sendDataOverUdp(void);
-    void sendDataOverDns(void);
-    void sendDataOverTcp(void);
-
-    void receiveDataOverUdp(size_t);
-    void receiveDataOverDns(size_t);
-    void receiveDataOverTcp(size_t);
-
-    void storeReceivedData(const std::string&);
-
 public:
-    enum class Protocol { UDP, TCP, DNS };
-
     ModemDriver(const hal::UsartWithDma & interface,
                 const hal::Gpio & resetPin,
                 const hal::Gpio & powerPin,
-                const hal::Gpio & supplyPin,
-                const Protocol = Protocol::UDP);
+                const hal::Gpio & supplyPin);
 
     ModemDriver(const ModemDriver &) = delete;
     ModemDriver(ModemDriver &&) = delete;
     ModemDriver& operator=(const ModemDriver&) = delete;
     ModemDriver& operator=(ModemDriver &&) = delete;
 
-    const Protocol mProtocol;
-
     static void ModemDriverInterruptHandler(uint8_t);
 
-    size_t send(std::string_view, const uint32_t ticksToWait = portMAX_DELAY);
-    size_t receive(uint8_t *, size_t, uint32_t ticksToWait = portMAX_DELAY);
-
-    const std::string& getDns(void);
-    size_t bytesAvailable(void) const;
-
-    void registerReceiveCallback(std::function<void(std::string_view)> );
-    void unregisterReceiveCallback(void);
+    std::shared_ptr<Socket> getSocket(Socket::Protocol, std::string ip, std::string port);
 };
 }
 

@@ -16,20 +16,21 @@
 #ifndef SOURCES_PMD_SOCKET_H_
 #define SOURCES_PMD_SOCKET_H_
 
-#include "os_StreamBuffer.h"
 #include <string>
 #include <string_view>
 #include <array>
 #include "AT_Parser.h"
 #include "os_Queue.h"
-#include "ModemDriver.h"
+#include "os_StreamBuffer.h"
 
 namespace app
 {
+class ModemDriver;
+
 class Socket
 {
 protected:
-    static constexpr size_t BUFFERSIZE = 1024;
+    static constexpr size_t BUFFERSIZE = 512;
     os::StreamBuffer<uint8_t, BUFFERSIZE> SendBuffer;
     os::StreamBuffer<uint8_t, BUFFERSIZE> ReceiveBuffer;
 
@@ -39,14 +40,18 @@ protected:
     virtual void sendData(void) = 0;
     virtual void receiveData(size_t) = 0;
     virtual bool startup(void) = 0;
+    virtual bool open(void) = 0;
 
+    void reset(void);
     void checkAndReceiveData(void);
+    void checkAndSendData(void);
     void storeReceivedData(const std::string&);
 
     ATCmdUSOCR mATCmdUSOCR;
     ATCmdUSOCO mATCmdUSOCO;
     size_t mSocket;
     size_t mTimeOfLastSend;
+    bool isOpen = false;
 
     const std::function<void(void)>& mHandleError;
 
@@ -88,13 +93,15 @@ class TcpSocket :
     virtual void sendData(void) override;
     virtual void receiveData(size_t) override;
     virtual bool startup() override;
+    virtual bool open(void) override;
 
     ATCmdUSOWR mATCmdUSOWR;
     ATCmdUSORD mATCmdUSORD;
 
 public:
     TcpSocket(ATParser& parser,
-              AT::SendFunction& send, std::string ip,
+              AT::SendFunction& send,
+              std::string ip,
               std::string port,
               const std::function<void(size_t, size_t)>& callback,
               const std::function<void(void)>& errorCallback);
@@ -104,22 +111,27 @@ public:
     TcpSocket& operator=(const TcpSocket&) = delete;
     TcpSocket& operator=(TcpSocket &&) = delete;
 
+    virtual ~TcpSocket(void);
+
     friend ModemDriver;
 };
 
 class UdpSocket :
     public Socket
 {
+protected:
     virtual void sendData(void) override;
     virtual void receiveData(size_t) override;
-    virtual bool startup() override;
+    virtual bool startup(void) override;
+    virtual bool open(void) override;
 
     ATCmdUSOST mATCmdUSOST;
     ATCmdUSORF mATCmdUSORF;
 
 public:
     UdpSocket(ATParser& parser,
-              AT::SendFunction& send, std::string ip,
+              AT::SendFunction& send,
+              std::string ip,
               std::string port,
               const std::function<void(size_t, size_t)>& callback,
               const std::function<void(void)>& errorCallback);
@@ -129,6 +141,8 @@ public:
     UdpSocket& operator=(const UdpSocket&) = delete;
     UdpSocket& operator=(UdpSocket &&) = delete;
 
+    virtual ~UdpSocket(void);
+
     friend ModemDriver;
 };
 
@@ -137,7 +151,7 @@ class DnsSocket :
 {
     virtual void sendData(void) override;
     virtual void receiveData(size_t) override;
-    virtual bool startup() override;
+    virtual bool startup(void) override;
 
     const std::string& getDns(void);
 
@@ -153,6 +167,8 @@ public:
     DnsSocket(DnsSocket &&) = delete;
     DnsSocket& operator=(const DnsSocket&) = delete;
     DnsSocket& operator=(DnsSocket &&) = delete;
+
+    virtual ~DnsSocket(void);
 
     friend ModemDriver;
 };

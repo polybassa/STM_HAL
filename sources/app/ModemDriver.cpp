@@ -14,19 +14,14 @@
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>. */
 
 #include "ModemDriver.h"
-#include "LockGuard.h"
 #include "trace.h"
-#include "AT_Parser.h"
 #include <memory>
-#include "binascii.h"
 
 using app::ModemDriver;
 
 static const int __attribute__((unused)) g_DebugZones = ZONE_ERROR | ZONE_WARNING | ZONE_VERBOSE | ZONE_INFO;
 
 os::StreamBuffer<uint8_t, ModemDriver::BUFFERSIZE> ModemDriver::InputBuffer;
-os::StreamBuffer<uint8_t, ModemDriver::BUFFERSIZE> ModemDriver::SendBuffer;
-os::StreamBuffer<uint8_t, ModemDriver::BUFFERSIZE> ModemDriver::ReceiveBuffer;
 
 void ModemDriver::ModemDriverInterruptHandler(uint8_t data)
 {
@@ -36,8 +31,7 @@ void ModemDriver::ModemDriverInterruptHandler(uint8_t data)
 ModemDriver::ModemDriver(const hal::UsartWithDma& interface,
                          const hal::Gpio&         resetPin,
                          const hal::Gpio&         powerPin,
-                         const hal::Gpio&         supplyPin,
-                         const Protocol           protocol) :
+                         const hal::Gpio&         supplyPin) :
     os::DeepSleepModule(),
     mModemTxTask("ModemTxTask",
                  ModemDriver::STACKSIZE,
@@ -58,53 +52,54 @@ ModemDriver::ModemDriver(const hal::UsartWithDma& interface,
     mModemPower(powerPin),
     mModemSupplyVoltage(supplyPin),
     mSend([&](std::string_view in, std::chrono::milliseconds timeout)->size_t {
-              os::ThisTask::sleep(std::chrono::milliseconds(60));
+              static size_t lastSend = os::Task::getTickCount();
+
+              if (os::Task::getTickCount() < lastSend + 20) {
+                  os::ThisTask::sleep(std::chrono::milliseconds(20));
+              }
+              lastSend = os::Task::getTickCount();
               return mInterface.send(in, timeout.count());
           }),
     mRecv([&](uint8_t * output, const size_t length, std::chrono::milliseconds timeout)->bool {
               return InputBuffer.receive(reinterpret_cast<char*>(output), length, timeout.count());
           }),
     mParser(mRecv),
-    mNumberOfBytesForReceive(),
     mUrcCallbackReceive([&](size_t socket, size_t bytes)
                         {
                             Trace(ZONE_INFO, "%d bytes available\r\n", bytes);
                             if (bytes) {
-                                mNumberOfBytesForReceive.overwrite(bytes);
+                                for (auto& sock: mSockets) {
+                                    if (sock->mSocket == socket) {
+                                        sock->mNumberOfBytesForReceive.overwrite(bytes);
+                                    }
+                                }
                             }
                         }),
     mUrcCallbackClose([&](size_t socket, size_t bytes)
                       {
                           Trace(ZONE_INFO, "Socket closed\r\n");
                           // produce error to force TX-Task to restart modem
-                          mErrorCount = ERROR_THRESHOLD;
+                          for (auto& sock: mSockets) {
+                              if (sock->mSocket == socket) {
+                                  sock->isOpen = false;
+                              }
+                          }
                       }),
     mATOK(),
     mATERROR(),
-    mATUSOST(mSend),
-    mATUSOWR(mSend),
-    mATUSORF(mSend, mUrcCallbackReceive),
-    mATUSORD(mSend, mUrcCallbackReceive),
     mATUUSORF("UUSORF", "+UUSORF: ", mUrcCallbackReceive),
     mATUUSORD("UUSORD", "+UUSORD: ", mUrcCallbackReceive),
     mATUUPSDD("UUPSDD", "+UUPSDD: ", mUrcCallbackClose),
-    mATUUSOCL("UUSOCL", "+UUSOCL: ", mUrcCallbackClose),
-    mATUPSND(mSend),
-    mProtocol(protocol)
+    mATUUSOCL("UUSOCL", "+UUSOCL: ", mUrcCallbackClose)
 {
     mInterface.mUsart.enableNonBlockingReceive(ModemDriverInterruptHandler);
 
     mParser.registerAtCommand(mATOK);
     mParser.registerAtCommand(mATERROR);
-    mParser.registerAtCommand(mATUSOST);
-    mParser.registerAtCommand(mATUSOWR);
-    mParser.registerAtCommand(mATUSORF);
-    mParser.registerAtCommand(mATUSORD);
     mParser.registerAtCommand(mATUUSORF);
     mParser.registerAtCommand(mATUUSORD);
     mParser.registerAtCommand(mATUUPSDD);
     mParser.registerAtCommand(mATUUSOCL);
-    mParser.registerAtCommand(mATUPSND);
 }
 
 void ModemDriver::enterDeepSleep(void)
@@ -122,8 +117,6 @@ void ModemDriver::exitDeepSleep(void)
 
 void ModemDriver::modemTxTaskFunction(const bool& join)
 {
-    os::ThisTask::sleep(std::chrono::milliseconds(500));
-
     do {
         modemReset();
 
@@ -132,43 +125,27 @@ void ModemDriver::modemTxTaskFunction(const bool& join)
             continue;
         }
 
-        SendBuffer.send("ONLINE ", 6, std::chrono::milliseconds(100).count());
-
         while (mErrorCount < ERROR_THRESHOLD) {
-            if (SendBuffer.bytesAvailable()) {
-                switch (mProtocol) {
-                case Protocol::UDP:
-                    sendDataOverUdp();
-                    break;
-
-                case Protocol::TCP:
-                    sendDataOverTcp();
-                    break;
-
-                case Protocol::DNS:
-                    sendDataOverDns();
-                    break;
+            for (auto& sock : mSockets) {
+                if (!sock->isOpen) {
+                    Trace(ZONE_VERBOSE, "opening %d\r\n", sock->mSocket);
+                    sock->startup();
+                    sock->open();
                 }
-            }
 
-            if ((mProtocol != Protocol::TCP) && (os::Task::getTickCount() - mTimeOfLastUdpSend >= 3000)) {
-                SendBuffer.send("HELLO ", 6, std::chrono::milliseconds(100).count());
-            }
-            size_t bytes = 0;
-            if (mNumberOfBytesForReceive.receive(bytes, std::chrono::milliseconds(10))) {
-                switch (mProtocol) {
-                case Protocol::UDP:
-                    receiveDataOverUdp(bytes);
-                    break;
-
-                case Protocol::TCP:
-                    receiveDataOverTcp(bytes);
-                    break;
-
-                case Protocol::DNS:
-                    receiveDataOverDns(bytes);
-                    break;
+                if (!sock->isOpen) {
+                    continue;
                 }
+
+                sock->checkAndSendData();
+
+                if ((sock->mProtocol != Socket::Protocol::TCP) &&
+                    (os::Task::getTickCount() - sock->mTimeOfLastSend >= 3000))
+                {
+                    sock->send("HELLO ", std::chrono::milliseconds(100).count());
+                }
+
+                sock->checkAndReceiveData();
             }
         }
     } while (!join);
@@ -184,38 +161,37 @@ void ModemDriver::parserTaskFunction(const bool& join)
 
 bool ModemDriver::modemStartup(void)
 {
-    std::array<std::shared_ptr<app::ATCmd>, 8> startupCommands = {
-        std::shared_ptr<app::ATCmd>(new app::ATCmd("ATZ", "ATZ\r", "")),
-        std::shared_ptr<app::ATCmd>(new app::ATCmd("ATE0V1", "ATE0V1\r", "")),
-        std::shared_ptr<app::ATCmd>(new app::ATCmd("AT+CMEE", "AT+CMEE=2\r", "")),
-        std::shared_ptr<app::ATCmd>(new app::ATCmd("AT+CGCLASS", "AT+CGCLASS=\"B\"\r", "")),
-        std::shared_ptr<app::ATCmd>(new app::ATCmd("AT+CGGATT", "AT+CGATT=1\r", "")),
-        std::shared_ptr<app::ATCmd>(new app::ATCmd("AT+UPSDA", "AT+UPSDA=0,3\r", "")),
+    static std::array<app::ATCmd, 6> startupCommands = {
+        app::ATCmd("ATZ", "ATZ\r", ""),
+        app::ATCmd("ATE0V1", "ATE0V1\r", ""),
+        app::ATCmd("AT+CMEE", "AT+CMEE=2\r", ""),
+        app::ATCmd("AT+CGCLASS", "AT+CGCLASS=\"B\"\r", ""),
+        app::ATCmd("AT+CGGATT", "AT+CGATT=1\r", ""),
+        app::ATCmd("AT+UPSDA", "AT+UPSDA=0,3\r", ""),
     };
 
-    if (mProtocol == Protocol::TCP) {
-        startupCommands[6] = std::shared_ptr<app::ATCmd>(new app::ATCmd("AT+USOCR", "AT+USOCR=6\r", ""));
-    } else {
-        startupCommands[6] = std::shared_ptr<app::ATCmd>(new app::ATCmd("AT+USOCR", "AT+USOCR=17\r", ""));
-    }
-    startupCommands[7] = std::shared_ptr<app::ATCmd>(new app::ATCmd("AT+USOCO", AT_CMD_USOCO, ""));
+    for (auto& cmd : startupCommands) {
+        os::ThisTask::sleep(std::chrono::milliseconds(100));
+        Trace(ZONE_VERBOSE, "Cmd %s\r\n", cmd.mName.data());
 
-    for (const auto& cmd : startupCommands) {
-        cmd->mParser = &mParser;
-
-        os::ThisTask::sleep(std::chrono::milliseconds(500));
-        Trace(ZONE_VERBOSE, "Executing startup cmd\r\n");
-        if ((cmd->send(mSend, std::chrono::milliseconds(30000)) != AT::Return_t::FINISHED) ||
-            (cmd->wasExecutionSuccessful() == false))
-        {
-            Trace(ZONE_VERBOSE, "Executing startup cmd--> ERROR\r\n");
+        cmd.mParser = &mParser;
+        if (cmd.send(mSend, std::chrono::milliseconds(30000)) != AT::Return_t::FINISHED) {
+            Trace(ZONE_VERBOSE, "Cmd %s ERROR\r\n", cmd.mName.data());
             return false;
         }
-        Trace(ZONE_VERBOSE, "Executing startup cmd--> SUCCESS\r\n");
+        Trace(ZONE_VERBOSE, "Cmd %s SUCCESS\r\n", cmd.mName.data());
     }
-    if (mProtocol == Protocol::DNS) {
-        os::ThisTask::sleep(std::chrono::milliseconds(3000));
-        this->getDns();
+
+    for (auto& sock : mSockets) {
+        if (!sock->startup()) {
+            Trace(ZONE_ERROR, "Socket startup error\r\n");
+            return false;
+        }
+
+        if (!sock->open()) {
+            Trace(ZONE_ERROR, "Socket open error\r\n");
+            return false;
+        }
     }
     return true;
 }
@@ -237,8 +213,9 @@ void ModemDriver::modemReset(void)
     Trace(ZONE_INFO, "Modem Reset\r\n");
     modemOff();
     InputBuffer.reset();
-    ReceiveBuffer.reset();
-    mNumberOfBytesForReceive.reset();
+    for (auto& sock : mSockets) {
+        sock->reset();
+    }
     mParser.reset();
     mErrorCount = 0;
     os::ThisTask::sleep(std::chrono::milliseconds(1000));
@@ -255,174 +232,26 @@ void ModemDriver::handleError(void)
     mErrorCount++;
 }
 
-void ModemDriver::sendDataOverUdp(void)
+std::shared_ptr<app::Socket> ModemDriver::getSocket(app::Socket::Protocol protocol,
+                                                    std::string ip, std::string port)
 {
-    std::string tmpSendStr(SendBuffer.bytesAvailable(), '\x00');
-    SendBuffer.receive(tmpSendStr.data(), tmpSendStr.length(), 1000);
-
-    auto ret = mATUSOST.send(0, ENDPOINT_IP, ENDPOINT_PORT, tmpSendStr, std::chrono::milliseconds(1000));
-
-    if (ret == AT::Return_t::ERROR) {
-        handleError();
-    } else if (ret == AT::Return_t::FINISHED) {
-        mTimeOfLastUdpSend = os::Task::getTickCount();
+    std::shared_ptr<app::Socket> sock;
+    if (protocol == Socket::Protocol::TCP) {
+        sock = std::make_shared<TcpSocket>(mParser, mSend, ip, port,
+                                           mUrcCallbackReceive, [&] {handleError();
+                                           });
     }
-    mATUSORF.send(0, 0, std::chrono::milliseconds(1000));
-}
 
-void ModemDriver::sendDataOverTcp(void)
-{
-    std::string tmpSendStr(SendBuffer.bytesAvailable(), '\x00');
-    SendBuffer.receive(tmpSendStr.data(), tmpSendStr.length(), 1000);
-
-    auto ret = mATUSOWR.send(0, tmpSendStr, std::chrono::milliseconds(5000));
-
-    if (ret == AT::Return_t::ERROR) {
-        handleError();
-    } else if (ret == AT::Return_t::FINISHED) {
-        mTimeOfLastUdpSend = os::Task::getTickCount();
+    if (protocol == Socket::Protocol::UDP) {
+        sock = std::make_shared<UdpSocket>(mParser, mSend, ip, port,
+                                           mUrcCallbackReceive, [&] {handleError();
+                                           });
     }
-    mATUSORD.send(0, 0, std::chrono::milliseconds(1000));
-}
 
-void ModemDriver::sendDataOverDns(void)
-{
-    static constexpr const size_t MAX_PAYLOAD_LENGTH = 24;
-    static short counter = 900;
-
-    counter++;
-    counter %= 999;
-    std::string counterStr = std::to_string(counter);
-
-    std::string tmpPayloadStr(std::max(SendBuffer.bytesAvailable(),
-                                       MAX_PAYLOAD_LENGTH), '\x00');
-    SendBuffer.receive(tmpPayloadStr.data(), tmpPayloadStr.length(), 1000);
-
-    std::string hexPayloadStr;
-    hexlify(hexPayloadStr, tmpPayloadStr);
-
-    std::string tmpSendStr(
-                           "\x00\x00\x01\x00\x00\x01\x00\x00\x00\x00\x00\x00\x33\x70\x70\x70\x70\x70\x70\x70\x70\x70\x70\x70\x70\x70\x70\x70\x70\x70\x70\x70\x70\x70\x70\x70\x70\x70\x70\x70\x70\x70\x70\x70\x70\x70\x70\x70\x70\x70\x70\x70\x70\x70\x70\x70\x70\x70\x70\x70\x70\x63\x63\x63\x02\x74\x31\x05\x7a\x69\x6e\x6f\x6f\x02\x69\x74\x00\x00\x1c\x00\x01",
-                           81);
-
-    tmpSendStr.replace(13, hexPayloadStr.length(), hexPayloadStr);
-    tmpSendStr.replace(64 - counterStr.length(), counterStr.length(), counterStr);
-
-    auto ret = mATUSOST.send(0, mATUPSND.getData(), "53", tmpSendStr, std::chrono::milliseconds(1000));
-
-    if (ret == AT::Return_t::ERROR) {
-        handleError();
-    } else if (ret == AT::Return_t::FINISHED) {
-        mTimeOfLastUdpSend = os::Task::getTickCount();
+    if (protocol == Socket::Protocol::DNS) {
+        sock = std::make_shared<DnsSocket>(mParser, mSend, mUrcCallbackReceive, [&] {handleError();
+                                           });
     }
-    mATUSORF.send(0, 0, std::chrono::milliseconds(1000));
-}
-
-void ModemDriver::receiveDataOverUdp(size_t bytes)
-{
-    Trace(ZONE_INFO, "Start receive %d\r\n", bytes);
-    if (bytes == 0) {
-        return;
-    }
-    auto ret = mATUSORF.send(0, bytes, std::chrono::milliseconds(1000));
-    if (ret == AT::Return_t::FINISHED) {
-        storeReceivedData(mATUSORF.getData());
-    } else {
-        handleError();
-    }
-}
-
-void ModemDriver::receiveDataOverTcp(size_t bytes)
-{
-    Trace(ZONE_INFO, "Start receive %d\r\n", bytes);
-    if (bytes == 0) {
-        return;
-    }
-    auto ret = mATUSORD.send(0, bytes, std::chrono::milliseconds(1000));
-    if (ret == AT::Return_t::FINISHED) {
-        storeReceivedData(mATUSORD.getData());
-    } else {
-        handleError();
-    }
-}
-
-void ModemDriver::receiveDataOverDns(size_t bytes)
-{
-    Trace(ZONE_INFO, "Start receive over dns %d\r\n", bytes);
-    if (bytes == 0) {
-        return;
-    }
-    auto ret = mATUSORF.send(0, bytes, std::chrono::milliseconds(1000));
-    if (ret == AT::Return_t::FINISHED) {
-        const auto& data = mATUSORF.getData();
-
-        if (data.length() < 220) {
-            Trace(ZONE_VERBOSE, "DNS PKT to short\r\n,");
-            return;
-        }
-
-        constexpr const auto FRAMEINDICES = {94, 122, 150, 178};
-        static constexpr const size_t FRAMELENGTH = 14;
-        std::string rawdata("\x00", FRAMELENGTH * FRAMEINDICES.size());
-
-        for (const auto idx : FRAMEINDICES) {
-            const auto rawdata1 = data.substr(idx, FRAMELENGTH);
-            const auto rawdata1Idx = static_cast<size_t>(data[idx + FRAMELENGTH]) - 1 % 4;
-            rawdata.replace(rawdata1Idx * FRAMELENGTH, FRAMELENGTH, rawdata1);
-        }
-
-        storeReceivedData(rawdata);
-    } else {
-        handleError();
-    }
-}
-
-void ModemDriver::storeReceivedData(const std::string& data)
-{
-    if (mReceiveCallback) {
-        mReceiveCallback(data);
-    } else {
-        ReceiveBuffer.send(data.data(), data.length(), 1000);
-    }
-    Trace(ZONE_INFO, "Data stored\r\n");
-}
-
-size_t ModemDriver::send(std::string_view message, const uint32_t ticksToWait)
-{
-    if (SendBuffer.send(message.data(), message.length(), ticksToWait)) {
-        return message.length();
-    }
-    return 0;
-}
-
-size_t ModemDriver::receive(uint8_t* message, size_t length, uint32_t ticksToWait)
-{
-    if (ReceiveBuffer.receive(reinterpret_cast<char*>(message), length, ticksToWait)) {
-        return length;
-    }
-    return 0;
-}
-
-const std::string& ModemDriver::getDns(void)
-{
-    const auto ret = mATUPSND.send(0, 1, std::chrono::milliseconds(1000));
-
-    if (ret == AT::Return_t::ERROR) {
-        handleError();
-    }
-    return mATUPSND.getData();
-}
-
-size_t ModemDriver::bytesAvailable(void) const
-{
-    return ReceiveBuffer.bytesAvailable();
-}
-
-void ModemDriver::registerReceiveCallback(std::function<void(std::string_view)> f)
-{
-    mReceiveCallback = f;
-}
-void ModemDriver::unregisterReceiveCallback(void)
-{
-    mReceiveCallback = nullptr;
+    mSockets.push_back(sock);
+    return sock;
 }
