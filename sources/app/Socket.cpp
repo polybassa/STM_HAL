@@ -17,6 +17,7 @@
 #include "trace.h"
 #include "binascii.h"
 #include "os_Task.h"
+#include <algorithm>
 
 using app::DnsSocket;
 using app::Socket;
@@ -52,6 +53,7 @@ void Socket::reset(void)
     ReceiveBuffer.reset();
     mNumberOfBytesForReceive.reset();
     isOpen = false;
+    isCreated = false;
 }
 
 void Socket::checkAndReceiveData(void)
@@ -137,7 +139,9 @@ TcpSocket::~TcpSocket(){}
 
 void TcpSocket::sendData(void)
 {
-    std::string tmpSendStr(SendBuffer.bytesAvailable(), '\x00');
+    size_t bytes = std::min(static_cast<size_t>(300), SendBuffer.bytesAvailable());
+
+    std::string tmpSendStr(bytes, '\x00');
     SendBuffer.receive(tmpSendStr.data(), tmpSendStr.length(), 1000);
 
     if (mATCmdUSOWR.send(mSocket, tmpSendStr, std::chrono::milliseconds(5000)) == AT::Return_t::ERROR) {
@@ -160,13 +164,16 @@ void TcpSocket::receiveData(size_t bytes)
     }
 }
 
-bool TcpSocket::startup()
+bool TcpSocket::create()
 {
     if (mATCmdUSOCR.send(6, std::chrono::seconds(2)) != AT::Return_t::FINISHED) {
+        Trace(ZONE_VERBOSE, "Socket create failed \r\n");
+
         return false;
     }
     mSocket = mATCmdUSOCR.getSocket();
     Trace(ZONE_VERBOSE, "Socket %d: created \r\n", mSocket);
+    isCreated = true;
     isOpen = false;
     return true;
 }
@@ -200,7 +207,11 @@ UdpSocket::~UdpSocket(void){}
 
 void UdpSocket::sendData(void)
 {
-    std::string tmpSendStr(SendBuffer.bytesAvailable(), '\x00');
+    Trace(ZONE_INFO, "S%d: send\r\n", mSocket);
+
+    size_t bytes = std::min(static_cast<size_t>(300), SendBuffer.bytesAvailable());
+
+    std::string tmpSendStr(bytes, '\x00');
     SendBuffer.receive(tmpSendStr.data(), tmpSendStr.length(), 1000);
 
     if (mATCmdUSOST.send(mSocket, mIP, mPort, tmpSendStr, std::chrono::milliseconds(5000)) == AT::Return_t::ERROR) {
@@ -212,7 +223,7 @@ void UdpSocket::sendData(void)
 
 void UdpSocket::receiveData(size_t bytes)
 {
-    Trace(ZONE_INFO, "Start receive %d\r\n", bytes);
+    Trace(ZONE_INFO, "S%d: receive %d\r\n", mSocket, bytes);
     if (bytes == 0) {
         return;
     }
@@ -223,13 +234,18 @@ void UdpSocket::receiveData(size_t bytes)
     }
 }
 
-bool UdpSocket::startup()
+bool UdpSocket::create()
 {
     if (mATCmdUSOCR.send(17, std::chrono::seconds(2)) != AT::Return_t::FINISHED) {
+        Trace(ZONE_VERBOSE, "Socket create failed \r\n");
+
         return false;
     }
 
     mSocket = mATCmdUSOCR.getSocket();
+    Trace(ZONE_VERBOSE, "Socket %d: created \r\n", mSocket);
+
+    isCreated = true;
     isOpen = false;
     return true;
 }
@@ -319,9 +335,9 @@ void DnsSocket::receiveData(size_t bytes)
     }
 }
 
-bool DnsSocket::startup()
+bool DnsSocket::create()
 {
-    if (!UdpSocket::startup()) {
+    if (!UdpSocket::create()) {
         return false;
     }
     if (!open()) {

@@ -39,7 +39,7 @@ protected:
 
     virtual void sendData(void) = 0;
     virtual void receiveData(size_t) = 0;
-    virtual bool startup(void) = 0;
+    virtual bool create(void) = 0;
     virtual bool open(void) = 0;
 
     void reset(void);
@@ -52,6 +52,7 @@ protected:
     size_t mSocket;
     size_t mTimeOfLastSend;
     bool isOpen = false;
+    bool isCreated = false;
 
     const std::function<void(void)>& mHandleError;
 
@@ -92,7 +93,7 @@ class TcpSocket :
 {
     virtual void sendData(void) override;
     virtual void receiveData(size_t) override;
-    virtual bool startup() override;
+    virtual bool create() override;
     virtual bool open(void) override;
 
     ATCmdUSOWR mATCmdUSOWR;
@@ -122,7 +123,7 @@ class UdpSocket :
 protected:
     virtual void sendData(void) override;
     virtual void receiveData(size_t) override;
-    virtual bool startup(void) override;
+    virtual bool create(void) override;
     virtual bool open(void) override;
 
     ATCmdUSOST mATCmdUSOST;
@@ -151,7 +152,7 @@ class DnsSocket :
 {
     virtual void sendData(void) override;
     virtual void receiveData(size_t) override;
-    virtual bool startup(void) override;
+    virtual bool create(void) override;
 
     const std::string& getDns(void);
 

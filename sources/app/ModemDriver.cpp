@@ -82,6 +82,7 @@ ModemDriver::ModemDriver(const hal::UsartWithDma& interface,
                           for (auto& sock: mSockets) {
                               if (sock->mSocket == socket) {
                                   sock->isOpen = false;
+                                  sock->isCreated = false;
                               }
                           }
                       }),
@@ -127,9 +128,11 @@ void ModemDriver::modemTxTaskFunction(const bool& join)
 
         while (mErrorCount < ERROR_THRESHOLD) {
             for (auto& sock : mSockets) {
-                if (!sock->isOpen) {
-                    Trace(ZONE_VERBOSE, "opening %d\r\n", sock->mSocket);
-                    sock->startup();
+                if (!sock->isCreated) {
+                    sock->create();
+                }
+
+                if (sock->isCreated && !sock->isOpen) {
                     sock->open();
                 }
 
@@ -139,9 +142,7 @@ void ModemDriver::modemTxTaskFunction(const bool& join)
 
                 sock->checkAndSendData();
 
-                if ((sock->mProtocol != Socket::Protocol::TCP) &&
-                    (os::Task::getTickCount() - sock->mTimeOfLastSend >= 3000))
-                {
+                if ((os::Task::getTickCount() - sock->mTimeOfLastSend >= 3000)) {
                     sock->send("HELLO ", std::chrono::milliseconds(100).count());
                 }
 
@@ -183,7 +184,7 @@ bool ModemDriver::modemStartup(void)
     }
 
     for (auto& sock : mSockets) {
-        if (!sock->startup()) {
+        if (!sock->create()) {
             Trace(ZONE_ERROR, "Socket startup error\r\n");
             return false;
         }
