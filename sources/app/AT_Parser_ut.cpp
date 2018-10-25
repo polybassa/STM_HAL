@@ -407,7 +407,11 @@ int ut_USOSTTest(void)
             testString += "@\rOK\rERROR\r";
             Trace(ZONE_INFO, "Hello %d\r\n", j);
         }
-        auto ret = std::dynamic_pointer_cast<app::ATCmdUSOST>(testee1)->send("hello", std::chrono::milliseconds(1000));
+        auto ret = std::dynamic_pointer_cast<app::ATCmdUSOST>(testee1)->send(0,
+                                                                             "ip",
+                                                                             "port",
+                                                                             "hello",
+                                                                             std::chrono::milliseconds(1000));
         CHECK(ret == app::AT::Return_t::FINISHED);
     };
 
