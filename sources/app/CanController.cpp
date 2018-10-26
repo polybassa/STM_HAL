@@ -21,10 +21,9 @@
 
 using app::CanController;
 
-static const int __attribute__((unused)) g_DebugZones = 0; //ZONE_ERROR | ZONE_WARNING | ZONE_VERBOSE | ZONE_INFO;
+static const int __attribute__((unused)) g_DebugZones = ZONE_ERROR | ZONE_WARNING | ZONE_VERBOSE | ZONE_INFO;
 
 os::StreamBuffer<uint8_t, CanController::BUFFERSIZE> CanController::ReceiveBuffer;
-os::Semaphore CanController::FrameAvailable;
 
 extern "C" char _binary_start;
 extern "C" char _binary_end;
@@ -32,10 +31,6 @@ extern "C" char _binary_end;
 void CanController::CanControllerInterruptHandler(uint8_t data)
 {
     ReceiveBuffer.sendFromISR(data);
-
-    if (data == '\r') {
-        FrameAvailable.giveFromISR();
-    }
 }
 
 CanController::CanController(const hal::UsartWithDma& interface,
@@ -70,13 +65,16 @@ void CanController::exitDeepSleep(void)
 
 void CanController::taskFunction(const bool& join)
 {
-    std::string tmpString(BUFFERSIZE, '\x00');
+    std::string tmpString(MAXCHUNKSIZE, '\x00');
 
     do {
         if (mReceiveCallback) {
-            if (FrameAvailable.take(std::chrono::milliseconds(100))) {
-                tmpString.resize(ReceiveBuffer.bytesAvailable());
-                ReceiveBuffer.receive(tmpString.data(), tmpString.size(), 100);
+            if (ReceiveBuffer.bytesAvailable()) {
+                tmpString.resize(std::min(ReceiveBuffer.bytesAvailable(), MAXCHUNKSIZE));
+                auto length = ReceiveBuffer.receive(tmpString.data(), tmpString.size(), 100);
+                if (length != tmpString.size()) {
+                    Trace(ZONE_ERROR, "Expected %d got %d \r\n", tmpString.size(), length);
+                }
                 mReceiveCallback(tmpString);
             }
         }
@@ -85,7 +83,7 @@ void CanController::taskFunction(const bool& join)
             Trace(ZONE_INFO, "START FLASH... \r\n");
             flashSecCoFirmware();
         } else {
-            os::ThisTask::sleep(std::chrono::milliseconds(500));
+            os::ThisTask::sleep(std::chrono::milliseconds(10));
         }
     } while (!join);
 }
@@ -281,9 +279,7 @@ size_t CanController::send(std::string_view message, const uint32_t ticksToWait)
 size_t CanController::receive(uint8_t* message, size_t length, uint32_t ticksToWait)
 {
     if (!mIsPerformingFirmwareUpdate) {
-        if (FrameAvailable.take(std::chrono::milliseconds(ticksToWait))) {
-            return ReceiveBuffer.receive(reinterpret_cast<char*>(message), length, ticksToWait);
-        }
+        return ReceiveBuffer.receive(reinterpret_cast<char*>(message), length, ticksToWait);
     }
     return 0;
 }

@@ -26,10 +26,6 @@
 #include "Mutex.h"
 #include "Endpoint.h"
 
-#define AT_CMD_IP ENDPOINT_IP
-#define AT_CMD_PORT ENDPOINT_PORT
-#define AT_CMD_USOCO "AT+USOCO=0,\"" ENDPOINT_IP "\"," ENDPOINT_PORT "\r"
-
 namespace app
 {
 class ATParser;
@@ -134,8 +130,8 @@ class ATCmdUSORF final :
     public ATCmd
 {
     size_t mSocket = 0;
-    std::string mIp = AT_CMD_IP;
-    std::string mPort = AT_CMD_PORT;
+    std::string mIp;
+    std::string mPort;
     std::string mData;
     SendFunction& mSendFunction;
     const std::function<void(size_t, size_t)>& mUrcReceivedCallback;
@@ -277,19 +273,21 @@ public:
 
 struct ATParser {
     static constexpr const size_t BUFFERSIZE = 512;
+    static constexpr const std::chrono::milliseconds defaultTimeout = std::chrono::milliseconds(300);
+    static constexpr const std::chrono::milliseconds defaultParseTimeout = std::chrono::milliseconds(30000);
 
     ATParser(const AT::ReceiveFunction& receive) :
-        mReceive(receive), mWaitingCmd(nullptr) {}
+        mReceive(receive), mWaitingCmd(nullptr), mWaitingCmdMutex() {}
 
     void reset(void);
     void triggerMatch(AT* match);
-    bool parse(std::chrono::milliseconds timeout = std::chrono::milliseconds(10000));
+    bool parse(std::chrono::milliseconds timeout = defaultParseTimeout);
     void registerAtCommand(AT& cmd);
-    std::string_view getLineFromInput(std::chrono::milliseconds timeout = std::chrono::milliseconds(500)) const;
-    std::string_view getInputUntilComma(std::chrono::milliseconds timeout = std::chrono::milliseconds(500),
-                                        char*                     termination = nullptr) const;
+    std::string_view getLineFromInput(std::chrono::milliseconds timeout = defaultTimeout) const;
+    std::string_view getInputUntilComma(char*                     termination = nullptr,
+                                        std::chrono::milliseconds timeout = defaultTimeout) const;
     std::string_view getBytesFromInput(size_t                    numberOfBytes,
-                                       std::chrono::milliseconds timeout = std::chrono::milliseconds(500)) const;
+                                       std::chrono::milliseconds timeout = defaultTimeout) const;
 
 protected:
     static std::array<char, BUFFERSIZE> ReceiveBuffer;
@@ -297,6 +295,7 @@ protected:
     const AT::ReceiveFunction& mReceive;
     std::vector<AT*> mRegisteredATCommands;
     AT* mWaitingCmd;
+    os::Mutex mWaitingCmdMutex;
 
     friend class ATCmdOK;
     friend class ATCmdERROR;

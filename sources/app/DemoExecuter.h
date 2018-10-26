@@ -31,7 +31,7 @@ class DemoExecuter final :
     virtual void enterDeepSleep(void) override;
     virtual void exitDeepSleep(void) override;
 
-    static constexpr uint32_t STACKSIZE = 2048;
+    static constexpr uint32_t STACKSIZE = 512;
 
     os::TaskInterruptable mDemoExecuterTask;
     CanController& mCan;

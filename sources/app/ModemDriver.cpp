@@ -182,18 +182,6 @@ bool ModemDriver::modemStartup(void)
         }
         Trace(ZONE_VERBOSE, "Cmd %s SUCCESS\r\n", cmd.mName.data());
     }
-
-    for (auto& sock : mSockets) {
-        if (!sock->create()) {
-            Trace(ZONE_ERROR, "Socket startup error\r\n");
-            return false;
-        }
-
-        if (!sock->open()) {
-            Trace(ZONE_ERROR, "Socket open error\r\n");
-            return false;
-        }
-    }
     return true;
 }
 
@@ -217,7 +205,6 @@ void ModemDriver::modemReset(void)
     for (auto& sock : mSockets) {
         sock->reset();
     }
-    mParser.reset();
     mErrorCount = 0;
     os::ThisTask::sleep(std::chrono::milliseconds(1000));
     modemOn();

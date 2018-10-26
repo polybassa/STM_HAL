@@ -78,6 +78,8 @@ void Socket::checkAndSendData(void)
 
 void Socket::storeReceivedData(const std::string& data)
 {
+    Trace(ZONE_INFO, "Data will be stored %d\r\n", data.length());
+
     if (mReceiveCallback) {
         mReceiveCallback(data);
     } else {
@@ -88,16 +90,18 @@ void Socket::storeReceivedData(const std::string& data)
 
 size_t Socket::send(std::string_view message, const uint32_t ticksToWait)
 {
-    if (SendBuffer.send(message.data(), message.length(), ticksToWait)) {
-        return message.length();
+    size_t bytes = std::min(BUFFERSIZE, static_cast<size_t>(message.length()));
+
+    if (SendBuffer.send(message.data(), bytes, ticksToWait)) {
+        return bytes;
     }
     return 0;
 }
 
 size_t Socket::receive(uint8_t* message, size_t length, uint32_t ticksToWait)
 {
-    if (ReceiveBuffer.receive(reinterpret_cast<char*>(message), length, ticksToWait)) {
-        return length;
+    if (auto ret = ReceiveBuffer.receive(reinterpret_cast<char*>(message), length, ticksToWait)) {
+        return ret;
     }
     return 0;
 }
@@ -139,10 +143,17 @@ TcpSocket::~TcpSocket(){}
 
 void TcpSocket::sendData(void)
 {
-    size_t bytes = std::min(static_cast<size_t>(300), SendBuffer.bytesAvailable());
+    size_t bytes = std::min(BUFFERSIZE, SendBuffer.bytesAvailable());
 
     std::string tmpSendStr(bytes, '\x00');
-    SendBuffer.receive(tmpSendStr.data(), tmpSendStr.length(), 1000);
+    Trace(ZONE_VERBOSE, "send %d \r\n", bytes);
+
+    size_t ret = SendBuffer.receive(tmpSendStr.data(), tmpSendStr.length(), 1000);
+
+    if (ret != bytes) {
+        Trace(ZONE_ERROR, "internal buffer didn't contain enough bytes\r\n");
+        return;
+    }
 
     if (mATCmdUSOWR.send(mSocket, tmpSendStr, std::chrono::milliseconds(5000)) == AT::Return_t::ERROR) {
         mHandleError();
@@ -209,7 +220,7 @@ void UdpSocket::sendData(void)
 {
     Trace(ZONE_INFO, "S%d: send\r\n", mSocket);
 
-    size_t bytes = std::min(static_cast<size_t>(300), SendBuffer.bytesAvailable());
+    size_t bytes = std::min(BUFFERSIZE, SendBuffer.bytesAvailable());
 
     std::string tmpSendStr(bytes, '\x00');
     SendBuffer.receive(tmpSendStr.data(), tmpSendStr.length(), 1000);

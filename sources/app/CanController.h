@@ -36,10 +36,11 @@ class CanController final :
     virtual void enterDeepSleep(void) override;
     virtual void exitDeepSleep(void) override;
 
-    static constexpr size_t STACKSIZE = 1024;
-    static constexpr size_t BUFFERSIZE = 1024;
+    static constexpr size_t STACKSIZE = 512;
+    static constexpr size_t BUFFERSIZE = 2048;
+    static constexpr size_t MAXCHUNKSIZE = 256;
+
     static os::StreamBuffer<uint8_t, BUFFERSIZE> ReceiveBuffer;
-    static os::Semaphore FrameAvailable;
 
     os::TaskInterruptable mTask;
 

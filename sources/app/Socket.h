@@ -30,7 +30,7 @@ class ModemDriver;
 class Socket
 {
 protected:
-    static constexpr size_t BUFFERSIZE = 512;
+    static constexpr size_t BUFFERSIZE = 256;
     os::StreamBuffer<uint8_t, BUFFERSIZE> SendBuffer;
     os::StreamBuffer<uint8_t, BUFFERSIZE> ReceiveBuffer;
 
