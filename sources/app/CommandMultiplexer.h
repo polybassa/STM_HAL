@@ -33,6 +33,7 @@ class CommandMultiplexer final :
     virtual void exitDeepSleep(void) override;
 
     static constexpr uint32_t STACKSIZE = 1024;
+    static constexpr size_t MAXCHUNKSIZE = 64;
 
     enum class SpecialCommand_t
     {
@@ -60,6 +61,7 @@ class CommandMultiplexer final :
     void commandMultiplexerTaskFunction(const bool&);
     void remoteCodeExecution(void);
     void updateRemoteCode(std::string_view code);
+    void showHelp(void) const;
 
 public:
     CommandMultiplexer(std::shared_ptr<Socket> control,

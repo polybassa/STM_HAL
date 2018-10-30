@@ -19,29 +19,26 @@
 using app::CommandMultiplexer;
 using app::Socket;
 
-static const int __attribute__((used)) g_DebugZones = ZONE_ERROR | ZONE_WARNING | ZONE_VERBOSE | ZONE_INFO;
+static const int __attribute__((used)) g_DebugZones = 0; // ZONE_ERROR | ZONE_WARNING | ZONE_VERBOSE | ZONE_INFO;
 
 CommandMultiplexer::CommandMultiplexer(std::shared_ptr<Socket> control,
                                        std::shared_ptr<Socket> data,
                                        CanController&          can,
                                        DemoExecuter&           demo) :
     os::DeepSleepModule(), mCommandMultiplexerTask("CommandMultiplexer",
-                                                   CommandMultiplexer::STACKSIZE, os::Task::Priority::HIGH,
+                                                   CommandMultiplexer::STACKSIZE, os::Task::Priority::MEDIUM,
                                                    [this](const bool& join)
                                                    {
                                                        commandMultiplexerTaskFunction(join);
                                                    }),
     mCtrlSock(control), mDataSock(data), mCan(can), mDemo(demo)
 {
-    mCtrlSock->registerReceiveCallback([&](std::string_view cmd){
-                                           multiplexCommand(cmd);
-                                       });
     mDataSock->registerReceiveCallback([&](std::string_view cmd){
-                                           mCan.send(cmd, 200);
+                                           mCan.send(cmd, 1000);
                                        });
     mCan.registerReceiveCallback([&](std::string_view data){
                                      if (mCanRxEnabled) {
-                                         mDataSock->send(data, 200);
+                                         mDataSock->send(data, 1000);
                                      }
                                  });
 }
@@ -58,6 +55,8 @@ void CommandMultiplexer::exitDeepSleep(void)
 
 void CommandMultiplexer::multiplexCommand(std::string_view input)
 {
+    Trace(ZONE_INFO, "Got cmd\r\n");
+
     auto ctrlindex = input.find('$');
 
     if (ctrlindex != std::string_view::npos) {
@@ -68,7 +67,26 @@ void CommandMultiplexer::multiplexCommand(std::string_view input)
         handleSpecialCommand(cmd,
                              std::string_view(input.data() + ctrlindex + 2,
                                               input.length() - ctrlindex - 2));
+    } else {
+        showHelp();
     }
+}
+
+void CommandMultiplexer::showHelp(void) const
+{
+    mCtrlSock->send("--------CARSEC Dongle ---------\r\n");
+    mCtrlSock->send("\r\n");
+    mCtrlSock->send("Commands:\r\n");
+    mCtrlSock->send("$0x =  RUN_DEMO x            \r\n");
+    mCtrlSock->send("$1  =  FLASH_CAN_MCU        \r\n");
+    mCtrlSock->send("$2  =  CAN_ON               \r\n");
+    mCtrlSock->send("$3  =  CAN_OFF              \r\n");
+    mCtrlSock->send("$4  =  ENABLE_CAN_RX        \r\n");
+    mCtrlSock->send("$5  =  DISABLE_CAN_RX       \r\n");
+    mCtrlSock->send("$6  =  DONGLE_RESET         \r\n");
+    mCtrlSock->send("$7  =  RC_UPDATE            \r\n");
+    mCtrlSock->send("$8  =  RC_EXECUTE           \r\n");
+    os::ThisTask::sleep(std::chrono::milliseconds(500));
 }
 
 void CommandMultiplexer::handleSpecialCommand(CommandMultiplexer::SpecialCommand_t cmd, std::string_view data)
@@ -161,8 +179,13 @@ void CommandMultiplexer::updateRemoteCode(std::string_view code)
 void CommandMultiplexer::commandMultiplexerTaskFunction(const bool& join)
 {
     Trace(ZONE_INFO, "Start command multiplexer \r\n");
+    std::array<char, MAXCHUNKSIZE> temp;
 
     do {
-        os::ThisTask::sleep(std::chrono::seconds(10));
+        const auto length = mCtrlSock->receive(reinterpret_cast<uint8_t*>(temp.data()), temp.size());
+        if (length == 0) {
+            continue;
+        }
+        multiplexCommand(std::string_view(temp.data(), length));
     } while (!join);
 }

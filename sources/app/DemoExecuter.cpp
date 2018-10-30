@@ -24,7 +24,7 @@ static const int __attribute__((unused)) g_DebugZones = ZONE_ERROR | ZONE_WARNIN
 
 DemoExecuter::DemoExecuter(CanController& can) :
     os::DeepSleepModule(), mDemoExecuterTask("DemoExecuter",
-                                             DemoExecuter::STACKSIZE, os::Task::Priority::HIGH,
+                                             DemoExecuter::STACKSIZE, os::Task::Priority::LOW,
                                              [this](const bool& join)
                                              {
                                                  DemoExecuterTaskFunction(join);
@@ -161,7 +161,8 @@ void DemoExecuter::DemoExecuterTaskFunction(const bool& join)
 
     do {
         std::array<char, 10> tempData;
-        auto received = mDemoQueue.receive(tempData, std::chrono::milliseconds(100));
+        tempData.fill(0);
+        auto received = mDemoQueue.receive(tempData, std::chrono::milliseconds(1000));
 
         if (received) {
             int demo_index = std::strtol(tempData.data(), NULL, 10);

@@ -15,13 +15,12 @@
 
 #include "CanController.h"
 #include "trace.h"
-#include <string>
 #include <algorithm>
 #include <cstring>
 
 using app::CanController;
 
-static const int __attribute__((unused)) g_DebugZones = ZONE_ERROR | ZONE_WARNING | ZONE_VERBOSE | ZONE_INFO;
+static const int __attribute__((unused)) g_DebugZones = 0; //ZONE_ERROR | ZONE_WARNING | ZONE_VERBOSE | ZONE_INFO;
 
 os::StreamBuffer<uint8_t, CanController::BUFFERSIZE> CanController::ReceiveBuffer;
 
@@ -39,7 +38,7 @@ CanController::CanController(const hal::UsartWithDma& interface,
     os::DeepSleepModule(),
     mTask("CanTask",
           CanController::STACKSIZE,
-          os::Task::Priority::HIGH,
+          os::Task::Priority::MEDIUM,
           [this](const bool& join)
           {
               taskFunction(join);
@@ -65,17 +64,14 @@ void CanController::exitDeepSleep(void)
 
 void CanController::taskFunction(const bool& join)
 {
-    std::string tmpString(MAXCHUNKSIZE, '\x00');
+    std::array<char, MAXCHUNKSIZE> tempString;
 
     do {
         if (mReceiveCallback) {
             if (ReceiveBuffer.bytesAvailable()) {
-                tmpString.resize(std::min(ReceiveBuffer.bytesAvailable(), MAXCHUNKSIZE));
-                auto length = ReceiveBuffer.receive(tmpString.data(), tmpString.size(), 100);
-                if (length != tmpString.size()) {
-                    Trace(ZONE_ERROR, "Expected %d got %d \r\n", tmpString.size(), length);
-                }
-                mReceiveCallback(tmpString);
+                const auto length = ReceiveBuffer.receive(tempString.data(), tempString.size(), 100);
+                mReceiveCallback(std::string_view(tempString.data(), length));
+                continue;
             }
         }
 
@@ -91,7 +87,6 @@ void CanController::taskFunction(const bool& join)
 void CanController::flashSecCoFirmware(void)
 {
     mWasFirmwareUpdateSuccessful = false;
-
     mWasFirmwareUpdateSuccessful = flash(std::string_view(
                                                           reinterpret_cast<char*>(&_binary_start),
                                                           reinterpret_cast<char*>(&_binary_end) -

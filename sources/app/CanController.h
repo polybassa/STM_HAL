@@ -22,7 +22,6 @@
 #include "Semaphore.h"
 #include "UsartWithDma.h"
 #include "Gpio.h"
-#include <string>
 #include <string_view>
 #include <array>
 
@@ -36,7 +35,7 @@ class CanController final :
     virtual void enterDeepSleep(void) override;
     virtual void exitDeepSleep(void) override;
 
-    static constexpr size_t STACKSIZE = 512;
+    static constexpr size_t STACKSIZE = 1024;
     static constexpr size_t BUFFERSIZE = 2048;
     static constexpr size_t MAXCHUNKSIZE = 256;
 
