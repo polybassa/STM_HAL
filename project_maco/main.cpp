@@ -14,8 +14,6 @@
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>. */
 
 /* GENERAL INCLUDES */
-#include <string>
-
 #include "os_Task.h"
 #include "cpp_overrides.h"
 #include "trace.h"
@@ -39,6 +37,7 @@
 #include "CanController.h"
 #include "CommandMultiplexer.h"
 #include "DemoExecuter.h"
+#include "Endpoint.h"
 
 /* GLOBAL VARIABLES */
 static const int __attribute__((used)) g_DebugZones = ZONE_ERROR | ZONE_WARNING |
@@ -73,7 +72,7 @@ int main(void)
                                       hal::Factory<hal::Gpio>::getAlternateFunctionGpio<hal::Gpio::USART2_TX>());
 
     auto demo = new app::DemoExecuter(*can);
-    auto mux = new app::CommandMultiplexer(controlsocket, datasocket, *can, *demo);
+    auto __attribute__((used)) mux = new app::CommandMultiplexer(controlsocket, datasocket, *can, *demo);
 
     os::Task::startScheduler();
 

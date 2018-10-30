@@ -19,6 +19,7 @@
 #if  defined(USE_FREERTOS) && defined(__cplusplus)
 
 #include "FreeRTOS.h"
+#include "trace.h"
 
 //Override C++ new/delete operators to reduce memory footprint
 void* operator new(size_t size)
@@ -43,7 +44,8 @@ void operator delete[](void* p)
 
 extern "C" void abort(void)
 {
-    while (1) {}
+    terminal.printf("BAD SHIT\r\n");
+    configASSERT(0);
 }
 
 #endif

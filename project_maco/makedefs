@@ -19,7 +19,9 @@
 
 
 ROOT=..
-RTOS_SOURCE_DIR=${ROOT}/libraries/FreeRTOS/Source_10_0_0
+RTOS_SOURCE_DIR=${ROOT}/libraries/FreeRTOS/Source_10_1_1
+SEGGER_SOURCE_DIR=${ROOT}/libraries/SystemView_Src_V252c
+RTT_SOURCE_DIR=${ROOT}/libraries/SEGGER_RTT_V635g
 PRJ_DIR=$(shell basename ${PRJ_PATH})
 OBJDIR?=obj
 BINDIR?=exe
@@ -165,6 +167,7 @@ ${OBJDIR}/versionfile.o: versionfile.txt
 	 @${OBJCOPY} --redefine-sym _binary_versionfile_txt_end=_version_end ${@}
 	 @${OBJCOPY} --redefine-sym _binary_versionfile_txt_size=_version_size ${@}
 	 @echo OBJ ${@}
+	 @echo "                         ${<}"                                           
 	 
 ${OBJDIR}/binaryfile.o: binaryfile.bin
 	 @${OBJCOPY} \
@@ -174,26 +177,32 @@ ${OBJDIR}/binaryfile.o: binaryfile.bin
 	 @${OBJCOPY} --redefine-sym _binary_binaryfile_bin_end=_binary_end ${@}
 	 @${OBJCOPY} --redefine-sym _binary_binaryfile_bin_size=_binary_size ${@}
 	 @echo OBJ ${@}
+	 @echo "                         ${<}"                                           
 
 ${OBJDIR}/%.o: %.cpp
 	 @${CPP} ${CPPFLAGS} ${DEFINES} -o ${@} ${<}
 	 @echo CPP ${@}
+	 @echo "                         ${<}"                                           
 
 ${OBJDIR}/%.o: %.c
 	 @${CC} ${CFLAGS} ${DEFINES} -c -Dgcc -o ${@} ${<}
 	 @echo CC ${@}
+	 @echo "                         ${<}"                                           
 
 ${OBJDIR}/%.o: %.S
 	@${CC} ${AFLAGS} ${DEFINES} -Dgcc -o ${@} -c ${<}
 	@echo AS ${@}
+	@echo "                         ${<}"                                           
 	
 ${OBJDIR}/%.o: %.s
 	@${CC} ${AFLAGS} ${DEFINES} -Dgcc -o ${@} -c ${<}
 	@echo AS ${@}
+	@echo "                         ${<}"                                           
 
 ${BINDIR}/%.a:
 	 @${AR} -cr ${@} ${^}
 	 @echo AR ${@}
+	 @echo "                         ${<}"                                           
 
 ${BINDIR}/%.elf:
 	 @${CPP} -T ${LDSCRIPT} ${LDFLAGS} ${LIBPATHS} -o ${@} $(filter %.o %.a, ${?}) ${LIBRARYS} 
