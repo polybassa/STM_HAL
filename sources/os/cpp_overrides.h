@@ -44,7 +44,9 @@ void operator delete[](void* p)
 
 extern "C" void abort(void)
 {
+#ifdef DEBUG
     terminal.printf("BAD SHIT\r\n");
+#endif
     configASSERT(0);
 }
 

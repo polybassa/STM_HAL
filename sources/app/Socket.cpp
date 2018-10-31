@@ -94,6 +94,21 @@ void Socket::storeReceivedData(const std::string_view data)
     Trace(ZONE_INFO, "Data stored\r\n");
 }
 
+size_t Socket::loadTemporaryBuffer(void)
+{
+    const size_t bytes = std::min(mTemporaryBuffer.size(), mSendBuffer.bytesAvailable());
+
+    Trace(ZONE_VERBOSE, "Send %d \r\n", bytes);
+
+    const size_t receivedLength = mSendBuffer.receive(mTemporaryBuffer.data(), mTemporaryBuffer.size(), 1000);
+
+    if (receivedLength != bytes) {
+        Trace(ZONE_ERROR, "Internal buffer didn't contain exact amount of bytes\r\n");
+        return 0;
+    }
+    return receivedLength;
+}
+
 size_t Socket::send(std::string_view message, const uint32_t ticksToWait)
 {
     return mSendBuffer.send(message.data(), message.length(), ticksToWait);
@@ -141,14 +156,8 @@ TcpSocket::~TcpSocket(){}
 
 void TcpSocket::sendData(void)
 {
-    const size_t bytes = std::min(mTemporaryBuffer.size(), mSendBuffer.bytesAvailable());
-
-    Trace(ZONE_VERBOSE, "Send %d \r\n", bytes);
-
-    const size_t receivedLength = mSendBuffer.receive(mTemporaryBuffer.data(), mTemporaryBuffer.size(), 1000);
-
-    if (receivedLength != bytes) {
-        Trace(ZONE_ERROR, "Internal buffer didn't contain exact amount of bytes\r\n");
+    const size_t receivedLength = loadTemporaryBuffer();
+    if (!receivedLength) {
         return;
     }
 
@@ -165,10 +174,10 @@ void TcpSocket::sendData(void)
 
 void TcpSocket::receiveData(size_t bytes)
 {
-    Trace(ZONE_INFO, "Start receive %d\r\n", bytes);
     if (bytes == 0) {
         return;
     }
+    Trace(ZONE_INFO, "Start receive %d\r\n", bytes);
     if (mATCmdUSORD.send(mSocket, bytes, std::chrono::milliseconds(1000)) == AT::Return_t::FINISHED) {
         storeReceivedData(mATCmdUSORD.getData());
     } else {
@@ -228,20 +237,14 @@ UdpSocket::~UdpSocket(void){}
 
 void UdpSocket::sendData(void)
 {
-    size_t bytes = std::min(BUFFERSIZE, mSendBuffer.bytesAvailable());
-
-    Trace(ZONE_VERBOSE, "send %d \r\n", bytes);
-
-    size_t ret = mSendBuffer.receive(mTemporaryBuffer.data(), mTemporaryBuffer.size(), 1000);
-
-    if (ret != bytes) {
-        Trace(ZONE_ERROR, "internal buffer didn't contain enough bytes\r\n");
+    const size_t receivedLength = loadTemporaryBuffer();
+    if (!receivedLength) {
         return;
     }
 
     if (mATCmdUSOST.send(mSocket, mIP, mPort,
                          std::string_view(mTemporaryBuffer.data(),
-                                          ret), std::chrono::milliseconds(5000)) == AT::Return_t::ERROR)
+                                          receivedLength), std::chrono::milliseconds(5000)) == AT::Return_t::ERROR)
     {
         mHandleError();
     }
@@ -251,10 +254,11 @@ void UdpSocket::sendData(void)
 
 void UdpSocket::receiveData(size_t bytes)
 {
-    Trace(ZONE_INFO, "S%d: receive %d\r\n", mSocket, bytes);
     if (bytes == 0) {
         return;
     }
+    Trace(ZONE_INFO, "S%d: receive %d\r\n", mSocket, bytes);
+
     if (mATCmdUSORF.send(mSocket, bytes, std::chrono::milliseconds(1000)) == AT::Return_t::FINISHED) {
         storeReceivedData(mATCmdUSORF.getData());
     } else {
@@ -266,10 +270,8 @@ bool UdpSocket::create()
 {
     if (mATCmdUSOCR.send(17, std::chrono::seconds(2)) != AT::Return_t::FINISHED) {
         Trace(ZONE_VERBOSE, "Socket create failed \r\n");
-
         return false;
     }
-
     mSocket = mATCmdUSOCR.getSocket();
     Trace(ZONE_VERBOSE, "Socket %d: created \r\n", mSocket);
 
@@ -301,6 +303,8 @@ DnsSocket::~DnsSocket(void){}
 
 void DnsSocket::sendData(void)
 {
+    //TODO: REFACTOR THIS FUNCTION
+
     static constexpr const size_t MAX_PAYLOAD_LENGTH = 24;
     static short counter = 900;
 
@@ -334,6 +338,8 @@ void DnsSocket::sendData(void)
 
 void DnsSocket::receiveData(size_t bytes)
 {
+    //TODO: REFACTOR THIS FUNCTION
+
     Trace(ZONE_INFO, "Start receive over dns %d\r\n", bytes);
     if (bytes == 0) {
         return;
@@ -363,24 +369,29 @@ void DnsSocket::receiveData(size_t bytes)
     }
 }
 
-bool DnsSocket::create()
+bool DnsSocket::open()
 {
-    if (!UdpSocket::create()) {
+    if (!UdpSocket::open()) {
         return false;
     }
-    if (!open()) {
+    if (!queryDnsServerIP()) {
+        isOpen = false;
         return false;
     }
-    getDns();
     return true;
 }
 
-std::string_view DnsSocket::getDns(void)
+bool DnsSocket::queryDnsServerIP(void)
 {
     const auto ret = mATCmdUPSND.send(mSocket, 1, std::chrono::milliseconds(1000));
 
     if (ret == AT::Return_t::ERROR) {
         mHandleError();
     }
+    return ret == AT::Return_t::FINISHED;
+}
+
+std::string_view DnsSocket::getDnsServerIP(void)
+{
     return mATCmdUPSND.getData();
 }

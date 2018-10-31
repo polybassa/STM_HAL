@@ -126,61 +126,63 @@ struct ATCmdUSOWR final :
                   const std::chrono::milliseconds timeout);
 };
 
-class ATCmdUSORF final :
+class ATCmdRXData :
     public ATCmd
 {
+protected:
     static constexpr const size_t REQUESTLEN = 24;
-    static constexpr const size_t IPLEN = 16;
-    static constexpr const size_t PORTLEN = 6;
     static constexpr const size_t DATALEN = 256;
     std::array<char, REQUESTLEN> mRequestBuffer;
-    size_t mSocket = 0;
-    std::array<char, IPLEN> mIpBuffer;
-    std::string_view mIp;
-    std::array<char, PORTLEN> mPortBuffer;
-    std::string_view mPort;
     std::array<char, DATALEN> mDataBuffer;
     std::string_view mData;
+    size_t mSocket = 0;
     SendFunction& mSendFunction;
     const std::function<void(const size_t, const size_t)>& mUrcReceivedCallback;
-    virtual Return_t onResponseMatch(void) override;
 
+    AT::Return_t getDataFromParser(const size_t bytesAvailable);
+
+    ATCmdRXData(const std::string_view name,
+                const std::string_view response,
+                SendFunction& send,
+                const std::function<void(size_t, size_t)>& callback) :
+        ATCmd(name, "", response),
+        mSendFunction(send),
+        mUrcReceivedCallback(callback){}
 public:
-    ATCmdUSORF(SendFunction & send, const std::function<void(size_t, size_t)> &callback) :
-        ATCmd("AT+USORF", "", "+USORF:"), mSendFunction(send), mUrcReceivedCallback(callback){}
-
-    Return_t send(const size_t socket, size_t bytesToRead, const std::chrono::milliseconds timeout);
-
     std::string_view getData(void) const
     {
         return mData;
     }
 };
 
-class ATCmdUSORD final :
-    public ATCmd
+class ATCmdUSORF final :
+    public ATCmdRXData
 {
-    static constexpr const size_t REQUESTLEN = 16;
-    static constexpr const size_t DATALEN = 256;
-    std::array<char, REQUESTLEN> mRequestBuffer;
-    std::array<char, DATALEN> mDataBuffer;
+    static constexpr const size_t IPLEN = 16;
+    static constexpr const size_t PORTLEN = 6;
+    std::array<char, IPLEN> mIpBuffer;
+    std::string_view mIp;
+    std::array<char, PORTLEN> mPortBuffer;
+    std::string_view mPort;
+    virtual Return_t onResponseMatch(void) override;
 
-    size_t mSocket = 0;
-    std::string mData;
-    SendFunction& mSendFunction;
-    const std::function<void(const size_t, const size_t)>& mUrcReceivedCallback;
+public:
+    ATCmdUSORF(SendFunction & send, const std::function<void(size_t, size_t)> &callback) :
+        ATCmdRXData("AT+USORF", "+USORF:", send, callback){}
+
+    Return_t send(const size_t socket, size_t bytesToRead, const std::chrono::milliseconds timeout);
+};
+
+class ATCmdUSORD final :
+    public ATCmdRXData
+{
     virtual Return_t onResponseMatch(void) override;
 
 public:
     ATCmdUSORD(SendFunction & send, const std::function<void(size_t, size_t)> &callback) :
-        ATCmd("AT+USORD", "", "+USORD:"), mSendFunction(send), mUrcReceivedCallback(callback){}
+        ATCmdRXData("AT+USORD", "+USORD:", send, callback){}
 
     Return_t send(const size_t socket, size_t bytesToRead, const std::chrono::milliseconds timeout);
-
-    const std::string& getData(void) const
-    {
-        return mData;
-    }
 };
 
 class ATCmdUPSND final :
@@ -319,6 +321,7 @@ public:
 
 struct ATParser {
     static constexpr const size_t BUFFERSIZE = 512;
+    static constexpr const size_t MAXATCMDS = 32;
     static constexpr const std::chrono::milliseconds defaultTimeout = std::chrono::milliseconds(300);
     static constexpr const std::chrono::milliseconds defaultParseTimeout = std::chrono::milliseconds(45000);
 
@@ -334,12 +337,14 @@ struct ATParser {
                                         std::chrono::milliseconds timeout = defaultTimeout) const;
     std::string_view getBytesFromInput(size_t                    numberOfBytes,
                                        std::chrono::milliseconds timeout = defaultTimeout) const;
-    AT::Return_t getSocket(size_t&                   socket,
-                           char* const               termination = nullptr,
-                           std::chrono::milliseconds timeout = defaultTimeout) const;
-    AT::Return_t getNumber(size_t&                   number,
-                           char* const               termination = nullptr,
-                           std::chrono::milliseconds timeout = defaultTimeout) const;
+    AT::Return_t getSocketFromInput(size_t&                   socket,
+                                    char* const               termination = nullptr,
+                                    std::chrono::milliseconds timeout = defaultTimeout) const;
+    AT::Return_t getNumberFromInput(size_t&                   number,
+                                    char* const               termination = nullptr,
+                                    std::chrono::milliseconds timeout = defaultTimeout) const;
+    AT::Return_t strToNum(size_t&                number,
+                          const std::string_view numstring) const;
 
 protected:
     static std::array<char, BUFFERSIZE> ReceiveBuffer;

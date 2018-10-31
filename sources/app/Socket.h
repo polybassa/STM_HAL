@@ -49,6 +49,7 @@ protected:
     void checkAndReceiveData(void);
     void checkAndSendData(void);
     void storeReceivedData(const std::string_view);
+    size_t loadTemporaryBuffer(void);
 
     ATCmdUSOCR mATCmdUSOCR;
     ATCmdUSOCO mATCmdUSOCO;
@@ -157,9 +158,10 @@ class DnsSocket :
 {
     virtual void sendData(void) override;
     virtual void receiveData(size_t) override;
-    virtual bool create(void) override;
+    virtual bool open(void) override;
 
-    std::string_view getDns(void);
+    bool queryDnsServerIP(void);
+    std::string_view getDnsServerIP(void);
 
     ATCmdUPSND mATCmdUPSND;
 

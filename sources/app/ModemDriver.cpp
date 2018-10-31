@@ -25,8 +25,11 @@ os::StreamBuffer<uint8_t, ModemDriver::BUFFERSIZE> ModemDriver::InputBuffer;
 
 void ModemDriver::ModemDriverInterruptHandler(uint8_t data)
 {
+#define MODEM_TX_DEBUG
+#ifdef MODEM_TX_DEBUG
+    //TODO: Remove this debug lines
     USART1->DR = (data & (uint16_t)0x01FF);
-
+#endif
     InputBuffer.sendFromISR(data);
 }
 
@@ -54,24 +57,18 @@ ModemDriver::ModemDriver(const hal::UsartWithDma& interface,
     mModemPower(powerPin),
     mModemSupplyVoltage(supplyPin),
     mSend([&](std::string_view in, std::chrono::milliseconds timeout)->size_t {
-              static size_t lastSend = os::Task::getTickCount();
-
-              if (os::Task::getTickCount() < lastSend + 20) {
-                  os::ThisTask::sleep(std::chrono::milliseconds(20));
-              }
-              lastSend = os::Task::getTickCount();
               return mInterface.send(in, timeout.count());
           }),
     mRecv([&](uint8_t * output, const size_t length, std::chrono::milliseconds timeout)->bool {
               return InputBuffer.receive(reinterpret_cast<char*>(output), length, timeout.count());
           }),
     mParser(mRecv),
-    mUrcCallbackReceive([&](size_t socket, size_t bytes)
+    mUrcCallbackReceive([&](const size_t socket, const size_t bytes)
                         {
-                            Trace(ZONE_INFO, "S%d: %d bytes available\r\n", socket, bytes);
                             for (auto& sock: mSockets) {
                                 if (sock->mSocket == socket) {
                                     if (bytes) {
+                                        Trace(ZONE_INFO, "S%d: %d bytes available\r\n", socket, bytes);
                                         sock->mNumberOfBytesForReceive.overwrite(bytes);
                                     } else {
                                         sock->mNumberOfBytesForReceive.reset();
@@ -79,10 +76,9 @@ ModemDriver::ModemDriver(const hal::UsartWithDma& interface,
                                 }
                             }
                         }),
-    mUrcCallbackClose([&](size_t socket, size_t bytes)
+    mUrcCallbackClose([&](const size_t socket, const size_t bytes)
                       {
-                          Trace(ZONE_INFO, "Socket closed\r\n");
-                          // produce error to force TX-Task to restart modem
+                          Trace(ZONE_INFO, "Socket %d closed\r\n", socket);
                           for (auto& sock: mSockets) {
                               if (sock->mSocket == socket) {
                                   sock->isOpen = false;
@@ -205,7 +201,7 @@ void ModemDriver::modemReset(void)
         sock->reset();
     }
     mErrorCount = 0;
-    os::ThisTask::sleep(std::chrono::milliseconds(1000));
+    os::ThisTask::sleep(std::chrono::milliseconds(2000));
     modemOn();
     os::ThisTask::sleep(std::chrono::milliseconds(2000));
 }
