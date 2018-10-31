@@ -17,38 +17,25 @@
 #include "trace.h"
 #include "binascii.h"
 #include "LockGuard.h"
+#include <cstring>
 
 using app::AT;
 using app::ATCmd;
 using app::ATCmdERROR;
 using app::ATCmdOK;
+using app::ATCmdTX;
 using app::ATCmdUPSND;
 using app::ATCmdURC;
 using app::ATCmdUSOCO;
 using app::ATCmdUSOCR;
 using app::ATCmdUSORD;
 using app::ATCmdUSORF;
+using app::ATCmdUSOSO;
 using app::ATCmdUSOST;
 using app::ATCmdUSOWR;
 using app::ATParser;
 
-static constexpr const int __attribute__((unused)) g_DebugZones = ZONE_ERROR | ZONE_WARNING | ZONE_VERBOSE | ZONE_INFO;
-
-void AT::okReceived(void)
-{
-    Trace(ZONE_INFO, "%s OK\n", mName.data());
-    while (true) {}
-}
-void AT::errorReceived(void)
-{
-    Trace(ZONE_INFO, "%s ERROR\n", mName.data());
-    while (true) {}
-}
-AT::Return_t AT::onResponseMatch(void)
-{
-    Trace(ZONE_INFO, "Hello from %s\n", mName.data());
-    return Return_t::WAITING;
-}
+static constexpr const int __attribute__((unused)) g_DebugZones = ZONE_VERBOSE; // ZONE_ERROR | ZONE_WARNING | ZONE_VERBOSE | ZONE_INFO;
 
 //------------------------ATCmd---------------------------------
 
@@ -59,7 +46,7 @@ AT::Return_t ATCmd::send(AT::SendFunction& sendFunction, const std::chrono::mill
         return Return_t::ERROR;
     }
 
-    mCommandSuccess = false;
+    mSendResult.reset();
 
     {
         os::LockGuard<os::Mutex> lock(mParser->mWaitingCmdMutex);
@@ -79,9 +66,9 @@ AT::Return_t ATCmd::send(AT::SendFunction& sendFunction, const std::chrono::mill
         }
         Trace(ZONE_VERBOSE, "waiting\r\n");
     }
-    if (mSendDone.take(timeout) && mCommandSuccess) {
+    bool commandSuccess = false;
+    if (mSendResult.receive(commandSuccess, timeout) && commandSuccess) {
         Trace(ZONE_VERBOSE, "done\r\n");
-
         return Return_t::FINISHED;
     }
     {
@@ -92,144 +79,177 @@ AT::Return_t ATCmd::send(AT::SendFunction& sendFunction, const std::chrono::mill
     }
 }
 
-bool ATCmd::wasExecutionSuccessful(void) const
-{
-    return mCommandSuccess;
-}
-
 void ATCmd::okReceived(void)
 {
     Trace(ZONE_INFO, "ATCMD: %s OK\n", mName.data());
-    mCommandSuccess = true;
-    mSendDone.give();
+    mSendResult.overwrite(true);
 }
+
 void ATCmd::errorReceived(void)
 {
     Trace(ZONE_INFO, "ATCMD: %s ERROR\n", mName.data());
-    mCommandSuccess = false;
-    mSendDone.give();
+    mSendResult.overwrite(false);
+}
+
+AT::Return_t ATCmd::onResponseMatch(void)
+{
+    Trace(ZONE_INFO, "Hello from %s\n", mName.data());
+    return Return_t::WAITING;
+}
+
+//------------------------ATCmdTX---------------------------------
+
+AT::Return_t ATCmdTX::onResponseMatch(void)
+{
+    if (mSendFunction(mData, ATParser::defaultTimeout) != mData.length()) {
+        Trace(ZONE_ERROR, "Couldn't send data\n");
+        return Return_t::ERROR;
+    }
+    return Return_t::WAITING;
 }
 
 //------------------------ATCmdUSOST---------------------------------
 
-AT::Return_t ATCmdUSOST::send(const size_t              socket,
-                              std::string_view          ip,
-                              std::string_view          port,
-                              std::string_view          data,
-                              std::chrono::milliseconds timeout)
+AT::Return_t ATCmdUSOST::send(const size_t                    socket,
+                              const std::string_view          ip,
+                              const std::string_view          port,
+                              const std::string_view          data,
+                              const std::chrono::milliseconds timeout)
 {
     if (data.length() == 0) {
         Trace(ZONE_WARNING, "Nodata %d\r\n", data.length());
         return AT::Return_t::FINISHED;
     }
     mData = data;
-    mRequest = "AT+USOST=" +
-               std::to_string(socket) + ",\"" +
-               std::string(ip.data(), ip.length()) + "\"," +
-               std::string(port.data(), port.length()) + "," +
-               std::to_string(data.length()) + "\r";
+    const size_t reqLen = std::snprintf(
+                                        mRequestBuffer.data(),
+                                        mRequestBuffer.size(),
+                                        "AT+USOST=%d,\"%s\",%s,%d\r",
+                                        socket,
+                                        ip.data(),
+                                        port.data(),
+                                        data.length());
 
-    if (ATCmd::send(mSendFunction, timeout) == AT::Return_t::FINISHED) {
-        return AT::Return_t::FINISHED;
-    }
-    return AT::Return_t::ERROR;
-}
+    mRequest = std::string_view(mRequestBuffer.data(), reqLen);
 
-AT::Return_t ATCmdUSOST::onResponseMatch(void)
-{
-    if (mSendFunction(mData, ATParser::defaultTimeout) != mData.length()) {
-        Trace(ZONE_ERROR, "Couldn't send data\n");
-        return Return_t::ERROR;
-    }
-    return Return_t::WAITING;
+    return ATCmd::send(mSendFunction, timeout);
 }
 
 //------------------------ATCmdUSOWR---------------------------------
 
-AT::Return_t ATCmdUSOWR::send(const size_t              socket,
-                              std::string_view          data,
-                              std::chrono::milliseconds timeout)
+AT::Return_t ATCmdUSOWR::send(const size_t                    socket,
+                              const std::string_view          data,
+                              const std::chrono::milliseconds timeout)
 {
     if (data.length() == 0) {
         Trace(ZONE_WARNING, "Nodata %d\r\n", data.length());
         return AT::Return_t::FINISHED;
     }
     mData = data;
-    mRequest = "AT+USOWR=" +
-               std::to_string(socket) + "," +
-               std::to_string(data.length()) + "\r";
+    const size_t reqLen = std::snprintf(
+                                        mRequestBuffer.data(),
+                                        mRequestBuffer.size(),
+                                        "AT+USOWR=%d,%d\r",
+                                        socket,
+                                        data.length());
 
-    if (ATCmd::send(mSendFunction, timeout) == AT::Return_t::FINISHED) {
-        return AT::Return_t::FINISHED;
-    }
-    return AT::Return_t::ERROR;
-}
+    mRequest = std::string_view(mRequestBuffer.data(), reqLen);
 
-AT::Return_t ATCmdUSOWR::onResponseMatch(void)
-{
-    if (mSendFunction(mData, ATParser::defaultTimeout) != mData.length()) {
-        Trace(ZONE_ERROR, "Couldn't send data\n");
-        return Return_t::ERROR;
-    }
-    return Return_t::WAITING;
+    return ATCmd::send(mSendFunction, timeout);
 }
 
 //------------------------ATCmdUSORF---------------------------------
 
-AT::Return_t ATCmdUSORF::send(size_t socket, size_t bytesToRead, std::chrono::milliseconds timeout)
+AT::Return_t ATCmdUSORF::send(const size_t                    socket,
+                              size_t                          bytesToRead,
+                              const std::chrono::milliseconds timeout)
 {
-    if (bytesToRead > ATParser::BUFFERSIZE) {
-        return Return_t::ERROR;
+    if (bytesToRead > DATALEN) {
+        Trace(ZONE_INFO, "More bytes available than readable\r\n");
+        bytesToRead = DATALEN;
     }
-    mRequest = std::string("AT+USORF=" +
-                           std::to_string(socket) + "," +
-                           std::to_string(bytesToRead) + "\r");
+    const size_t reqLen = std::snprintf(
+                                        mRequestBuffer.data(),
+                                        mRequestBuffer.size(),
+                                        "AT+USORF=%d,%d\r",
+                                        socket, bytesToRead);
+
+    mRequest = std::string_view(mRequestBuffer.data(), reqLen);
     return ATCmd::send(mSendFunction, timeout);
 }
 
 AT::Return_t ATCmdUSORF::onResponseMatch(void)
 {
-    auto socketstring = mParser->getInputUntilComma();
-    if (socketstring.length() == 0) {
-        return AT::Return_t::ERROR;
+    if (mParser->getSocket(mSocket) != Return_t::FINISHED) {
+        return Return_t::ERROR;
     }
-    mSocket = std::stoul(std::string(socketstring.data(), socketstring.length()));
 
     char termination = 0;
-    auto ipstring = mParser->getInputUntilComma(&termination);
+    const std::string_view ipstring = mParser->getInputUntilComma(&termination);
+    if (ipstring.length() == 0) {
+        return AT::Return_t::ERROR;
+    }
 
     if (termination == ',') {
-        if (ipstring.length() == 0) {
+        auto first = ipstring.find_first_of('"') + 1;
+        auto last = ipstring.find_last_of('"');
+
+        mIp = std::string_view(mIpBuffer.data(), last - first);
+
+        if ((mIp.length() == 0) || (mIp.length() > IPLEN)) {
             return AT::Return_t::ERROR;
         }
-        mIp = std::string(ipstring.data(), ipstring.length());
 
-        auto portstring = mParser->getInputUntilComma();
+        std::memcpy(mIpBuffer.data(), ipstring.data() + first, mIp.length());
+
+        const std::string_view portstring = mParser->getInputUntilComma();
         if (portstring.length() == 0) {
             return AT::Return_t::ERROR;
         }
-        mPort = std::string(portstring.data(), portstring.length());
 
-        auto bytesAvailablestring = mParser->getInputUntilComma();
+        mPort = std::string_view(mPortBuffer.data(), portstring.length());
+
+        if ((mPort.length() == 0) || (mPort.length() > PORTLEN)) {
+            return AT::Return_t::ERROR;
+        }
+
+        std::memcpy(mPortBuffer.data(), portstring.data(), mData.length());
+
+        const std::string_view bytesAvailablestring = mParser->getInputUntilComma();
         if (bytesAvailablestring.length() == 0) {
             return AT::Return_t::ERROR;
         }
-        auto bytesAvailable = std::stoul(std::string(bytesAvailablestring.data(), bytesAvailablestring.length()));
 
-        auto datastring = mParser->getBytesFromInput(bytesAvailable + 2);
-        if (datastring.length() < bytesAvailable) {
+        size_t bytesAvailable = 0;
+        if (mParser->getNumber(bytesAvailable) != Return_t::FINISHED) {
             return Return_t::ERROR;
         }
 
-        auto first = datastring.find_first_of('"') + 1;
-        auto last = datastring.find_last_of('"');
+        const std::string_view datastring = mParser->getBytesFromInput(bytesAvailable + 2);
+        if (datastring.length() != bytesAvailable) {
+            return Return_t::ERROR;
+        }
 
-        mData = std::string(datastring.data() + first, last - first);
+        first = datastring.find_first_of('"') + 1;
+        last = datastring.find_last_of('"');
+
+        mData = std::string_view(mDataBuffer.data(), last - first);
+
+        if ((mData.length() == 0) || (mData.length() > DATALEN)) {
+            return AT::Return_t::ERROR;
+        }
+
+        std::memcpy(mDataBuffer.data(), datastring.data() + first, mData.length());
 
         return Return_t::WAITING;
     } else if (termination == '\r') {
-        auto bytesAvailablestring = ipstring;
-        auto bytesAvailable = std::stoul(std::string(bytesAvailablestring.data(), bytesAvailablestring.length()));
+        const std::string_view bytesAvailablestring = ipstring;
+
+        char tempBuffer[16];
+        std::memset(tempBuffer, 0, sizeof(tempBuffer));
+        std::memcpy(tempBuffer, bytesAvailablestring.data(), bytesAvailablestring.length());
+
+        const size_t bytesAvailable = std::strtoul(tempBuffer, nullptr, 10);
         if (bytesAvailable) {
             mUrcReceivedCallback(mSocket, bytesAvailable);
         }
@@ -241,52 +261,63 @@ AT::Return_t ATCmdUSORF::onResponseMatch(void)
 
 //------------------------ATCmdUSORD---------------------------------
 
-AT::Return_t ATCmdUSORD::send(size_t socket, size_t bytesToRead, std::chrono::milliseconds timeout)
+AT::Return_t ATCmdUSORD::send(const size_t socket, size_t bytesToRead, const std::chrono::milliseconds timeout)
 {
-    if (bytesToRead > ATParser::BUFFERSIZE) {
-        return Return_t::ERROR;
+    if (bytesToRead > DATALEN) {
+        Trace(ZONE_INFO, "More bytes available than readable\r\n");
+        bytesToRead = DATALEN;
     }
-    mRequest = std::string("AT+USORD=" +
-                           std::to_string(socket) + "," +
-                           std::to_string(bytesToRead) + "\r");
+    const size_t reqLen = std::snprintf(
+                                        mRequestBuffer.data(),
+                                        mRequestBuffer.size(),
+                                        "AT+USORD=%d,%d\r",
+                                        socket, bytesToRead);
+
+    mRequest = std::string_view(mRequestBuffer.data(), reqLen);
     return ATCmd::send(mSendFunction, timeout);
 }
 
 AT::Return_t ATCmdUSORD::onResponseMatch(void)
 {
-    auto socketstring = mParser->getInputUntilComma();
-    if (socketstring.length() == 0) {
-        return AT::Return_t::ERROR;
+    if (mParser->getSocket(mSocket) != Return_t::FINISHED) {
+        Trace(ZONE_ERROR, "socket\r\n");
+        return Return_t::ERROR;
     }
-    mSocket = std::stoul(std::string(socketstring.data(), socketstring.length()));
 
     char termination = 0;
-    auto bytesAvailablestring = mParser->getInputUntilComma(&termination);
+    size_t bytesAvailable = 0;
+    if (mParser->getNumber(bytesAvailable, &termination) != Return_t::FINISHED) {
+        Trace(ZONE_ERROR, "bytesAvailable\r\n");
+        return Return_t::ERROR;
+    }
 
     if (termination == ',') {
-        if (bytesAvailablestring.length() == 0) {
-            return AT::Return_t::ERROR;
-        }
-        auto bytesAvailable = std::stoul(std::string(bytesAvailablestring.data(), bytesAvailablestring.length()));
-
-        auto datastring = mParser->getBytesFromInput(bytesAvailable + 2);
+        const std::string_view datastring = mParser->getBytesFromInput(bytesAvailable + 2);
         if (datastring.length() < bytesAvailable) {
+            Trace(ZONE_ERROR, "datastringLength %d %d\r\n", datastring.length(), bytesAvailable);
             return Return_t::ERROR;
         }
 
         auto first = datastring.find_first_of('"') + 1;
         auto last = datastring.find_last_of('"');
 
-        mData = std::string(datastring.data() + first, last - first);
+        mData = std::string_view(mDataBuffer.data(), last - first);
+
+        if ((mData.length() == 0) || (mData.length() > DATALEN)) {
+            Trace(ZONE_ERROR, "data length\r\n");
+
+            return AT::Return_t::ERROR;
+        }
+
+        std::memcpy(mData.data(), datastring.data() + first, mData.length());
 
         return Return_t::WAITING;
     } else if (termination == '\r') {
-        auto bytesAvailable = std::stoul(std::string(bytesAvailablestring.data(), bytesAvailablestring.length()));
-        if (bytesAvailable) {
-            mUrcReceivedCallback(mSocket, bytesAvailable);
-        }
+        mUrcReceivedCallback(mSocket, bytesAvailable);
         return Return_t::FINISHED;
     } else {
+        Trace(ZONE_ERROR, "termination\r\n");
+
         return Return_t::ERROR;
     }
 }
@@ -295,36 +326,41 @@ AT::Return_t ATCmdUSORD::onResponseMatch(void)
 
 AT::Return_t ATCmdUPSND::send(const size_t socket, const size_t parameter, const std::chrono::milliseconds timeout)
 {
-    mRequest = std::string("AT+UPSND=" +
-                           std::to_string(socket) + "," +
-                           std::to_string(parameter) + "\r");
+    const size_t reqLen = std::snprintf(
+                                        mRequestBuffer.data(),
+                                        mRequestBuffer.size(),
+                                        "AT+UPSND=%d,%d\r",
+                                        socket, parameter);
+
+    mRequest = std::string_view(mRequestBuffer.data(), reqLen);
     return ATCmd::send(mSendFunction, timeout);
 }
 
 AT::Return_t ATCmdUPSND::onResponseMatch(void)
 {
-    auto socketstring = mParser->getInputUntilComma();
-    if (socketstring.length() == 0) {
-        return AT::Return_t::ERROR;
+    if (mParser->getSocket(mSocket) != Return_t::FINISHED) {
+        return Return_t::ERROR;
     }
-    mSocket = std::stoul(std::string(socketstring.data(), socketstring.length()));
 
-    auto parameterstring = mParser->getInputUntilComma();
-    if (parameterstring.length() == 0) {
-        return AT::Return_t::ERROR;
+    if (mParser->getNumber(mParameter) != Return_t::FINISHED) {
+        return Return_t::ERROR;
     }
-    mParameter = std::stoul(std::string(parameterstring.data(), parameterstring.length()));
 
-    auto datastring = mParser->getInputUntilComma();
-    if (datastring.length() == 0) {
+    const std::string_view datastring = mParser->getInputUntilComma();
+    if ((datastring.length() == 0) || (datastring.length() > DATALEN)) {
         return AT::Return_t::ERROR;
     }
 
     auto first = datastring.find_first_of('"') + 1;
     auto last = datastring.find_last_of('"');
 
-    mData = std::string(datastring.data() + first, last - first);
+    mData = std::string_view(mDataBuffer.data(), last - first);
 
+    if ((mData.length() == 0) || (mData.length() > DATALEN)) {
+        return AT::Return_t::ERROR;
+    }
+
+    std::memcpy(mDataBuffer.data(), datastring.data() + first, mData.length());
     return Return_t::FINISHED;
 }
 
@@ -332,64 +368,113 @@ AT::Return_t ATCmdUPSND::onResponseMatch(void)
 
 AT::Return_t ATCmdUSOCR::send(const size_t protocol, const std::chrono::milliseconds timeout)
 {
-    mRequest = std::string("AT+USOCR=" + std::to_string(protocol) + "\r");
+    const size_t reqLen = std::snprintf(
+                                        mRequestBuffer.data(),
+                                        mRequestBuffer.size(),
+                                        "AT+USOCR=%d\r",
+                                        protocol);
+
+    mRequest = std::string_view(mRequestBuffer.data(), reqLen);
     return ATCmd::send(mSendFunction, timeout);
 }
 
 AT::Return_t ATCmdUSOCR::onResponseMatch(void)
 {
-    auto socketstring = mParser->getLineFromInput();
-    if (socketstring.length() == 0) {
-        return AT::Return_t::ERROR;
+    if (mParser->getSocket(mSocket) != Return_t::FINISHED) {
+        return Return_t::ERROR;
     }
-    mSocket = std::stoul(std::string(socketstring.data(), socketstring.length()));
     return Return_t::FINISHED;
 }
 
 //------------------------ATCmdUSOCO---------------------------------
 
-AT::Return_t ATCmdUSOCO::send(const size_t              socket,
-                              std::string_view          ip,
-                              std::string_view          port,
-                              std::chrono::milliseconds timeout)
+AT::Return_t ATCmdUSOCO::send(const size_t                    socket,
+                              const std::string_view          ip,
+                              const std::string_view          port,
+                              const std::chrono::milliseconds timeout)
 {
-    std::string request = "AT+USOCO=" +
-                          std::to_string(socket) + ",\"" +
-                          std::string(ip.data(), ip.length()) + "\"," +
-                          std::string(port.data(), port.length()) + "\r";
+    const size_t reqLen = std::snprintf(
+                                        mRequestBuffer.data(),
+                                        mRequestBuffer.size(),
+                                        "AT+USOCO=%d,\"%s\",%s\r",
+                                        socket,
+                                        ip.data(),
+                                        port.data());
 
-    mRequest = request;
-    auto ret = ATCmd::send(mSendFunction, timeout);
-    if ((ret == AT::Return_t::FINISHED) && mCommandSuccess) {
-        return AT::Return_t::FINISHED;
-    }
-    return AT::Return_t::ERROR;
+    mRequest = std::string_view(mRequestBuffer.data(), reqLen);
+
+    return ATCmd::send(mSendFunction, timeout);
+}
+
+//------------------------ATCmdUSOSO---------------------------------
+
+AT::Return_t ATCmdUSOSO::send(const size_t                    socket,
+                              const size_t                    level,
+                              const size_t                    optName,
+                              const size_t                    optVal,
+                              const std::chrono::milliseconds timeout)
+{
+    const size_t reqLen = std::snprintf(
+                                        mRequestBuffer.data(),
+                                        mRequestBuffer.size(),
+                                        "AT+USOSO=%d,%d,%d,%d\r",
+                                        socket,
+                                        level,
+                                        optName,
+                                        optVal);
+
+    mRequest = std::string_view(mRequestBuffer.data(), reqLen);
+
+    return ATCmd::send(mSendFunction, timeout);
+}
+
+//------------------------ATCmdURC---------------------------------
+
+void ATCmdURC::okReceived(void)
+{
+    Trace(ZONE_INFO, "%s OK\n", mName.data());
+    while (true) {}
+}
+void ATCmdURC::errorReceived(void)
+{
+    Trace(ZONE_INFO, "%s ERROR\n", mName.data());
+    while (true) {}
 }
 
 AT::Return_t ATCmdURC::onResponseMatch(void)
 {
     char termination = 0;
-    auto socketstring = mParser->getInputUntilComma(&termination);
-    size_t socket = std::stoul(std::string(socketstring.data(), socketstring.length()));
+    size_t socket = 0;
+    if (mParser->getSocket(socket, &termination) != Return_t::FINISHED) {
+        return Return_t::ERROR;
+    }
 
     if (termination == '\r') {
         mUrcReceivedCallback(socket, 0);
         return Return_t::FINISHED;
     }
 
-    std::string_view line = mParser->getLineFromInput();
-
-    size_t bytesAvailable = std::stoul(std::string(line.data(), line.length()));
-
-    if (bytesAvailable > ATParser::BUFFERSIZE) {
+    size_t parameter;
+    if (mParser->getNumber(parameter) != Return_t::FINISHED) {
         return Return_t::ERROR;
     }
 
-    mUrcReceivedCallback(socket, bytesAvailable);
+    mUrcReceivedCallback(socket, parameter);
     return Return_t::FINISHED;
 }
 
 //------------------------ATCmdOK---------------------------------
+
+void ATCmdOK::okReceived(void)
+{
+    Trace(ZONE_INFO, "%s OK\n", mName.data());
+    while (true) {}
+}
+void ATCmdOK::errorReceived(void)
+{
+    Trace(ZONE_INFO, "%s ERROR\n", mName.data());
+    while (true) {}
+}
 
 AT::Return_t ATCmdOK::onResponseMatch(void)
 {
@@ -402,6 +487,17 @@ AT::Return_t ATCmdOK::onResponseMatch(void)
 }
 
 //------------------------ATCmdERROR---------------------------------
+
+void ATCmdERROR::okReceived(void)
+{
+    Trace(ZONE_INFO, "%s OK\n", mName.data());
+    while (true) {}
+}
+void ATCmdERROR::errorReceived(void)
+{
+    Trace(ZONE_INFO, "%s ERROR\n", mName.data());
+    while (true) {}
+}
 
 AT::Return_t ATCmdERROR::onResponseMatch(void)
 {
@@ -500,10 +596,10 @@ bool ATParser::parse(std::chrono::milliseconds timeout)
     return true;
 }
 
-void ATParser::registerAtCommand(AT& cmd)
+void ATParser::registerAtCommand(AT* cmd)
 {
-    cmd.mParser = this;
-    mRegisteredATCommands.push_back(&cmd);
+    cmd->mParser = this;
+    mRegisteredATCommands.push_back(cmd);
 }
 
 std::string_view ATParser::getLineFromInput(std::chrono::milliseconds timeout) const
@@ -528,7 +624,7 @@ std::string_view ATParser::getLineFromInput(std::chrono::milliseconds timeout) c
     return std::string_view(ReceiveBuffer.data(), currentPos);
 }
 
-std::string_view ATParser::getInputUntilComma(char* termination, std::chrono::milliseconds timeout) const
+std::string_view ATParser::getInputUntilComma(char* const termination, std::chrono::milliseconds timeout) const
 {
     uint8_t data;
     size_t currentPos = 0;
@@ -576,4 +672,33 @@ std::string_view ATParser::getBytesFromInput(size_t numberOfBytes, std::chrono::
     }
 
     return std::string_view(ReceiveBuffer.data(), currentPos);
+}
+
+AT::Return_t ATParser::getSocket(size_t& socket, char* const termination, std::chrono::milliseconds timeout) const
+{
+    if (getNumber(socket, termination, timeout) != AT::Return_t::FINISHED) {
+        return AT::Return_t::ERROR;
+    }
+
+    if (socket > 6) {
+        return AT::Return_t::ERROR;
+    }
+    return AT::Return_t::FINISHED;
+}
+
+AT::Return_t ATParser::getNumber(size_t&                   number,
+                                 char* const               termination,
+                                 std::chrono::milliseconds timeout) const
+{
+    const std::string_view numstring = getInputUntilComma(termination, timeout);
+
+    if (numstring.length() == 0) {
+        return AT::Return_t::ERROR;
+    }
+    char tempBuffer[16];
+    std::memset(tempBuffer, 0, sizeof(tempBuffer));
+    std::memcpy(tempBuffer, numstring.data(), numstring.length());
+
+    number = std::strtoul(tempBuffer, nullptr, 10);
+    return AT::Return_t::FINISHED;
 }

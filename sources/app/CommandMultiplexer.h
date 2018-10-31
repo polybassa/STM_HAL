@@ -33,7 +33,8 @@ class CommandMultiplexer final :
     virtual void exitDeepSleep(void) override;
 
     static constexpr uint32_t STACKSIZE = 1024;
-    static constexpr size_t MAXCHUNKSIZE = 64;
+    static constexpr size_t MAXCOMMANDSIZE = 64;
+    std::array<char, MAXCOMMANDSIZE> mCommandBuffer;
 
     enum class SpecialCommand_t
     {
@@ -55,12 +56,12 @@ class CommandMultiplexer final :
     DemoExecuter& mDemo;
     bool mCanRxEnabled = false;
 
-    void multiplexCommand(std::string_view cmd);
-    void handleSpecialCommand(SpecialCommand_t cmd, std::string_view);
+    void multiplexCommand(const std::string_view cmd);
+    void handleSpecialCommand(SpecialCommand_t cmd, const std::string_view);
 
     void commandMultiplexerTaskFunction(const bool&);
     void remoteCodeExecution(void);
-    void updateRemoteCode(std::string_view code);
+    void updateRemoteCode(const std::string_view code);
     void showHelp(void) const;
 
 public:

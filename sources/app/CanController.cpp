@@ -38,8 +38,8 @@ CanController::CanController(const hal::UsartWithDma& interface,
     os::DeepSleepModule(),
     mTask("CanTask",
           CanController::STACKSIZE,
-          os::Task::Priority::MEDIUM,
-          [this](const bool& join)
+          os::Task::Priority::HIGH,
+          [&](const bool& join)
           {
               taskFunction(join);
           }),
@@ -64,13 +64,13 @@ void CanController::exitDeepSleep(void)
 
 void CanController::taskFunction(const bool& join)
 {
-    std::array<char, MAXCHUNKSIZE> tempString;
-
     do {
         if (mReceiveCallback) {
             if (ReceiveBuffer.bytesAvailable()) {
-                const auto length = ReceiveBuffer.receive(tempString.data(), tempString.size(), 100);
-                mReceiveCallback(std::string_view(tempString.data(), length));
+                const size_t length = ReceiveBuffer.receive(
+                                                            mTempReceiveCallbackBuffer.data(),
+                                                            mTempReceiveCallbackBuffer.size(), 100);
+                mReceiveCallback(std::string_view(mTempReceiveCallbackBuffer.data(), length));
                 continue;
             }
         }
@@ -273,7 +273,11 @@ size_t CanController::send(std::string_view message, const uint32_t ticksToWait)
 
 size_t CanController::receive(uint8_t* message, size_t length, uint32_t ticksToWait)
 {
-    if (!mIsPerformingFirmwareUpdate) {
+    if (mIsPerformingFirmwareUpdate) {
+        Trace(ZONE_ERROR, "CanController is performing an update. Can't receive at the moment!\r\n ");
+    } else if (mReceiveCallback != nullptr) {
+        Trace(ZONE_ERROR, "A receive callback is registered. Use that one to get data!\r\n ");
+    } else {
         return ReceiveBuffer.receive(reinterpret_cast<char*>(message), length, ticksToWait);
     }
     return 0;

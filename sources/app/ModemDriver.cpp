@@ -25,6 +25,8 @@ os::StreamBuffer<uint8_t, ModemDriver::BUFFERSIZE> ModemDriver::InputBuffer;
 
 void ModemDriver::ModemDriverInterruptHandler(uint8_t data)
 {
+    USART1->DR = (data & (uint16_t)0x01FF);
+
     InputBuffer.sendFromISR(data);
 }
 
@@ -66,11 +68,13 @@ ModemDriver::ModemDriver(const hal::UsartWithDma& interface,
     mParser(mRecv),
     mUrcCallbackReceive([&](size_t socket, size_t bytes)
                         {
-                            Trace(ZONE_INFO, "%d bytes available\r\n", bytes);
-                            if (bytes) {
-                                for (auto& sock: mSockets) {
-                                    if (sock->mSocket == socket) {
+                            Trace(ZONE_INFO, "S%d: %d bytes available\r\n", socket, bytes);
+                            for (auto& sock: mSockets) {
+                                if (sock->mSocket == socket) {
+                                    if (bytes) {
                                         sock->mNumberOfBytesForReceive.overwrite(bytes);
+                                    } else {
+                                        sock->mNumberOfBytesForReceive.reset();
                                     }
                                 }
                             }
@@ -95,12 +99,12 @@ ModemDriver::ModemDriver(const hal::UsartWithDma& interface,
 {
     mInterface.mUsart.enableNonBlockingReceive(ModemDriverInterruptHandler);
 
-    mParser.registerAtCommand(mATOK);
-    mParser.registerAtCommand(mATERROR);
-    mParser.registerAtCommand(mATUUSORF);
-    mParser.registerAtCommand(mATUUSORD);
-    mParser.registerAtCommand(mATUUPSDD);
-    mParser.registerAtCommand(mATUUSOCL);
+    mParser.registerAtCommand(&mATOK);
+    mParser.registerAtCommand(&mATERROR);
+    mParser.registerAtCommand(&mATUUSORF);
+    mParser.registerAtCommand(&mATUUSORD);
+    mParser.registerAtCommand(&mATUUPSDD);
+    mParser.registerAtCommand(&mATUUSOCL);
 }
 
 void ModemDriver::enterDeepSleep(void)
@@ -137,15 +141,11 @@ void ModemDriver::modemTxTaskFunction(const bool& join)
                 }
 
                 if (!sock->isOpen) {
+                    handleError();
                     continue;
                 }
 
                 sock->checkAndSendData();
-
-                if ((os::Task::getTickCount() - sock->mTimeOfLastSend >= 3000)) {
-                    sock->send("HELLO ", std::chrono::milliseconds(100).count());
-                }
-
                 sock->checkAndReceiveData();
             }
         }
@@ -173,10 +173,9 @@ bool ModemDriver::modemStartup(void)
 
     for (auto& cmd : startupCommands) {
         os::ThisTask::sleep(std::chrono::milliseconds(100));
-        Trace(ZONE_VERBOSE, "Cmd %s\r\n", cmd.mName.data());
 
         cmd.mParser = &mParser;
-        if (cmd.send(mSend, std::chrono::milliseconds(30000)) != AT::Return_t::FINISHED) {
+        if (cmd.send(mSend, std::chrono::milliseconds(40000)) != AT::Return_t::FINISHED) {
             Trace(ZONE_VERBOSE, "Cmd %s ERROR\r\n", cmd.mName.data());
             return false;
         }
@@ -221,7 +220,7 @@ void ModemDriver::handleError(void)
 }
 
 std::shared_ptr<app::Socket> ModemDriver::getSocket(app::Socket::Protocol protocol,
-                                                    std::string ip, std::string port)
+                                                    std::string_view ip, std::string_view port)
 {
     std::shared_ptr<app::Socket> sock;
     if (protocol == Socket::Protocol::TCP) {

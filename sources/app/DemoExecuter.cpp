@@ -49,25 +49,23 @@ void DemoExecuter::send_GM_tester_present_twice()
     os::ThisTask::sleep(std::chrono::milliseconds(50));
 }
 
-int DemoExecuter::demo_wipers_run(const char* args)
+void DemoExecuter::demo_wipers_run(const char* args)
 {
     Trace(ZONE_INFO, "Running demo Wipers!\r\n");
     send_GM_tester_present_twice();
     mCan.send("t241807AE038000030000\r");
-    return 1;
 }
 
-int DemoExecuter::demo_horn_run(const char* args)
+void DemoExecuter::demo_horn_run(const char* args)
 {
     Trace(ZONE_INFO, "Running demo Honk!\r\n");
     send_GM_tester_present_twice();
     mCan.send("t241807AE100101000000\r");
     os::ThisTask::sleep(std::chrono::milliseconds(100));
     mCan.send("t241807AE100100000000\r");
-    return 1;
 }
 
-int DemoExecuter::demo_doors_run(const char* args)
+void DemoExecuter::demo_doors_run(const char* args)
 {
     Trace(ZONE_INFO, "Running demo Doors!\r\n");
     send_GM_tester_present_twice();
@@ -75,10 +73,9 @@ int DemoExecuter::demo_doors_run(const char* args)
     os::ThisTask::sleep(std::chrono::milliseconds(1000));
     send_GM_tester_present_twice();
     mCan.send("t241807AE010202000000\r");
-    return 1;
 }
 
-int DemoExecuter::demo_window_run(const char* args)
+void DemoExecuter::demo_window_run(const char* args)
 {
     Trace(ZONE_INFO, "Running demo Window!\r\n");
     send_GM_tester_present_twice();
@@ -86,10 +83,9 @@ int DemoExecuter::demo_window_run(const char* args)
     os::ThisTask::sleep(std::chrono::milliseconds(3000));
     send_GM_tester_present_twice();
     mCan.send("t241807AE3B0102000000\r");
-    return 1;
 }
 
-int DemoExecuter::demo_lights_run(const char* args)
+void DemoExecuter::demo_lights_run(const char* args)
 {
     Trace(ZONE_INFO, "Running demo Lights!\r\n");
     send_GM_tester_present_twice();
@@ -138,10 +134,9 @@ int DemoExecuter::demo_lights_run(const char* args)
 
     send_GM_tester_present_twice();
     mCan.send("t241807AE00\r"); // Release Control
-    return 1;
 }
 
-int DemoExecuter::demo_washers_run(const char* args)
+void DemoExecuter::demo_washers_run(const char* args)
 {
     Trace(ZONE_INFO, "Running demo Washers!\r\n");
     send_GM_tester_present_twice();
@@ -150,7 +145,6 @@ int DemoExecuter::demo_washers_run(const char* args)
     send_GM_tester_present_twice();
     mCan.send("t241807AE030800000000\r");
     mCan.send("t241807AE00\r"); // Release Control
-    return 1;
 }
 
 void DemoExecuter::DemoExecuterTaskFunction(const bool& join)
@@ -158,14 +152,14 @@ void DemoExecuter::DemoExecuterTaskFunction(const bool& join)
     os::ThisTask::sleep(std::chrono::seconds(5));
 
     Trace(ZONE_INFO, "Start DemoExecuter\r\n");
+    std::array<char, 10> demoBuffer;
 
     do {
-        std::array<char, 10> tempData;
-        tempData.fill(0);
-        auto received = mDemoQueue.receive(tempData, std::chrono::milliseconds(1000));
+        demoBuffer.fill(0);
+        auto received = mDemoQueue.receive(demoBuffer);
 
         if (received) {
-            int demo_index = std::strtol(tempData.data(), NULL, 10);
+            int demo_index = std::strtol(demoBuffer.data(), NULL, 10);
             Trace(ZONE_INFO, "Demo %d requested.\r\n", demo_index);
 
             switch (demo_index) {

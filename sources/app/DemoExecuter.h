@@ -42,12 +42,12 @@ class DemoExecuter final :
     void DemoExecuterTaskFunction(const bool&);
 
     void send_GM_tester_present_twice(void);
-    int demo_wipers_run(const char* args);
-    int demo_horn_run(const char* args);
-    int demo_doors_run(const char* args);
-    int demo_window_run(const char* args);
-    int demo_lights_run(const char* args);
-    int demo_washers_run(const char* args);
+    void demo_wipers_run(const char* args);
+    void demo_horn_run(const char* args);
+    void demo_doors_run(const char* args);
+    void demo_window_run(const char* args);
+    void demo_lights_run(const char* args);
+    void demo_washers_run(const char* args);
 
 public:
     DemoExecuter(CanController & can);

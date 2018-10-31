@@ -15,6 +15,7 @@
 
 #include "CommandMultiplexer.h"
 #include "trace.h"
+#include <cstring>
 
 using app::CommandMultiplexer;
 using app::Socket;
@@ -27,16 +28,16 @@ CommandMultiplexer::CommandMultiplexer(std::shared_ptr<Socket> control,
                                        DemoExecuter&           demo) :
     os::DeepSleepModule(), mCommandMultiplexerTask("CommandMultiplexer",
                                                    CommandMultiplexer::STACKSIZE, os::Task::Priority::MEDIUM,
-                                                   [this](const bool& join)
+                                                   [&](const bool& join)
                                                    {
                                                        commandMultiplexerTaskFunction(join);
                                                    }),
     mCtrlSock(control), mDataSock(data), mCan(can), mDemo(demo)
 {
-    mDataSock->registerReceiveCallback([&](std::string_view cmd){
+    mDataSock->registerReceiveCallback([&](const std::string_view cmd){
                                            mCan.send(cmd, 1000);
                                        });
-    mCan.registerReceiveCallback([&](std::string_view data){
+    mCan.registerReceiveCallback([&](const std::string_view data){
                                      if (mCanRxEnabled) {
                                          mDataSock->send(data, 1000);
                                      }
@@ -53,15 +54,15 @@ void CommandMultiplexer::exitDeepSleep(void)
     mCommandMultiplexerTask.start();
 }
 
-void CommandMultiplexer::multiplexCommand(std::string_view input)
+void CommandMultiplexer::multiplexCommand(const std::string_view input)
 {
     Trace(ZONE_INFO, "Got cmd\r\n");
-
-    auto ctrlindex = input.find('$');
+    const auto ctrlindex = input.find('$');
 
     if (ctrlindex != std::string_view::npos) {
         if (input.length() - 2 <= ctrlindex) {
-            return; // Empty command
+            Trace(ZONE_INFO, "Empty command received.\r\n");
+            return;
         }
         SpecialCommand_t cmd = SpecialCommand_t(input[ctrlindex + 1]);
         handleSpecialCommand(cmd,
@@ -77,19 +78,19 @@ void CommandMultiplexer::showHelp(void) const
     mCtrlSock->send("--------CARSEC Dongle ---------\r\n");
     mCtrlSock->send("\r\n");
     mCtrlSock->send("Commands:\r\n");
-    mCtrlSock->send("$0x =  RUN_DEMO x            \r\n");
-    mCtrlSock->send("$1  =  FLASH_CAN_MCU        \r\n");
-    mCtrlSock->send("$2  =  CAN_ON               \r\n");
-    mCtrlSock->send("$3  =  CAN_OFF              \r\n");
-    mCtrlSock->send("$4  =  ENABLE_CAN_RX        \r\n");
-    mCtrlSock->send("$5  =  DISABLE_CAN_RX       \r\n");
-    mCtrlSock->send("$6  =  DONGLE_RESET         \r\n");
-    mCtrlSock->send("$7  =  RC_UPDATE            \r\n");
-    mCtrlSock->send("$8  =  RC_EXECUTE           \r\n");
+    mCtrlSock->send("$0x =  RUN_DEMO x\r\n");
+    mCtrlSock->send("$1  =  FLASH_CAN_MCU\r\n");
+    mCtrlSock->send("$2  =  CAN_ON\r\n");
+    mCtrlSock->send("$3  =  CAN_OFF\r\n");
+    mCtrlSock->send("$4  =  ENABLE_CAN_RX\r\n");
+    mCtrlSock->send("$5  =  DISABLE_CAN_RX\r\n");
+    mCtrlSock->send("$6  =  DONGLE_RESET\r\n");
+    mCtrlSock->send("$7  =  RC_UPDATE\r\n");
+    mCtrlSock->send("$8  =  RC_EXECUTE\r\n");
     os::ThisTask::sleep(std::chrono::milliseconds(500));
 }
 
-void CommandMultiplexer::handleSpecialCommand(CommandMultiplexer::SpecialCommand_t cmd, std::string_view data)
+void CommandMultiplexer::handleSpecialCommand(CommandMultiplexer::SpecialCommand_t cmd, const std::string_view data)
 {
     switch (cmd) {
     case SpecialCommand_t::FLASH_CAN_MCU:
@@ -166,26 +167,60 @@ __attribute__ ((section(".rce"))) void CommandMultiplexer::remoteCodeExecution(v
 extern "C" char _rce_start;
 extern "C" char _rce_end;
 
-void CommandMultiplexer::updateRemoteCode(std::string_view code)
+void CommandMultiplexer::updateRemoteCode(const std::string_view code)
 {
-    uint8_t* p = (uint8_t*)(&_rce_start);
-    uint8_t* end = (uint8_t*)(&_rce_end);
-    for (size_t i = 0; i < code.length() && p < end; i++) {
-        *p++ = code.data()[i];
-        Trace(ZONE_INFO, "%02X \r\n", *(p - 1));
+    if (code.length() <= 2) {
+        Trace(ZONE_ERROR, "Code to short to contain a 2 byte length field\r\n");
+        return;
     }
+    size_t length;
+
+    std::memcpy(&length, code.data(), sizeof(length));
+
+    uint8_t* p = (uint8_t*)(&_rce_start);
+    uint8_t const* const end = (uint8_t*)(&_rce_end);
+
+    if (length > static_cast<size_t>(end - p)) {
+        Trace(ZONE_ERROR, "Provide a valid length smaller than %d \r\n", (end - p));
+        return;
+    }
+
+    std::string_view segment(code.data() + 2, code.length() - 2);
+
+    do {
+        if (p + segment.length() > end) {
+            Trace(ZONE_ERROR, "Memory would overflow \r\n");
+            return;
+        }
+
+        if (segment.length() > length) {
+            Trace(ZONE_ERROR, "More bytes in segment than I'm waiting for\r\n");
+            return;
+        }
+
+        std::memcpy(p, segment.data(), segment.length());
+        p += segment.length();
+        length -= segment.length();
+
+        const size_t newSegmentLength = mCtrlSock->receive(
+                                                           reinterpret_cast<uint8_t*>(mCommandBuffer.data()),
+                                                           mCommandBuffer.size(), 2000);
+        if (!newSegmentLength) {
+            Trace(ZONE_ERROR, "Timeout while waiting for more data \r\n");
+            return;
+        }
+        segment = std::string_view(mCommandBuffer.data(), newSegmentLength);
+    } while (p < end && length);
 }
 
 void CommandMultiplexer::commandMultiplexerTaskFunction(const bool& join)
 {
     Trace(ZONE_INFO, "Start command multiplexer \r\n");
-    std::array<char, MAXCHUNKSIZE> temp;
 
     do {
-        const auto length = mCtrlSock->receive(reinterpret_cast<uint8_t*>(temp.data()), temp.size());
-        if (length == 0) {
-            continue;
+        const auto length = mCtrlSock->receive(reinterpret_cast<uint8_t*>(mCommandBuffer.data()), mCommandBuffer.size());
+        if (length) {
+            multiplexCommand(std::string_view(mCommandBuffer.data(), length));
         }
-        multiplexCommand(std::string_view(temp.data(), length));
     } while (!join);
 }

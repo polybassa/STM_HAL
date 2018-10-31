@@ -90,7 +90,8 @@ public:
 
     static void ModemDriverInterruptHandler(uint8_t);
 
-    std::shared_ptr<Socket> getSocket(Socket::Protocol, std::string ip, std::string port);
+    std::shared_ptr<Socket> getSocket(Socket::Protocol,
+                                      std::string_view ip, std::string_view port);
 };
 }
 

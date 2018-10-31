@@ -35,17 +35,17 @@ public:
     Queue& operator=(Queue &&);
     ~Queue(void);
 
-    bool sendFront(T & message, std::chrono::milliseconds = std::chrono::milliseconds(portMAX_DELAY)) const;
+    bool sendFront(T & message, std::chrono::milliseconds) const;
     bool sendFront(T& message, uint32_t ticksToWait = portMAX_DELAY) const;
     bool sendFrontFromISR(T& message) const;
     bool sendFromISR(T& message) const;
-    bool sendBack(T & message, std::chrono::milliseconds = std::chrono::milliseconds(portMAX_DELAY)) const;
+    bool sendBack(T & message, std::chrono::milliseconds) const;
     bool sendBack(T& message, uint32_t ticksToWait = portMAX_DELAY) const;
     bool sendBackFromISR(T& message) const;
-    bool peek(T & message, std::chrono::milliseconds = std::chrono::milliseconds(portMAX_DELAY)) const;
+    bool peek(T & message, std::chrono::milliseconds) const;
     bool peek(T& message, uint32_t ticksToWait = portMAX_DELAY) const;
     bool peekFromISR(T& message) const;
-    bool receive(T & message, std::chrono::milliseconds = std::chrono::milliseconds(portMAX_DELAY)) const;
+    bool receive(T & message, std::chrono::milliseconds) const;
     bool receive(T& message, uint32_t ticksToWait = portMAX_DELAY) const;
     UBaseType_t messagesWaiting(void) const;
     UBaseType_t spacesAvailable(void) const;

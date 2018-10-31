@@ -16,7 +16,6 @@
 #ifndef SOURCES_PMD_SOCKET_H_
 #define SOURCES_PMD_SOCKET_H_
 
-#include <string>
 #include <string_view>
 #include <array>
 #include "AT_Parser.h"
@@ -30,9 +29,13 @@ class ModemDriver;
 class Socket
 {
 protected:
-    static constexpr size_t BUFFERSIZE = 256;
-    os::StreamBuffer<uint8_t, BUFFERSIZE> SendBuffer;
-    os::StreamBuffer<uint8_t, BUFFERSIZE> ReceiveBuffer;
+    static constexpr const size_t BUFFERSIZE = 512;
+    static constexpr const std::chrono::milliseconds KEEP_ALIVE_PAUSE = std::chrono::seconds(3);
+    static constexpr const char* KEEP_ALIVE_MSG = "ALIVE";
+
+    os::StreamBuffer<uint8_t, BUFFERSIZE> mSendBuffer;
+    os::StreamBuffer<uint8_t, BUFFERSIZE> mReceiveBuffer;
+    std::array<char, BUFFERSIZE> mTemporaryBuffer;
 
     std::function<void(std::string_view)> mReceiveCallback;
     os::Queue<size_t, 1> mNumberOfBytesForReceive;
@@ -45,10 +48,11 @@ protected:
     void reset(void);
     void checkAndReceiveData(void);
     void checkAndSendData(void);
-    void storeReceivedData(const std::string&);
+    void storeReceivedData(const std::string_view);
 
     ATCmdUSOCR mATCmdUSOCR;
     ATCmdUSOCO mATCmdUSOCO;
+    ATCmdUSOSO mATCmdUSOSO;
     size_t mSocket;
     size_t mTimeOfLastSend;
     bool isOpen = false;
@@ -59,10 +63,11 @@ protected:
 public:
     enum class Protocol { UDP, TCP, DNS };
 
-    Socket(const Protocol,
-           ATParser& parser,
-           AT::SendFunction& send, std::string ip,
-           std::string port,
+    Socket(const                            Protocol,
+           ATParser&                        parser,
+           AT::SendFunction&                send,
+           const std::string_view           ip,
+           const std::string_view           port,
            const std::function<void(void)>& errorCallback);
 
     Socket(const Socket&) = delete;
@@ -73,8 +78,8 @@ public:
     virtual ~Socket(void);
 
     const Protocol mProtocol;
-    const std::string mIP;
-    const std::string mPort;
+    const std::string_view mIP;
+    const std::string_view mPort;
 
     size_t send(std::string_view, const uint32_t ticksToWait = portMAX_DELAY);
     size_t receive(uint8_t *, size_t, uint32_t ticksToWait = portMAX_DELAY);
@@ -102,8 +107,8 @@ class TcpSocket :
 public:
     TcpSocket(ATParser& parser,
               AT::SendFunction& send,
-              std::string ip,
-              std::string port,
+              const std::string_view ip,
+              const std::string_view port,
               const std::function<void(size_t, size_t)>& callback,
               const std::function<void(void)>& errorCallback);
 
@@ -132,8 +137,8 @@ protected:
 public:
     UdpSocket(ATParser& parser,
               AT::SendFunction& send,
-              std::string ip,
-              std::string port,
+              std::string_view ip,
+              std::string_view port,
               const std::function<void(size_t, size_t)>& callback,
               const std::function<void(void)>& errorCallback);
 
@@ -154,7 +159,7 @@ class DnsSocket :
     virtual void receiveData(size_t) override;
     virtual bool create(void) override;
 
-    const std::string& getDns(void);
+    std::string_view getDns(void);
 
     ATCmdUPSND mATCmdUPSND;
 

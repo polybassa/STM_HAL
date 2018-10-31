@@ -19,7 +19,6 @@
 #include "TaskInterruptable.h"
 #include "DeepSleepInterface.h"
 #include "os_StreamBuffer.h"
-#include "Semaphore.h"
 #include "UsartWithDma.h"
 #include "Gpio.h"
 #include <string_view>
@@ -40,6 +39,7 @@ class CanController final :
     static constexpr size_t MAXCHUNKSIZE = 256;
 
     static os::StreamBuffer<uint8_t, BUFFERSIZE> ReceiveBuffer;
+    std::array<char, MAXCHUNKSIZE> mTempReceiveCallbackBuffer;
 
     os::TaskInterruptable mTask;
 

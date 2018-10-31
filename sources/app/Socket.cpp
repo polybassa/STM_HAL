@@ -24,17 +24,18 @@ using app::Socket;
 using app::TcpSocket;
 using app::UdpSocket;
 
-static const int __attribute__((unused)) g_DebugZones = ZONE_ERROR | ZONE_WARNING | ZONE_VERBOSE | ZONE_INFO;
+static const int __attribute__((unused)) g_DebugZones = 0; //ZONE_ERROR | ZONE_WARNING | ZONE_VERBOSE | ZONE_INFO;
 
 Socket::Socket(const Protocol                   protocol,
                ATParser&                        parser,
                AT::SendFunction&                send,
-               std::string                      ip,
-               std::string                      port,
+               const std::string_view           ip,
+               const std::string_view           port,
                const std::function<void(void)>& errorCallback) :
     mNumberOfBytesForReceive(),
     mATCmdUSOCR(send),
     mATCmdUSOCO(send),
+    mATCmdUSOSO(send),
     mSocket(0),
     mTimeOfLastSend(os::Task::getTickCount()),
     mHandleError(errorCallback),
@@ -42,15 +43,16 @@ Socket::Socket(const Protocol                   protocol,
     mIP(ip),
     mPort(port)
 {
-    parser.registerAtCommand(mATCmdUSOCR);
-    parser.registerAtCommand(mATCmdUSOCO);
+    parser.registerAtCommand(&mATCmdUSOCR);
+    parser.registerAtCommand(&mATCmdUSOCO);
+    parser.registerAtCommand(&mATCmdUSOSO);
 }
 
 Socket::~Socket(void){}
 
 void Socket::reset(void)
 {
-    ReceiveBuffer.reset();
+    mReceiveBuffer.reset();
     mNumberOfBytesForReceive.reset();
     isOpen = false;
     isCreated = false;
@@ -69,46 +71,42 @@ void Socket::checkAndReceiveData(void)
 
 void Socket::checkAndSendData(void)
 {
-    if (isOpen && SendBuffer.bytesAvailable()) {
+    if (isOpen && mSendBuffer.bytesAvailable()) {
         Trace(ZONE_VERBOSE, "send\r\n");
 
         this->sendData();
     }
+
+    if ((mProtocol == Protocol::UDP) && (os::Task::getTickCount() - mTimeOfLastSend >= KEEP_ALIVE_PAUSE.count())) {
+        send(KEEP_ALIVE_MSG, std::chrono::milliseconds(100).count());
+    }
 }
 
-void Socket::storeReceivedData(const std::string& data)
+void Socket::storeReceivedData(const std::string_view data)
 {
     Trace(ZONE_INFO, "Data will be stored %d\r\n", data.length());
 
     if (mReceiveCallback) {
         mReceiveCallback(data);
     } else {
-        ReceiveBuffer.send(data.data(), data.length(), 1000);
+        mReceiveBuffer.send(data.data(), data.length(), 1000);
     }
     Trace(ZONE_INFO, "Data stored\r\n");
 }
 
 size_t Socket::send(std::string_view message, const uint32_t ticksToWait)
 {
-    size_t bytes = std::min(BUFFERSIZE, static_cast<size_t>(message.length()));
-
-    if (SendBuffer.send(message.data(), bytes, ticksToWait)) {
-        return bytes;
-    }
-    return 0;
+    return mSendBuffer.send(message.data(), message.length(), ticksToWait);
 }
 
 size_t Socket::receive(uint8_t* message, size_t length, uint32_t ticksToWait)
 {
-    if (auto ret = ReceiveBuffer.receive(reinterpret_cast<char*>(message), length, ticksToWait)) {
-        return ret;
-    }
-    return 0;
+    return mReceiveBuffer.receive(reinterpret_cast<char*>(message), length, ticksToWait);
 }
 
 size_t Socket::bytesAvailable(void) const
 {
-    return ReceiveBuffer.bytesAvailable();
+    return mReceiveBuffer.bytesAvailable();
 }
 
 size_t Socket::getTimeOfLastSend(void) const
@@ -127,35 +125,38 @@ void Socket::unregisterReceiveCallback(void)
 
 TcpSocket::TcpSocket(ATParser& parser,
                      AT::SendFunction& send,
-                     std::string ip,
-                     std::string port,
+                     const std::string_view ip,
+                     const std::string_view port,
                      const std::function<void(size_t, size_t)>& callback,
                      const std::function<void(void)>& errorCallback) :
     Socket(Protocol::TCP, parser, send, ip, port, errorCallback),
     mATCmdUSOWR(send),
     mATCmdUSORD(send, callback)
 {
-    parser.registerAtCommand(mATCmdUSOWR);
-    parser.registerAtCommand(mATCmdUSORD);
+    parser.registerAtCommand(&mATCmdUSOWR);
+    parser.registerAtCommand(&mATCmdUSORD);
 }
 
 TcpSocket::~TcpSocket(){}
 
 void TcpSocket::sendData(void)
 {
-    size_t bytes = std::min(BUFFERSIZE, SendBuffer.bytesAvailable());
+    const size_t bytes = std::min(mTemporaryBuffer.size(), mSendBuffer.bytesAvailable());
 
-    std::string tmpSendStr(bytes, '\x00');
-    Trace(ZONE_VERBOSE, "send %d \r\n", bytes);
+    Trace(ZONE_VERBOSE, "Send %d \r\n", bytes);
 
-    size_t ret = SendBuffer.receive(tmpSendStr.data(), tmpSendStr.length(), 1000);
+    const size_t receivedLength = mSendBuffer.receive(mTemporaryBuffer.data(), mTemporaryBuffer.size(), 1000);
 
-    if (ret != bytes) {
-        Trace(ZONE_ERROR, "internal buffer didn't contain enough bytes\r\n");
+    if (receivedLength != bytes) {
+        Trace(ZONE_ERROR, "Internal buffer didn't contain exact amount of bytes\r\n");
         return;
     }
 
-    if (mATCmdUSOWR.send(mSocket, tmpSendStr, std::chrono::milliseconds(5000)) == AT::Return_t::ERROR) {
+    if (mATCmdUSOWR.send(mSocket,
+                         std::string_view(mTemporaryBuffer.data(),
+                                          receivedLength),
+                         std::chrono::milliseconds(5000)) == AT::Return_t::ERROR)
+    {
         mHandleError();
     }
     mTimeOfLastSend = os::Task::getTickCount();
@@ -197,35 +198,51 @@ bool TcpSocket::open(void)
     isOpen = true;
     Trace(ZONE_VERBOSE, "Socket %d: opened \r\n", mSocket);
 
+    if (mATCmdUSOSO.send(mSocket, 6, 1, 1, std::chrono::seconds(2)) != AT::Return_t::FINISHED) {
+        return false;
+    }
+
+    if (mATCmdUSOSO.send(mSocket, 6, 2, 10000, std::chrono::seconds(2)) != AT::Return_t::FINISHED) {
+        return false;
+    }
+    Trace(ZONE_VERBOSE, "Socket %d: options set \r\n", mSocket);
+
     return true;
 }
 
 UdpSocket::UdpSocket(ATParser& parser,
                      AT::SendFunction& send,
-                     std::string ip,
-                     std::string port,
+                     std::string_view ip,
+                     std::string_view port,
                      const std::function<void(size_t, size_t)>& callback,
                      const std::function<void(void)>& errorCallback) :
     Socket(Protocol::UDP, parser, send, ip, port, errorCallback),
     mATCmdUSOST(send),
     mATCmdUSORF(send, callback)
 {
-    parser.registerAtCommand(mATCmdUSOST);
-    parser.registerAtCommand(mATCmdUSORF);
+    parser.registerAtCommand(&mATCmdUSOST);
+    parser.registerAtCommand(&mATCmdUSORF);
 }
 
 UdpSocket::~UdpSocket(void){}
 
 void UdpSocket::sendData(void)
 {
-    Trace(ZONE_INFO, "S%d: send\r\n", mSocket);
+    size_t bytes = std::min(BUFFERSIZE, mSendBuffer.bytesAvailable());
 
-    size_t bytes = std::min(BUFFERSIZE, SendBuffer.bytesAvailable());
+    Trace(ZONE_VERBOSE, "send %d \r\n", bytes);
 
-    std::string tmpSendStr(bytes, '\x00');
-    SendBuffer.receive(tmpSendStr.data(), tmpSendStr.length(), 1000);
+    size_t ret = mSendBuffer.receive(mTemporaryBuffer.data(), mTemporaryBuffer.size(), 1000);
 
-    if (mATCmdUSOST.send(mSocket, mIP, mPort, tmpSendStr, std::chrono::milliseconds(5000)) == AT::Return_t::ERROR) {
+    if (ret != bytes) {
+        Trace(ZONE_ERROR, "internal buffer didn't contain enough bytes\r\n");
+        return;
+    }
+
+    if (mATCmdUSOST.send(mSocket, mIP, mPort,
+                         std::string_view(mTemporaryBuffer.data(),
+                                          ret), std::chrono::milliseconds(5000)) == AT::Return_t::ERROR)
+    {
         mHandleError();
     }
     mTimeOfLastSend = os::Task::getTickCount();
@@ -277,7 +294,7 @@ DnsSocket::DnsSocket(ATParser& parser,
     UdpSocket(parser, send, "", "", callback, errorCallback),
     mATCmdUPSND(send)
 {
-    parser.registerAtCommand(mATCmdUPSND);
+    parser.registerAtCommand(&mATCmdUPSND);
 }
 
 DnsSocket::~DnsSocket(void){}
@@ -291,9 +308,9 @@ void DnsSocket::sendData(void)
     counter %= 999;
     std::string counterStr = std::to_string(counter);
 
-    std::string tmpPayloadStr(std::max(SendBuffer.bytesAvailable(),
+    std::string tmpPayloadStr(std::max(mSendBuffer.bytesAvailable(),
                                        MAX_PAYLOAD_LENGTH), '\x00');
-    SendBuffer.receive(tmpPayloadStr.data(), tmpPayloadStr.length(), 1000);
+    mSendBuffer.receive(tmpPayloadStr.data(), tmpPayloadStr.length(), 1000);
 
     std::string hexPayloadStr;
     hexlify(hexPayloadStr, tmpPayloadStr);
@@ -358,7 +375,7 @@ bool DnsSocket::create()
     return true;
 }
 
-const std::string& DnsSocket::getDns(void)
+std::string_view DnsSocket::getDns(void)
 {
     const auto ret = mATCmdUPSND.send(mSocket, 1, std::chrono::milliseconds(1000));
 
