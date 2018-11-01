@@ -42,9 +42,10 @@ protected:
 
     virtual void sendData(void) = 0;
     virtual void receiveData(size_t) = 0;
-    virtual bool create(void) = 0;
+    virtual bool create() = 0;
     virtual bool open(void) = 0;
 
+    bool create(size_t magicSocket);
     void reset(void);
     void checkAndReceiveData(void);
     void checkAndSendData(void);
@@ -99,7 +100,7 @@ class TcpSocket :
 {
     virtual void sendData(void) override;
     virtual void receiveData(size_t) override;
-    virtual bool create() override;
+    virtual bool create(void) override;
     virtual bool open(void) override;
 
     ATCmdUSOWR mATCmdUSOWR;

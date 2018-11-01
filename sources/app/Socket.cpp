@@ -50,6 +50,19 @@ Socket::Socket(const Protocol                   protocol,
 
 Socket::~Socket(void){}
 
+bool Socket::create(size_t magicSocket)
+{
+    if (mATCmdUSOCR.send(magicSocket, std::chrono::seconds(2)) != AT::Return_t::FINISHED) {
+        Trace(ZONE_VERBOSE, "Socket create failed \r\n");
+        return false;
+    }
+    mSocket = mATCmdUSOCR.getSocket();
+    Trace(ZONE_VERBOSE, "Socket %d: created \r\n", mSocket);
+    isCreated = true;
+    isOpen = false;
+    return true;
+}
+
 void Socket::reset(void)
 {
     mReceiveBuffer.reset();
@@ -187,16 +200,7 @@ void TcpSocket::receiveData(size_t bytes)
 
 bool TcpSocket::create()
 {
-    if (mATCmdUSOCR.send(6, std::chrono::seconds(2)) != AT::Return_t::FINISHED) {
-        Trace(ZONE_VERBOSE, "Socket create failed \r\n");
-
-        return false;
-    }
-    mSocket = mATCmdUSOCR.getSocket();
-    Trace(ZONE_VERBOSE, "Socket %d: created \r\n", mSocket);
-    isCreated = true;
-    isOpen = false;
-    return true;
+    return Socket::create(6);
 }
 
 bool TcpSocket::open(void)
@@ -268,16 +272,7 @@ void UdpSocket::receiveData(size_t bytes)
 
 bool UdpSocket::create()
 {
-    if (mATCmdUSOCR.send(17, std::chrono::seconds(2)) != AT::Return_t::FINISHED) {
-        Trace(ZONE_VERBOSE, "Socket create failed \r\n");
-        return false;
-    }
-    mSocket = mATCmdUSOCR.getSocket();
-    Trace(ZONE_VERBOSE, "Socket %d: created \r\n", mSocket);
-
-    isCreated = true;
-    isOpen = false;
-    return true;
+    return Socket::create(17);
 }
 
 bool UdpSocket::open(void)
