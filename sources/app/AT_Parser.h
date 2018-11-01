@@ -94,8 +94,7 @@ class ATCmdTX :
     public ATCmd
 {
 protected:
-    static constexpr const size_t REQUESTLEN = 64;
-    std::array<char, REQUESTLEN> mRequestBuffer;
+    std::array<char, 64> mRequestBuffer;
     std::string_view mData;
     SendFunction& mSendFunction;
     virtual Return_t onResponseMatch(void) override;
@@ -130,9 +129,8 @@ class ATCmdRXData :
     public ATCmd
 {
 protected:
-    static constexpr const size_t REQUESTLEN = 24;
     static constexpr const size_t DATALEN = 256;
-    std::array<char, REQUESTLEN> mRequestBuffer;
+    std::array<char, 24> mRequestBuffer;
     std::array<char, DATALEN> mDataBuffer;
     std::string_view mData;
     size_t mSocket = 0;
@@ -188,9 +186,8 @@ public:
 class ATCmdUPSND final :
     public ATCmd
 {
-    static constexpr const size_t REQUESTLEN = 16;
     static constexpr const size_t DATALEN = 32;
-    std::array<char, REQUESTLEN> mRequestBuffer;
+    std::array<char, 16> mRequestBuffer;
     std::array<char, DATALEN> mDataBuffer;
     size_t mSocket = 0;
     size_t mParameter = 0;
@@ -223,8 +220,7 @@ public:
 class ATCmdUSOCR final :
     public ATCmd
 {
-    static constexpr const size_t REQUESTLEN = 16;
-    std::array<char, REQUESTLEN> mRequestBuffer;
+    std::array<char, 16> mRequestBuffer;
     size_t mSocket = 0;
     SendFunction& mSendFunction;
     virtual Return_t onResponseMatch(void) override;
@@ -244,8 +240,7 @@ public:
 class ATCmdUSOCO final :
     public ATCmd
 {
-    static constexpr const size_t REQUESTLEN = 40;
-    std::array<char, REQUESTLEN> mRequestBuffer;
+    std::array<char, 40> mRequestBuffer;
     SendFunction& mSendFunction;
 
 public:
@@ -261,8 +256,7 @@ public:
 class ATCmdUSOSO final :
     public ATCmd
 {
-    static constexpr const size_t REQUESTLEN = 64;
-    std::array<char, REQUESTLEN> mRequestBuffer;
+    std::array<char, 64> mRequestBuffer;
     SendFunction& mSendFunction;
 
 public:
