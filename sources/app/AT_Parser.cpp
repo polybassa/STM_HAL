@@ -620,7 +620,7 @@ std::string_view ATParser::getLineFromInput(std::chrono::milliseconds timeout) c
     size_t currentPos = 0;
 
     while (true) {
-        if (!mReceive(reinterpret_cast<uint8_t*>(&data), 1, timeout)) {
+        if (!mReceive(&data, 1, timeout)) {
             Trace(ZONE_ERROR, "Timeout\r\n");
             return "";
         }
@@ -642,7 +642,7 @@ std::string_view ATParser::getInputUntilComma(char* const termination, std::chro
     size_t currentPos = 0;
 
     while (true) {
-        if (!mReceive(reinterpret_cast<uint8_t*>(&data), 1, timeout)) {
+        if (!mReceive(&data, 1, timeout)) {
             Trace(ZONE_ERROR, "Timeout\r\n");
             return "";
         }
@@ -671,7 +671,7 @@ std::string_view ATParser::getBytesFromInput(size_t numberOfBytes, std::chrono::
     }
 
     while (true) {
-        if (!mReceive(reinterpret_cast<uint8_t*>(&data), 1, timeout)) {
+        if (!mReceive(&data, 1, timeout)) {
             Trace(ZONE_ERROR, "Timeout\r\n");
             return "";
         }
