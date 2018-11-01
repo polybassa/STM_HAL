@@ -189,9 +189,9 @@ AT::Return_t ATCmdUSORF::send(const size_t                    socket,
                               size_t                          bytesToRead,
                               const std::chrono::milliseconds timeout)
 {
-    if (bytesToRead > DATALEN) {
+    if (bytesToRead > sizeof(mDataBuffer)) {
         Trace(ZONE_INFO, "More bytes available than readable\r\n");
-        bytesToRead = DATALEN;
+        bytesToRead = sizeof(mDataBuffer);
     }
     const size_t reqLen = std::snprintf(
                                         mRequestBuffer.data(),
@@ -267,9 +267,9 @@ AT::Return_t ATCmdUSORF::onResponseMatch(void)
 
 AT::Return_t ATCmdUSORD::send(const size_t socket, size_t bytesToRead, const std::chrono::milliseconds timeout)
 {
-    if (bytesToRead > DATALEN) {
+    if (bytesToRead > sizeof(mDataBuffer)) {
         Trace(ZONE_INFO, "More bytes available than readable\r\n");
-        bytesToRead = DATALEN;
+        bytesToRead = sizeof(mDataBuffer);
     }
     const size_t reqLen = std::snprintf(
                                         mRequestBuffer.data(),
@@ -333,7 +333,7 @@ AT::Return_t ATCmdUPSND::onResponseMatch(void)
     }
 
     const std::string_view datastring = mParser->getInputUntilComma();
-    if ((datastring.length() == 0) || (datastring.length() > DATALEN)) {
+    if ((datastring.length() == 0) || (datastring.length() > sizeof(mDataBuffer))) {
         return AT::Return_t::ERROR;
     }
 
@@ -342,7 +342,7 @@ AT::Return_t ATCmdUPSND::onResponseMatch(void)
 
     mData = std::string_view(mDataBuffer.data(), last - first);
 
-    if ((mData.length() == 0) || (mData.length() > DATALEN)) {
+    if ((mData.length() == 0) || (mData.length() > sizeof(mDataBuffer))) {
         return AT::Return_t::ERROR;
     }
 

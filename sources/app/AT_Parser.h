@@ -129,9 +129,8 @@ class ATCmdRXData :
     public ATCmd
 {
 protected:
-    static constexpr const size_t DATALEN = 256;
     std::array<char, 24> mRequestBuffer;
-    std::array<char, DATALEN> mDataBuffer;
+    std::array<char, 256> mDataBuffer;
     std::string_view mData;
     size_t mSocket = 0;
     SendFunction& mSendFunction;
@@ -186,9 +185,8 @@ public:
 class ATCmdUPSND final :
     public ATCmd
 {
-    static constexpr const size_t DATALEN = 32;
     std::array<char, 16> mRequestBuffer;
-    std::array<char, DATALEN> mDataBuffer;
+    std::array<char, 32> mDataBuffer;
     size_t mSocket = 0;
     size_t mParameter = 0;
     SendFunction& mSendFunction;
