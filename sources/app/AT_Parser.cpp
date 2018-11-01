@@ -546,13 +546,7 @@ bool ATParser::parse(std::chrono::milliseconds timeout)
 
     resetPossibleResponses();
 
-    while (true) {
-        if (mReceive(reinterpret_cast<uint8_t*>(ReceiveBuffer.data() + currentPos++), 1, timeout) != 1) {
-            Trace(ZONE_ERROR, "Parser Timeout\r\n");
-            reset();
-            return false;
-        }
-
+    while (1 == mReceive(reinterpret_cast<uint8_t*>(ReceiveBuffer.data() + currentPos++), 1, timeout)) {
         std::string_view currentData(ReceiveBuffer.data(), currentPos);
         //Trace(ZONE_VERBOSE, "parse: %s\n", std::string(currentData.data(), currentData.length()).c_str());
 
@@ -601,7 +595,9 @@ bool ATParser::parse(std::chrono::milliseconds timeout)
         resetPossibleResponses();
     }
 
-    return true;
+    Trace(ZONE_ERROR, "Parser Timeout\r\n");
+    reset();
+    return false;
 }
 
 void ATParser::registerAtCommand(AT* cmd)
