@@ -619,21 +619,17 @@ std::string_view ATParser::getLineFromInput(std::chrono::milliseconds timeout) c
     uint8_t data;
     size_t currentPos = 0;
 
-    while (true) {
-        if (!mReceive(&data, 1, timeout)) {
-            Trace(ZONE_ERROR, "Timeout\r\n");
-            return "";
-        }
+    while (mReceive(&data, 1, timeout)) {
         ReceiveBuffer[currentPos++] = data;
 
         const bool terminationFound = (data == '\r') || (data == '\n') || (data == 0);
 
         if (terminationFound) {
-            break;
+            return std::string_view(ReceiveBuffer.data(), currentPos);
         }
     }
-
-    return std::string_view(ReceiveBuffer.data(), currentPos);
+    Trace(ZONE_ERROR, "Timeout\r\n");
+    return "";
 }
 
 std::string_view ATParser::getInputUntilComma(char* const termination, std::chrono::milliseconds timeout) const
