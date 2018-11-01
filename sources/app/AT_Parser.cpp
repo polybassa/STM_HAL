@@ -637,24 +637,19 @@ std::string_view ATParser::getInputUntilComma(char* const termination, std::chro
     uint8_t data;
     size_t currentPos = 0;
 
-    while (true) {
-        if (!mReceive(&data, 1, timeout)) {
-            Trace(ZONE_ERROR, "Timeout\r\n");
-            return "";
-        }
-
+    while (mReceive(&data, 1, timeout)) {
         const bool terminationFound = (data == ',') || (data == '\r');
 
         if (terminationFound || isalpha(data)) {
             if (termination != nullptr) {
                 *termination = data;
             }
-            break;
+            return std::string_view(ReceiveBuffer.data(), currentPos);
         }
         ReceiveBuffer[currentPos++] = data;
     }
-
-    return std::string_view(ReceiveBuffer.data(), currentPos);
+    Trace(ZONE_ERROR, "Timeout\r\n");
+    return "";
 }
 
 std::string_view ATParser::getBytesFromInput(size_t numberOfBytes, std::chrono::milliseconds timeout) const
