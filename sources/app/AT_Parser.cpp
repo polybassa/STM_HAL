@@ -661,20 +661,16 @@ std::string_view ATParser::getBytesFromInput(size_t numberOfBytes, std::chrono::
         return "";
     }
 
-    while (true) {
-        if (!mReceive(&data, 1, timeout)) {
-            Trace(ZONE_ERROR, "Timeout\r\n");
-            return "";
-        }
+    while (mReceive(&data, 1, timeout)) {
         ReceiveBuffer[currentPos++] = data;
 
         const bool terminationFound = currentPos >= numberOfBytes;
         if (terminationFound) {
-            break;
+            return std::string_view(ReceiveBuffer.data(), currentPos);
         }
     }
-
-    return std::string_view(ReceiveBuffer.data(), currentPos);
+    Trace(ZONE_ERROR, "Timeout\r\n");
+    return "";
 }
 
 AT::Return_t ATParser::getSocketFromInput(size_t& socket, char* const termination,
