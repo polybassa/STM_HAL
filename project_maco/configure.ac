@@ -31,8 +31,8 @@ if test -z "$UNCRUSTIFY" || test "X$UNCRUSTIFY" = "Xnot_found"; then
 	AC_MSG_ERROR([uncrustify not found!]) 
 fi 
 
-if test "$($UNCRUSTIFY -v)" != "uncrustify 0.59"; then 
-	AC_MSG_ERROR([wrong uncrustify version. Get version 0.59: https://sourceforge.net/projects/uncrustify/files/uncrustify/uncrustify-0.59/uncrustify-0.59.tar.gz/download]) 
+if test "$($UNCRUSTIFY -v)" != "Uncrustify-0.67_f"; then 
+	AC_MSG_ERROR([wrong uncrustify version. Get version 0.67_f: https://sourceforge.net/projects/uncrustify/files/uncrustify/uncrustify-0.67/uncrustify-0.67.tar.gz/download]) 
 fi 
 
 

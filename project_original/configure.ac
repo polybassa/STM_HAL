@@ -2,7 +2,7 @@
 # Process this file with autoconf to produce a configure script.
 
 AC_PREREQ([2.69])
-AC_INIT([STM_HAL], [0.1], [nils.weiss@st.oth-regensburg.de])
+AC_INIT([STM_HAL], [0.1], [nils@we155.de])
 AC_CONFIG_HEADERS([config.h])
 
 # Checks for programs.
@@ -10,6 +10,7 @@ AC_PROG_CXX
 AC_PROG_CC
 AC_PROG_MAKE_SET
 AC_SUBST(AM_CXXFLAGS, [-std=c++14])
+AC_SUBST(AM_CXXFLAGS, [-std=c++17])
 AC_SUBST(AM_CXXFLAGS, [-pedantic])
 AC_SUBST(AM_CXXFLAGS, [-Wall])
 
@@ -26,9 +27,14 @@ if test -z "$OPENSSL" || test "X$OPENSSL" = "Xnot_found"; then
 	AC_MSG_ERROR([openssl not found!]) 
 fi 
 
-#if test -z "$UNCRUSTIFY" || test "X$UNCRUSTIFY" = "Xnot_found"; then 
-#	AC_MSG_ERROR([uncrustify not found!]) 
-#fi 
+if test -z "$UNCRUSTIFY" || test "X$UNCRUSTIFY" = "Xnot_found"; then 
+	AC_MSG_ERROR([uncrustify not found!]) 
+fi 
+
+if test "$($UNCRUSTIFY -v)" != "Uncrustify-0.67_f"; then 
+	AC_MSG_ERROR([wrong uncrustify version. Get version 0.67_f: https://sourceforge.net/projects/uncrustify/files/uncrustify/uncrustify-0.67/uncrustify-0.67.tar.gz/download]) 
+fi 
+
 
 
 AC_DEFUN(AC_PATH_PROG_ARM_GCC, [

@@ -115,17 +115,17 @@
 
 /* Define for Solaris 2.5.1 so the uint32_t typedef from <sys/synch.h>,
    <pthread.h>, or <semaphore.h> is not used. If the typedef were allowed, the
- #define below would cause a syntax error. */
+   #define below would cause a syntax error. */
 /* #undef _UINT32_T */
 
 /* Define for Solaris 2.5.1 so the uint64_t typedef from <sys/synch.h>,
    <pthread.h>, or <semaphore.h> is not used. If the typedef were allowed, the
- #define below would cause a syntax error. */
+   #define below would cause a syntax error. */
 /* #undef _UINT64_T */
 
 /* Define for Solaris 2.5.1 so the uint8_t typedef from <sys/synch.h>,
    <pthread.h>, or <semaphore.h> is not used. If the typedef were allowed, the
- #define below would cause a syntax error. */
+   #define below would cause a syntax error. */
 /* #undef _UINT8_T */
 
 /* Define to `__inline__' or `__inline' if that's what the C compiler

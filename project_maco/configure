@@ -3756,8 +3756,8 @@ if test -z "$UNCRUSTIFY" || test "X$UNCRUSTIFY" = "Xnot_found"; then
 	as_fn_error $? "uncrustify not found!" "$LINENO" 5
 fi
 
-if test "$($UNCRUSTIFY -v)" != "uncrustify 0.59"; then
-	as_fn_error $? "wrong uncrustify version. Get version 0.59: https://sourceforge.net/projects/uncrustify/files/uncrustify/uncrustify-0.59/uncrustify-0.59.tar.gz/download" "$LINENO" 5
+if test "$($UNCRUSTIFY -v)" != "Uncrustify-0.67_f"; then
+	as_fn_error $? "wrong uncrustify version. Get version 0.67_f: https://sourceforge.net/projects/uncrustify/files/uncrustify/uncrustify-0.67/uncrustify-0.67.tar.gz/download" "$LINENO" 5
 fi
 
 
