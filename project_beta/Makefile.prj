@@ -23,7 +23,7 @@ DEFINES+=-DMPL_LOG_NDEBUG=1
 
 # Where to find source files that do not live in this directory.
 VPATH+=${ROOT}/sources
-VPATH+=${ROOT}/sources/hal_stm32f30x_stm32f30x
+VPATH+=${ROOT}/sources/hal_stm32f30x
 VPATH+=${ROOT}/sources/os
 VPATH+=${ROOT}/sources/dev
 VPATH+=${ROOT}/sources/app
@@ -57,7 +57,7 @@ VPATH+=${PRJ_PATH}
 IPATH=${ROOT}/sources
 IPATH+=${PRJ_PATH}
 IPATH+=${PRJ_PATH}/config
-IPATH+=${ROOT}/sources/hal_stm32f30x_stm32f30x
+IPATH+=${ROOT}/sources/hal_stm32f30x
 IPATH+=${ROOT}/sources/os
 IPATH+=${ROOT}/sources/dev
 IPATH+=${ROOT}/sources/app
