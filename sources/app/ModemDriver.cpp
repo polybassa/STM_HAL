@@ -42,50 +42,50 @@ ModemDriver::ModemDriver(const hal::UsartWithDma& interface,
                  ModemDriver::STACKSIZE,
                  os::Task::Priority::HIGH,
                  [this](const bool& join)
-                 {
-                     modemTxTaskFunction(join);
-                 }),
+{
+    modemTxTaskFunction(join);
+}),
     mParserTask("ParserTask",
                 ModemDriver::STACKSIZE,
                 os::Task::Priority::VERY_HIGH,
                 [this](const bool& join)
-                {
-                    parserTaskFunction(join);
-                }),
+{
+    parserTaskFunction(join);
+}),
     mInterface(interface),
     mModemReset(resetPin),
     mModemPower(powerPin),
     mModemSupplyVoltage(supplyPin),
-    mSend([&](std::string_view in, std::chrono::milliseconds timeout)->size_t {
-              return mInterface.send(in, timeout.count());
-          }),
-    mRecv([&](uint8_t * output, const size_t length, std::chrono::milliseconds timeout)->bool {
-              return InputBuffer.receive(reinterpret_cast<char*>(output), length, timeout.count());
-          }),
+    mSend([&](std::string_view in, std::chrono::milliseconds timeout) -> size_t {
+    return mInterface.send(in, timeout.count());
+}),
+    mRecv([&](uint8_t* output, const size_t length, std::chrono::milliseconds timeout) -> bool {
+    return InputBuffer.receive(reinterpret_cast<char*>(output), length, timeout.count());
+}),
     mParser(mRecv),
     mUrcCallbackReceive([&](const size_t socket, const size_t bytes)
-                        {
-                            for (auto& sock: mSockets) {
-                                if (sock->mSocket == socket) {
-                                    if (bytes) {
-                                        Trace(ZONE_INFO, "S%d: %d bytes available\r\n", socket, bytes);
-                                        sock->mNumberOfBytesForReceive.overwrite(bytes);
-                                    } else {
-                                        sock->mNumberOfBytesForReceive.reset();
-                                    }
-                                }
-                            }
-                        }),
+{
+    for (auto& sock: mSockets) {
+        if (sock->mSocket == socket) {
+            if (bytes) {
+                Trace(ZONE_INFO, "S%d: %d bytes available\r\n", socket, bytes);
+                sock->mNumberOfBytesForReceive.overwrite(bytes);
+            } else {
+                sock->mNumberOfBytesForReceive.reset();
+            }
+        }
+    }
+}),
     mUrcCallbackClose([&](const size_t socket, const size_t bytes)
-                      {
-                          Trace(ZONE_INFO, "Socket %d closed\r\n", socket);
-                          for (auto& sock: mSockets) {
-                              if (sock->mSocket == socket) {
-                                  sock->isOpen = false;
-                                  sock->isCreated = false;
-                              }
-                          }
-                      }),
+{
+    Trace(ZONE_INFO, "Socket %d closed\r\n", socket);
+    for (auto& sock: mSockets) {
+        if (sock->mSocket == socket) {
+            sock->isOpen = false;
+            sock->isCreated = false;
+        }
+    }
+}),
     mATOK(),
     mATERROR(),
     mATUUSORF("UUSORF", "+UUSORF: ", mUrcCallbackReceive),
@@ -221,19 +221,22 @@ std::shared_ptr<app::Socket> ModemDriver::getSocket(app::Socket::Protocol protoc
     std::shared_ptr<app::Socket> sock;
     if (protocol == Socket::Protocol::TCP) {
         sock = std::make_shared<TcpSocket>(mParser, mSend, ip, port,
-                                           mUrcCallbackReceive, [&] {handleError();
-                                           });
+                                           mUrcCallbackReceive, [&] {
+            handleError();
+        });
     }
 
     if (protocol == Socket::Protocol::UDP) {
         sock = std::make_shared<UdpSocket>(mParser, mSend, ip, port,
-                                           mUrcCallbackReceive, [&] {handleError();
-                                           });
+                                           mUrcCallbackReceive, [&] {
+            handleError();
+        });
     }
 
     if (protocol == Socket::Protocol::DNS) {
-        sock = std::make_shared<DnsSocket>(mParser, mSend, mUrcCallbackReceive, [&] {handleError();
-                                           });
+        sock = std::make_shared<DnsSocket>(mParser, mSend, mUrcCallbackReceive, [&] {
+            handleError();
+        });
     }
     mSockets.push_back(sock);
     return sock;

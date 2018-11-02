@@ -30,9 +30,9 @@ class Semaphore
 public:
     Semaphore(void);
     Semaphore(const Semaphore&) = delete;
-    Semaphore(Semaphore &&);
+    Semaphore(Semaphore&&);
     Semaphore& operator=(const Semaphore&) = delete;
-    Semaphore& operator=(Semaphore &&);
+    Semaphore& operator=(Semaphore&&);
     ~Semaphore(void);
 
     bool take(void) const {return this->take(portMAX_DELAY); }

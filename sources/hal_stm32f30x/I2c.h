@@ -33,9 +33,9 @@ struct I2c {
 
     I2c() = delete;
     I2c(const I2c&) = delete;
-    I2c(I2c &&) = default;
+    I2c(I2c&&) = default;
     I2c& operator=(const I2c&) = delete;
-    I2c& operator=(I2c &&) = delete;
+    I2c& operator=(I2c&&) = delete;
 
     size_t write(const uint16_t deviceAddr, const uint8_t regAddr, uint8_t const* const data,
                  const size_t length) const;

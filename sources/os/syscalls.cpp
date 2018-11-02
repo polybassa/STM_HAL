@@ -63,7 +63,8 @@ extern "C" {
  | module variables
  */
 
-char* environ_initial[1] = { 0 };
+char* environ_initial[1] = { 0
+};
 char** environ = environ_initial;
 
 #undef errno

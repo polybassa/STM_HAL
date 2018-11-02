@@ -36,8 +36,7 @@ struct AT {
     using ReceiveFunction = std::function<size_t(uint8_t*, const size_t, std::chrono::milliseconds)>;
     using SendFunction = std::function<size_t(std::string_view, std::chrono::milliseconds)>;
 
-    enum class Return_t
-    {
+    enum class Return_t {
         FINISHED,
         WAITING,
         ERROR,
@@ -105,7 +104,7 @@ protected:
 
 struct ATCmdUSOST final :
     ATCmdTX {
-    ATCmdUSOST(SendFunction & send) :
+    ATCmdUSOST(SendFunction& send) :
         ATCmdTX("AT+USOST", send){}
 
     Return_t send(const size_t                    socket,
@@ -117,7 +116,7 @@ struct ATCmdUSOST final :
 
 struct ATCmdUSOWR final :
     ATCmdTX {
-    ATCmdUSOWR(SendFunction & send) :
+    ATCmdUSOWR(SendFunction& send) :
         ATCmdTX("AT+USOWR", send){}
 
     Return_t send(const size_t                    socket,
@@ -164,7 +163,7 @@ class ATCmdUSORF final :
     virtual Return_t onResponseMatch(void) override;
 
 public:
-    ATCmdUSORF(SendFunction & send, const std::function<void(size_t, size_t)> &callback) :
+    ATCmdUSORF(SendFunction& send, const std::function<void(size_t, size_t)>& callback) :
         ATCmdRXData("AT+USORF", "+USORF:", send, callback){}
 
     Return_t send(const size_t socket, size_t bytesToRead, const std::chrono::milliseconds timeout);
@@ -176,7 +175,7 @@ class ATCmdUSORD final :
     virtual Return_t onResponseMatch(void) override;
 
 public:
-    ATCmdUSORD(SendFunction & send, const std::function<void(size_t, size_t)> &callback) :
+    ATCmdUSORD(SendFunction& send, const std::function<void(size_t, size_t)>& callback) :
         ATCmdRXData("AT+USORD", "+USORD:", send, callback){}
 
     Return_t send(const size_t socket, size_t bytesToRead, const std::chrono::milliseconds timeout);
@@ -194,7 +193,7 @@ class ATCmdUPSND final :
     virtual Return_t onResponseMatch(void) override;
 
 public:
-    ATCmdUPSND(SendFunction & send) :
+    ATCmdUPSND(SendFunction& send) :
         ATCmd("AT+UPSND", "", "+UPSND:"), mSendFunction(send){}
 
     Return_t send(const size_t socket, const size_t parameter, const std::chrono::milliseconds timeout);
@@ -224,7 +223,7 @@ class ATCmdUSOCR final :
     virtual Return_t onResponseMatch(void) override;
 
 public:
-    ATCmdUSOCR(SendFunction & send) :
+    ATCmdUSOCR(SendFunction& send) :
         ATCmd("AT+USOCR", "", "+USOCR:"), mSendFunction(send){}
 
     Return_t send(const size_t protocol, const std::chrono::milliseconds timeout);
@@ -242,7 +241,7 @@ class ATCmdUSOCO final :
     SendFunction& mSendFunction;
 
 public:
-    ATCmdUSOCO(SendFunction & send) :
+    ATCmdUSOCO(SendFunction& send) :
         ATCmd("AT+USOCO", "", ""), mSendFunction(send) {}
 
     Return_t send(const size_t                    socket,
@@ -258,7 +257,7 @@ class ATCmdUSOSO final :
     SendFunction& mSendFunction;
 
 public:
-    ATCmdUSOSO(SendFunction & send) :
+    ATCmdUSOSO(SendFunction& send) :
         ATCmd("AT+USOSO", "", ""), mSendFunction(send) {}
 
     Return_t send(const size_t                    socket,
@@ -279,7 +278,7 @@ class ATCmdURC final :
 
 public:
     ATCmdURC(const std::string_view name, const std::string_view response,
-             const std::function<void(const size_t, const size_t)> &callback) :
+             const std::function<void(const size_t, const size_t)>& callback) :
         AT(name, response), mUrcReceivedCallback(callback) {}
 };
 

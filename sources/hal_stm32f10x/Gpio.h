@@ -32,9 +32,9 @@ struct Gpio {
 
     Gpio() = delete;
     Gpio(const Gpio&) = delete;
-    Gpio(Gpio &&) = default;
+    Gpio(Gpio&&) = default;
     Gpio& operator=(const Gpio&) = delete;
-    Gpio& operator=(Gpio &&) = delete;
+    Gpio& operator=(Gpio&&) = delete;
 
     operator bool() const;
     void operator=(const bool& state) const;
@@ -43,10 +43,10 @@ struct Gpio {
     void restoreDefaultConfiguration(void) const;
 
 private:
-    constexpr Gpio(const Description&        desc,
-                   const uint32_t&           peripherie,
-                   const GPIO_InitTypeDef && conf,
-                   const uint16_t&           pinSource = std::numeric_limits<uint16_t>::max()) :
+    constexpr Gpio(const Description&       desc,
+                   const uint32_t&          peripherie,
+                   const GPIO_InitTypeDef&& conf,
+                   const uint16_t&          pinSource = std::numeric_limits<uint16_t>::max()) :
         mDescription(desc),
         mPeripherie(peripherie),
         mConfiguration(std::move(conf)),

@@ -46,13 +46,13 @@ class CanTunnel final :
     void canTxTaskFunction(const bool&);
 
 public:
-    CanTunnel(const hal::UsartWithDma & tunnelInterface,
-              app::CanController & canInterface);
+    CanTunnel(const hal::UsartWithDma& tunnelInterface,
+              app::CanController&      canInterface);
 
-    CanTunnel(const CanTunnel &) = delete;
-    CanTunnel(CanTunnel &&) = delete;
+    CanTunnel(const CanTunnel&) = delete;
+    CanTunnel(CanTunnel&&) = delete;
     CanTunnel& operator=(const CanTunnel&) = delete;
-    CanTunnel& operator=(CanTunnel &&) = delete;
+    CanTunnel& operator=(CanTunnel&&) = delete;
 };
 }
 

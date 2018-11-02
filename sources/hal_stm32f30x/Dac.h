@@ -30,9 +30,9 @@ struct Dac {
 
     Dac() = delete;
     Dac(const Dac&) = delete;
-    Dac(Dac &&) = default;
+    Dac(Dac&&) = default;
     Dac& operator=(const Dac&) = delete;
-    Dac& operator=(Dac &&) = delete;
+    Dac& operator=(Dac&&) = delete;
 
     void set(const uint32_t data) const;
     uint16_t get(void) const;

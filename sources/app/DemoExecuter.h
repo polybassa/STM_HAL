@@ -50,12 +50,12 @@ class DemoExecuter final :
     void demo_washers_run(const char* args);
 
 public:
-    DemoExecuter(CanController & can);
+    DemoExecuter(CanController& can);
 
-    DemoExecuter(const DemoExecuter &) = delete;
-    DemoExecuter(DemoExecuter &&) = delete;
+    DemoExecuter(const DemoExecuter&) = delete;
+    DemoExecuter(DemoExecuter&&) = delete;
     DemoExecuter& operator=(const DemoExecuter&) = delete;
-    DemoExecuter& operator=(DemoExecuter &&) = delete;
+    DemoExecuter& operator=(DemoExecuter&&) = delete;
 
     void runDemo(std::string_view data);
 };

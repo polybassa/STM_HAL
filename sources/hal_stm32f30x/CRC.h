@@ -30,9 +30,9 @@ struct Crc {
 
     Crc() = delete;
     Crc(const Crc&) = delete;
-    Crc(Crc &&) = default;
+    Crc(Crc&&) = default;
     Crc& operator=(const Crc&) = delete;
-    Crc& operator=(Crc &&) = delete;
+    Crc& operator=(Crc&&) = delete;
 
     uint8_t getCrc(uint8_t const* const data, const size_t length) const;
 

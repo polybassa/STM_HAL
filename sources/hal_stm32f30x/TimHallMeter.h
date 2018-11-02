@@ -35,9 +35,9 @@ struct HallMeter {
 
     HallMeter() = delete;
     HallMeter(const HallMeter&) = delete;
-    HallMeter(HallMeter &&) = default;
+    HallMeter(HallMeter&&) = default;
     HallMeter& operator=(const HallMeter&) = delete;
-    HallMeter& operator=(HallMeter &&) = delete;
+    HallMeter& operator=(HallMeter&&) = delete;
 
     float getCurrentRPS(void) const;
     float getCurrentOmega(void) const;

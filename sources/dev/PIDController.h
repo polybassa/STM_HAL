@@ -21,24 +21,22 @@
 namespace dev
 {
 struct PIDController final {
-    enum class ControlDirection
-    {
+    enum class ControlDirection {
         DIRECT,
         REVERSE
     };
 
-    enum class ControlMode
-    {
+    enum class ControlMode {
         AUTOMATIC,
         MANUAL
     };
 
-    PIDController(float& input,
-                  float& output,
-                  float& setPoint,
-                  const float kp,
-                  const float ki,
-                  const float kd,
+    PIDController(float&                 input,
+                  float&                 output,
+                  float&                 setPoint,
+                  const float            kp,
+                  const float            ki,
+                  const float            kd,
                   const ControlDirection direction);
 
     void setMode(const ControlMode);
@@ -57,10 +55,10 @@ struct PIDController final {
     ControlMode getMode(void) const;
 
 private:
-    PIDController(const PIDController &) = delete;
-    PIDController(PIDController &&) = default;
+    PIDController(const PIDController&) = delete;
+    PIDController(PIDController&&) = default;
     PIDController& operator=(const PIDController&) = delete;
-    PIDController& operator=(PIDController &&) = delete;
+    PIDController& operator=(PIDController&&) = delete;
 
     void initalize(void);
     void checkLimits(float&);

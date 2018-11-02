@@ -26,8 +26,7 @@ namespace app
 {
 struct BatteryObserver final :
     private os::DeepSleepModule {
-    enum class ErrorCode
-    {
+    enum class ErrorCode {
         OVERCURRENT = 0,
         UNDERVOLTAGE,
         OVERVOLTAGE,
@@ -35,12 +34,12 @@ struct BatteryObserver final :
         BATTERY_ALMOST_EMPTY
     };
 
-    BatteryObserver(const dev::Battery &, const std::function<void(ErrorCode)> errorCallback);
+    BatteryObserver(const dev::Battery&, const std::function<void(ErrorCode)> errorCallback);
 
-    BatteryObserver(const BatteryObserver &) = delete;
-    BatteryObserver(BatteryObserver &&) = delete;
+    BatteryObserver(const BatteryObserver&) = delete;
+    BatteryObserver(BatteryObserver&&) = delete;
     BatteryObserver& operator=(const BatteryObserver&) = delete;
-    BatteryObserver& operator=(BatteryObserver &&) = delete;
+    BatteryObserver& operator=(BatteryObserver&&) = delete;
 
     float getEnergyLevelInPercent(void) const;
     float getEnergy(void) const;
@@ -69,7 +68,7 @@ private:
     static const std::chrono::milliseconds energyRecordInterval;
 
     float calculateEnergyConsumption(const std::chrono::milliseconds,
-                                     const              float) const;
+                                     const float) const;
     void overcurrentDetection(void);
     void undervoltageDetection(void);
     void energyRecordTaskFunction(const bool&);

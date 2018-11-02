@@ -30,9 +30,9 @@ struct PhaseCurrentSensor {
 
     PhaseCurrentSensor() = delete;
     PhaseCurrentSensor(const PhaseCurrentSensor&) = delete;
-    PhaseCurrentSensor(PhaseCurrentSensor &&) = default;
+    PhaseCurrentSensor(PhaseCurrentSensor&&) = default;
     PhaseCurrentSensor& operator=(const PhaseCurrentSensor&) = delete;
-    PhaseCurrentSensor& operator=(PhaseCurrentSensor &&) = delete;
+    PhaseCurrentSensor& operator=(PhaseCurrentSensor&&) = delete;
 
     float getPhaseCurrent(void) const;
     float getCurrentVoltage(void) const;

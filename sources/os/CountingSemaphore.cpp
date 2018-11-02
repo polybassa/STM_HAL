@@ -24,13 +24,13 @@ CountingSemaphore::CountingSemaphore(uint32_t maximalCount,
                                               initalCount))
 {}
 
-CountingSemaphore::CountingSemaphore(CountingSemaphore && rhs) :
+CountingSemaphore::CountingSemaphore(CountingSemaphore&& rhs) :
     mSemaphoreHandle(rhs.mSemaphoreHandle)
 {
     rhs.mSemaphoreHandle = nullptr;
 }
 
-CountingSemaphore& CountingSemaphore::operator=(CountingSemaphore && rhs)
+CountingSemaphore& CountingSemaphore::operator=(CountingSemaphore&& rhs)
 {
     mSemaphoreHandle = rhs.mSemaphoreHandle;
     rhs.mSemaphoreHandle = nullptr;

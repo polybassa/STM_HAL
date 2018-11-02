@@ -34,9 +34,9 @@ struct HalfBridge {
 
     HalfBridge() = delete;
     HalfBridge(const HalfBridge&) = delete;
-    HalfBridge(HalfBridge &&) = default;
+    HalfBridge(HalfBridge&&) = default;
     HalfBridge& operator=(const HalfBridge&) = delete;
-    HalfBridge& operator=(HalfBridge &&) = delete;
+    HalfBridge& operator=(HalfBridge&&) = delete;
 
     void setPulsWidthPerMill(uint32_t) const;
     uint32_t getPulsWidthPerMill(void) const;

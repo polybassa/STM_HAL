@@ -40,12 +40,12 @@ class RealTimeDebugInterface
     }
 public:
     RealTimeDebugInterface(const RealTimeDebugInterface&) = delete;
-    RealTimeDebugInterface(RealTimeDebugInterface &&) = delete;
+    RealTimeDebugInterface(RealTimeDebugInterface&&) = delete;
     RealTimeDebugInterface& operator=(const RealTimeDebugInterface&) = delete;
-    RealTimeDebugInterface& operator=(RealTimeDebugInterface &&) = delete;
+    RealTimeDebugInterface& operator=(RealTimeDebugInterface&&) = delete;
 
     template<typename ... Params>
-    void printf(Params && ... params)
+    void printf(Params&& ... params)
     {
         SEGGER_RTT_printf(0, std::forward<Params>(params) ...);
     }

@@ -24,9 +24,9 @@ namespace virt
 struct TemperatureSensor {
     TemperatureSensor() = delete;
     TemperatureSensor(const TemperatureSensor&) = delete;
-    TemperatureSensor(TemperatureSensor &&) = default;
+    TemperatureSensor(TemperatureSensor&&) = default;
     TemperatureSensor& operator=(const TemperatureSensor&) = delete;
-    TemperatureSensor& operator=(TemperatureSensor &&) = delete;
+    TemperatureSensor& operator=(TemperatureSensor&&) = delete;
 
     inline void setTemperature(const float);
     inline float getTemperature(void) const;

@@ -21,17 +21,17 @@
 namespace virt
 {
 class MotorController final :
-    public interface::MotorController
+    public interface ::MotorController
 {
     float mTorque = 0.0;
     float mRps = 0.0;
 
 public:
     MotorController() {}
-    MotorController(const MotorController &) = delete;
-    MotorController(MotorController &&) = delete;
+    MotorController(const MotorController&) = delete;
+    MotorController(MotorController&&) = delete;
     MotorController& operator=(const MotorController&) = delete;
-    MotorController& operator=(MotorController &&) = delete;
+    MotorController& operator=(MotorController&&) = delete;
 
     inline float getTorque(void) const;
     inline virtual void setTorque(const float) override;

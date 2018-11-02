@@ -57,9 +57,9 @@ struct Dma {
 
     Dma() = delete;
     Dma(const Dma&) = delete;
-    Dma(Dma &&) = default;
+    Dma(Dma&&) = default;
     Dma& operator=(const Dma&) = delete;
-    Dma& operator=(Dma &&) = delete;
+    Dma& operator=(Dma&&) = delete;
 
     void setupTransfer(uint8_t const* const data, const size_t length, const bool repeat = false) const;
     void setupSendSingleCharMultipleTimes(uint8_t const* const data, const size_t length) const;
@@ -106,7 +106,7 @@ private:
 
     using SemaphoreArray = std::array<os::Semaphore*, Dma::__ENUM__SIZE>;
     inline static void DMA_IRQHandlerSemaphore(const Dma& peripherie, const SemaphoreArray&);
-    using CallbackArray = std::array<std::function<void(void)>, Dma::__ENUM__SIZE>;
+    using CallbackArray = std::array<std::function<void (void)>, Dma::__ENUM__SIZE>;
     inline static void DMA_IRQHandlerCallback(const Dma& peripherie, const CallbackArray&);
 
     static SemaphoreArray TCInterruptSemaphores; // Transfer Complete

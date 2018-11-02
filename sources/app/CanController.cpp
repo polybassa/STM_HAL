@@ -40,9 +40,9 @@ CanController::CanController(const hal::UsartWithDma& interface,
           CanController::STACKSIZE,
           os::Task::Priority::HIGH,
           [&](const bool& join)
-          {
-              taskFunction(join);
-          }),
+{
+    taskFunction(join);
+}),
     mInterface(interface),
     mCanSupplyVoltage(supplyPin),
     mUsartTxPin(usartTxPin)
@@ -116,9 +116,9 @@ size_t CanController::sendToBootloaderWithChecksum(std::string_view data, uint8_
     std::for_each(
                   data.begin(),
                   data.end(),
-                  [&sum](const auto & d){
-                      sum ^= d;
-                  });
+                  [&sum](const auto& d){
+        sum ^= d;
+    });
 
     ReceiveBuffer.reset();
     auto ret = mInterface.send(data, 100);

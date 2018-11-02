@@ -30,12 +30,12 @@ SteeringController::SteeringController(
                             SteeringController::STACKSIZE,
                             os::Task::Priority::VERY_HIGH,
                             [this](const bool& join)
-                            {
-                                SteeringControllerTaskFunction(join);
-                            }),
+{
+    SteeringControllerTaskFunction(join);
+}),
     mStraingaugeUpdateTask("9StrainGaugeUpdate", 1024, os::Task::Priority::VERY_LOW, [this](const bool& join){
-                               StraingaugeUpdateTaskFunction(join);
-                           }),
+    StraingaugeUpdateTaskFunction(join);
+}),
     mQueue(),
     mMasterBalance(masterBalance),
     mSlaveBalance(slaveBalance),

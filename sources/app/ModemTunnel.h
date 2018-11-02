@@ -53,16 +53,16 @@ class ModemTunnel final :
     void modemReset(void);
 
 public:
-    ModemTunnel(const hal::UsartWithDma & tunnelInterface,
-                const hal::UsartWithDma & modemInterface,
-                const hal::Gpio & resetPin,
-                const hal::Gpio & powerPin,
-                const hal::Gpio & supplyPin);
+    ModemTunnel(const hal::UsartWithDma& tunnelInterface,
+                const hal::UsartWithDma& modemInterface,
+                const hal::Gpio&         resetPin,
+                const hal::Gpio&         powerPin,
+                const hal::Gpio&         supplyPin);
 
-    ModemTunnel(const ModemTunnel &) = delete;
-    ModemTunnel(ModemTunnel &&) = delete;
+    ModemTunnel(const ModemTunnel&) = delete;
+    ModemTunnel(ModemTunnel&&) = delete;
     ModemTunnel& operator=(const ModemTunnel&) = delete;
-    ModemTunnel& operator=(ModemTunnel &&) = delete;
+    ModemTunnel& operator=(ModemTunnel&&) = delete;
 
     static void TunnelInterruptHandler(uint8_t);
     static void ModemInterruptHandler(uint8_t);

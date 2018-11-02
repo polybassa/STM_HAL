@@ -63,8 +63,9 @@ void PhaseCurrentSensor::setNumberOfMeasurementsForPhaseCurrentValue(uint32_t va
     mAdcWithDma.stopConversion();
     mAdcWithDma.startConversion(
                                 MeasurementValueBuffer[mDescription].data(), mNumberOfMeasurementsForPhaseCurrentValue,
-                                [&] {this->updateCurrentValue();
-                                });
+                                [&] {
+        this->updateCurrentValue();
+    });
 }
 
 size_t PhaseCurrentSensor::getNumberOfMeasurementsForPhaseCurrentValue(void) const
@@ -98,8 +99,9 @@ void PhaseCurrentSensor::unregisterValueAvailableSemaphore(void) const
 
 void PhaseCurrentSensor::enable(void) const
 {
-    mAdcWithDma.startConversion(MeasurementValueBuffer[mDescription], [&] {this->updateCurrentValue();
-                                });
+    mAdcWithDma.startConversion(MeasurementValueBuffer[mDescription], [&] {
+        this->updateCurrentValue();
+    });
 }
 
 void PhaseCurrentSensor::disable(void) const

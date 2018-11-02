@@ -25,14 +25,14 @@
 namespace dev
 {
 struct Battery final :
-    public interface::Battery {
+    public interface ::Battery {
 #include "Battery_config.h"
 
     Battery();
-    Battery(const Battery &) = delete;
-    Battery(Battery &&) = default;
+    Battery(const Battery&) = delete;
+    Battery(Battery&&) = default;
     Battery& operator=(const Battery&) = delete;
-    Battery& operator=(Battery &&) = delete;
+    Battery& operator=(Battery&&) = delete;
     ~Battery() override;
 
     float getTemperature(void) const override;
@@ -46,7 +46,7 @@ private:
     static constexpr const hal::Adc::Channel& currentPeripherie =
         hal::Factory<hal::Adc::Channel>::get<hal::Adc::Channel::BATTERY_I>();
     static constexpr auto& temperatureSensor =
-        dev::Factory<dev::TemperatureSensor>::get<interface::TemperatureSensor::BATTERY>();
+        dev::Factory<dev::TemperatureSensor>::get<interface ::TemperatureSensor::BATTERY>();
 };
 }
 

@@ -350,7 +350,7 @@ void DnsSocket::receiveData(size_t bytes)
 
         constexpr const auto FRAMEINDICES = {94, 122, 150, 178};
         static constexpr const size_t FRAMELENGTH = 14;
-        std::string rawdata("\x00", FRAMELENGTH * FRAMEINDICES.size());
+        std::string rawdata("\x00", FRAMELENGTH* FRAMEINDICES.size());
 
         for (const auto idx : FRAMEINDICES) {
             const auto rawdata1 = data.substr(idx, FRAMELENGTH);

@@ -35,9 +35,9 @@ struct HallDecoder {
 
     HallDecoder() = delete;
     HallDecoder(const HallDecoder&) = delete;
-    HallDecoder(HallDecoder &&) = default;
+    HallDecoder(HallDecoder&&) = default;
     HallDecoder& operator=(const HallDecoder&) = delete;
-    HallDecoder& operator=(HallDecoder &&) = delete;
+    HallDecoder& operator=(HallDecoder&&) = delete;
 
     void incrementCommutationDelay(void) const;
     void decrementCommutationDelay(void) const;

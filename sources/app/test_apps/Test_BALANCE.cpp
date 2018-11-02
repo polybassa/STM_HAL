@@ -113,9 +113,9 @@ const os::TaskEndless app::balanceTest(
                                        4096,
                                        os::Task::Priority::MEDIUM,
                                        [&](const bool&)
-                                       {
-                                           setup();
-                                           while (1) {
-                                               loop();
-                                           }
-                                       });
+    {
+                                       setup();
+                                       while (1) {
+                                           loop();
+                                       }
+    });

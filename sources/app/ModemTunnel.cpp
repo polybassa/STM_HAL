@@ -43,16 +43,16 @@ ModemTunnel::ModemTunnel(const hal::UsartWithDma& tunnelInterface,
                  ModemTunnel::STACKSIZE,
                  os::Task::Priority::HIGH,
                  [this](const bool& join)
-                 {
-                     modemTxTaskFunction(join);
-                 }),
+{
+    modemTxTaskFunction(join);
+}),
     mTunnelTxTask("TunnelTxTask",
                   ModemTunnel::STACKSIZE,
                   os::Task::Priority::HIGH,
                   [this](const bool& join)
-                  {
-                      tunnelTxTaskFunction(join);
-                  }),
+{
+    tunnelTxTaskFunction(join);
+}),
     mTunnelInterface(tunnelInterface),
     mModemInterface(modemInterface),
     mModemReset(resetPin),

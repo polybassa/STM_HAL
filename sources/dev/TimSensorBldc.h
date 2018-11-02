@@ -32,17 +32,16 @@ struct SensorBLDC {
         __ENUM__SIZE
     };
 
-    enum class Direction
-    {
+    enum class Direction {
         FORWARD,
         BACKWARD
     };
 
     SensorBLDC() = delete;
     SensorBLDC(const SensorBLDC&) = delete;
-    SensorBLDC(SensorBLDC &&) = default;
+    SensorBLDC(SensorBLDC&&) = default;
     SensorBLDC& operator=(const SensorBLDC&) = delete;
-    SensorBLDC& operator=(SensorBLDC &&) = delete;
+    SensorBLDC& operator=(SensorBLDC&&) = delete;
 
     float getActualRPS(void) const;
     float getActualOmega(void) const;

@@ -31,9 +31,9 @@ struct Comp {
 
     Comp() = delete;
     Comp(const Comp&) = delete;
-    Comp(Comp &&) = default;
+    Comp(Comp&&) = default;
     Comp& operator=(const Comp&) = delete;
-    Comp& operator=(Comp &&) = delete;
+    Comp& operator=(Comp&&) = delete;
 
 private:
     constexpr Comp(const enum Description& desc,
@@ -68,7 +68,8 @@ public:
     static constexpr const Comp& get(void)
     {
         static_assert(IS_COMP_ALL_PERIPH(Container[index].mPeripherie), "Invalid Peripheries ");
-        static_assert(IS_COMP_INVERTING_INPUT(Container[index].mConfiguration.COMP_InvertingInput), "Invalid Parameter");
+        static_assert(IS_COMP_INVERTING_INPUT(Container[index].mConfiguration.COMP_InvertingInput),
+                      "Invalid Parameter");
         static_assert(IS_COMP_NONINVERTING_INPUT(
                                                  Container[index].mConfiguration.COMP_NonInvertingInput),
                       "Invalid Parameter");

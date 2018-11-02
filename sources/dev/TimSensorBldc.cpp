@@ -220,7 +220,7 @@ float SensorBLDC::getActualPhaseCurrent(void) const
 {
     return mSetDirection == Direction::FORWARD ? 0.0 -
            (mPhaseCurrentSensor.getPhaseCurrent() * 0.75 -
-            0.0079) : mPhaseCurrentSensor.getPhaseCurrent() * 0.75 - 0.0079;
+            0.0079) : mPhaseCurrentSensor.getPhaseCurrent()* 0.75 - 0.0079;
 }
 
 float SensorBLDC::getActualTorqueInNewtonMeter(void) const
@@ -308,12 +308,12 @@ void SensorBLDC::prepareCommutation(const size_t hallPosition) const
 void SensorBLDC::start(void) const
 {
     mHallDecoder.registerCommutationCallback([&] {
-                                                 this->commutate(this->mHallDecoder.getCurrentHallState());
-                                             });
+        this->commutate(this->mHallDecoder.getCurrentHallState());
+    });
 
     mHallDecoder.registerHallEventCheckCallback([&] {
-                                                    this->computeDirection();
-                                                });
+        this->computeDirection();
+    });
 
     mHallDecoder.mTim.enable();
     mHallMeter1.mTim.enable();

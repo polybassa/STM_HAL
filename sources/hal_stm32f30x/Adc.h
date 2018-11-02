@@ -38,9 +38,9 @@ struct Adc {
 
     Adc() = delete;
     Adc(const Adc&) = delete;
-    Adc(Adc &&) = default;
+    Adc(Adc&&) = default;
     Adc& operator=(const Adc&) = delete;
-    Adc& operator=(Adc &&) = delete;
+    Adc& operator=(Adc&&) = delete;
 
     uint32_t getCalibrationValue(void) const;
 

@@ -48,10 +48,10 @@ class Mpu final :
 public:
     Mpu(const hal::Exti& exti = hal::Factory<hal::Exti>::get<hal::Exti::IMU_INT>());
 
-    Mpu(const Mpu &) = delete;
-    Mpu(Mpu &&) = delete;
+    Mpu(const Mpu&) = delete;
+    Mpu(Mpu&&) = delete;
     Mpu& operator=(const Mpu&) = delete;
-    Mpu& operator=(Mpu &&) = delete;
+    Mpu& operator=(Mpu&&) = delete;
 
     static constexpr unsigned short DEFAULT_MPU_HZ = 200;
     static constexpr double TWO_PWO_16 = 65536.f;

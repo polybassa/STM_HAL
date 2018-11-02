@@ -29,9 +29,9 @@ namespace hal
 struct UsartWithDma {
     UsartWithDma() = delete;
     UsartWithDma(const UsartWithDma&) = delete;
-    UsartWithDma(UsartWithDma &&) = default;
+    UsartWithDma(UsartWithDma&&) = default;
     UsartWithDma& operator=(const UsartWithDma&) = delete;
-    UsartWithDma& operator=(UsartWithDma &&) = delete;
+    UsartWithDma& operator=(UsartWithDma&&) = delete;
 
     bool isInitalized(void) const;
     bool isReadyToReceive(void) const;

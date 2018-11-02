@@ -29,9 +29,9 @@ class CountingSemaphore
 public:
     CountingSemaphore(uint32_t maximalCount, uint32_t initalCount);
     CountingSemaphore(const CountingSemaphore&) = delete;
-    CountingSemaphore(CountingSemaphore &&);
+    CountingSemaphore(CountingSemaphore&&);
     CountingSemaphore& operator=(const CountingSemaphore&) = delete;
-    CountingSemaphore& operator=(CountingSemaphore &&);
+    CountingSemaphore& operator=(CountingSemaphore&&);
     ~CountingSemaphore(void);
 
     bool take(uint32_t ticksToWait = portMAX_DELAY) const;

@@ -21,7 +21,7 @@
 #include <utility>
 
 template<typename Tuple, typename F, std::size_t ... Indices>
-void for_each_impl(Tuple && tuple, F && f, std::index_sequence<Indices ...> )
+void for_each_impl(Tuple&& tuple, F&& f, std::index_sequence<Indices ...> )
 {
     using swallow = int[];
     (void)swallow {
@@ -31,7 +31,7 @@ void for_each_impl(Tuple && tuple, F && f, std::index_sequence<Indices ...> )
 }
 
 template<typename Tuple, typename F>
-void for_each(Tuple && tuple, F && f)
+void for_each(Tuple&& tuple, F&& f)
 {
     constexpr std::size_t N = std::tuple_size<std::remove_reference_t<Tuple> >::value;
     for_each_impl(std::forward<Tuple>(tuple), std::forward<F>(f),

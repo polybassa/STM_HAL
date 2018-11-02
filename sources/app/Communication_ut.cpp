@@ -132,38 +132,38 @@ int ut_CrcError(void)
                                                                    rxDto,
                                                                    txDto,
                                                                    [&](auto error)
+        {
+                                                                   if (error ==
+                                                                       decltype(masterCom) ::ErrorCode::CRC_ERROR)
                                                                    {
-                                                                       if (error ==
-                                                                           decltype(masterCom) ::ErrorCode::CRC_ERROR)
-                                                                       {
-                                                                           crcError = true;
-                                                                       }
-                                                                   });
+                                                                       crcError = true;
+                                                                   }
+        });
     app::Communication<decltype(txDto), decltype(rxDto)> slaveCom(hal::Factory<hal::UsartWithDma>::get<hal::Usart::
                                                                                                        MSCOM_IF>(),
                                                                   txDto,
                                                                   rxDto);
 
     std::thread masterThread([&] {
-                                 g_masterThreadId = std::this_thread::get_id();
+                             g_masterThreadId = std::this_thread::get_id();
 
-                                 for (size_t i = 0; i < 100; i++) {
-                                     masterCom.triggerTxTaskExecution();
-                                     masterCom.triggerRxTaskExecution();
-                                     std::this_thread::yield();
-                                     std::this_thread::sleep_for(std::chrono::milliseconds(1));
-                                 }
-                             });
+                             for (size_t i = 0; i < 100; i++) {
+                                 masterCom.triggerTxTaskExecution();
+                                 masterCom.triggerRxTaskExecution();
+                                 std::this_thread::yield();
+                                 std::this_thread::sleep_for(std::chrono::milliseconds(1));
+                             }
+        });
     std::thread slaveThread([&] {
-                                g_slaveThreadId = std::this_thread::get_id();
+                            g_slaveThreadId = std::this_thread::get_id();
 
-                                for (size_t i = 0; i < 100; i++) {
-                                    slaveCom.triggerTxTaskExecution();
-                                    slaveCom.triggerRxTaskExecution();
-                                    std::this_thread::yield();
-                                    std::this_thread::sleep_for(std::chrono::milliseconds(1));
-                                }
-                            });
+                            for (size_t i = 0; i < 100; i++) {
+                                slaveCom.triggerTxTaskExecution();
+                                slaveCom.triggerRxTaskExecution();
+                                std::this_thread::yield();
+                                std::this_thread::sleep_for(std::chrono::milliseconds(1));
+                            }
+        });
 
     std::this_thread::sleep_for(std::chrono::milliseconds(5));
 
@@ -248,25 +248,25 @@ int ut_ValueExchange(void)
                                                                               slaveTxDto);
 
     std::thread masterThread([&] {
-                                 g_masterThreadId = std::this_thread::get_id();
+                             g_masterThreadId = std::this_thread::get_id();
 
-                                 for (size_t i = 0; i < 1000; i++) {
-                                     masterCom.triggerTxTaskExecution();
-                                     masterCom.triggerRxTaskExecution();
-                                     std::this_thread::yield();
-                                     std::this_thread::sleep_for(std::chrono::milliseconds(1));
-                                 }
-                             });
+                             for (size_t i = 0; i < 1000; i++) {
+                                 masterCom.triggerTxTaskExecution();
+                                 masterCom.triggerRxTaskExecution();
+                                 std::this_thread::yield();
+                                 std::this_thread::sleep_for(std::chrono::milliseconds(1));
+                             }
+        });
     std::thread slaveThread([&] {
-                                g_slaveThreadId = std::this_thread::get_id();
+                            g_slaveThreadId = std::this_thread::get_id();
 
-                                for (size_t i = 0; i < 1000; i++) {
-                                    slaveCom.triggerTxTaskExecution();
-                                    slaveCom.triggerRxTaskExecution();
-                                    std::this_thread::yield();
-                                    std::this_thread::sleep_for(std::chrono::milliseconds(1));
-                                }
-                            });
+                            for (size_t i = 0; i < 1000; i++) {
+                                slaveCom.triggerTxTaskExecution();
+                                slaveCom.triggerRxTaskExecution();
+                                std::this_thread::yield();
+                                std::this_thread::sleep_for(std::chrono::milliseconds(1));
+                            }
+        });
 
     for (size_t i = 0; i < 20; i++) {
         mTx = i;

@@ -25,9 +25,9 @@ namespace dev
 struct TemperatureSensor_Internal {
     TemperatureSensor_Internal() = delete;
     TemperatureSensor_Internal(const TemperatureSensor_Internal&) = delete;
-    TemperatureSensor_Internal(TemperatureSensor_Internal &&) = default;
+    TemperatureSensor_Internal(TemperatureSensor_Internal&&) = default;
     TemperatureSensor_Internal& operator=(const TemperatureSensor_Internal&) = delete;
-    TemperatureSensor_Internal& operator=(TemperatureSensor_Internal &&) = delete;
+    TemperatureSensor_Internal& operator=(TemperatureSensor_Internal&&) = delete;
 
     float getTemperature(void) const;
     const enum interface::TemperatureSensor::Description mDescription;

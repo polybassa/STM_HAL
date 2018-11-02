@@ -35,9 +35,9 @@ struct Pwm {
 
     Pwm() = delete;
     Pwm(const Pwm&) = delete;
-    Pwm(Pwm &&) = default;
+    Pwm(Pwm&&) = default;
     Pwm& operator=(const Pwm&) = delete;
-    Pwm& operator=(Pwm &&) = delete;
+    Pwm& operator=(Pwm&&) = delete;
 
     void setPulsWidthInMill(uint32_t) const;
 

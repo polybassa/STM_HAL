@@ -24,12 +24,12 @@ namespace virt
 struct Light {
     Light() = delete;
     Light(const Light&) = delete;
-    Light(Light &&) = default;
+    Light(Light&&) = default;
     Light& operator=(const Light&) = delete;
-    Light& operator=(Light &&) = delete;
+    Light& operator=(Light&&) = delete;
 
-    inline interface::Color getColor(void) const;
-    inline void setColor(const interface::Color& color);
+    inline interface ::Color getColor(void) const;
+    inline void setColor(const interface ::Color& color);
 
     const enum interface::Light::Description mDescription;
 
@@ -37,16 +37,16 @@ struct Light {
         mDescription(desc) {}
 
 private:
-    interface::Color mColor;
+    interface ::Color mColor;
 };
 }
 
-interface::Color virt::Light::getColor(void) const
+interface ::Color virt::Light::getColor(void) const
 {
     return mColor;
 }
 
-void virt::Light::setColor(const interface::Color& color)
+void virt::Light::setColor(const interface ::Color& color)
 {
     mColor.red = color.red;
     mColor.green = color.green;

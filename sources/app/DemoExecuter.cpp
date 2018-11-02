@@ -26,9 +26,9 @@ DemoExecuter::DemoExecuter(CanController& can) :
     os::DeepSleepModule(), mDemoExecuterTask("DemoExecuter",
                                              DemoExecuter::STACKSIZE, os::Task::Priority::LOW,
                                              [this](const bool& join)
-                                             {
-                                                 DemoExecuterTaskFunction(join);
-                                             }), mCan(can), mDemoQueue()
+{
+    DemoExecuterTaskFunction(join);
+}), mCan(can), mDemoQueue()
 {}
 
 void DemoExecuter::enterDeepSleep(void)

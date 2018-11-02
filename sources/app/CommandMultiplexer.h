@@ -36,8 +36,7 @@ class CommandMultiplexer final :
     static constexpr size_t MAXCOMMANDSIZE = 64;
     std::array<char, MAXCOMMANDSIZE> mCommandBuffer;
 
-    enum class SpecialCommand_t
-    {
+    enum class SpecialCommand_t {
         RUN_DEMO = '0',
         FLASH_CAN_MCU,
         CAN_ON,
@@ -67,13 +66,13 @@ class CommandMultiplexer final :
 public:
     CommandMultiplexer(std::shared_ptr<Socket> control,
                        std::shared_ptr<Socket> data,
-                       CanController & can,
-                       DemoExecuter & demo);
+                       CanController&          can,
+                       DemoExecuter&           demo);
 
-    CommandMultiplexer(const CommandMultiplexer &) = delete;
-    CommandMultiplexer(CommandMultiplexer &&) = delete;
+    CommandMultiplexer(const CommandMultiplexer&) = delete;
+    CommandMultiplexer(CommandMultiplexer&&) = delete;
     CommandMultiplexer& operator=(const CommandMultiplexer&) = delete;
-    CommandMultiplexer& operator=(CommandMultiplexer &&) = delete;
+    CommandMultiplexer& operator=(CommandMultiplexer&&) = delete;
 };
 }
 

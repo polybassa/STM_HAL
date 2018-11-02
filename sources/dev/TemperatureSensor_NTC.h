@@ -28,9 +28,9 @@ namespace dev
 struct TemperatureSensor_NTC {
     TemperatureSensor_NTC() = delete;
     TemperatureSensor_NTC(const TemperatureSensor_NTC&) = delete;
-    TemperatureSensor_NTC(TemperatureSensor_NTC &&) = default;
+    TemperatureSensor_NTC(TemperatureSensor_NTC&&) = default;
     TemperatureSensor_NTC& operator=(const TemperatureSensor_NTC&) = delete;
-    TemperatureSensor_NTC& operator=(TemperatureSensor_NTC &&) = delete;
+    TemperatureSensor_NTC& operator=(TemperatureSensor_NTC&&) = delete;
 
     float getTemperature(void) const;
     const enum interface::TemperatureSensor::Description mDescription;

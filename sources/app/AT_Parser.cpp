@@ -535,12 +535,12 @@ bool ATParser::parse(std::chrono::milliseconds timeout)
     std::array<AT*, MAXATCMDS> sievedResponses;
 
     auto resetPossibleResponses = [&] {
-        currentPos = 0;
-        possibleResponses.fill(nullptr);
-        std::copy(mRegisteredATCommands.begin(),
-                  mRegisteredATCommands.end(),
-                  possibleResponses.begin());
-    };
+                                      currentPos = 0;
+                                      possibleResponses.fill(nullptr);
+                                      std::copy(mRegisteredATCommands.begin(),
+                                                mRegisteredATCommands.end(),
+                                                possibleResponses.begin());
+                                  };
 
     Trace(ZONE_INFO, "Start Parser\r\n");
 
@@ -564,24 +564,25 @@ bool ATParser::parse(std::chrono::milliseconds timeout)
             std::copy_if(possibleResponses.begin(),
                          possibleResponses.end(),
                          sievedResponses.begin(),
-                         [&](AT * atcmd){return atcmd != nullptr && currentData ==
-                                         atcmd->mResponse.substr(0, currentPos);
-                         });
+                         [&](AT* atcmd){
+                return atcmd != nullptr && currentData ==
+                atcmd->mResponse.substr(0, currentPos);
+            });
 
             possibleResponses = sievedResponses;
             const size_t possibleResponsesCount = std::count_if(possibleResponses.begin(),
                                                                 possibleResponses.end(),
-                                                                [] (AT * cmd){
-                                                                    return cmd != nullptr;
-                                                                });
+                                                                [](AT* cmd){
+                return cmd != nullptr;
+            });
 
             if (possibleResponsesCount > 1) { continue; }
 
             if (possibleResponsesCount == 1) {
                 const auto matchIt = std::find_if(possibleResponses.begin(),
-                                                  possibleResponses.end(), [] (AT * cmd){
-                                                      return cmd != nullptr;
-                                                  });
+                                                  possibleResponses.end(), [](AT* cmd){
+                    return cmd != nullptr;
+                });
                 if (matchIt == possibleResponses.end()) {
                     continue;
                 }

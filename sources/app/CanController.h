@@ -65,14 +65,14 @@ class CanController final :
     bool sendGoCommand(const uint32_t goAddress);
 
 public:
-    CanController(const hal::UsartWithDma & interface,
-                  const hal::Gpio & supplyPin,
-                  const hal::Gpio & usartTxPin);
+    CanController(const hal::UsartWithDma& interface,
+                  const hal::Gpio&         supplyPin,
+                  const hal::Gpio&         usartTxPin);
 
-    CanController(const CanController &) = delete;
-    CanController(CanController &&) = delete;
+    CanController(const CanController&) = delete;
+    CanController(CanController&&) = delete;
     CanController& operator=(const CanController&) = delete;
-    CanController& operator=(CanController &&) = delete;
+    CanController& operator=(CanController&&) = delete;
 
     static void CanControllerInterruptHandler(uint8_t);
 
@@ -83,7 +83,7 @@ public:
     bool wasFirmwareUpdateSuccessful(void) const;
 
     size_t send(std::string_view, const uint32_t ticksToWait = portMAX_DELAY);
-    size_t receive(uint8_t *, size_t, uint32_t ticksToWait = portMAX_DELAY);
+    size_t receive(uint8_t*, size_t, uint32_t ticksToWait = portMAX_DELAY);
     size_t bytesAvailable(void) const;
 
     void registerReceiveCallback(std::function<void(std::string_view)> );

@@ -412,8 +412,8 @@ int ut_StraingaugeSensorMeanTest()
     const auto& testee = dev::Factory<dev::StraingaugeSensor>::get<dev::StraingaugeSensor::STRAINGAUGESENSOR>();
     float mean;
 
-    std::array<std::pair<float, float>, testee.mMeanRange*7> line1;
-    std::array<std::pair<float, float>, testee.mMeanRange*7> line2;
+    std::array<std::pair<float, float>, testee.mMeanRange * 7> line1;
+    std::array<std::pair<float, float>, testee.mMeanRange * 7> line2;
 
     g_Testdatastep = 0;
     uint32_t i = 0;
@@ -562,8 +562,8 @@ int ut_StraingaugeSensorMeanTest1()
     u_int32_t testsize = 0;
     u_int32_t i = 0;
 
-    std::array<std::pair<float, float>, testee.mMeanRange*5> line1;
-    std::array<std::pair<float, float>, testee.mMeanRange*5> line2;
+    std::array<std::pair<float, float>, testee.mMeanRange * 5> line1;
+    std::array<std::pair<float, float>, testee.mMeanRange * 5> line2;
 
     /*fills window with same test Samples  (value = 1.0)*/
     g_Testdatastep = 0;

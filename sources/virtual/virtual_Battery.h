@@ -22,7 +22,7 @@
 namespace virt
 {
 class Battery :
-    interface::Battery
+    interface ::Battery
 {
     float mTemperature = 0.0;
     float mCurrent = 0.0;
@@ -31,9 +31,9 @@ class Battery :
 public:
     Battery(void) = default;
     Battery(const Battery&) = delete;
-    Battery(Battery &&) = default;
+    Battery(Battery&&) = default;
     Battery& operator=(const Battery&) = delete;
-    Battery& operator=(Battery &&) = delete;
+    Battery& operator=(Battery&&) = delete;
     virtual ~Battery(void) {}
 
     inline virtual float getTemperature(void) const override;

@@ -28,7 +28,7 @@
 namespace app
 {
 class MotorController final :
-    private os::DeepSleepModule, public interface::MotorController
+    private os::DeepSleepModule, public interface ::MotorController
 {
     virtual void enterDeepSleep(void) override;
     virtual void exitDeepSleep(void) override;
@@ -55,13 +55,13 @@ class MotorController final :
     void adjustControllerLimits(void);
 
 public:
-    MotorController(const dev::SensorBLDC & motor, const dev::Battery & battery, const float Kp,
+    MotorController(const dev::SensorBLDC& motor, const dev::Battery& battery, const float Kp,
                     const float Ki);
 
-    MotorController(const MotorController &) = delete;
-    MotorController(MotorController &&) = delete;
+    MotorController(const MotorController&) = delete;
+    MotorController(MotorController&&) = delete;
     MotorController& operator=(const MotorController&) = delete;
-    MotorController& operator=(MotorController &&) = delete;
+    MotorController& operator=(MotorController&&) = delete;
 
     virtual void setTorque(const float) override;
     virtual float getCurrentRPS(void) const override;

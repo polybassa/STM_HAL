@@ -25,8 +25,7 @@ namespace app
 template<typename rxDto, typename txDto>
 struct Communication final :
     private os::DeepSleepModule {
-    enum class ErrorCode
-    {
+    enum class ErrorCode {
         CRC_ERROR = 0,
         OFFSET_ERROR,
         UPDATE_ERROR,
@@ -34,13 +33,13 @@ struct Communication final :
         TX_ERROR
     };
 
-    Communication(const hal::UsartWithDma & interface, rxDto &, txDto &,
+    Communication(const hal::UsartWithDma& interface, rxDto&, txDto&,
                   std::function<void(ErrorCode)> errorCallback = nullptr);
 
-    Communication(const Communication &) = delete;
-    Communication(Communication &&) = default;
+    Communication(const Communication&) = delete;
+    Communication(Communication&&) = default;
     Communication& operator=(const Communication&) = delete;
-    Communication& operator=(Communication &&) = delete;
+    Communication& operator=(Communication&&) = delete;
 
 #ifdef UNITTEST
     void triggerRxTaskExecution(void) { this->RxTaskFunction(true); }
@@ -70,7 +69,7 @@ template<typename rxDto, typename txDto>
 app::Communication<rxDto, txDto>::Communication(const hal::UsartWithDma& interface, rxDto& rx_dto, txDto& tx_dto,
                                                 std::function<void(ErrorCode)> errorCallback) :
     os::DeepSleepModule(),
-    mInterface(interface),
+        mInterface(interface),
     mRxDto(rx_dto),
     mTxDto(tx_dto),
     mErrorCallback(errorCallback),
@@ -78,16 +77,16 @@ app::Communication<rxDto, txDto>::Communication(const hal::UsartWithDma& interfa
             Communication::STACKSIZE,
             os::Task::Priority::VERY_HIGH,
             [this](const bool& join)
-            {
-                TxTaskFunction(join);
-            }),
+{
+    TxTaskFunction(join);
+}),
     mRxTask("5ComRx",
             Communication::STACKSIZE,
             os::Task::Priority::VERY_HIGH,
             [this](const bool& join)
-            {
-                RxTaskFunction(join);
-            })
+{
+    RxTaskFunction(join);
+})
 {}
 
 template<typename rxDto, typename txDto>

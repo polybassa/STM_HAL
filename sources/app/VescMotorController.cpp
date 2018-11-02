@@ -69,9 +69,9 @@ VescMotorController::VescMotorController(const hal::Usart& interface) :
                          VescMotorController::STACKSIZE,
                          os::Task::Priority::LOW,
                          [this](const bool& join)
-                         {
-                             motorControllerTaskFunction(join);
-                         }),
+{
+    motorControllerTaskFunction(join);
+}),
     mSetTorqueQueue(),
     mInterface(interface)
 {

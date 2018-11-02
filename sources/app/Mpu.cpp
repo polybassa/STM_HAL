@@ -49,9 +49,9 @@ Mpu::Mpu(const hal::Exti& exti) :
              Mpu::STACKSIZE,
              os::Task::Priority::HIGH,
              [this](const bool& join)
-             {
-                 mpuTaskFunction(join);
-             }), mExti(exti)
+{
+    mpuTaskFunction(join);
+}), mExti(exti)
 {
     mExti.registerInterruptCallback(MpuInterruptHandler);
     mExti.enable();

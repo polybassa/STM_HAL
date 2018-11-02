@@ -34,9 +34,9 @@ BatteryObserver::BatteryObserver(const dev::Battery&                  battery,
                              const
                              bool&
                              join) {
-                          energyRecordTaskFunction(
-                                                   join);
-                      }),
+    energyRecordTaskFunction(
+                             join);
+}),
     mErrorCallback(
                    errorCallback),
     mBattery(

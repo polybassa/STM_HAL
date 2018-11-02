@@ -28,9 +28,9 @@ namespace hal
 struct SpiWithDma {
     SpiWithDma() = delete;
     SpiWithDma(const SpiWithDma&) = delete;
-    SpiWithDma(SpiWithDma &&) = default;
+    SpiWithDma(SpiWithDma&&) = default;
     SpiWithDma& operator=(const SpiWithDma&) = delete;
-    SpiWithDma& operator=(SpiWithDma &&) = delete;
+    SpiWithDma& operator=(SpiWithDma&&) = delete;
 
     template<size_t n>
     size_t receive(std::array<uint8_t, n>&) const;

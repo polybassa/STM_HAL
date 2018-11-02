@@ -106,8 +106,9 @@ void UsartWithDma::receiveTimeoutCallback(void) const
 void UsartWithDma::enableReceiveTimeout(const size_t bitsUntilTimeout) const
 {
     if (mDmaCmd & USART_DMAReq_Rx) {
-        mUsart.enableReceiveTimeout([this] {receiveTimeoutCallback();
-                                    }, bitsUntilTimeout);
+        mUsart.enableReceiveTimeout([this] {
+            receiveTimeoutCallback();
+        }, bitsUntilTimeout);
     }
 }
 

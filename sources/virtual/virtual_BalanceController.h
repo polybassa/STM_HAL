@@ -21,15 +21,15 @@
 namespace virt
 {
 class BalanceController final :
-    public interface::BalanceController
+    public interface ::BalanceController
 {
     float mTargetAngle = 0.0;
 public:
     BalanceController() {}
-    BalanceController(const BalanceController &) = delete;
-    BalanceController(BalanceController &&) = delete;
+    BalanceController(const BalanceController&) = delete;
+    BalanceController(BalanceController&&) = delete;
     BalanceController& operator=(const BalanceController&) = delete;
-    BalanceController& operator=(BalanceController &&) = delete;
+    BalanceController& operator=(BalanceController&&) = delete;
     virtual ~BalanceController(){}
 
     inline virtual void setTargetAngleInDegree(const float angle) override;

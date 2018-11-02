@@ -38,9 +38,9 @@ struct StraingaugeSensor {
 
     StraingaugeSensor() = delete;
     StraingaugeSensor(const StraingaugeSensor&) = delete;
-    StraingaugeSensor(StraingaugeSensor &&) = default;
+    StraingaugeSensor(StraingaugeSensor&&) = default;
     StraingaugeSensor& operator=(const StraingaugeSensor&) = delete;
-    StraingaugeSensor& operator=(StraingaugeSensor &&) = delete;
+    StraingaugeSensor& operator=(StraingaugeSensor&&) = delete;
 
     void resetStraingaugeSensor(void) const;
     float getDirection(void) const;

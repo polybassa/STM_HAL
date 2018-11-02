@@ -69,29 +69,29 @@ class SlaveController final
     void UpdateInternalObjectsTaskFunction(const bool&);
 
 public:
-    SlaveController(BalanceController &,
-                    const virt::BalanceController &,
-                    const MotorController &,
-                    virt::MotorController &,
-                    const dev::Battery &,
-                    virt::Battery &,
-                    const dev::TemperatureSensor_Internal &,
-                    const dev::TemperatureSensor_NTC &,
-                    const dev::TemperatureSensor_NTC &,
-                    const dev::TemperatureSensor_NTC &,
-                    virt::TemperatureSensor &,
-                    virt::TemperatureSensor &,
-                    virt::TemperatureSensor &,
-                    virt::TemperatureSensor &,
-                    const dev::Light &,
-                    const dev::Light &,
-                    const virt::Light &,
-                    const virt::Light &);
+    SlaveController(BalanceController&,
+                    const virt::BalanceController&,
+                    const MotorController&,
+                    virt::MotorController&,
+                    const dev::Battery&,
+                    virt::Battery&,
+                    const dev::TemperatureSensor_Internal&,
+                    const dev::TemperatureSensor_NTC&,
+                    const dev::TemperatureSensor_NTC&,
+                    const dev::TemperatureSensor_NTC&,
+                    virt::TemperatureSensor&,
+                    virt::TemperatureSensor&,
+                    virt::TemperatureSensor&,
+                    virt::TemperatureSensor&,
+                    const dev::Light&,
+                    const dev::Light&,
+                    const virt::Light&,
+                    const virt::Light&);
 
-    SlaveController(const SlaveController &) = delete;
-    SlaveController(SlaveController &&) = delete;
+    SlaveController(const SlaveController&) = delete;
+    SlaveController(SlaveController&&) = delete;
     SlaveController& operator=(const SlaveController&) = delete;
-    SlaveController& operator=(SlaveController &&) = delete;
+    SlaveController& operator=(SlaveController&&) = delete;
 };
 }
 

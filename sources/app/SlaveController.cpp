@@ -47,16 +47,16 @@ SlaveController::SlaveController(
                                SlaveController::STACKSIZE,
                                os::Task::Priority::HIGH,
                                [this](const bool& join)
-                               {
-                                   UpdateExternalObjectsTaskFunction(join);
-                               }),
+{
+    UpdateExternalObjectsTaskFunction(join);
+}),
     mUpdateInternalObjectsTask("7UpdateInternalTask",
                                SlaveController::STACKSIZE,
                                os::Task::Priority::HIGH,
                                [this](const bool& join)
-                               {
-                                   UpdateInternalObjectsTaskFunction(join);
-                               }),
+{
+    UpdateInternalObjectsTaskFunction(join);
+}),
     mRealBalancer(rBal),
     mVirtBalancer(vBal),
     mRealMotorController(rMot),

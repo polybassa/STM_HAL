@@ -31,9 +31,9 @@ BalanceController::BalanceController(const Mpu& gyro, MotorController& motor) :
     os::DeepSleepModule(), mBalanceControllerTask("3BalanceControl",
                                                   BalanceController::STACKSIZE, os::Task::Priority::HIGH,
                                                   [this](const bool& join)
-                                                  {
-                                                      balanceControllerTaskFunction(join);
-                                                  }), mMpu(gyro), mMotor(motor), mSetAngleQueue()
+{
+    balanceControllerTaskFunction(join);
+}), mMpu(gyro), mMotor(motor), mSetAngleQueue()
 {}
 
 void BalanceController::enterDeepSleep(void)

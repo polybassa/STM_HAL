@@ -155,8 +155,9 @@ void HallDecoder::registerHallEventCheckCallback(std::function<void(void)> callb
 
 void HallDecoder::unregisterHallEventCheckCallback(void) const
 {
-    registerHallEventCheckCallback([] { return;
-                                   });
+    registerHallEventCheckCallback([] {
+        return;
+    });
 }
 
 void HallDecoder::initialize(void) const

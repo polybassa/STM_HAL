@@ -49,14 +49,14 @@ class SteeringController final :
 
 public:
     SteeringController(
-                       BalanceController & masterBalance,
-                       virt::BalanceController & slaveBalance,
-                       const dev::StraingaugeSensor & dms);
+                       BalanceController&            masterBalance,
+                       virt::BalanceController&      slaveBalance,
+                       const dev::StraingaugeSensor& dms);
 
-    SteeringController(const SteeringController &) = delete;
-    SteeringController(SteeringController &&) = delete;
+    SteeringController(const SteeringController&) = delete;
+    SteeringController(SteeringController&&) = delete;
     SteeringController& operator=(const SteeringController&) = delete;
-    SteeringController& operator=(SteeringController &&) = delete;
+    SteeringController& operator=(SteeringController&&) = delete;
 
     void setDirectionAndAngleInDegree(const float, const float);
     void setDirectionAndAngleInDegree(const std::pair<float, float> );

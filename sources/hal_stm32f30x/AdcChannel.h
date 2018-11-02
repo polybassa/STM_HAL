@@ -30,9 +30,9 @@ struct Adc::Channel {
 
     Channel() = delete;
     Channel(const Channel&) = delete;
-    Channel(Channel &&) = default;
+    Channel(Channel&&) = default;
     Channel& operator=(const Channel&) = delete;
-    Channel& operator=(Channel &&) = delete;
+    Channel& operator=(Channel&&) = delete;
 
     uint32_t getValue(void) const;
     uint32_t getCalibrationValue(void) const;

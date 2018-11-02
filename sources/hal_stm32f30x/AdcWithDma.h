@@ -29,9 +29,9 @@ namespace hal
 struct AdcWithDma {
     AdcWithDma() = delete;
     AdcWithDma(const AdcWithDma&) = delete;
-    AdcWithDma(AdcWithDma &&) = default;
+    AdcWithDma(AdcWithDma&&) = default;
     AdcWithDma& operator=(const AdcWithDma&) = delete;
-    AdcWithDma& operator=(AdcWithDma &&) = delete;
+    AdcWithDma& operator=(AdcWithDma&&) = delete;
 
     template<size_t n>
     void startConversion(const std::array<uint16_t, n>& data, os::Semaphore* dataAvailable = nullptr) const;

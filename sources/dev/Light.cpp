@@ -21,7 +21,7 @@ static const int __attribute__((unused)) g_DebugZones = ZONE_ERROR | ZONE_WARNIN
 
 using dev::Light;
 
-std::array<std::array<uint8_t, Light::ARRAY_SIZE>, interface::Light::__ENUM__SIZE> Light::LedBitArrays;
+std::array<std::array<uint8_t, Light::ARRAY_SIZE>, interface ::Light::__ENUM__SIZE> Light::LedBitArrays;
 
 uint8_t Light::getBitmask(const uint8_t in) const
 {
@@ -67,7 +67,7 @@ void Light::convertByteToBitArray(const uint8_t byte, uint8_t* bitArray) const
     }
 }
 
-void Light::displayNumber(const uint8_t number, const interface::Color& color) const
+void Light::displayNumber(const uint8_t number, const interface ::Color& color) const
 {
     uint8_t* pointer = LedBitArrays[mDescription].data();
 
@@ -92,9 +92,9 @@ void Light::displayNumber(const uint8_t number, const interface::Color& color) c
     mSpi.send(LedBitArrays[mDescription]);
 }
 
-void Light::setColor(const interface::Color& color) const
+void Light::setColor(const interface ::Color& color) const
 {
     displayNumber(LED_COUNT, color);
 }
 
-constexpr const std::array<const Light, interface::Light::Description::__ENUM__SIZE> dev::Factory<Light>::Container;
+constexpr const std::array<const Light, interface ::Light::Description::__ENUM__SIZE> dev::Factory<Light>::Container;

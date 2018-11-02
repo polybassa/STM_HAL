@@ -28,9 +28,9 @@ namespace hal
 struct UsartWithDma {
     UsartWithDma() = delete;
     UsartWithDma(const UsartWithDma&) = delete;
-    UsartWithDma(UsartWithDma &&) = default;
+    UsartWithDma(UsartWithDma&&) = default;
     UsartWithDma& operator=(const UsartWithDma&) = delete;
-    UsartWithDma& operator=(UsartWithDma &&) = delete;
+    UsartWithDma& operator=(UsartWithDma&&) = delete;
 
     template<size_t n>
     size_t send(const std::array<uint8_t, n>&) const;

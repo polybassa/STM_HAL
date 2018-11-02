@@ -28,7 +28,7 @@
 namespace app
 {
 class BalanceController final :
-    private os::DeepSleepModule, public interface::BalanceController
+    private os::DeepSleepModule, public interface ::BalanceController
 {
     virtual void enterDeepSleep(void) override;
     virtual void exitDeepSleep(void) override;
@@ -45,13 +45,13 @@ class BalanceController final :
     void balanceControllerTaskFunction(const bool&);
 public:
     BalanceController(
-                      const Mpu &gyro,
-                      MotorController & motor);
+                      const Mpu&       gyro,
+                      MotorController& motor);
 
-    BalanceController(const BalanceController &) = delete;
-    BalanceController(BalanceController &&) = delete;
+    BalanceController(const BalanceController&) = delete;
+    BalanceController(BalanceController&&) = delete;
     BalanceController& operator=(const BalanceController&) = delete;
-    BalanceController& operator=(BalanceController &&) = delete;
+    BalanceController& operator=(BalanceController&&) = delete;
 
     virtual void setTargetAngleInDegree(const float angle) override;
 };

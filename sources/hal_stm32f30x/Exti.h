@@ -45,9 +45,9 @@ struct Exti {
 
     Exti() = delete;
     Exti(const Exti&) = delete;
-    Exti(Exti &&) = default;
+    Exti(Exti&&) = default;
     Exti& operator=(const Exti&) = delete;
-    Exti& operator=(Exti &&) = delete;
+    Exti& operator=(Exti&&) = delete;
 
     void enable(void) const;
     void disable(void) const;
@@ -62,12 +62,12 @@ private:
                    const uint32_t            priority = 0xf) :
         mDescription(desc), mGpio(gpio),
         mConfiguration(EXTI_InitTypeDef
-                       {
-                           gpio
-                           .mPinSource, EXTI_Mode_Interrupt,
-                           trigger,
-                           DISABLE
-                       }),
+        {
+            gpio
+            .mPinSource, EXTI_Mode_Interrupt,
+            trigger,
+            DISABLE
+        }),
         mPriority(priority) {}
 
     const enum Description mDescription;
@@ -83,7 +83,7 @@ private:
     void initialize(void) const;
     bool getStatus(void) const;
 
-    using CallbackArray = std::array<std::function<void(void)>, Exti::__ENUM__SIZE>;
+    using CallbackArray = std::array<std::function<void (void)>, Exti::__ENUM__SIZE>;
     static CallbackArray ExtiCallbacks;
 
     friend class Factory<Exti>;

@@ -65,7 +65,7 @@ protected:
 public:
     enum class Protocol { UDP, TCP, DNS };
 
-    Socket(const                            Protocol,
+    Socket(const Protocol,
            ATParser&                        parser,
            AT::SendFunction&                send,
            const std::string_view           ip,
@@ -73,9 +73,9 @@ public:
            const std::function<void(void)>& errorCallback);
 
     Socket(const Socket&) = delete;
-    Socket(Socket &&) = delete;
+    Socket(Socket&&) = delete;
     Socket& operator=(const Socket&) = delete;
-    Socket& operator=(Socket &&) = delete;
+    Socket& operator=(Socket&&) = delete;
 
     virtual ~Socket(void);
 
@@ -84,7 +84,7 @@ public:
     const std::string_view mPort;
 
     size_t send(std::string_view, const uint32_t ticksToWait = portMAX_DELAY);
-    size_t receive(uint8_t *, size_t, uint32_t ticksToWait = portMAX_DELAY);
+    size_t receive(uint8_t*, size_t, uint32_t ticksToWait = portMAX_DELAY);
 
     size_t bytesAvailable(void) const;
     size_t getTimeOfLastSend(void) const;
@@ -115,9 +115,9 @@ public:
               const std::function<void(void)>& errorCallback);
 
     TcpSocket(const TcpSocket&) = delete;
-    TcpSocket(TcpSocket &&) = delete;
+    TcpSocket(TcpSocket&&) = delete;
     TcpSocket& operator=(const TcpSocket&) = delete;
-    TcpSocket& operator=(TcpSocket &&) = delete;
+    TcpSocket& operator=(TcpSocket&&) = delete;
 
     virtual ~TcpSocket(void);
 
@@ -145,9 +145,9 @@ public:
               const std::function<void(void)>& errorCallback);
 
     UdpSocket(const UdpSocket&) = delete;
-    UdpSocket(UdpSocket &&) = delete;
+    UdpSocket(UdpSocket&&) = delete;
     UdpSocket& operator=(const UdpSocket&) = delete;
-    UdpSocket& operator=(UdpSocket &&) = delete;
+    UdpSocket& operator=(UdpSocket&&) = delete;
 
     virtual ~UdpSocket(void);
 
@@ -173,9 +173,9 @@ public:
               const std::function<void(void)>& errorCallback);
 
     DnsSocket(const DnsSocket&) = delete;
-    DnsSocket(DnsSocket &&) = delete;
+    DnsSocket(DnsSocket&&) = delete;
     DnsSocket& operator=(const DnsSocket&) = delete;
-    DnsSocket& operator=(DnsSocket &&) = delete;
+    DnsSocket& operator=(DnsSocket&&) = delete;
 
     virtual ~DnsSocket(void);
 

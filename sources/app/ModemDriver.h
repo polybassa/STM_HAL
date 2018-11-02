@@ -78,15 +78,15 @@ class ModemDriver final :
     void handleError(void);
 
 public:
-    ModemDriver(const hal::UsartWithDma & interface,
-                const hal::Gpio & resetPin,
-                const hal::Gpio & powerPin,
-                const hal::Gpio & supplyPin);
+    ModemDriver(const hal::UsartWithDma& interface,
+                const hal::Gpio&         resetPin,
+                const hal::Gpio&         powerPin,
+                const hal::Gpio&         supplyPin);
 
-    ModemDriver(const ModemDriver &) = delete;
-    ModemDriver(ModemDriver &&) = delete;
+    ModemDriver(const ModemDriver&) = delete;
+    ModemDriver(ModemDriver&&) = delete;
     ModemDriver& operator=(const ModemDriver&) = delete;
-    ModemDriver& operator=(ModemDriver &&) = delete;
+    ModemDriver& operator=(ModemDriver&&) = delete;
 
     static void ModemDriverInterruptHandler(uint8_t);
 

@@ -30,16 +30,16 @@ CanTunnel::CanTunnel(const hal::UsartWithDma& tunnelInterface,
                   CanTunnel::STACKSIZE,
                   os::Task::Priority::HIGH,
                   [this](const bool& join)
-                  {
-                      tunnelTxTaskFunction(join);
-                  }),
+{
+    tunnelTxTaskFunction(join);
+}),
     mCanTxTask("ModemTxTask",
                CanTunnel::STACKSIZE,
                os::Task::Priority::HIGH,
                [this](const bool& join)
-               {
-                   canTxTaskFunction(join);
-               }),
+{
+    canTxTaskFunction(join);
+}),
     mTunnelInterface(tunnelInterface),
     mCanInterface(canInterface)
 {}
@@ -77,14 +77,14 @@ void CanTunnel::tunnelTxTaskFunction(const bool& join)
     } else {
         mCanInterface.off();
         mCanInterface.mInterface.mUsart.enableNonBlockingReceive([&](uint8_t data)
-                                                                 {
-                                                                     CanReceiveBuffer.sendFromISR(data);
-                                                                 });
+        {
+            CanReceiveBuffer.sendFromISR(data);
+        });
 
         mTunnelInterface.mUsart.enableNonBlockingReceive([&](uint8_t data)
-                                                         {
-                                                             TunnelReceiveBuffer.sendFromISR(data);
-                                                         });
+        {
+            TunnelReceiveBuffer.sendFromISR(data);
+        });
 
         os::ThisTask::sleep(std::chrono::milliseconds(200));
         mCanInterface.on();

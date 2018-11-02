@@ -28,9 +28,9 @@ float dev::TemperatureSensor_Internal::getTemperature(void) const
     uint16_t const* const adcValue30 = reinterpret_cast<uint16_t const* const>(TS_CAL1);
     uint16_t const* const adcValue110 = reinterpret_cast<uint16_t const* const>(TS_CAL2);
 
-    auto getVoltageFromAdcValue = [] (const uint16_t value){
-        return (3.3 / std::pow(2, 12)) * value;
-    };
+    auto getVoltageFromAdcValue = [](const uint16_t value){
+                                      return (3.3 / std::pow(2, 12)) * value;
+                                  };
 
     auto voltage30 = getVoltageFromAdcValue(*adcValue30);
     auto voltage110 = getVoltageFromAdcValue(*adcValue110);

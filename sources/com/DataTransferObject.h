@@ -51,9 +51,9 @@ public:
         mTransferTuple(tuple ...) {}
 
     DataTransferObject(const DataTransferObject&) = delete;
-    DataTransferObject(DataTransferObject &&) = default;
+    DataTransferObject(DataTransferObject&&) = default;
     DataTransferObject& operator=(const DataTransferObject&) = delete;
-    DataTransferObject& operator=(DataTransferObject &&) = delete;
+    DataTransferObject& operator=(DataTransferObject&&) = delete;
 
     void updateTuple(void);
     void prepareForTx(void);
@@ -78,7 +78,7 @@ public:
 
 template<typename ... _Elements>
 constexpr com::DataTransferObject<typename std::remove_pointer_t<std::decay_t<_Elements> > ...>
-make_dto(_Elements && ... __args)
+make_dto(_Elements&& ... __args)
 {
     typedef com::DataTransferObject<typename std::remove_pointer_t<std::decay_t<_Elements> > ...> __result_type;
     return __result_type(std::forward<_Elements>(__args) ...);
@@ -91,10 +91,10 @@ void com::DataTransferObject<types ...>::prepareForTx(void)
     mTransferData.timestamp = os::Task::getTickCount();
     uint8_t* ptr = mTransferData.data;
 
-    for_each(mTransferTuple, [&ptr](const auto & x){
-                 std::memcpy(ptr, &x, sizeof(x));
-                 ptr += sizeof(x);
-             });
+    for_each(mTransferTuple, [&ptr](const auto& x){
+        std::memcpy(ptr, &x, sizeof(x));
+        ptr += sizeof(x);
+    });
     const hal::Crc& crcUnit = hal::Factory<hal::Crc>::get<hal::Crc::SYSTEM_CRC>();
     mTransferData.crc = crcUnit.getCrc(this->data(), this->length() - sizeof(mTransferData.crc));
 }
@@ -112,10 +112,10 @@ void com::DataTransferObject<types ...>::updateTuple(void)
 {
     uint8_t const* ptr = mTransferData.data;
     os::ThisTask::enterCriticalSection();
-    for_each(mTransferTuple, [&ptr](auto & x){
-                 std::memcpy(&x, ptr, sizeof(x));
-                 ptr += sizeof(x);
-             });
+    for_each(mTransferTuple, [&ptr](auto& x){
+        std::memcpy(&x, ptr, sizeof(x));
+        ptr += sizeof(x);
+    });
     os::ThisTask::exitCriticalSection();
 }
 

@@ -29,7 +29,7 @@ void send_packet_callback(unsigned char*, unsigned int);
 void bldc_val_received(void* valPtr);
 
 class VescMotorController final :
-    private os::DeepSleepModule, public interface::MotorController
+    private os::DeepSleepModule, public interface ::MotorController
 {
     virtual void enterDeepSleep(void) override;
     virtual void exitDeepSleep(void) override;
@@ -47,12 +47,12 @@ class VescMotorController final :
     void send_packet(unsigned char* data, unsigned int len);
 
 public:
-    VescMotorController(const hal::Usart & interface);
+    VescMotorController(const hal::Usart& interface);
 
-    VescMotorController(const VescMotorController &) = delete;
-    VescMotorController(VescMotorController &&) = delete;
+    VescMotorController(const VescMotorController&) = delete;
+    VescMotorController(VescMotorController&&) = delete;
     VescMotorController& operator=(const VescMotorController&) = delete;
-    VescMotorController& operator=(VescMotorController &&) = delete;
+    VescMotorController& operator=(VescMotorController&&) = delete;
 
     virtual void setTorque(const float) override;
     virtual float getCurrentRPS(void) const override;

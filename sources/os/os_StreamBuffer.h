@@ -30,9 +30,9 @@ class StreamBuffer
 public:
     StreamBuffer(const size_t triggerLevel = 1);
     StreamBuffer(const StreamBuffer&) = delete;
-    StreamBuffer(StreamBuffer &&);
+    StreamBuffer(StreamBuffer&&);
     StreamBuffer& operator=(const StreamBuffer&) = delete;
-    StreamBuffer& operator=(StreamBuffer &&);
+    StreamBuffer& operator=(StreamBuffer&&);
     ~StreamBuffer(void);
 
     bool send(T message, uint32_t ticksToWait = portMAX_DELAY) const;
@@ -60,14 +60,14 @@ StreamBuffer<T, n>::StreamBuffer(const size_t triggerLevel) :
     mStreamBufferHandle(xStreamBufferCreate(n * sizeof(T), triggerLevel)) {}
 
 template<typename T, size_t n>
-StreamBuffer<T, n>::StreamBuffer(StreamBuffer && rhs) :
+StreamBuffer<T, n>::StreamBuffer(StreamBuffer&& rhs) :
     mStreamBufferHandle(rhs.mStreamBufferHandle)
 {
     rhs.mStreamBufferHandle = nullptr;
 }
 
 template<typename T, size_t n>
-StreamBuffer<T, n>& StreamBuffer<T, n>::operator=(StreamBuffer<T, n> && rhs)
+StreamBuffer<T, n>& StreamBuffer<T, n>::operator=(StreamBuffer<T, n>&& rhs)
 {
     mStreamBufferHandle = rhs.mStreamBufferHandle;
     rhs.mStreamBufferHandle = nullptr;

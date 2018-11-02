@@ -29,19 +29,19 @@ CommandMultiplexer::CommandMultiplexer(std::shared_ptr<Socket> control,
     os::DeepSleepModule(), mCommandMultiplexerTask("CommandMultiplexer",
                                                    CommandMultiplexer::STACKSIZE, os::Task::Priority::MEDIUM,
                                                    [&](const bool& join)
-                                                   {
-                                                       commandMultiplexerTaskFunction(join);
-                                                   }),
+{
+    commandMultiplexerTaskFunction(join);
+}),
     mCtrlSock(control), mDataSock(data), mCan(can), mDemo(demo)
 {
     mDataSock->registerReceiveCallback([&](const std::string_view cmd){
-                                           mCan.send(cmd, 1000);
-                                       });
+        mCan.send(cmd, 1000);
+    });
     mCan.registerReceiveCallback([&](const std::string_view data){
-                                     if (mCanRxEnabled) {
-                                         mDataSock->send(data, 1000);
-                                     }
-                                 });
+        if (mCanRxEnabled) {
+            mDataSock->send(data, 1000);
+        }
+    });
 }
 
 void CommandMultiplexer::enterDeepSleep(void)
@@ -218,7 +218,8 @@ void CommandMultiplexer::commandMultiplexerTaskFunction(const bool& join)
     Trace(ZONE_INFO, "Start command multiplexer \r\n");
 
     do {
-        const auto length = mCtrlSock->receive(reinterpret_cast<uint8_t*>(mCommandBuffer.data()), mCommandBuffer.size());
+        const auto length =
+            mCtrlSock->receive(reinterpret_cast<uint8_t*>(mCommandBuffer.data()), mCommandBuffer.size());
         if (length) {
             multiplexCommand(std::string_view(mCommandBuffer.data(), length));
         }
