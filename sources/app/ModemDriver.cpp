@@ -224,6 +224,7 @@ std::shared_ptr<app::Socket> ModemDriver::getSocket(app::Socket::Protocol protoc
                                            mUrcCallbackReceive, [&] {
             handleError();
         });
+        mSockets.push_back(sock);
     }
 
     if (protocol == Socket::Protocol::UDP) {
@@ -231,13 +232,14 @@ std::shared_ptr<app::Socket> ModemDriver::getSocket(app::Socket::Protocol protoc
                                            mUrcCallbackReceive, [&] {
             handleError();
         });
+        mSockets.push_back(sock);
     }
 
     if (protocol == Socket::Protocol::DNS) {
         sock = std::make_shared<DnsSocket>(mParser, mSend, mUrcCallbackReceive, [&] {
             handleError();
         });
+        mSockets.push_back(sock);
     }
-    mSockets.push_back(sock);
     return sock;
 }
