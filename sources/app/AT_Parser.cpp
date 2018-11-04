@@ -624,6 +624,11 @@ std::string_view ATParser::getLineFromInput(std::chrono::milliseconds timeout) c
         if (terminationFound) {
             return std::string_view(ReceiveBuffer.data(), currentPos);
         }
+
+        if (currentPos >= BUFFERSIZE) {
+            Trace(ZONE_ERROR, "ReceiveBufferOverflow\r\n");
+            return "";
+        }
     }
     Trace(ZONE_ERROR, "Timeout\r\n");
     return "";
@@ -644,6 +649,11 @@ std::string_view ATParser::getInputUntilComma(char* const termination, std::chro
             return std::string_view(ReceiveBuffer.data(), currentPos);
         }
         ReceiveBuffer[currentPos++] = data;
+
+        if (currentPos >= BUFFERSIZE) {
+            Trace(ZONE_ERROR, "ReceiveBufferOverflow\r\n");
+            return "";
+        }
     }
     Trace(ZONE_ERROR, "Timeout\r\n");
     return "";
