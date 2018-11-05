@@ -41,15 +41,13 @@ ModemDriver::ModemDriver(const hal::UsartWithDma& interface,
     mModemTxTask("ModemTxTask",
                  ModemDriver::STACKSIZE,
                  os::Task::Priority::HIGH,
-                 [this](const bool& join)
-{
+                 [this](const bool& join){
     modemTxTaskFunction(join);
 }),
     mParserTask("ParserTask",
                 ModemDriver::STACKSIZE,
                 os::Task::Priority::VERY_HIGH,
-                [this](const bool& join)
-{
+                [this](const bool& join){
     parserTaskFunction(join);
 }),
     mInterface(interface),
@@ -63,8 +61,7 @@ ModemDriver::ModemDriver(const hal::UsartWithDma& interface,
     return InputBuffer.receive(reinterpret_cast<char*>(output), length, timeout.count());
 }),
     mParser(mRecv),
-    mUrcCallbackReceive([&](const size_t socket, const size_t bytes)
-{
+    mUrcCallbackReceive([&](const size_t socket, const size_t bytes){
     for (auto& sock: mSockets) {
         if (sock->mSocket == socket) {
             if (bytes) {
@@ -76,8 +73,7 @@ ModemDriver::ModemDriver(const hal::UsartWithDma& interface,
         }
     }
 }),
-    mUrcCallbackClose([&](const size_t socket, const size_t bytes)
-{
+    mUrcCallbackClose([&](const size_t socket, const size_t bytes){
     Trace(ZONE_INFO, "Socket %d closed\r\n", socket);
     for (auto& sock: mSockets) {
         if (sock->mSocket == socket) {
