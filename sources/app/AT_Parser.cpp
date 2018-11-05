@@ -257,7 +257,7 @@ AT::Return_t ATCmdUSORF::onResponseMatch(void)
             return Return_t::ERROR;
         }
         mUrcReceivedCallback(mSocket, bytesAvailable);
-        return Return_t::FINISHED;
+        return Return_t::WAITING;
     } else {
         Trace(ZONE_ERROR, "termination failure\r\n");
         return Return_t::ERROR;
@@ -302,7 +302,7 @@ AT::Return_t ATCmdUSORD::onResponseMatch(void)
         return Return_t::WAITING;
     } else if (termination == '\r') {
         mUrcReceivedCallback(mSocket, bytesAvailable);
-        return Return_t::FINISHED;
+        return Return_t::WAITING;
     } else {
         Trace(ZONE_ERROR, "termination failure\r\n");
         return Return_t::ERROR;
@@ -348,7 +348,7 @@ AT::Return_t ATCmdUPSND::onResponseMatch(void)
     }
 
     std::memcpy(mDataBuffer.data(), datastring.data() + first, mData.length());
-    return Return_t::FINISHED;
+    return Return_t::WAITING;
 }
 
 //------------------------ATCmdUSOCR---------------------------------
@@ -370,7 +370,7 @@ AT::Return_t ATCmdUSOCR::onResponseMatch(void)
     if (mParser->getSocketFromInput(mSocket) != Return_t::FINISHED) {
         return Return_t::ERROR;
     }
-    return Return_t::FINISHED;
+    return Return_t::WAITING;
 }
 
 //------------------------ATCmdUSOCO---------------------------------
