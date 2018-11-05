@@ -30,8 +30,8 @@ class Socket
 {
 protected:
     static constexpr const size_t BUFFERSIZE = 512;
-    static constexpr const std::chrono::milliseconds KEEP_ALIVE_PAUSE = std::chrono::seconds(3);
-    static constexpr const char* KEEP_ALIVE_MSG = "ALIVE";
+    static constexpr const std::chrono::milliseconds KEEP_ALIVE_PAUSE = std::chrono::seconds(10);
+    static constexpr const char* KEEP_ALIVE_MSG = "\r";
 
     os::StreamBuffer<uint8_t, BUFFERSIZE> mSendBuffer;
     os::StreamBuffer<uint8_t, BUFFERSIZE> mReceiveBuffer;
@@ -44,6 +44,7 @@ protected:
     virtual void receiveData(size_t) = 0;
     virtual bool create() = 0;
     virtual bool open(void) = 0;
+    virtual void checkIfDataAvailable(void) = 0;
 
     bool create(size_t magicSocket);
     void reset(void);
@@ -58,6 +59,8 @@ protected:
     ATCmdUSOCTL mATCmdUSOCTL;
     size_t mSocket;
     size_t mTimeOfLastSend;
+    size_t mTimeOfLastReceive;
+
     bool isOpen = false;
     bool isCreated = false;
 
@@ -103,6 +106,7 @@ class TcpSocket :
     virtual void receiveData(size_t) override;
     virtual bool create(void) override;
     virtual bool open(void) override;
+    virtual void checkIfDataAvailable(void) override;
 
     ATCmdUSOWR mATCmdUSOWR;
     ATCmdUSORD mATCmdUSORD;
@@ -133,6 +137,7 @@ protected:
     virtual void receiveData(size_t) override;
     virtual bool create(void) override;
     virtual bool open(void) override;
+    virtual void checkIfDataAvailable(void) override;
 
     ATCmdUSOST mATCmdUSOST;
     ATCmdUSORF mATCmdUSORF;

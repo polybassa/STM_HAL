@@ -24,7 +24,7 @@ using app::Socket;
 using app::TcpSocket;
 using app::UdpSocket;
 
-static const int __attribute__((unused)) g_DebugZones = 0; //ZONE_ERROR | ZONE_WARNING | ZONE_VERBOSE | ZONE_INFO;
+static const int __attribute__((unused)) g_DebugZones = 0;//ZONE_ERROR | ZONE_WARNING | ZONE_VERBOSE | ZONE_INFO;
 
 Socket::Socket(const Protocol                   protocol,
                ATParser&                        parser,
@@ -39,6 +39,7 @@ Socket::Socket(const Protocol                   protocol,
     mATCmdUSOCTL(send),
     mSocket(0),
     mTimeOfLastSend(os::Task::getTickCount()),
+    mTimeOfLastReceive(os::Task::getTickCount()),
     mHandleError(errorCallback),
     mProtocol(protocol),
     mIP(ip),
@@ -82,17 +83,21 @@ void Socket::checkAndReceiveData(void)
 
         this->receiveData(bytes);
     }
+    if (isOpen && (os::Task::getTickCount() - mTimeOfLastReceive >= KEEP_ALIVE_PAUSE.count())) {
+        this->checkIfDataAvailable();
+    }
 }
 
 void Socket::checkAndSendData(void)
 {
     if (isOpen && mSendBuffer.bytesAvailable()) {
         Trace(ZONE_VERBOSE, "send\r\n");
-
         this->sendData();
     }
 
-    if ((mProtocol == Protocol::UDP) && (os::Task::getTickCount() - mTimeOfLastSend >= KEEP_ALIVE_PAUSE.count())) {
+    if ((os::Task::getTickCount() - mTimeOfLastSend >= KEEP_ALIVE_PAUSE.count()) &&
+        (os::Task::getTickCount() - mTimeOfLastReceive >= KEEP_ALIVE_PAUSE.count()))
+    {
         send(KEEP_ALIVE_MSG, std::chrono::milliseconds(100).count());
     }
 }
@@ -107,6 +112,7 @@ void Socket::storeReceivedData(const std::string_view data)
         mReceiveBuffer.send(data.data(), data.length(), 1000);
     }
     Trace(ZONE_INFO, "Data stored\r\n");
+    mTimeOfLastReceive = os::Task::getTickCount();
 }
 
 size_t Socket::loadTemporaryBuffer(void)
@@ -225,6 +231,14 @@ bool TcpSocket::open(void)
     return true;
 }
 
+void TcpSocket::checkIfDataAvailable(void)
+{
+    if (mATCmdUSORD.send(mSocket, 0, std::chrono::milliseconds(1000)) != AT::Return_t::FINISHED) {
+        mHandleError();
+    }
+    mTimeOfLastReceive = os::Task::getTickCount();
+}
+
 UdpSocket::UdpSocket(ATParser& parser,
                      AT::SendFunction& send,
                      std::string_view ip,
@@ -284,6 +298,13 @@ bool UdpSocket::open(void)
     }
     isOpen = true;
     return true;
+}
+
+void UdpSocket::checkIfDataAvailable(void)
+{
+    if (mATCmdUSORF.send(mSocket, 0, std::chrono::milliseconds(1000)) != AT::Return_t::FINISHED) {
+        mHandleError();
+    }
 }
 
 DnsSocket::DnsSocket(ATParser& parser,
