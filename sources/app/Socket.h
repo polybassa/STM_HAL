@@ -55,6 +55,7 @@ protected:
     ATCmdUSOCR mATCmdUSOCR;
     ATCmdUSOCO mATCmdUSOCO;
     ATCmdUSOSO mATCmdUSOSO;
+    ATCmdUSOCTL mATCmdUSOCTL;
     size_t mSocket;
     size_t mTimeOfLastSend;
     bool isOpen = false;

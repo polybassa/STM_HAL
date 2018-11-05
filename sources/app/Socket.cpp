@@ -36,6 +36,7 @@ Socket::Socket(const Protocol                   protocol,
     mATCmdUSOCR(send),
     mATCmdUSOCO(send),
     mATCmdUSOSO(send),
+    mATCmdUSOCTL(send),
     mSocket(0),
     mTimeOfLastSend(os::Task::getTickCount()),
     mHandleError(errorCallback),
@@ -46,6 +47,7 @@ Socket::Socket(const Protocol                   protocol,
     parser.registerAtCommand(&mATCmdUSOCR);
     parser.registerAtCommand(&mATCmdUSOCO);
     parser.registerAtCommand(&mATCmdUSOSO);
+    parser.registerAtCommand(&mATCmdUSOCTL);
 }
 
 Socket::~Socket(void){}

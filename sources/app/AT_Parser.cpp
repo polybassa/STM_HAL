@@ -29,6 +29,7 @@ using app::ATCmdUPSND;
 using app::ATCmdURC;
 using app::ATCmdUSOCO;
 using app::ATCmdUSOCR;
+using app::ATCmdUSOCTL;
 using app::ATCmdUSORD;
 using app::ATCmdUSORF;
 using app::ATCmdUSOSO;
@@ -412,6 +413,44 @@ AT::Return_t ATCmdUSOSO::send(const size_t                    socket,
     mRequest = std::string_view(mRequestBuffer.data(), reqLen);
 
     return ATCmd::send(mSendFunction, timeout);
+}
+
+//------------------------ATCmdUSOCTL---------------------------------
+
+AT::Return_t ATCmdUSOCTL::send(const size_t                    socket,
+                               const size_t                    paramId,
+                               const std::chrono::milliseconds timeout)
+{
+    const size_t reqLen = std::snprintf(
+                                        mRequestBuffer.data(),
+                                        mRequestBuffer.size(),
+                                        "AT+USOCTL=%d,%d\r",
+                                        socket,
+                                        paramId
+                                        );
+
+    mRequest = std::string_view(mRequestBuffer.data(), reqLen);
+
+    return ATCmd::send(mSendFunction, timeout);
+}
+
+AT::Return_t ATCmdUSOCTL::onResponseMatch(void)
+{
+    if (mParser->getSocketFromInput(mSocket) != Return_t::FINISHED) {
+        return Return_t::ERROR;
+    }
+
+    if (mParser->getNumberFromInput(mParamId) != Return_t::FINISHED) {
+        return Return_t::ERROR;
+    }
+
+    mData = mParser->getInputUntilComma();
+
+    if ((mData.length() == 0) || (mData.length() > sizeof(mDataBuffer))) {
+        return AT::Return_t::ERROR;
+    }
+    std::memcpy(mDataBuffer.data(), mData.data(), mData.length());
+    return Return_t::WAITING;
 }
 
 //------------------------ATCmdURC---------------------------------

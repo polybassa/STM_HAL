@@ -267,6 +267,41 @@ public:
                   const std::chrono::milliseconds timeout);
 };
 
+class ATCmdUSOCTL final :
+    public ATCmd
+{
+    std::array<char, 64> mRequestBuffer;
+    SendFunction& mSendFunction;
+    std::array<char, 32> mDataBuffer;
+    std::string_view mData;
+    size_t mSocket = 0;
+    size_t mParamId = 0;
+    virtual Return_t onResponseMatch(void) override;
+
+public:
+    ATCmdUSOCTL(SendFunction& send) :
+        ATCmd("AT+USOCTL", "", "+USOCTL:"), mSendFunction(send) {}
+
+    Return_t send(const size_t                    socket,
+                  const size_t                    paramId,
+                  const std::chrono::milliseconds timeout);
+
+    const std::string_view getData(void) const
+    {
+        return mData;
+    }
+
+    size_t getParamId(void) const
+    {
+        return mParamId;
+    }
+
+    size_t getSocket(void) const
+    {
+        return mSocket;
+    }
+};
+
 class ATCmdURC final :
     public AT
 {
