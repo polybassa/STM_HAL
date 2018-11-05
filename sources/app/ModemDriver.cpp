@@ -238,6 +238,8 @@ std::shared_ptr<app::Socket> ModemDriver::getSocket(app::Socket::Protocol protoc
             handleError();
         });
     }
-    mSockets.push_back(sock);
+    if (sock) {
+        mSockets.push_back(sock);
+    }
     return sock;
 }
