@@ -13,8 +13,7 @@
  *  You should have received a copy of the GNU General Public License
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>. */
 
-#ifndef SOURCES_PMD__SEMAPHORE_H_
-#define SOURCES_PMD__SEMAPHORE_H_
+#pragma once
 
 #include "FreeRTOS.h"
 #include "semphr.h"
@@ -48,5 +47,3 @@ public:
     operator bool() const;
 };
 }
-
-#endif /* SOURCES_PMD__SEMAPHORE_H_ */

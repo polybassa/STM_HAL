@@ -13,10 +13,7 @@
  *  You should have received a copy of the GNU General Public License
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>. */
 
-#ifndef SOURCES_PMD_ENDPOINT_H_
-#define SOURCES_PMD_ENDPOINT_H_
+#pragma once
 
 #define ENDPOINT_IP "95.143.172.237"
 #define ENDPOINT_PORT "62938"
-
-#endif

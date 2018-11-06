@@ -13,8 +13,7 @@
  *  You should have received a copy of the GNU General Public License
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>. */
 
-#ifndef SOURCES_DEMOEXECUTER_H_
-#define SOURCES_DEMOEXECUTER_H_
+#pragma once
 
 #include "CanController.h"
 #include "TaskInterruptable.h"
@@ -60,5 +59,3 @@ public:
     void runDemo(std::string_view data);
 };
 }
-
-#endif /* SOURCES_DEMOEXECUTER_H_ */

@@ -13,8 +13,7 @@
  *  You should have received a copy of the GNU General Public License
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>. */
 
-#ifndef SOURCES_PMD__LOCKGUARD_H_
-#define SOURCES_PMD__LOCKGUARD_H_
+#pragma once
 
 #include "FreeRTOS.h"
 #include "semphr.h"
@@ -53,5 +52,3 @@ private:
     bool mLockObtained = false;
 };
 }
-
-#endif /* SOURCES_PMD__LOCKGUARD_H_ */

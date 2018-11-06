@@ -13,8 +13,7 @@
  *  You should have received a copy of the GNU General Public License
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>. */
 
-#ifndef SOURCES_PMD_DEBUGINTERFACE_H_
-#define SOURCES_PMD_DEBUGINTERFACE_H_
+#pragma once
 
 #include "Usart.h"
 #include "hal_Factory.h"
@@ -48,5 +47,3 @@ public:
     size_t receiveAvailableData(uint8_t* const data, const size_t length) const;
 };
 }
-
-#endif /* SOURCES_PMD_DEBUGINTERFACE_H_ */

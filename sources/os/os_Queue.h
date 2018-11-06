@@ -13,8 +13,7 @@
  *  You should have received a copy of the GNU General Public License
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>. */
 
-#ifndef SOURCES_PMD__QUEUE_H_
-#define SOURCES_PMD__QUEUE_H_
+#pragma once
 
 #include "FreeRTOS.h"
 #include "queue.h"
@@ -289,5 +288,3 @@ void Queue<T, 1>::reset(void) const
     xQueueReset(mQueueHandle);
 }
 }
-
-#endif /* SOURCES_PMD__QUEUE_H_ */

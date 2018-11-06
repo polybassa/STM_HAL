@@ -13,8 +13,7 @@
  *  You should have received a copy of the GNU General Public License
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>. */
 
-#ifndef SOURCES_PMD_COMMANDMULTIPLEXER_H_
-#define SOURCES_PMD_COMMANDMULTIPLEXER_H_
+#pragma once
 
 #include <string_view>
 #include <memory>
@@ -75,5 +74,3 @@ public:
     CommandMultiplexer& operator=(CommandMultiplexer&&) = delete;
 };
 }
-
-#endif /* SOURCES_PMD_COMMANDMULTIPLEXER_H_ */

@@ -13,8 +13,7 @@
  *  You should have received a copy of the GNU General Public License
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>. */
 
-#ifndef SOURCES_PMD__STREAMBUFFER_H_
-#define SOURCES_PMD__STREAMBUFFER_H_
+#pragma once
 
 #include "FreeRTOS.h"
 #include "stream_buffer.h"
@@ -187,4 +186,3 @@ bool StreamBuffer<T, n>::receiveCompletedFromISR(void) const
     return retValue == pdTRUE;
 }
 }
-#endif /* SOURCES_PMD__STREAMBUFFER_H_ */

@@ -13,8 +13,7 @@
  *  You should have received a copy of the GNU General Public License
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>. */
 
-#ifndef SOURCES_PMD__TASK_H_
-#define SOURCES_PMD__TASK_H_
+#pragma once
 
 #include <cstdint>
 #include "FreeRTOS.h"
@@ -99,5 +98,3 @@ struct ThisTask {
     static char* getName(void);
 };
 }
-
-#endif /* SOURCES_PMD__TASK_H_ */

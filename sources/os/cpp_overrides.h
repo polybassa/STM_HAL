@@ -13,8 +13,7 @@
  *  You should have received a copy of the GNU General Public License
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>. */
 
-#ifndef COMMON_CPP_OVERRIDES_H_
-#define COMMON_CPP_OVERRIDES_H_
+#pragma once
 
 #if  defined(USE_FREERTOS) && defined(__cplusplus)
 
@@ -51,5 +50,3 @@ extern "C" void abort(void)
 }
 
 #endif
-
-#endif /* COMMON_CPP_OVERRIDES_H_ */

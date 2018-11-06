@@ -16,8 +16,7 @@
    You should have received a copy of the GNU General Public License
    along with Wifly_Light.  If not, see <http://www.gnu.org/licenses/>. */
 
-#ifndef _UNITTEST_H_
-#define _UNITTEST_H_
+#pragma once
 
 #include <stdio.h>
 #include "trace.h"
@@ -62,4 +61,3 @@
         printf("%36s run %2d Tests (%2d skipped | %2d errors)\n", __FILE__, numTests, numSkipped, numErrors); \
         return numErrors; \
 } while (0)
-#endif /* #ifndef _UNITTEST_H_ */

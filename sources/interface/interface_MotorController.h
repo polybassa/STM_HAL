@@ -13,8 +13,7 @@
  *  You should have received a copy of the GNU General Public License
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>. */
 
-#ifndef SOURCES_PMD_MOTORCONTROLLER_INTERFACE_H_
-#define SOURCES_PMD_MOTORCONTROLLER_INTERFACE_H_
+#pragma once
 
 namespace interface
 {
@@ -23,5 +22,3 @@ struct MotorController {
     virtual float getCurrentRPS(void) const = 0;
 };
 }
-
-#endif /* SOURCES_PMD_MOTORCONTROLLER_INTERFACE_H_ */

@@ -13,8 +13,7 @@
  *  You should have received a copy of the GNU General Public License
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>. */
 
-#ifndef SOURCES_PMD_VIRTUAL_LIGHT_H_
-#define SOURCES_PMD_VIRTUAL_LIGHT_H_
+#pragma once
 
 #include <cstdint>
 #include "interface_Light.h"
@@ -52,4 +51,3 @@ void virt::Light::setColor(const interface ::Color& color)
     mColor.green = color.green;
     mColor.blue = color.blue;
 }
-#endif /* SOURCES_PMD_VIRTUAL_LIGHT_H_ */

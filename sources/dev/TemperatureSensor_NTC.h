@@ -13,8 +13,7 @@
  *  You should have received a copy of the GNU General Public License
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>. */
 
-#ifndef SOURCES_PMD_TEMPERATURESENSOR_NTC_H_
-#define SOURCES_PMD_TEMPERATURESENSOR_NTC_H_
+#pragma once
 
 #include <cstdint>
 #include "Adc.h"
@@ -50,5 +49,3 @@ private:
     friend class Factory;
 };
 }
-
-#endif /* SOURCES_PMD_TEMPERATURESENSOR_NTC_H_ */

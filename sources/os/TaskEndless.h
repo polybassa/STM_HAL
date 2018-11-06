@@ -13,8 +13,7 @@
  *  You should have received a copy of the GNU General Public License
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>. */
 
-#ifndef SOURCES_PMD_TASK_ENDLESS_H_
-#define SOURCES_PMD_TASK_ENDLESS_H_
+#pragma once
 
 #include "os_Task.h"
 
@@ -25,5 +24,3 @@ struct TaskEndless :
     using Task::Task;
 };
 }
-
-#endif /* SOURCES_PMD_TASK_ENDLESS_H_ */

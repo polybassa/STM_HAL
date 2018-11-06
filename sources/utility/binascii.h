@@ -13,8 +13,7 @@
  *  You should have received a copy of the GNU General Public License
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>. */
 
-#ifndef SOURCES_UTILITY_BINASCII_H_
-#define SOURCES_UTILITY_BINASCII_H_
+#pragma once
 
 template<typename T, typename U>
 void hexlify(T& dest, const U& src)
@@ -30,4 +29,3 @@ void hexlify(T& dest, const U& src)
         *destIt++ = hex[(x & 0x0f)];
     }
 }
-#endif /* SOURCES_UTILITY_BINASCII_H_ */

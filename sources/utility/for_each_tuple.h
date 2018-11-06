@@ -13,8 +13,7 @@
  *  You should have received a copy of the GNU General Public License
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>. */
 
-#ifndef SOURCES_UTILITY_FOR_EACH_TUPLE_H_
-#define SOURCES_UTILITY_FOR_EACH_TUPLE_H_
+#pragma once
 
 #include <cstddef>
 #include <tuple>
@@ -56,5 +55,3 @@ template<typename ... args>
 struct pack_size {
     static constexpr size_t value = pack_size_index<sizeof ... (args), args ...>::value;
 };
-
-#endif /* SOURCES_UTILITY_FOR_EACH_TUPLE_H_ */

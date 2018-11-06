@@ -13,8 +13,7 @@
  *  You should have received a copy of the GNU General Public License
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>. */
 
-#ifndef SOURCES_PMD_REALTIMEDEBUGINTERFACE_H_
-#define SOURCES_PMD_REALTIMEDEBUGINTERFACE_H_
+#pragma once
 
 #include "SEGGER_RTT.h"
 #if defined (STM32F303xC) || defined (STM32F334x8) || defined (STM32F302x8) || defined (STM32F303xE)
@@ -98,5 +97,3 @@ public:
     }
 };
 }
-
-#endif /* SOURCES_PMD_REALTIMEDEBUGINTERFACE_H_ */
