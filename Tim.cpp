@@ -100,4 +100,3 @@ TIM_TypeDef* Tim::getBasePointer(void) const
 }
 
 constexpr const std::array<const Tim, Tim::Description::__ENUM__SIZE + 1> Factory<Tim>::Container;
-constexpr const std::array<const uint32_t, Tim::Description::__ENUM__SIZE> Factory<Tim>::Clocks;

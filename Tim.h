@@ -16,6 +16,8 @@
 #ifndef SOURCES_PMD_TIM_H_
 #define SOURCES_PMD_TIM_H_
 
+#include "trace.h"
+
 #include <cstdint>
 #include <limits>
 #include <array>
@@ -39,6 +41,9 @@
                                         ((PERIPH) == TIM12_BASE) || \
                                         ((PERIPH) == TIM13_BASE) || \
                                         ((PERIPH) == TIM14_BASE))
+
+#define IS_TIM_BASE_APB1(_BASE) (((_BASE & 0xFFFF0000) - APB1PERIPH_BASE) == 0)
+#define IS_TIM_BASE_APB2(_BASE) (((_BASE & 0xFFFF0000) - APB2PERIPH_BASE) == 0)
 // ================================================================================================
 
 namespace dev
@@ -72,15 +77,21 @@ struct Tim {
     const enum Description mDescription;
 
 private:
-    constexpr Tim(const enum Description&        desc,
-                  const uint32_t&                peripherie,
-                  const TIM_TimeBaseInitTypeDef& conf) :
+    constexpr Tim(const enum Description& desc,
+                  const uint32_t& peripherie,
+                  const TIM_TimeBaseInitTypeDef& conf,
+                  const uint32_t& clock_source = 0,
+                  const TIM_BDTRInitTypeDef& bdtr_init = {0, 0, 0, 0, 0, 0, 0}) :
         mDescription(desc),
         mPeripherie(peripherie),
-        mConfiguration(conf) {}
+        mConfiguration(conf),
+        mClockSource(clock_source),
+        mBrakeAndDeadTimeConf(bdtr_init) {}
 
     const uint32_t mPeripherie;
     const TIM_TimeBaseInitTypeDef mConfiguration;
+    const uint32_t mClockSource;
+    const TIM_BDTRInitTypeDef mBrakeAndDeadTimeConf;
     mutable uint32_t mClockFrequency = 0;
 
     void initialize(void) const;
@@ -102,39 +113,26 @@ class Factory<Tim>
 
     Factory(void)
     {
-        for (const auto& clock : Clocks) {
-            if ((clock == RCC_APB1Periph_TIM2) ||
-                (clock == RCC_APB1Periph_TIM3) ||
-                (clock == RCC_APB1Periph_TIM4) ||
-                (clock == RCC_APB1Periph_TIM5) ||
-                (clock == RCC_APB1Periph_TIM6) ||
-                (clock == RCC_APB1Periph_TIM7) ||
-                (clock == RCC_APB1Periph_TIM12) ||
-                (clock == RCC_APB1Periph_TIM13) ||
-                (clock == RCC_APB1Periph_TIM14))
-            {
-                RCC_APB1PeriphClockCmd(clock, ENABLE);
-            } else if ((clock == RCC_APB2Periph_TIM1) ||
-                       (clock == RCC_APB2Periph_TIM8) ||
-                       (clock == RCC_APB2Periph_TIM9) ||
-                       (clock == RCC_APB2Periph_TIM10) ||
-                       (clock == RCC_APB2Periph_TIM11))
-            {
-                RCC_APB2PeriphClockCmd(clock, ENABLE);
-            }
-        }
-
         RCC_ClocksTypeDef clocks;
         RCC_GetClocksFreq(&clocks);
 
         for (const auto& tim : Container) {
             if (tim.mDescription != Tim::__ENUM__SIZE) {
-                tim.initialize();
+                if (IS_TIM_BASE_APB1(tim.mPeripherie)) {
+                    RCC_APB1PeriphClockCmd(tim.mClockSource, ENABLE);
+                    tim.mClockFrequency = clocks.SYSCLK_Frequency;
+                } else if (IS_TIM_BASE_APB2(tim.mPeripherie)) {
+                    RCC_APB2PeriphClockCmd(tim.mClockSource, ENABLE);
+                    tim.mClockFrequency = clocks.SYSCLK_Frequency;
+                } else {
+                    tim.mClockFrequency = 0;
+                }
 
-                tim.mClockFrequency = clocks.SYSCLK_Frequency;
+                tim.initialize();
             }
         }
     }
+
 public:
 
     template<enum Tim::Description index>

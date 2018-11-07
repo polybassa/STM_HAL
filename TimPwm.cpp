@@ -74,7 +74,55 @@ void Pwm::initialize(void) const
         break;
     }
 
+    if (IS_TIM_LIST4_PERIPH(mTim.getBasePointer())) {
+        TIM_BDTRInitTypeDef tmp_conf = mTim.mBrakeAndDeadTimeConf;
+        TIM_BDTRConfig(mTim.getBasePointer(), &tmp_conf);
+        // TIM_BDTRConfig accesses TIM_BDTRInitTypeDef only read-only, but std periph lib is written without const
+        TIM_CtrlPWMOutputs(mTim.getBasePointer(), ENABLE);
+    }
+
     mTim.enable();
+}
+
+void Pwm::togglePolarityOfComplementaryChannel(void) const
+{
+//	switch (mChannel) {
+//	    case CHANNEL1:
+////	        TIM_OC1Init(mTim.getBasePointer(), &mOcConfiguration);
+////	        TIM_OC1PreloadConfig(mTim.getBasePointer(), TIM_OCPreload_Enable);
+//	        mTim.getBasePointer()->CCER ^= TIM_CCER_CC1NP;
+//	        break;
+//
+//	    case CHANNEL2:
+////	        TIM_OC2Init(mTim.getBasePointer(), &mOcConfiguration);
+////	        TIM_OC2PreloadConfig(mTim.getBasePointer(), TIM_OCPreload_Enable);
+//	        mTim.getBasePointer()->CCER ^= TIM_CCER_CC2NP;
+//	        break;
+//
+//	    case CHANNEL3:
+////	        TIM_OC3Init(mTim.getBasePointer(), &mOcConfiguration);
+////	        TIM_OC3PreloadConfig(mTim.getBasePointer(), TIM_OCPreload_Enable);
+//	        mTim.getBasePointer()->CCER ^= TIM_CCER_CC3NP;
+//	        break;
+//
+//	    case CHANNEL4:
+////	        TIM_OC4Init(mTim.getBasePointer(), &mOcConfiguration);
+////	        TIM_OC4PreloadConfig(mTim.getBasePointer(), TIM_OCPreload_Enable);
+    mTim.getBasePointer()->CCER ^= TIM_CCER_CC4NP;
+//	        break;
+//	    }
+    const uint16_t TIM_CCxNP_bit = 0x8 << (4 * mChannel);
+    mTim.getBasePointer()->CCER ^= TIM_CCxNP_bit;
+}
+
+void Pwm::setPolarityOfComplementaryChannel(const bool& inverted) const
+{
+    const uint16_t TIM_CCxNP_bit = 0x8 << (4 * mChannel);
+    if (inverted) {
+        mTim.getBasePointer()->CCER &= ~TIM_CCxNP_bit;
+    } else {
+        mTim.getBasePointer()->CCER |= TIM_CCxNP_bit;
+    }
 }
 
 constexpr const std::array<const Pwm, Pwm::Description::__ENUM__SIZE> Factory<Pwm>::Container;
