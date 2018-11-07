@@ -51,11 +51,11 @@ struct Pwm {
      * Set the polarity of the complementary pwm output.
      * This only effects the advanced control timers. (Tim1 and Tim8)
      * If set to true, the xNChannel outputs a signal with the logical opposite
-     * of the xChannel signal. Be careful if an additional dead time is configured
+     * of the reference signal. Be careful if an additional dead time is configured
      * for the used timer.
-     * @param inverted bool indicating the polarity of the n channel
+     * @param high bool indicating the polarity of the n channel
      */
-    void setPolarityOfComplementaryChannel(const bool& inverted) const;
+    void setPolarityOfComplementaryChannel(const bool& high) const;
 
 private:
     constexpr Pwm(const enum Description&  desc,
