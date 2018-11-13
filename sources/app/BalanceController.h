@@ -1,20 +1,9 @@
-/* Copyright (C) 2016 Nils Weiss
- *
- *  This program is free software: you can redistribute it and/or modify
- *  it under the terms of the GNU General Public License as published by
- *  the Free Software Foundation, either version 3 of the License, or
- *  (at your option) any later version.
- *
- *  This program is distributed in the hope that it will be useful,
- *  but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- *  GNU General Public License for more details.
- *
- *  You should have received a copy of the GNU General Public License
- *  along with this program.  If not, see <http://www.gnu.org/licenses/>. */
+// SPDX-License-Identifier: GPL-3.0
+/*
+ * Copyright (c) 2014-2018 Nils Weiss
+ */
 
-#ifndef SOURCES_PMD_BALANCECONTROLLER_H_
-#define SOURCES_PMD_BALANCECONTROLLER_H_
+#pragma once
 
 #include "PIDController.h"
 #include "MotorController.h"
@@ -28,7 +17,7 @@
 namespace app
 {
 class BalanceController final :
-    private os::DeepSleepModule, public interface::BalanceController
+    private os::DeepSleepModule, public interface ::BalanceController
 {
     virtual void enterDeepSleep(void) override;
     virtual void exitDeepSleep(void) override;
@@ -45,16 +34,14 @@ class BalanceController final :
     void balanceControllerTaskFunction(const bool&);
 public:
     BalanceController(
-                      const Mpu &gyro,
-                      MotorController & motor);
+                      const Mpu&       gyro,
+                      MotorController& motor);
 
-    BalanceController(const BalanceController &) = delete;
-    BalanceController(BalanceController &&) = delete;
+    BalanceController(const BalanceController&) = delete;
+    BalanceController(BalanceController&&) = delete;
     BalanceController& operator=(const BalanceController&) = delete;
-    BalanceController& operator=(BalanceController &&) = delete;
+    BalanceController& operator=(BalanceController&&) = delete;
 
     virtual void setTargetAngleInDegree(const float angle) override;
 };
 }
-
-#endif /* SOURCES_PMD_BALANCECONTROLLER_H_ */

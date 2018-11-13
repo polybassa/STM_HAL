@@ -1,17 +1,7 @@
-/* Copyright (C) 2015  Nils Weiss, Florian Breintner, Markus Wildgruber
- *
- *  This program is free software: you can redistribute it and/or modify
- *  it under the terms of the GNU General Public License as published by
- *  the Free Software Foundation, either version 3 of the License, or
- *  (at your option) any later version.
- *
- *  This program is distributed in the hope that it will be useful,
- *  but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- *  GNU General Public License for more details.
- *
- *  You should have received a copy of the GNU General Public License
- *  along with this program.  If not, see <http://www.gnu.org/licenses/>. */
+// SPDX-License-Identifier: GPL-3.0
+/*
+ * Copyright (c) 2014-2018 Nils Weiss
+ */
 
 #ifndef SOURCES_PMD_I2C_H_
 #define SOURCES_PMD_I2C_H_
@@ -33,9 +23,9 @@ struct I2c {
 
     I2c() = delete;
     I2c(const I2c&) = delete;
-    I2c(I2c &&) = default;
+    I2c(I2c&&) = default;
     I2c& operator=(const I2c&) = delete;
-    I2c& operator=(I2c &&) = delete;
+    I2c& operator=(I2c&&) = delete;
 
     size_t write(const uint16_t deviceAddr, const uint8_t regAddr, uint8_t const* const data,
                  const size_t length) const;

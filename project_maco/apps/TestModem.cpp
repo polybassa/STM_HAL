@@ -23,37 +23,37 @@
 
 static const int __attribute__((unused)) g_DebugZones = ZONE_ERROR | ZONE_WARNING | ZONE_VERBOSE | ZONE_INFO;
 
-os::TaskEndless modemTest("MODEM_Test", 2048, os::Task::Priority::LOW, [] (const bool&){
-                              constexpr const hal::Usart& debug =
-                                  hal::Factory<hal::Usart>::get<hal::Usart::DEBUG_IF>();
+os::TaskEndless modemTest("MODEM_Test", 2048, os::Task::Priority::LOW, [](const bool&){
+                          constexpr const hal::Usart& debug =
+                              hal::Factory<hal::Usart>::get<hal::Usart::DEBUG_IF>();
 
-                              auto modem = new app::ModemDriver(
-                                                                hal::Factory<hal::UsartWithDma>::get<hal::Usart::
-                                                                                                     MODEM_COM>(),
-                                                                hal::Factory<hal::Gpio>::get<hal::Gpio::MODEM_RESET>(),
-                                                                hal::Factory<hal::Gpio>::get<hal::Gpio::MODEM_POWER>(),
-                                                                hal::Factory<hal::Gpio>::get<hal::Gpio::MODEM_SUPPLY>());
+                          auto modem = new app::ModemDriver(
+                                                            hal::Factory<hal::UsartWithDma>::get<hal::Usart::
+                                                                                                 MODEM_COM>(),
+                                                            hal::Factory<hal::Gpio>::get<hal::Gpio::MODEM_RESET>(),
+                                                            hal::Factory<hal::Gpio>::get<hal::Gpio::MODEM_POWER>(),
+                                                            hal::Factory<hal::Gpio>::get<hal::Gpio::MODEM_SUPPLY>());
 
-                              auto callback = [&](std::string_view data)
-                              {
-                                  auto str = std::string(data.data(), data.length());
-                                  Trace(ZONE_INFO, "Received %s\r\n", str.c_str());
-                              };
-                              modem->registerReceiveCallback(callback);
+                          auto callback = [&](std::string_view data)
+        {
+                                          auto str = std::string(data.data(), data.length());
+                                          Trace(ZONE_INFO, "Received %s\r\n", str.c_str());
+        };
+                          modem->registerReceiveCallback(callback);
+                          os::ThisTask::sleep(std::chrono::milliseconds(300));
+                          os::ThisTask::sleep(std::chrono::milliseconds(300));
+                          os::ThisTask::sleep(std::chrono::milliseconds(300));
+                          Trace(ZONE_INFO, "Startup\r\n");
+
+                          while (true) {
                               os::ThisTask::sleep(std::chrono::milliseconds(300));
+                              modem->send(std::string_view("HiHI  "));
+
                               os::ThisTask::sleep(std::chrono::milliseconds(300));
+
+                              modem->send(std::string_view("HUHU  "));
+                              Trace(ZONE_INFO, "loop\r\n");
+
                               os::ThisTask::sleep(std::chrono::milliseconds(300));
-                              Trace(ZONE_INFO, "Startup\r\n");
-
-                              while (true) {
-                                  os::ThisTask::sleep(std::chrono::milliseconds(300));
-                                  modem->send(std::string_view("HiHI  "));
-
-                                  os::ThisTask::sleep(std::chrono::milliseconds(300));
-
-                                  modem->send(std::string_view("HUHU  "));
-                                  Trace(ZONE_INFO, "loop\r\n");
-
-                                  os::ThisTask::sleep(std::chrono::milliseconds(300));
-                              }
-                          });
+                          }
+    });

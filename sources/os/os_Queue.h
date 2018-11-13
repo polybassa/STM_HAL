@@ -1,20 +1,9 @@
-/* Copyright (C) 2015  Nils Weiss
- *
- *  This program is free software: you can redistribute it and/or modify
- *  it under the terms of the GNU General Public License as published by
- *  the Free Software Foundation, either version 3 of the License, or
- *  (at your option) any later version.
- *
- *  This program is distributed in the hope that it will be useful,
- *  but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- *  GNU General Public License for more details.
- *
- *  You should have received a copy of the GNU General Public License
- *  along with this program.  If not, see <http://www.gnu.org/licenses/>. */
+// SPDX-License-Identifier: GPL-3.0
+/*
+ * Copyright (c) 2014-2018 Nils Weiss
+ */
 
-#ifndef SOURCES_PMD__QUEUE_H_
-#define SOURCES_PMD__QUEUE_H_
+#pragma once
 
 #include "FreeRTOS.h"
 #include "queue.h"
@@ -30,22 +19,22 @@ class Queue
 public:
     Queue(void);
     Queue(const Queue&) = delete;
-    Queue(Queue &&);
+    Queue(Queue&&);
     Queue& operator=(const Queue&) = delete;
-    Queue& operator=(Queue &&);
+    Queue& operator=(Queue&&);
     ~Queue(void);
 
-    bool sendFront(T & message, std::chrono::milliseconds = std::chrono::milliseconds(portMAX_DELAY)) const;
+    bool sendFront(T & message, std::chrono::milliseconds) const;
     bool sendFront(T& message, uint32_t ticksToWait = portMAX_DELAY) const;
     bool sendFrontFromISR(T& message) const;
     bool sendFromISR(T& message) const;
-    bool sendBack(T & message, std::chrono::milliseconds = std::chrono::milliseconds(portMAX_DELAY)) const;
+    bool sendBack(T & message, std::chrono::milliseconds) const;
     bool sendBack(T& message, uint32_t ticksToWait = portMAX_DELAY) const;
     bool sendBackFromISR(T& message) const;
-    bool peek(T & message, std::chrono::milliseconds = std::chrono::milliseconds(portMAX_DELAY)) const;
+    bool peek(T & message, std::chrono::milliseconds) const;
     bool peek(T& message, uint32_t ticksToWait = portMAX_DELAY) const;
     bool peekFromISR(T& message) const;
-    bool receive(T & message, std::chrono::milliseconds = std::chrono::milliseconds(portMAX_DELAY)) const;
+    bool receive(T & message, std::chrono::milliseconds) const;
     bool receive(T& message, uint32_t ticksToWait = portMAX_DELAY) const;
     UBaseType_t messagesWaiting(void) const;
     UBaseType_t spacesAvailable(void) const;
@@ -60,9 +49,9 @@ class Queue<T, 1>
 public:
     Queue(void);
     Queue(const Queue&) = delete;
-    Queue(Queue &&);
+    Queue(Queue&&);
     Queue& operator=(const Queue&) = delete;
-    Queue& operator=(Queue &&);
+    Queue& operator=(Queue&&);
     ~Queue(void);
 
     bool peek(T & message, std::chrono::milliseconds = std::chrono::milliseconds(portMAX_DELAY)) const;
@@ -80,14 +69,14 @@ Queue<T, n>::Queue(void) :
     mQueueHandle(xQueueCreate(n, sizeof(T))) {}
 
 template<typename T, size_t n>
-Queue<T, n>::Queue(Queue && rhs) :
+Queue<T, n>::Queue(Queue&& rhs) :
     mQueueHandle(rhs.mQueueHandle)
 {
     rhs.mQueueHandle = nullptr;
 }
 
 template<typename T, size_t n>
-Queue<T, n>& Queue<T, n>::operator=(Queue<T, n> && rhs)
+Queue<T, n>& Queue<T, n>::operator=(Queue<T, n>&& rhs)
 {
     mQueueHandle = rhs.mQueueHandle;
     rhs.mQueueHandle = nullptr;
@@ -215,14 +204,14 @@ Queue<T, 1>::Queue(void) :
 {}
 
 template<typename T>
-Queue<T, 1>::Queue(Queue<T, 1> && rhs) :
+Queue<T, 1>::Queue(Queue<T, 1>&& rhs) :
     mQueueHandle(rhs.mQueueHandle)
 {
     rhs.mQueueHandle = nullptr;
 }
 
 template<typename T>
-Queue<T, 1>& Queue<T, 1>::operator=(Queue<T, 1> && rhs)
+Queue<T, 1>& Queue<T, 1>::operator=(Queue<T, 1>&& rhs)
 {
     mQueueHandle = rhs.mQueueHandle;
     rhs.mQueueHandle = nullptr;
@@ -289,5 +278,3 @@ void Queue<T, 1>::reset(void) const
     xQueueReset(mQueueHandle);
 }
 }
-
-#endif /* SOURCES_PMD__QUEUE_H_ */

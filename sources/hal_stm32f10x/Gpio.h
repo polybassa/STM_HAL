@@ -1,17 +1,7 @@
-/* Copyright (C) 2018  Nils Weiss
- *
- *  This program is free software: you can redistribute it and/or modify
- *  it under the terms of the GNU General Public License as published by
- *  the Free Software Foundation, either version 3 of the License, or
- *  (at your option) any later version.
- *
- *  This program is distributed in the hope that it will be useful,
- *  but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- *  GNU General Public License for more details.
- *
- *  You should have received a copy of the GNU General Public License
- *  along with this program.  If not, see <http://www.gnu.org/licenses/>. */
+// SPDX-License-Identifier: GPL-3.0
+/*
+ * Copyright (c) 2014-2018 Nils Weiss
+ */
 
 #ifndef SOURCES_PMD_GPIO_H_
 #define SOURCES_PMD_GPIO_H_
@@ -32,19 +22,21 @@ struct Gpio {
 
     Gpio() = delete;
     Gpio(const Gpio&) = delete;
-    Gpio(Gpio &&) = default;
+    Gpio(Gpio&&) = default;
     Gpio& operator=(const Gpio&) = delete;
-    Gpio& operator=(Gpio &&) = delete;
+    Gpio& operator=(Gpio&&) = delete;
 
     operator bool() const;
-
     void operator=(const bool& state) const;
 
+    void configureAsOutput(void) const;
+    void restoreDefaultConfiguration(void) const;
+
 private:
-    constexpr Gpio(const Description&        desc,
-                   const uint32_t&           peripherie,
-                   const GPIO_InitTypeDef && conf,
-                   const uint16_t&           pinSource = std::numeric_limits<uint16_t>::max()) :
+    constexpr Gpio(const Description&       desc,
+                   const uint32_t&          peripherie,
+                   const GPIO_InitTypeDef&& conf,
+                   const uint16_t&          pinSource = std::numeric_limits<uint16_t>::max()) :
         mDescription(desc),
         mPeripherie(peripherie),
         mConfiguration(std::move(conf)),

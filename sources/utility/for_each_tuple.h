@@ -13,15 +13,14 @@
  *  You should have received a copy of the GNU General Public License
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>. */
 
-#ifndef SOURCES_UTILITY_FOR_EACH_TUPLE_H_
-#define SOURCES_UTILITY_FOR_EACH_TUPLE_H_
+#pragma once
 
 #include <cstddef>
 #include <tuple>
 #include <utility>
 
 template<typename Tuple, typename F, std::size_t ... Indices>
-void for_each_impl(Tuple && tuple, F && f, std::index_sequence<Indices ...> )
+void for_each_impl(Tuple&& tuple, F&& f, std::index_sequence<Indices ...> )
 {
     using swallow = int[];
     (void)swallow {
@@ -31,7 +30,7 @@ void for_each_impl(Tuple && tuple, F && f, std::index_sequence<Indices ...> )
 }
 
 template<typename Tuple, typename F>
-void for_each(Tuple && tuple, F && f)
+void for_each(Tuple&& tuple, F&& f)
 {
     constexpr std::size_t N = std::tuple_size<std::remove_reference_t<Tuple> >::value;
     for_each_impl(std::forward<Tuple>(tuple), std::forward<F>(f),
@@ -56,5 +55,3 @@ template<typename ... args>
 struct pack_size {
     static constexpr size_t value = pack_size_index<sizeof ... (args), args ...>::value;
 };
-
-#endif /* SOURCES_UTILITY_FOR_EACH_TUPLE_H_ */

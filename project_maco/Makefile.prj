@@ -1,16 +1,17 @@
 ifeq ($(MAKECMDGOALS),debug_firmware)
 DEFINES+=-DDEBUG
-DEFINES+=-DUSART_DEBUG
+#DEFINES+=-DSYSVIEW
+#DEFINES+=-DUSART_DEBUG
 DEFINES+=-g
 DEFINES+=-O0
 DEFINES+=-DUSE_FULL_ASSERT
 LDFLAGS+=-O0
-LDFLAGS+=-u _printf_float
+#LDFLAGS+=-u _printf_float
 endif
 
 ifeq ($(MAKECMDGOALS),firmware)
-DEFINES+=-O3
-LDFLAGS+=-O3
+DEFINES+=-Os
+LDFLAGS+=-Os
 endif
 
 ifneq (,$(filter debug_firmware firmware,$(MAKECMDGOALS)))
@@ -30,10 +31,12 @@ VPATH+=${RTOS_SOURCE_DIR}/portable/GCC/ARM_CM3
 VPATH+=${ROOT}/libraries/CMSIS/Source
 VPATH+=${ROOT}/libraries/CMSIS/Device/ST/STM32F10x
 VPATH+=${ROOT}/libraries/STM32F10x_StdPeriph_Driver/src
-
-VPATH+=${ROOT}/libraries/SystemView_Src_V240a/SEGGER
-VPATH+=${ROOT}/libraries/SystemView_Src_V240a/OS
-VPATH+=${ROOT}/libraries/SystemView_Src_V240a/Config
+VPATH+=${SEGGER_SOURCE_DIR}/SEGGER
+VPATH+=${SEGGER_SOURCE_DIR}/Config
+VPATH+=${SEGGER_SOURCE_DIR}/Sample/FreeRTOSV10
+VPATH+=${SEGGER_SOURCE_DIR}/Sample/FreeRTOSV10/Config
+VPATH+=${RTT_SOURCE_DIR}/RTT
+VPATH+=${RTT_SOURCE_DIR}/Syscalls
 
 VPATH+=${ROOT}/device
 
@@ -58,21 +61,22 @@ IPATH+=${ROOT}/libraries/CMSIS/Include
 IPATH+=${ROOT}/libraries/CMSIS/Device/ST/STM32F10x
 IPATH+=${ROOT}/libraries/STM32F10x_StdPeriph_Driver/inc
 IPATH+=${ROOT}/libraries
-
-IPATH+=${ROOT}/libraries/SystemView_Src_V240a/SEGGER
-IPATH+=${ROOT}/libraries/SystemView_Src_V240a/OS
-IPATH+=${ROOT}/libraries/SystemView_Src_V240a/Config
+IPATH+=${SEGGER_SOURCE_DIR}/SEGGER
+IPATH+=${SEGGER_SOURCE_DIR}/Config
+IPATH+=${SEGGER_SOURCE_DIR}/Sample/FreeRTOSV10
+IPATH+=${SEGGER_SOURCE_DIR}/Sample/FreeRTOSV10/Config
 
 # PMD firmware
 ${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/main.o
 ${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/versionfile.o
+${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/binaryfile.o
 
 # HAL Layer
 ${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/Gpio.o
 ${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/Usart.o
 ${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/Dma.o
 ${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/UsartWithDma.o
-
+${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/Spi.o
 
 # DEV Layer
 ${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/DebugInterface.o
@@ -92,12 +96,12 @@ ${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/ModemDriver.o
 ${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/AT_Parser.o
 ${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/CanController.o
 ${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/CommandMultiplexer.o
+${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/DemoExecuter.o
+${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/Socket.o
 
-
-#PMD TestApps
+#TestApps
 #${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/TestGpio.o
 #${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/TestModem.o
-
 
 # device
 ${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/startup_stm32f10x_hd.o
@@ -111,7 +115,7 @@ ${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/stm32f10x_pwr.o
 #${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/stm32f10x_rtc.o
 ${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/stm32f10x_gpio.o
 ${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/stm32f10x_usart.o
-#${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/stm32f10x_spi.o
+${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/stm32f10x_spi.o
 ${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/stm32f10x_dma.o
 ${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/misc.o
 #${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/stm32f10x_exti.o
@@ -119,6 +123,7 @@ ${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/misc.o
 #${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/stm32f10x_adc.o
 #${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/stm32f10x_crc.o
 #${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/stm32f10x_i2c.o
+
 
 # freeRTOS
 ${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/croutine.o
@@ -128,9 +133,13 @@ ${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/stream_buffer.o
 ${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/tasks.o
 ${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/port.o
 ${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/heap_3.o
-${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/event_groups.o
+#${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/event_groups.o
 
 # SEGGER_SYSVIEW
 ${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/SEGGER_RTT.o
 ${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/SEGGER_RTT_printf.o
+${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/SEGGER_SYSVIEW_Config_FreeRTOS.o
+${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/SEGGER_SYSVIEW.o
+${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/SEGGER_SYSVIEW_FreeRTOS.o
+
 endif

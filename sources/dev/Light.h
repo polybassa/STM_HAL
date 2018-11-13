@@ -1,20 +1,9 @@
-/* Copyright (C) 2015  Nils Weiss
- *
- *  This program is free software: you can redistribute it and/or modify
- *  it under the terms of the GNU General Public License as published by
- *  the Free Software Foundation, either version 3 of the License, or
- *  (at your option) any later version.
- *
- *  This program is distributed in the hope that it will be useful,
- *  but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- *  GNU General Public License for more details.
- *
- *  You should have received a copy of the GNU General Public License
- *  along with this program.  If not, see <http://www.gnu.org/licenses/>. */
+// SPDX-License-Identifier: GPL-3.0
+/*
+ * Copyright (c) 2014-2018 Nils Weiss
+ */
 
-#ifndef SOURCES_PMD_LIGHT_H_
-#define SOURCES_PMD_LIGHT_H_
+#pragma once
 
 #include <cstdint>
 #include <array>
@@ -27,12 +16,12 @@ namespace dev
 struct Light {
     Light() = delete;
     Light(const Light&) = delete;
-    Light(Light &&) = default;
+    Light(Light&&) = default;
     Light& operator=(const Light&) = delete;
-    Light& operator=(Light &&) = delete;
+    Light& operator=(Light&&) = delete;
 
-    void setColor(const interface::Color& color) const;
-    void displayNumber(const uint8_t number, const interface::Color& color) const;
+    void setColor(const interface ::Color& color) const;
+    void displayNumber(const uint8_t number, const interface ::Color& color) const;
 
 private:
     constexpr Light(const enum interface::Light::Description& desc, const hal::SpiWithDma& spi) :
@@ -49,7 +38,7 @@ private:
     static const size_t BYTE_TO_8BIT_SCALE_FACTOR = 4;
 
     static const size_t ARRAY_SIZE = LED_COUNT * BYTE_TO_8BIT_SCALE_FACTOR * COLORS_PER_LED;
-    static std::array<std::array<uint8_t, ARRAY_SIZE>, interface::Light::__ENUM__SIZE> LedBitArrays;
+    static std::array<std::array<uint8_t, ARRAY_SIZE>, interface ::Light::__ENUM__SIZE> LedBitArrays;
 
     friend class Factory<Light>;
 };
@@ -58,16 +47,16 @@ template<>
 class Factory<Light>
 {
     static constexpr const std::array<const Light,
-                                      interface::Light::__ENUM__SIZE> Container =
+                                      interface ::Light::__ENUM__SIZE> Container =
     { {
-          Light(interface::Light::HEADLIGHT, hal::Factory<hal::SpiWithDma>::get<hal::Spi::HEADLIGHT>())
+          Light(interface ::Light::HEADLIGHT, hal::Factory<hal::SpiWithDma>::get<hal::Spi::HEADLIGHT>())
       } };
 
 public:
     template<enum interface::Light::Description index>
     static constexpr const Light& get(void)
     {
-        static_assert(index != interface::Light::Description::__ENUM__SIZE, "__ENUM__SIZE is not accessible");
+        static_assert(index != interface ::Light::Description::__ENUM__SIZE, "__ENUM__SIZE is not accessible");
         static_assert(Container[index].mDescription == index, "Wrong mapping between Description and Container");
 
         return Container[index];
@@ -77,5 +66,3 @@ public:
     friend const U& getFactory(void);
 };
 }
-
-#endif /* SOURCES_PMD_LIGHT_H_ */

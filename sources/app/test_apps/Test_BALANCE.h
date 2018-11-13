@@ -1,13 +1,4 @@
-/* Copyright (C) 2016 Nils Weiss */
-
-#ifndef SOURCES_PMD_TEST_BALANCE_H_
-#define SOURCES_PMD_TEST_BALANCE_H_
-
-#include "TaskEndless.h"
-
-namespace app
-{
-extern const os::TaskEndless balanceTest;
-}
-
-#endif /* SOURCES_PMD_TEST_BALANCE_H_ */
+// SPDX-License-Identifier: GPL-3.0
+/*
+ * Copyright (c) 2014-2018 Nils Weiss
+ */

@@ -13,8 +13,7 @@
  *  You should have received a copy of the GNU General Public License
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>. */
 
-#ifndef SOURCES_UTILITY_MEDIAN_FILTER_H_
-#define SOURCES_UTILITY_MEDIAN_FILTER_H_
+#pragma once
 
 #include <array>
 #include <algorithm>
@@ -38,9 +37,9 @@ void applyMedianFilter(std::array<T, N>& array)
 
     it output = middle;
 
-    auto getMedian = [] (const it &a, const it &b, const it &c){
-        return std::max(std::min(*a, *b), std::min(std::max(*a, *b), *c));
-    };
+    auto getMedian = [](const it& a, const it& b, const it& c){
+                         return std::max(std::min(*a, *b), std::min(std::max(*a, *b), *c));
+                     };
 
     //first step for preparation
     storage1 = getMedian(first++, middle++, last++);
@@ -58,5 +57,3 @@ void applyMedianFilter(std::array<T, N>& array)
     *output++ = storage2;
     *output = storage1;
 }
-
-#endif /* SOURCES_UTILITY_MEDIAN_FILTER_H_ */

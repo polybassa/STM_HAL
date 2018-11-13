@@ -118,6 +118,10 @@ typedef struct
                                    ((PERIPH) == SPI2) || \
                                    ((PERIPH) == SPI3))
 
+#define IS_SPI_ALL_PERIPH_BASE(PERIPH) (((PERIPH) == SPI1_BASE) || \
+                                   ((PERIPH) == SPI2_BASE) || \
+                                   ((PERIPH) == SPI3_BASE))
+
 #define IS_SPI_23_PERIPH(PERIPH) (((PERIPH) == SPI2) || \
                                   ((PERIPH) == SPI3))
 
@@ -444,7 +448,7 @@ typedef struct
   */
 
 void SPI_I2S_DeInit(SPI_TypeDef* SPIx);
-void SPI_Init(SPI_TypeDef* SPIx, SPI_InitTypeDef* SPI_InitStruct);
+void SPI_Init(SPI_TypeDef* SPIx, const SPI_InitTypeDef* SPI_InitStruct);
 void I2S_Init(SPI_TypeDef* SPIx, I2S_InitTypeDef* I2S_InitStruct);
 void SPI_StructInit(SPI_InitTypeDef* SPI_InitStruct);
 void I2S_StructInit(I2S_InitTypeDef* I2S_InitStruct);

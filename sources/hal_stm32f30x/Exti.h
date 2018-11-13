@@ -1,17 +1,7 @@
-/* Copyright (C) 2015  Nils Weiss, Markus Wildgruber
- *
- *  This program is free software: you can redistribute it and/or modify
- *  it under the terms of the GNU General Public License as published by
- *  the Free Software Foundation, either version 3 of the License, or
- *  (at your option) any later version.
- *
- *  This program is distributed in the hope that it will be useful,
- *  but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- *  GNU General Public License for more details.
- *
- *  You should have received a copy of the GNU General Public License
- *  along with this program.  If not, see <http://www.gnu.org/licenses/>. */
+// SPDX-License-Identifier: GPL-3.0
+/*
+ * Copyright (c) 2014-2018 Nils Weiss
+ */
 
 #ifndef SOURCES_PMD_EXTI_H_
 #define SOURCES_PMD_EXTI_H_
@@ -45,9 +35,9 @@ struct Exti {
 
     Exti() = delete;
     Exti(const Exti&) = delete;
-    Exti(Exti &&) = default;
+    Exti(Exti&&) = default;
     Exti& operator=(const Exti&) = delete;
-    Exti& operator=(Exti &&) = delete;
+    Exti& operator=(Exti&&) = delete;
 
     void enable(void) const;
     void disable(void) const;
@@ -62,12 +52,12 @@ private:
                    const uint32_t            priority = 0xf) :
         mDescription(desc), mGpio(gpio),
         mConfiguration(EXTI_InitTypeDef
-                       {
-                           gpio
-                           .mPinSource, EXTI_Mode_Interrupt,
-                           trigger,
-                           DISABLE
-                       }),
+        {
+            gpio
+            .mPinSource, EXTI_Mode_Interrupt,
+            trigger,
+            DISABLE
+        }),
         mPriority(priority) {}
 
     const enum Description mDescription;
@@ -83,7 +73,7 @@ private:
     void initialize(void) const;
     bool getStatus(void) const;
 
-    using CallbackArray = std::array<std::function<void(void)>, Exti::__ENUM__SIZE>;
+    using CallbackArray = std::array<std::function<void (void)>, Exti::__ENUM__SIZE>;
     static CallbackArray ExtiCallbacks;
 
     friend class Factory<Exti>;

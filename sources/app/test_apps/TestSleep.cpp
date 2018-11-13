@@ -1,17 +1,7 @@
-/* Copyright (C) 2015  Nils Weiss
- *
- *  This program is free software: you can redistribute it and/or modify
- *  it under the terms of the GNU General Public License as published by
- *  the Free Software Foundation, either version 3 of the License, or
- *  (at your option) any later version.
- *
- *  This program is distributed in the hope that it will be useful,
- *  but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- *  GNU General Public License for more details.
- *
- *  You should have received a copy of the GNU General Public License
- *  along with this program.  If not, see <http://www.gnu.org/licenses/>. */
+// SPDX-License-Identifier: GPL-3.0
+/*
+ * Copyright (c) 2014-2018 Nils Weiss
+ */
 
 #include "TestSleep.h"
 #include "trace.h"
@@ -47,14 +37,14 @@ private:
 public:
     BlinkApp(void) :
         os::DeepSleepModule(),
-        mBlinkTask("blinky", 2048, os::Task::Priority::LOW, [this](const bool& join) {
-                       blinkAppTaskFunction(join);
-                   }) {}
+            mBlinkTask("blinky", 2048, os::Task::Priority::LOW, [this](const bool& join) {
+        blinkAppTaskFunction(join);
+    }) {}
 
     BlinkApp(const BlinkApp&) = delete;
-    BlinkApp(BlinkApp &&) = delete;
+    BlinkApp(BlinkApp&&) = delete;
     BlinkApp& operator=(const BlinkApp&) = delete;
-    BlinkApp& operator=(BlinkApp &&) = delete;
+    BlinkApp& operator=(BlinkApp&&) = delete;
 };
 
 void BlinkApp::blinkAppTaskFunction(const bool& join)
@@ -69,12 +59,12 @@ void BlinkApp::blinkAppTaskFunction(const bool& join)
     led0 = true;
     led1 = true;
     do {
-    os::ThisTask::sleep(100ms);
-    led0 = true;
-    led1 = false;
-    os::ThisTask::sleep(100ms);
-    led0 = !true;
-    led1 = !false;
+        os::ThisTask::sleep(100ms);
+        led0 = true;
+        led1 = false;
+        os::ThisTask::sleep(100ms);
+        led0 = !true;
+        led1 = !false;
     } while (!join);
 
     led0 = false;
@@ -105,46 +95,46 @@ static void SYSCLKConfig_STOP(void)
     while (RCC_GetSYSCLKSource() != 0x08) {}
 }
 
-os::TaskEndless sleepTest("Sleep_Test", 2048, os::Task::Priority::MEDIUM, [] (const bool&){
-                              using hal::Exti;
-                              using hal::Factory;
-                              using hal::Gpio;
-                              static constexpr const auto& button = Factory<Gpio>::get<Gpio::USER_BUTTON>();
-                              static constexpr const auto& wakeup = Factory<Exti>::get<Exti::WAKEUP>();
-                              static constexpr const auto& led2 = Factory<Gpio>::get<Gpio::LED_5>();
+os::TaskEndless sleepTest("Sleep_Test", 2048, os::Task::Priority::MEDIUM, [](const bool&){
+                          using hal::Exti;
+                          using hal::Factory;
+                          using hal::Gpio;
+                          static constexpr const auto& button = Factory<Gpio>::get<Gpio::USER_BUTTON>();
+                          static constexpr const auto& wakeup = Factory<Exti>::get<Exti::WAKEUP>();
+                          static constexpr const auto& led2 = Factory<Gpio>::get<Gpio::LED_5>();
 
-                              wakeup.enable();
+                          wakeup.enable();
 
-                              while (true) {
-                                  if (!button) {
-                                      os::ThisTask::sleep(std::chrono::milliseconds(20));
-                                      continue;
-                                  }
-
-                                  while (button) {
-                                      os::ThisTask::sleep(std::chrono::milliseconds(20));
-                                  }
-
-                                  os::ThisTask::sleep(std::chrono::milliseconds(50));
-
-                                  os::DeepSleepController::enterGlobalDeepSleep();
-
-                                  os::Task::suspendAll();
-
-                                  led2 = false;
-
-                                  PWR_EnterSTOPMode(PWR_Regulator_LowPower, PWR_STOPEntry_WFI);
-
-                                  portDISABLE_INTERRUPTS();
-                                  SYSCLKConfig_STOP();
-                                  SysTick_Config((configCPU_CLOCK_HZ / configTICK_RATE_HZ) - 1UL);
-                                  portENABLE_INTERRUPTS();
-
-                                  led2 = true;
-
-                                  os::Task::resumeAll();
-
-                                  os::DeepSleepController::exitGlobalDeepSleep();
-                                  os::ThisTask::sleep(std::chrono::milliseconds(500));
+                          while (true) {
+                              if (!button) {
+                                  os::ThisTask::sleep(std::chrono::milliseconds(20));
+                                  continue;
                               }
-                          });
+
+                              while (button) {
+                                  os::ThisTask::sleep(std::chrono::milliseconds(20));
+                              }
+
+                              os::ThisTask::sleep(std::chrono::milliseconds(50));
+
+                              os::DeepSleepController::enterGlobalDeepSleep();
+
+                              os::Task::suspendAll();
+
+                              led2 = false;
+
+                              PWR_EnterSTOPMode(PWR_Regulator_LowPower, PWR_STOPEntry_WFI);
+
+                              portDISABLE_INTERRUPTS();
+                              SYSCLKConfig_STOP();
+                              SysTick_Config((configCPU_CLOCK_HZ / configTICK_RATE_HZ) - 1UL);
+                              portENABLE_INTERRUPTS();
+
+                              led2 = true;
+
+                              os::Task::resumeAll();
+
+                              os::DeepSleepController::exitGlobalDeepSleep();
+                              os::ThisTask::sleep(std::chrono::milliseconds(500));
+                          }
+    });

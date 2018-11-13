@@ -14,8 +14,6 @@
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>. */
 
 /* GENERAL INCLUDES */
-#include <string>
-
 #include "os_Task.h"
 #include "cpp_overrides.h"
 #include "trace.h"
@@ -26,6 +24,7 @@
 #include "Usart.h"
 #include "Dma.h"
 #include "UsartWithDma.h"
+#include "Spi.h"
 
 /* DEV LAYER INLCUDES */
 
@@ -37,6 +36,8 @@
 #include "ModemDriver.h"
 #include "CanController.h"
 #include "CommandMultiplexer.h"
+#include "DemoExecuter.h"
+#include "Endpoint.h"
 
 /* GLOBAL VARIABLES */
 static const int __attribute__((used)) g_DebugZones = ZONE_ERROR | ZONE_WARNING |
@@ -52,6 +53,7 @@ int main(void)
     hal::initFactory<hal::Factory<hal::Usart> >();
     hal::initFactory<hal::Factory<hal::Dma> >();
     hal::initFactory<hal::Factory<hal::UsartWithDma> >();
+    hal::initFactory<hal::Factory<hal::Spi> >();
 
     TraceInit();
     Trace(ZONE_INFO, "Version: %s \r\n", VERSION.c_str());
@@ -62,14 +64,19 @@ int main(void)
                                       hal::Factory<hal::Gpio>::get<hal::Gpio::MODEM_POWER>(),
                                       hal::Factory<hal::Gpio>::get<hal::Gpio::MODEM_SUPPLY>());
 
-    auto can = new app::CanController(hal::Factory<hal::UsartWithDma>::get<hal::Usart::SECCO_COM>(),
-                                      hal::Factory<hal::Gpio>::get<hal::Gpio::SECCO_PWR>());
+    auto controlsocket = modem->getSocket(app::Socket::Protocol::TCP, ENDPOINT_IP, "62938");
+    auto datasocket = modem->getSocket(app::Socket::Protocol::TCP, ENDPOINT_IP, "62979");
 
-    auto mux = new app::CommandMultiplexer(*modem, *can);
+    auto can = new app::CanController(hal::Factory<hal::UsartWithDma>::get<hal::Usart::SECCO_COM>(),
+                                      hal::Factory<hal::Gpio>::get<hal::Gpio::SECCO_PWR>(),
+                                      hal::Factory<hal::Gpio>::getAlternateFunctionGpio<hal::Gpio::USART2_TX>());
+
+    auto demo = new app::DemoExecuter(*can);
+    auto __attribute__((used)) mux = new app::CommandMultiplexer(controlsocket, datasocket, *can, *demo);
 
     os::Task::startScheduler();
-
-    while (1) {}
+    Trace(ZONE_ERROR, "This shouldn't happen!\r\n");
+    configASSERT(0);
 }
 
 void assert_failed(uint8_t* file, uint32_t line)

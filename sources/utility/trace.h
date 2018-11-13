@@ -13,8 +13,7 @@
  *  You should have received a copy of the GNU General Public License
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>. */
 
-#ifndef _TRACE_H_
-#define _TRACE_H_
+#pragma once
 
 #define ZONE_ERROR 0x00000001
 #define ZONE_WARNING 0x00000002
@@ -26,6 +25,7 @@
         if (g_DebugZones & (ZONE)) { \
             printf("%s:%u: ", __FILE__, __LINE__); \
             printf(__VA_ARGS__); \
+            fflush(stdout); \
         } \
 } while (0)
 #define TraceInit()
@@ -61,4 +61,3 @@ static dev::RealTimeDebugInterface& terminal = dev::RealTimeDebugInterface::inst
 #define TraceInit()
 #endif
 #endif
-#endif /* #ifndef _TRACE_H_ */

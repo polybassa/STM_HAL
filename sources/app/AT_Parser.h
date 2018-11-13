@@ -1,34 +1,18 @@
-/* Copyright (C) 2015  Nils Weiss
- *
- *  This program is free software: you can redistribute it and/or modify
- *  it under the terms of the GNU General Public License as published by
- *  the Free Software Foundation, either version 3 of the License, or
- *  (at your option) any later version.
- *
- *  This program is distributed in the hope that it will be useful,
- *  but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- *  GNU General Public License for more details.
- *
- *  You should have received a copy of the GNU General Public License
- *  along with this program.  If not, see <http://www.gnu.org/licenses/>. */
+// SPDX-License-Identifier: GPL-3.0
+/*
+ * Copyright (c) 2014-2018 Nils Weiss
+ */
 
-#ifndef SOURCES_PMD_AT_PARSER_H_
-#define SOURCES_PMD_AT_PARSER_H_
+#pragma once
 
-#include "os_StreamBuffer.h"
+#include <array>
 #include <string_view>
 #include <functional>
 #include <chrono>
 #include <vector>
-#include <memory>
-#include "Semaphore.h"
-
-#define AT_CMD_IP "91.7.34.61"
-#define AT_CMD_PORT "60017"
-
-#define AT_CMD_USOST "AT+USOST=0,\"" AT_CMD_IP "\"," AT_CMD_PORT ","
-#define AT_CMD_USOCO "AT+USOCO=0,\"" AT_CMD_IP "\"," AT_CMD_PORT "\r"
+#include "os_StreamBuffer.h"
+#include "os_Queue.h"
+#include "Mutex.h"
 
 namespace app
 {
@@ -41,8 +25,7 @@ struct AT {
     using ReceiveFunction = std::function<size_t(uint8_t*, const size_t, std::chrono::milliseconds)>;
     using SendFunction = std::function<size_t(std::string_view, std::chrono::milliseconds)>;
 
-    enum class Return_t
-    {
+    enum class Return_t {
         FINISHED,
         WAITING,
         ERROR,
@@ -51,150 +34,292 @@ struct AT {
 
     const std::string_view mName;
     const std::string_view mResponse;
-    ATParser& mParser;
+
+    ATParser* mParser;
 
 protected:
 
     AT(const std::string_view name,
-       const std::string_view response,
-       ATParser&              parser) :
-        mName(name), mResponse(response), mParser(parser){};
+       const std::string_view response) :
+        mName(name), mResponse(response)
+    {
+        mParser = nullptr;
+    };
     virtual ~AT(void){};
 
-    virtual void okReceived(void);
-    virtual void errorReceived(void);
-    virtual Return_t onResponseMatch(void);
+    virtual void okReceived(void) = 0;
+    virtual void errorReceived(void) = 0;
+    virtual Return_t onResponseMatch(void) = 0;
 
     friend class ATParser;
-    friend class ATCmdERROR;
+    friend class ATCmd;
     friend class ATCmdOK;
+    friend class ATCmdERROR;
 };
 
-class ATCmd :
-    public AT, public std::enable_shared_from_this<ATCmd>
-{
+struct ATCmd :
+    AT {
+    ATCmd(const std::string_view name, const std::string_view request, const std::string_view response) :
+        AT(name, response),
+        mRequest(request), mSendResult() {};
+    virtual ~ATCmd(void){};
+
+    Return_t send(SendFunction& sendFunction, const std::chrono::milliseconds timeout);
+
 protected:
-    bool mCommandSuccess = false;
     std::string_view mRequest;
-    os::Semaphore mSendDone;
+    os::Queue<bool, 1> mSendResult;
 
     virtual void okReceived(void) override;
     virtual void errorReceived(void) override;
-
-public:
-
-    ATCmd(std::string_view name, std::string_view request, std::string_view response, ATParser& parser) :
-        AT(name, response, parser),
-        mRequest(request), mSendDone() {};
-    virtual ~ATCmd(void){};
-
-    Return_t send(SendFunction& sendFunction, std::chrono::milliseconds timeout);
-
-    bool wasExecutionSuccessful(void) const;
+    virtual Return_t onResponseMatch(void) override;
 };
 
-class ATCmdUSOST final :
-    public ATCmd
-{
-    size_t mSocket = 0;
-    std::string mIp = AT_CMD_IP;
-    std::string mPort = AT_CMD_PORT;
+struct ATCmdTX :
+    ATCmd {
+protected:
+    std::array<char, 64> mRequestBuffer;
     std::string_view mData;
     SendFunction& mSendFunction;
-    bool mWaitingForPrompt = false;
     virtual Return_t onResponseMatch(void) override;
 
-public:
-    ATCmdUSOST(SendFunction & send, ATParser & parser) :
-        ATCmd("AT+USOST", "", "@", parser), mSendFunction(send){}
-
-    Return_t send(std::string_view data, std::chrono::milliseconds timeout);
+    ATCmdTX(const std::string_view name, SendFunction& send) :
+        ATCmd(name, "", "@"), mSendFunction(send){}
 };
 
-class ATCmdUSORF final :
-    public ATCmd
-{
-    size_t mSocket = 0;
-    std::string mIp = AT_CMD_IP;
-    std::string mPort = AT_CMD_PORT;
-    std::string mData;
-    SendFunction& mSendFunction;
-    virtual Return_t onResponseMatch(void) override;
+struct ATCmdUSOST final :
+    ATCmdTX {
+    ATCmdUSOST(SendFunction& send) :
+        ATCmdTX("AT+USOST", send){}
 
-public:
-    ATCmdUSORF(SendFunction & send, ATParser & parser) :
-        ATCmd("AT+USORF", "", "+USORF:", parser), mSendFunction(send){}
-
-    Return_t send(size_t bytesToRead, std::chrono::milliseconds timeout);
-
-    const std::string& getData(void) const
-    {
-        return mData;
-    }
+    Return_t send(const size_t                    socket,
+                  const std::string_view          ip,
+                  const std::string_view          port,
+                  const std::string_view          data,
+                  const std::chrono::milliseconds timeout);
 };
 
-class ATCmdURC final :
-    public AT
-{
-    virtual Return_t onResponseMatch(void) override;
-    const std::function<void(size_t, size_t)>& mUrcReceivedCallback;
+struct ATCmdUSOWR final :
+    ATCmdTX {
+    ATCmdUSOWR(SendFunction& send) :
+        ATCmdTX("AT+USOWR", send){}
 
-public:
-    ATCmdURC(const std::string_view name, const std::string_view response, ATParser & parser,
-             const std::function<void(size_t, size_t)> &callback) :
-        AT(name, response, parser), mUrcReceivedCallback(callback) {}
+    Return_t send(const size_t                    socket,
+                  const std::string_view          data,
+                  const std::chrono::milliseconds timeout);
 };
 
-class ATCmdOK final :
-    public AT
-{
-    Return_t onResponseMatch(void) override;
-
-public:
-    ATCmdOK(ATParser & parser) :
-        AT("CMD_OK", "OK\r", parser) {};
-    virtual ~ATCmdOK(void){};
-    friend class ATParser;
-};
-
-class ATCmdERROR final :
-    public AT
-{
-    Return_t onResponseMatch(void) override;
-
-public:
-    ATCmdERROR(ATParser & parser) :
-        AT("CMD_ERROR", "ERROR\r", parser) {};
-    virtual ~ATCmdERROR(void){};
-    friend class ATParser;
-};
-
-struct ATParser {
-    static constexpr const size_t BUFFERSIZE = 512;
-
-    ATParser(const AT::ReceiveFunction& receive) :
-        mReceive(receive) {}
-
-    void reset(void);
-
-    bool parse(std::chrono::milliseconds timeout = std::chrono::milliseconds(10000));
-    void registerAtCommand(std::shared_ptr<AT> cmd);
-    std::string_view getLineFromInput(std::chrono::milliseconds timeout = std::chrono::milliseconds(500)) const;
-    std::string_view getInputUntilComma(std::chrono::milliseconds timeout = std::chrono::milliseconds(500)) const;
-    std::string_view getBytesFromInput(size_t                    numberOfBytes,
-                                       std::chrono::milliseconds timeout = std::chrono::milliseconds(500)) const;
+struct ATCmdRXData :
+    ATCmd {
+    std::string_view getData(void) const;
 
 protected:
+    std::array<char, 24> mRequestBuffer;
+    std::array<char, 256> mDataBuffer;
+    std::string_view mData;
+    size_t mSocket = 0;
+    SendFunction& mSendFunction;
+    const std::function<void(const size_t, const size_t)>& mUrcReceivedCallback;
+
+    AT::Return_t getDataFromParser(const size_t bytesAvailable);
+
+    ATCmdRXData(const std::string_view name,
+                const std::string_view response,
+                SendFunction& send,
+                const std::function<void(size_t, size_t)>& callback) :
+        ATCmd(name, "", response),
+        mSendFunction(send),
+        mUrcReceivedCallback(callback){}
+};
+
+struct ATCmdUSORF final :
+    ATCmdRXData {
+    ATCmdUSORF(SendFunction& send, const std::function<void(size_t, size_t)>& callback) :
+        ATCmdRXData("AT+USORF", "+USORF:", send, callback){}
+
+    Return_t send(const size_t socket, size_t bytesToRead, const std::chrono::milliseconds timeout);
+
+private:
+
+    static constexpr const size_t IPLEN = 16;
+    static constexpr const size_t PORTLEN = 6;
+    std::array<char, IPLEN> mIpBuffer;
+    std::string_view mIp;
+    std::array<char, PORTLEN> mPortBuffer;
+    std::string_view mPort;
+    virtual Return_t onResponseMatch(void) override;
+};
+
+struct ATCmdUSORD final :
+    ATCmdRXData {
+    ATCmdUSORD(SendFunction& send, const std::function<void(size_t, size_t)>& callback) :
+        ATCmdRXData("AT+USORD", "+USORD:", send, callback){}
+
+    Return_t send(const size_t socket, size_t bytesToRead, const std::chrono::milliseconds timeout);
+
+private:
+    virtual Return_t onResponseMatch(void) override;
+};
+
+struct ATCmdUPSND final :
+    ATCmd {
+    ATCmdUPSND(SendFunction& send) :
+        ATCmd("AT+UPSND", "", "+UPSND:"), mSendFunction(send){}
+
+    Return_t send(const size_t socket, const size_t parameter, const std::chrono::milliseconds timeout);
+    const std::string_view getData(void) const;
+    size_t getParameter(void) const;
+    size_t getSocket(void) const;
+private:
+    std::array<char, 16> mRequestBuffer;
+    std::array<char, 32> mDataBuffer;
+    size_t mSocket = 0;
+    size_t mParameter = 0;
+    SendFunction& mSendFunction;
+    std::string_view mData;
+    virtual Return_t onResponseMatch(void) override;
+};
+
+struct ATCmdUSOCR final :
+    ATCmd {
+    ATCmdUSOCR(SendFunction& send) :
+        ATCmd("AT+USOCR", "", "+USOCR:"), mSendFunction(send){}
+
+    Return_t send(const size_t protocol, const std::chrono::milliseconds timeout);
+    size_t getSocket(void) const;
+
+private:
+    std::array<char, 16> mRequestBuffer;
+    size_t mSocket = 0;
+    SendFunction& mSendFunction;
+    virtual Return_t onResponseMatch(void) override;
+};
+
+struct ATCmdUSOCO final :
+    ATCmd {
+    ATCmdUSOCO(SendFunction& send) :
+        ATCmd("AT+USOCO", "", ""), mSendFunction(send) {}
+
+    Return_t send(const size_t                    socket,
+                  const std::string_view          ip,
+                  const std::string_view          port,
+                  const std::chrono::milliseconds timeout);
+private:
+    std::array<char, 40> mRequestBuffer;
+    SendFunction& mSendFunction;
+};
+
+struct ATCmdUSOSO final :
+    ATCmd {
+    ATCmdUSOSO(SendFunction& send) :
+        ATCmd("AT+USOSO", "", ""), mSendFunction(send) {}
+
+    Return_t send(const size_t                    socket,
+                  const size_t                    level,
+                  const size_t                    optName,
+                  const size_t                    optVal,
+                  const std::chrono::milliseconds timeout);
+private:
+    std::array<char, 64> mRequestBuffer;
+    SendFunction& mSendFunction;
+};
+
+struct ATCmdUSOCTL final :
+    ATCmd {
+    ATCmdUSOCTL(SendFunction& send) :
+        ATCmd("AT+USOCTL", "", "+USOCTL:"), mSendFunction(send) {}
+
+    Return_t send(const size_t                    socket,
+                  const size_t                    paramId,
+                  const std::chrono::milliseconds timeout);
+
+    const std::string_view getData(void) const;
+    size_t getParamId(void) const;
+    size_t getSocket(void) const;
+private:
+    std::array<char, 64> mRequestBuffer;
+    SendFunction& mSendFunction;
+    std::array<char, 32> mDataBuffer;
+    std::string_view mData;
+    size_t mSocket = 0;
+    size_t mParamId = 0;
+    virtual Return_t onResponseMatch(void) override;
+};
+
+struct ATCmdURC final :
+    AT {
+    ATCmdURC(const std::string_view name, const std::string_view response,
+             const std::function<void(const size_t, const size_t)>& callback) :
+        AT(name, response), mUrcReceivedCallback(callback) {}
+private:
+    virtual void okReceived(void) override;
+    virtual void errorReceived(void) override;
+    virtual Return_t onResponseMatch(void) override;
+
+    const std::function<void(const size_t, const size_t)>& mUrcReceivedCallback;
+};
+
+struct ATCmdOK final :
+    AT {
+    ATCmdOK(void) :
+        AT("CMD_OK", "OK\r") {};
+    virtual ~ATCmdOK(void){};
+private:
+    virtual void okReceived(void) override;
+    virtual void errorReceived(void) override;
+    virtual Return_t onResponseMatch(void) override;
+    friend class ATParser;
+};
+
+struct ATCmdERROR final :
+    AT {
+    ATCmdERROR(void) :
+        AT("CMD_ERROR", "ERROR\r") {};
+    virtual ~ATCmdERROR(void){};
+    friend class ATParser;
+private:
+    virtual void okReceived(void) override;
+    virtual void errorReceived(void) override;
+    virtual Return_t onResponseMatch(void) override;
+};
+
+struct ATParser final {
+    static constexpr const size_t BUFFERSIZE = 512;
+    static constexpr const size_t MAXATCMDS = 32;
+    static constexpr const std::chrono::milliseconds defaultTimeout = std::chrono::milliseconds(300);
+    static constexpr const std::chrono::milliseconds defaultParseTimeout = std::chrono::milliseconds(45000);
+
+    ATParser(const AT::ReceiveFunction& receive) :
+        mReceive(receive), mWaitingCmd(nullptr), mWaitingCmdMutex() {}
+
+    void reset(void);
+    void triggerMatch(AT* match);
+    bool parse(std::chrono::milliseconds timeout = defaultParseTimeout);
+    void registerAtCommand(AT* cmd);
+    std::string_view getLineFromInput(std::chrono::milliseconds timeout = defaultTimeout) const;
+    std::string_view getInputUntilComma(char* const               termination = nullptr,
+                                        std::chrono::milliseconds timeout = defaultTimeout) const;
+    std::string_view getBytesFromInput(size_t                    numberOfBytes,
+                                       std::chrono::milliseconds timeout = defaultTimeout) const;
+    AT::Return_t getSocketFromInput(size_t&                   socket,
+                                    char* const               termination = nullptr,
+                                    std::chrono::milliseconds timeout = defaultTimeout) const;
+    AT::Return_t getNumberFromInput(size_t&                   number,
+                                    char* const               termination = nullptr,
+                                    std::chrono::milliseconds timeout = defaultTimeout) const;
+    AT::Return_t strToNum(size_t&                number,
+                          const std::string_view numstring) const;
+
+private:
     static std::array<char, BUFFERSIZE> ReceiveBuffer;
 
     const AT::ReceiveFunction& mReceive;
-    std::vector<std::shared_ptr<AT> > mRegisteredATCommands;
-    std::shared_ptr<AT> mWaitingCmd;
+    std::vector<AT*> mRegisteredATCommands;
+    AT* mWaitingCmd;
+    os::Mutex mWaitingCmdMutex;
 
     friend class ATCmdOK;
     friend class ATCmdERROR;
     friend class ATCmd;
 };
 }
-
-#endif /* SOURCES_PMD_AT_PARSER_H_ */

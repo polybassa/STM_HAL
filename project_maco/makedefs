@@ -19,7 +19,10 @@
 
 
 ROOT=..
-RTOS_SOURCE_DIR=${ROOT}/libraries/FreeRTOS/Source_10_0_0
+RTOS_SOURCE_DIR=${ROOT}/libraries/FreeRTOS/Source_10_1_1
+SEGGER_SOURCE_DIR=${ROOT}/libraries/SystemView_Src_V252c
+RTT_SOURCE_DIR=${ROOT}/libraries/SEGGER_RTT_V635g
+PRJ_DIR=$(shell basename ${PRJ_PATH})
 OBJDIR?=obj
 BINDIR?=exe
 COVERAGEDIR?=testcoverage
@@ -156,34 +159,50 @@ AFLAGS+=${patsubst %,-I%,${subst :, ,${IPATH}}}
 CFLAGS+=${patsubst %,-I%,${subst :, ,${IPATH}}}
 CPPFLAGS+=${patsubst %,-I%,${subst :, ,${IPATH}}}
 
-${OBJDIR}/versionfile.o: ${ROOT}/project/versionfile.txt
+${OBJDIR}/versionfile.o: versionfile.txt
 	 @${OBJCOPY} \
 	 --rename-section .data=.version,contents,alloc,load,readonly,data \
 	 --input binary --output elf32-littlearm --binary-architecture arm ${<} ${@}
-	 @${OBJCOPY} --redefine-sym _binary____project_versionfile_txt_start=_version_start ${@}
-	 @${OBJCOPY} --redefine-sym _binary____project_versionfile_txt_end=_version_end ${@}
-	 @${OBJCOPY} --redefine-sym _binary____project_versionfile_txt_size=_version_size ${@}
+	 @${OBJCOPY} --redefine-sym _binary_versionfile_txt_start=_version_start ${@}
+	 @${OBJCOPY} --redefine-sym _binary_versionfile_txt_end=_version_end ${@}
+	 @${OBJCOPY} --redefine-sym _binary_versionfile_txt_size=_version_size ${@}
 	 @echo OBJ ${@}
+	 @echo "                         ${<}"                                           
+	 
+${OBJDIR}/binaryfile.o: binaryfile.bin
+	 @${OBJCOPY} \
+	 --rename-section .data=.binary,contents,alloc,load,readonly,data \
+	 --input binary --output elf32-littlearm --binary-architecture arm ${<} ${@}
+	 @${OBJCOPY} --redefine-sym _binary_binaryfile_bin_start=_binary_start ${@}
+	 @${OBJCOPY} --redefine-sym _binary_binaryfile_bin_end=_binary_end ${@}
+	 @${OBJCOPY} --redefine-sym _binary_binaryfile_bin_size=_binary_size ${@}
+	 @echo OBJ ${@}
+	 @echo "                         ${<}"                                           
 
 ${OBJDIR}/%.o: %.cpp
 	 @${CPP} ${CPPFLAGS} ${DEFINES} -o ${@} ${<}
 	 @echo CPP ${@}
+	 @echo "                         ${<}"                                           
 
 ${OBJDIR}/%.o: %.c
 	 @${CC} ${CFLAGS} ${DEFINES} -c -Dgcc -o ${@} ${<}
 	 @echo CC ${@}
+	 @echo "                         ${<}"                                           
 
 ${OBJDIR}/%.o: %.S
 	@${CC} ${AFLAGS} ${DEFINES} -Dgcc -o ${@} -c ${<}
 	@echo AS ${@}
+	@echo "                         ${<}"                                           
 	
 ${OBJDIR}/%.o: %.s
 	@${CC} ${AFLAGS} ${DEFINES} -Dgcc -o ${@} -c ${<}
 	@echo AS ${@}
+	@echo "                         ${<}"                                           
 
 ${BINDIR}/%.a:
 	 @${AR} -cr ${@} ${^}
 	 @echo AR ${@}
+	 @echo "                         ${<}"                                           
 
 ${BINDIR}/%.elf:
 	 @${CPP} -T ${LDSCRIPT} ${LDFLAGS} ${LIBPATHS} -o ${@} $(filter %.o %.a, ${?}) ${LIBRARYS} 

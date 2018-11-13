@@ -1,33 +1,25 @@
-/* Copyright (C) 2015  Nils Weiss
- *
- *  This program is free software: you can redistribute it and/or modify
- *  it under the terms of the GNU General Public License as published by
- *  the Free Software Foundation, either version 3 of the License, or
- *  (at your option) any later version.
- *
- *  This program is distributed in the hope that it will be useful,
- *  but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- *  GNU General Public License for more details.
- *
- *  You should have received a copy of the GNU General Public License
- *  along with this program.  If not, see <http://www.gnu.org/licenses/>. */
+// SPDX-License-Identifier: GPL-3.0
+/*
+ * Copyright (c) 2014-2018 Nils Weiss
+ */
 
 #include "ModemDriver.h"
-#include "LockGuard.h"
 #include "trace.h"
-#include "AT_Parser.h"
+#include <memory>
 
 using app::ModemDriver;
 
 static const int __attribute__((unused)) g_DebugZones = ZONE_ERROR | ZONE_WARNING | ZONE_VERBOSE | ZONE_INFO;
 
 os::StreamBuffer<uint8_t, ModemDriver::BUFFERSIZE> ModemDriver::InputBuffer;
-os::StreamBuffer<uint8_t, ModemDriver::BUFFERSIZE> ModemDriver::SendBuffer;
-os::StreamBuffer<uint8_t, ModemDriver::BUFFERSIZE> ModemDriver::ReceiveBuffer;
 
 void ModemDriver::ModemDriverInterruptHandler(uint8_t data)
 {
+#define MODEM_TX_DEBUG
+#ifdef MODEM_TX_DEBUG
+    //TODO: Remove this debug lines
+    USART1->DR = (data & (uint16_t)0x01FF);
+#endif
     InputBuffer.sendFromISR(data);
 }
 
@@ -39,49 +31,62 @@ ModemDriver::ModemDriver(const hal::UsartWithDma& interface,
     mModemTxTask("ModemTxTask",
                  ModemDriver::STACKSIZE,
                  os::Task::Priority::HIGH,
-                 [this](const bool& join)
-                 {
-                     modemTxTaskFunction(join);
-                 }),
+                 [this](const bool& join){
+    modemTxTaskFunction(join);
+}),
     mParserTask("ParserTask",
                 ModemDriver::STACKSIZE,
-                os::Task::Priority::HIGH,
-                [this](const bool& join)
-                {
-                    parserTaskFunction(join);
-                }),
+                os::Task::Priority::VERY_HIGH,
+                [this](const bool& join){
+    parserTaskFunction(join);
+}),
     mInterface(interface),
     mModemReset(resetPin),
     mModemPower(powerPin),
     mModemSupplyVoltage(supplyPin),
-    mSend([&](std::string_view in, std::chrono::milliseconds timeout)->size_t {
-              return mInterface.send(in, timeout.count());
-          }),
-    mRecv([&](uint8_t * output, const size_t length, std::chrono::milliseconds timeout)->bool {
-              return InputBuffer.receive(reinterpret_cast<char*>(output), length, timeout.count());
-          }),
+    mSend([&](std::string_view in, std::chrono::milliseconds timeout) -> size_t {
+    return mInterface.send(in, timeout.count());
+}),
+    mRecv([&](uint8_t* output, const size_t length, std::chrono::milliseconds timeout) -> bool {
+    return InputBuffer.receive(reinterpret_cast<char*>(output), length, timeout.count());
+}),
     mParser(mRecv),
-    mNumberOfBytesForReceive(),
-    mUrcCallback([&](size_t socket, size_t bytes)
-                 {
-                     Trace(ZONE_INFO, "%d bytes available\r\n", bytes);
-                     mNumberOfBytesForReceive.overwrite(bytes);
-                 }),
-    mATUSOST(std::shared_ptr<app::ATCmdUSOST>(new app::ATCmdUSOST(mSend, mParser))),
-    mATUSORF(std::shared_ptr<app::ATCmdUSORF>(new app::ATCmdUSORF(mSend, mParser)))
+    mUrcCallbackReceive([&](const size_t socket, const size_t bytes){
+    for (auto& sock: mSockets) {
+        if (sock->mSocket == socket) {
+            if (bytes) {
+                Trace(ZONE_INFO, "S%d: %d bytes available\r\n", socket, bytes);
+                sock->mNumberOfBytesForReceive.overwrite(bytes);
+            } else {
+                sock->mNumberOfBytesForReceive.reset();
+            }
+        }
+    }
+}),
+    mUrcCallbackClose([&](const size_t socket, const size_t bytes){
+    Trace(ZONE_INFO, "Socket %d closed\r\n", socket);
+    for (auto& sock: mSockets) {
+        if (sock->mSocket == socket) {
+            sock->isOpen = false;
+            sock->isCreated = false;
+        }
+    }
+}),
+    mATOK(),
+    mATERROR(),
+    mATUUSORF("UUSORF", "+UUSORF: ", mUrcCallbackReceive),
+    mATUUSORD("UUSORD", "+UUSORD: ", mUrcCallbackReceive),
+    mATUUPSDD("UUPSDD", "+UUPSDD: ", mUrcCallbackClose),
+    mATUUSOCL("UUSOCL", "+UUSOCL: ", mUrcCallbackClose)
 {
     mInterface.mUsart.enableNonBlockingReceive(ModemDriverInterruptHandler);
 
-    mParser.registerAtCommand(std::shared_ptr<app::AT>(new app::ATCmdOK(mParser)));
-    mParser.registerAtCommand(std::shared_ptr<app::AT>(new app::ATCmdERROR(mParser)));
-
-    auto atuusorf = std::shared_ptr<app::ATCmdURC>(new app::ATCmdURC("UUSORF", "+UUSORF: ", mParser, mUrcCallback));
-    auto atuusord = std::shared_ptr<app::ATCmdURC>(new app::ATCmdURC("UUSORD", "+UUSORD: ", mParser, mUrcCallback));
-
-    mParser.registerAtCommand(mATUSOST);
-    mParser.registerAtCommand(mATUSORF);
-    mParser.registerAtCommand(atuusorf);
-    mParser.registerAtCommand(atuusord);
+    mParser.registerAtCommand(&mATOK);
+    mParser.registerAtCommand(&mATERROR);
+    mParser.registerAtCommand(&mATUUSORF);
+    mParser.registerAtCommand(&mATUUSORD);
+    mParser.registerAtCommand(&mATUUPSDD);
+    mParser.registerAtCommand(&mATUUSOCL);
 }
 
 void ModemDriver::enterDeepSleep(void)
@@ -99,26 +104,31 @@ void ModemDriver::exitDeepSleep(void)
 
 void ModemDriver::modemTxTaskFunction(const bool& join)
 {
-    os::ThisTask::sleep(std::chrono::milliseconds(500));
-
     do {
         modemReset();
 
         if (!modemStartup()) {
+            Trace(ZONE_VERBOSE, "ERROR modemStartup\r\n");
             continue;
         }
 
         while (mErrorCount < ERROR_THRESHOLD) {
-            if (SendBuffer.bytesAvailable()) {
-                sendData();
-            }
+            for (auto& sock : mSockets) {
+                if (!sock->isCreated) {
+                    sock->create();
+                }
 
-            if (os::Task::getTickCount() - mTimeOfLastUdpSend >= 1000) {
-                SendBuffer.send("HELLO ", 6, std::chrono::milliseconds(100).count());
-            }
-            size_t bytes = 0;
-            if (mNumberOfBytesForReceive.receive(bytes, std::chrono::milliseconds(10))) {
-                receiveData(bytes);
+                if (sock->isCreated && !sock->isOpen) {
+                    sock->open();
+                }
+
+                if (!sock->isOpen) {
+                    handleError();
+                    continue;
+                }
+
+                sock->checkAndSendData();
+                sock->checkAndReceiveData();
             }
         }
     } while (!join);
@@ -127,30 +137,31 @@ void ModemDriver::modemTxTaskFunction(const bool& join)
 void ModemDriver::parserTaskFunction(const bool& join)
 {
     do {
-        auto x = mParser.parse(std::chrono::milliseconds(10000));
+        auto x = mParser.parse(std::chrono::milliseconds(35000));
         Trace(ZONE_INFO, "Parser terminated with %d\r\n", x);
     } while (!join);
 }
 
 bool ModemDriver::modemStartup(void)
 {
-    std::array<std::shared_ptr<app::ATCmd>, 7> startupCommands = {
-        std::shared_ptr<app::ATCmd>(new app::ATCmd("ATE0V1", "ATE0V1\r", "", mParser)),
-        std::shared_ptr<app::ATCmd>(new app::ATCmd("AT+CMEE", "AT+CMEE=2\r", "", mParser)),
-        std::shared_ptr<app::ATCmd>(new app::ATCmd("AT+CGCLASS", "AT+CGCLASS=\"B\"\r", "", mParser)),
-        std::shared_ptr<app::ATCmd>(new app::ATCmd("AT+CGGATT", "AT+CGATT=1\r", "", mParser)),
-        std::shared_ptr<app::ATCmd>(new app::ATCmd("AT+UPSDA", "AT+UPSDA=0,3\r", "", mParser)),
-        std::shared_ptr<app::ATCmd>(new app::ATCmd("AT+USOCR", "AT+USOCR=17\r", "", mParser)),
-        std::shared_ptr<app::ATCmd>(new app::ATCmd("AT+USOCO", AT_CMD_USOCO, "", mParser)),
+    static std::array<app::ATCmd, 6> startupCommands = {
+        app::ATCmd("ATZ", "ATZ\r", ""),
+        app::ATCmd("ATE0V1", "ATE0V1\r", ""),
+        app::ATCmd("AT+CMEE", "AT+CMEE=2\r", ""),
+        app::ATCmd("AT+CGCLASS", "AT+CGCLASS=\"B\"\r", ""),
+        app::ATCmd("AT+CGGATT", "AT+CGATT=1\r", ""),
+        app::ATCmd("AT+UPSDA", "AT+UPSDA=0,3\r", ""),
     };
 
-    for (const auto& cmd : startupCommands) {
-        os::ThisTask::sleep(std::chrono::milliseconds(2000));
-        if ((cmd->send(mSend, std::chrono::milliseconds(10000)) != AT::Return_t::FINISHED) ||
-            (cmd->wasExecutionSuccessful() == false))
-        {
+    for (auto& cmd : startupCommands) {
+        os::ThisTask::sleep(std::chrono::milliseconds(100));
+
+        cmd.mParser = &mParser;
+        if (cmd.send(mSend, std::chrono::milliseconds(40000)) != AT::Return_t::FINISHED) {
+            Trace(ZONE_VERBOSE, "Cmd %s ERROR\r\n", cmd.mName.data());
             return false;
         }
+        Trace(ZONE_VERBOSE, "Cmd %s SUCCESS\r\n", cmd.mName.data());
     }
     return true;
 }
@@ -172,11 +183,11 @@ void ModemDriver::modemReset(void)
     Trace(ZONE_INFO, "Modem Reset\r\n");
     modemOff();
     InputBuffer.reset();
-    ReceiveBuffer.reset();
-    mNumberOfBytesForReceive.reset();
-    mParser.reset();
+    for (auto& sock : mSockets) {
+        sock->reset();
+    }
     mErrorCount = 0;
-    os::ThisTask::sleep(std::chrono::milliseconds(1000));
+    os::ThisTask::sleep(std::chrono::milliseconds(2000));
     modemOn();
     os::ThisTask::sleep(std::chrono::milliseconds(2000));
 }
@@ -190,62 +201,31 @@ void ModemDriver::handleError(void)
     mErrorCount++;
 }
 
-void ModemDriver::sendData(void)
+std::shared_ptr<app::Socket> ModemDriver::getSocket(app::Socket::Protocol protocol,
+                                                    std::string_view ip, std::string_view port)
 {
-    std::string tmpSendStr(SendBuffer.bytesAvailable(), '\x00');
-    SendBuffer.receive(tmpSendStr.data(), tmpSendStr.length(), 1000);
-
-    auto ret = mATUSOST->send(tmpSendStr, std::chrono::milliseconds(1000));
-
-    if (ret == AT::Return_t::ERROR) {
-        handleError();
-    } else if (ret == AT::Return_t::FINISHED) {
-        mTimeOfLastUdpSend = os::Task::getTickCount();
+    std::shared_ptr<app::Socket> sock;
+    if (protocol == Socket::Protocol::TCP) {
+        sock = std::make_shared<TcpSocket>(mParser, mSend, ip, port,
+                                           mUrcCallbackReceive, [&] {
+            handleError();
+        });
     }
-}
 
-void ModemDriver::receiveData(size_t bytes)
-{
-    Trace(ZONE_INFO, "Start receive %d\r\n", bytes);
-    auto ret = mATUSORF->send(bytes, std::chrono::milliseconds(1000));
-    if (ret == AT::Return_t::FINISHED) {
-        if (mReceiveCallback) {
-            mReceiveCallback(mATUSORF->getData());
-        } else {
-            ReceiveBuffer.send(mATUSORF->getData().data(), mATUSORF->getData().length(), 1000);
-        }
-        Trace(ZONE_INFO, "Data received\r\n");
-    } else {
-        handleError();
+    if (protocol == Socket::Protocol::UDP) {
+        sock = std::make_shared<UdpSocket>(mParser, mSend, ip, port,
+                                           mUrcCallbackReceive, [&] {
+            handleError();
+        });
     }
-}
 
-size_t ModemDriver::send(std::string_view message, const uint32_t ticksToWait)
-{
-    if (SendBuffer.send(message.data(), message.length(), ticksToWait)) {
-        return message.length();
+    if (protocol == Socket::Protocol::DNS) {
+        sock = std::make_shared<DnsSocket>(mParser, mSend, mUrcCallbackReceive, [&] {
+            handleError();
+        });
     }
-    return 0;
-}
-
-size_t ModemDriver::receive(uint8_t* message, size_t length, uint32_t ticksToWait)
-{
-    if (ReceiveBuffer.receive(reinterpret_cast<char*>(message), length, ticksToWait)) {
-        return length;
+    if (sock) {
+        mSockets.push_back(sock);
     }
-    return 0;
-}
-
-size_t ModemDriver::bytesAvailable(void) const
-{
-    return ReceiveBuffer.bytesAvailable();
-}
-
-void ModemDriver::registerReceiveCallback(std::function<void(std::string_view)> f)
-{
-    mReceiveCallback = f;
-}
-void ModemDriver::unregisterReceiveCallback(void)
-{
-    mReceiveCallback = nullptr;
+    return sock;
 }

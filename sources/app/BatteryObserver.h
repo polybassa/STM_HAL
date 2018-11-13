@@ -1,20 +1,9 @@
-/* Copyright (C) 2015  Nils Weiss
- *
- *  This program is free software: you can redistribute it and/or modify
- *  it under the terms of the GNU General Public License as published by
- *  the Free Software Foundation, either version 3 of the License, or
- *  (at your option) any later version.
- *
- *  This program is distributed in the hope that it will be useful,
- *  but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- *  GNU General Public License for more details.
- *
- *  You should have received a copy of the GNU General Public License
- *  along with this program.  If not, see <http://www.gnu.org/licenses/>. */
+// SPDX-License-Identifier: GPL-3.0
+/*
+ * Copyright (c) 2014-2018 Nils Weiss
+ */
 
-#ifndef SOURCES_PMD_BATTERYOBSERVER_H_
-#define SOURCES_PMD_BATTERYOBSERVER_H_
+#pragma once
 
 #include <functional>
 #include "Battery.h"
@@ -26,8 +15,7 @@ namespace app
 {
 struct BatteryObserver final :
     private os::DeepSleepModule {
-    enum class ErrorCode
-    {
+    enum class ErrorCode {
         OVERCURRENT = 0,
         UNDERVOLTAGE,
         OVERVOLTAGE,
@@ -35,12 +23,12 @@ struct BatteryObserver final :
         BATTERY_ALMOST_EMPTY
     };
 
-    BatteryObserver(const dev::Battery &, const std::function<void(ErrorCode)> errorCallback);
+    BatteryObserver(const dev::Battery&, const std::function<void(ErrorCode)> errorCallback);
 
-    BatteryObserver(const BatteryObserver &) = delete;
-    BatteryObserver(BatteryObserver &&) = delete;
+    BatteryObserver(const BatteryObserver&) = delete;
+    BatteryObserver(BatteryObserver&&) = delete;
     BatteryObserver& operator=(const BatteryObserver&) = delete;
-    BatteryObserver& operator=(BatteryObserver &&) = delete;
+    BatteryObserver& operator=(BatteryObserver&&) = delete;
 
     float getEnergyLevelInPercent(void) const;
     float getEnergy(void) const;
@@ -69,7 +57,7 @@ private:
     static const std::chrono::milliseconds energyRecordInterval;
 
     float calculateEnergyConsumption(const std::chrono::milliseconds,
-                                     const              float) const;
+                                     const float) const;
     void overcurrentDetection(void);
     void undervoltageDetection(void);
     void energyRecordTaskFunction(const bool&);
@@ -77,5 +65,3 @@ private:
     void increaseEnergyLevel(const float);
 };
 }
-
-#endif /* SOURCES_PMD_BATTERYOBSERVER_H_ */

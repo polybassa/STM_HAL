@@ -1,17 +1,7 @@
-/* Copyright (C) 2015  Nils Weiss
- *
- *  This program is free software: you can redistribute it and/or modify
- *  it under the terms of the GNU General Public License as published by
- *  the Free Software Foundation, either version 3 of the License, or
- *  (at your option) any later version.
- *
- *  This program is distributed in the hope that it will be useful,
- *  but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- *  GNU General Public License for more details.
- *
- *  You should have received a copy of the GNU General Public License
- *  along with this program.  If not, see <http://www.gnu.org/licenses/>. */
+// SPDX-License-Identifier: GPL-3.0
+/*
+ * Copyright (c) 2014-2018 Nils Weiss
+ */
 
 #include <algorithm>
 #include "Light.h"
@@ -21,7 +11,7 @@ static const int __attribute__((unused)) g_DebugZones = ZONE_ERROR | ZONE_WARNIN
 
 using dev::Light;
 
-std::array<std::array<uint8_t, Light::ARRAY_SIZE>, interface::Light::__ENUM__SIZE> Light::LedBitArrays;
+std::array<std::array<uint8_t, Light::ARRAY_SIZE>, interface ::Light::__ENUM__SIZE> Light::LedBitArrays;
 
 uint8_t Light::getBitmask(const uint8_t in) const
 {
@@ -67,7 +57,7 @@ void Light::convertByteToBitArray(const uint8_t byte, uint8_t* bitArray) const
     }
 }
 
-void Light::displayNumber(const uint8_t number, const interface::Color& color) const
+void Light::displayNumber(const uint8_t number, const interface ::Color& color) const
 {
     uint8_t* pointer = LedBitArrays[mDescription].data();
 
@@ -92,9 +82,9 @@ void Light::displayNumber(const uint8_t number, const interface::Color& color) c
     mSpi.send(LedBitArrays[mDescription]);
 }
 
-void Light::setColor(const interface::Color& color) const
+void Light::setColor(const interface ::Color& color) const
 {
     displayNumber(LED_COUNT, color);
 }
 
-constexpr const std::array<const Light, interface::Light::Description::__ENUM__SIZE> dev::Factory<Light>::Container;
+constexpr const std::array<const Light, interface ::Light::Description::__ENUM__SIZE> dev::Factory<Light>::Container;

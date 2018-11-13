@@ -1,20 +1,9 @@
-/* Copyright (C) 2015  Nils Weiss
- *
- *  This program is free software: you can redistribute it and/or modify
- *  it under the terms of the GNU General Public License as published by
- *  the Free Software Foundation, either version 3 of the License, or
- *  (at your option) any later version.
- *
- *  This program is distributed in the hope that it will be useful,
- *  but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- *  GNU General Public License for more details.
- *
- *  You should have received a copy of the GNU General Public License
- *  along with this program.  If not, see <http://www.gnu.org/licenses/>. */
+// SPDX-License-Identifier: GPL-3.0
+/*
+ * Copyright (c) 2014-2018 Nils Weiss
+ */
 
-#ifndef SOURCES_PMD_DTO_H_
-#define SOURCES_PMD_DTO_H_
+#pragma once
 
 #include <cstdint>
 #include <tuple>
@@ -51,9 +40,9 @@ public:
         mTransferTuple(tuple ...) {}
 
     DataTransferObject(const DataTransferObject&) = delete;
-    DataTransferObject(DataTransferObject &&) = default;
+    DataTransferObject(DataTransferObject&&) = default;
     DataTransferObject& operator=(const DataTransferObject&) = delete;
-    DataTransferObject& operator=(DataTransferObject &&) = delete;
+    DataTransferObject& operator=(DataTransferObject&&) = delete;
 
     void updateTuple(void);
     void prepareForTx(void);
@@ -78,7 +67,7 @@ public:
 
 template<typename ... _Elements>
 constexpr com::DataTransferObject<typename std::remove_pointer_t<std::decay_t<_Elements> > ...>
-make_dto(_Elements && ... __args)
+make_dto(_Elements&& ... __args)
 {
     typedef com::DataTransferObject<typename std::remove_pointer_t<std::decay_t<_Elements> > ...> __result_type;
     return __result_type(std::forward<_Elements>(__args) ...);
@@ -91,10 +80,10 @@ void com::DataTransferObject<types ...>::prepareForTx(void)
     mTransferData.timestamp = os::Task::getTickCount();
     uint8_t* ptr = mTransferData.data;
 
-    for_each(mTransferTuple, [&ptr](const auto & x){
-                 std::memcpy(ptr, &x, sizeof(x));
-                 ptr += sizeof(x);
-             });
+    for_each(mTransferTuple, [&ptr](const auto& x){
+        std::memcpy(ptr, &x, sizeof(x));
+        ptr += sizeof(x);
+    });
     const hal::Crc& crcUnit = hal::Factory<hal::Crc>::get<hal::Crc::SYSTEM_CRC>();
     mTransferData.crc = crcUnit.getCrc(this->data(), this->length() - sizeof(mTransferData.crc));
 }
@@ -112,11 +101,9 @@ void com::DataTransferObject<types ...>::updateTuple(void)
 {
     uint8_t const* ptr = mTransferData.data;
     os::ThisTask::enterCriticalSection();
-    for_each(mTransferTuple, [&ptr](auto & x){
-                 std::memcpy(&x, ptr, sizeof(x));
-                 ptr += sizeof(x);
-             });
+    for_each(mTransferTuple, [&ptr](auto& x){
+        std::memcpy(&x, ptr, sizeof(x));
+        ptr += sizeof(x);
+    });
     os::ThisTask::exitCriticalSection();
 }
-
-#endif /* SOURCES_PMD_DTO_H_ */

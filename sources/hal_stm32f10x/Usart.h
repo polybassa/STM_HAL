@@ -1,17 +1,7 @@
-/* Copyright (C) 2015  Nils Weiss
- *
- *  This program is free software: you can redistribute it and/or modify
- *  it under the terms of the GNU General Public License as published by
- *  the Free Software Foundation, either version 3 of the License, or
- *  (at your option) any later version.
- *
- *  This program is distributed in the hope that it will be useful,
- *  but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- *  GNU General Public License for more details.
- *
- *  You should have received a copy of the GNU General Public License
- *  along with this program.  If not, see <http://www.gnu.org/licenses/>. */
+// SPDX-License-Identifier: GPL-3.0
+/*
+ * Copyright (c) 2014-2018 Nils Weiss
+ */
 
 #ifndef SOURCES_PMD_USART_H_
 #define SOURCES_PMD_USART_H_
@@ -41,9 +31,9 @@ struct Usart {
 
     Usart() = delete;
     Usart(const Usart&) = delete;
-    Usart(Usart &&) = default;
+    Usart(Usart&&) = default;
     Usart& operator=(const Usart&) = delete;
-    Usart& operator=(Usart &&) = delete;
+    Usart& operator=(Usart&&) = delete;
 
     template<size_t n>
     size_t send(const std::array<uint8_t, n>&) const;
@@ -94,7 +84,7 @@ private:
     void initialize(void) const;
     IRQn getIRQn(void) const;
 
-    using ReceiveCallbackArray = std::array<std::function<void(uint8_t)>, Usart::__ENUM__SIZE>;
+    using ReceiveCallbackArray = std::array<std::function<void (uint8_t)>, Usart::__ENUM__SIZE>;
 
     static ReceiveCallbackArray ReceiveInterruptCallbacks;
 

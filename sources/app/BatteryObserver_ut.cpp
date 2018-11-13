@@ -1,17 +1,7 @@
-/* Copyright (C) 2015  Nils Weiss
- *
- *  This program is free software: you can redistribute it and/or modify
- *  it under the terms of the GNU General Public License as published by
- *  the Free Software Foundation, either version 3 of the License, or
- *  (at your option) any later version.
- *
- *  This program is distributed in the hope that it will be useful,
- *  but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- *  GNU General Public License for more details.
- *
- *  You should have received a copy of the GNU General Public License
- *  along with this program.  If not, see <http://www.gnu.org/licenses/>. */
+// SPDX-License-Identifier: GPL-3.0
+/*
+ * Copyright (c) 2014-2018 Nils Weiss
+ */
 
 #include "unittest.h"
 #include "BatteryObserver.h"
@@ -118,9 +108,9 @@ int ut_LoadBattery(void)
 
     dev::Battery batt = dev::Battery();
 
-    app::BatteryObserver testee(batt, [] (app::BatteryObserver::ErrorCode error){
-                                    printf("Error %d\n", (int)error);
-                                });
+    app::BatteryObserver testee(batt, [](app::BatteryObserver::ErrorCode error){
+                                printf("Error %d\n", (int)error);
+        });
 
     testee.triggerTaskExecution();
 
@@ -154,9 +144,9 @@ int ut_LoadAndDischargeBattery(void)
 
     dev::Battery batt;
 
-    app::BatteryObserver testee(batt, [] (app::BatteryObserver::ErrorCode error){
-                                    printf("Error %d\n", (int)error);
-                                });
+    app::BatteryObserver testee(batt, [](app::BatteryObserver::ErrorCode error){
+                                printf("Error %d\n", (int)error);
+        });
 
     testee.triggerTaskExecution();
 
@@ -216,10 +206,10 @@ int ut_OvercurrentTest(void)
     dev::Battery batt;
 
     app::BatteryObserver testee(batt, [&](app::BatteryObserver::ErrorCode error) {
-                                    if (error == app::BatteryObserver::ErrorCode::OVERCURRENT) {
-                                        overcurrentDetected = true;
-                                    }
-                                });
+                                if (error == app::BatteryObserver::ErrorCode::OVERCURRENT) {
+                                    overcurrentDetected = true;
+                                }
+        });
 
     g_currentCurrent = 0;
     testee.triggerTaskExecution();
@@ -246,10 +236,10 @@ int ut_UndervoltageTest(void)
     dev::Battery batt;
 
     app::BatteryObserver testee(batt, [&](app::BatteryObserver::ErrorCode error) {
-                                    if (error == app::BatteryObserver::ErrorCode::UNDERVOLTAGE) {
-                                        undervoltage = true;
-                                    }
-                                });
+                                if (error == app::BatteryObserver::ErrorCode::UNDERVOLTAGE) {
+                                    undervoltage = true;
+                                }
+        });
 
     g_currentVoltage = 1000;
     testee.triggerTaskExecution();
@@ -274,9 +264,9 @@ int ut_DeepSleep(void)
 
     dev::Battery batt;
 
-    app::BatteryObserver testee(batt, [] (app::BatteryObserver::ErrorCode error){
-                                    printf("Error %d\n", (int)error);
-                                });
+    app::BatteryObserver testee(batt, [](app::BatteryObserver::ErrorCode error){
+                                printf("Error %d\n", (int)error);
+        });
 
     testee.triggerTaskExecution();
 
