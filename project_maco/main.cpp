@@ -75,8 +75,8 @@ int main(void)
     auto __attribute__((used)) mux = new app::CommandMultiplexer(controlsocket, datasocket, *can, *demo);
 
     os::Task::startScheduler();
-
-    while (1) {}
+    Trace(ZONE_ERROR, "This shouldn't happen!\r\n");
+    configASSERT(0);
 }
 
 void assert_failed(uint8_t* file, uint32_t line)
