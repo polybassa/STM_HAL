@@ -27,6 +27,7 @@
 #include "stm32f4xx.h"
 #include "Gpio.h"
 #include "hal_Factory.h"
+#include "Nvic.h"
 
 // ================================================================================================
 // Macro definitions
@@ -37,16 +38,6 @@
 // static_assert(IS_EXTI_LINE(extiLine), "Invalid Line");
 //#define EXTI_LINE_TO_PIN_SOURCE(EXTI_LINE)
 // ================================================================================================
-
-extern "C" {
-void EXTI0_IRQHandler(void);
-void EXTI1_IRQHandler(void);
-void EXTI2_IRQHandler(void);
-void EXTI3_IRQHandler(void);
-void EXTI4_IRQHandler(void);
-void EXTI9_5_IRQHandler(void);
-void EXTI15_10_IRQHandler(void);
-}
 
 namespace hal
 {
@@ -68,9 +59,10 @@ struct Exti {
 private:
     constexpr Exti(const enum Description&   desc,
                    const Gpio&               gpio,
+                   const Nvic&               nvic,
                    const EXTITrigger_TypeDef trigger,
                    const uint32_t            priority = 0xf) :
-        mDescription(desc), mGpio(gpio),
+        mDescription(desc), mGpio(gpio), mNvic(nvic),
         mConfiguration(EXTI_InitTypeDef
                        {
                            PIN_SOURCE_TO_EXTI_LINE((uint32_t)gpio.mPinSource),
@@ -82,6 +74,7 @@ private:
 
     const enum Description mDescription;
     const Gpio& mGpio;
+    const Nvic& mNvic;
     const EXTI_InitTypeDef mConfiguration;
     const uint32_t mPriority;
 
@@ -89,7 +82,6 @@ private:
     IRQn getIRQChannel(const EXTI_InitTypeDef& config) const;
     void setEXTI_LineCmd(FunctionalState cmd) const;
     void clearInterruptBit(void) const;
-    void executeCallback(void) const;
     void initialize(void) const;
     bool getStatus(void) const;
 
@@ -107,7 +99,7 @@ class Factory<Exti>
     Factory(void)
     {
         RCC_APB2PeriphClockCmd(RCC_APB2Periph_SYSCFG, ENABLE);
-
+        // ??? Why enable to times, just for disabling right afterwards?
         RCC_APB2PeriphResetCmd(RCC_APB2Periph_SYSCFG, ENABLE);
         RCC_APB2PeriphResetCmd(RCC_APB2Periph_SYSCFG, DISABLE);
 
