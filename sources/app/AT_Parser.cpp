@@ -152,6 +152,11 @@ AT::Return_t ATCmdUSOWR::send(const size_t                    socket,
 
 //------------------------ATCmdRXData---------------------------------
 
+std::string_view ATCmdRXData::getData(void) const
+{
+    return mData;
+}
+
 AT::Return_t ATCmdRXData::getDataFromParser(const size_t bytesAvailable)
 {
     const std::string_view datastring = mParser->getBytesFromInput(bytesAvailable + 2);
@@ -301,6 +306,21 @@ AT::Return_t ATCmdUSORD::onResponseMatch(void)
 
 //------------------------ATCmdUPSND---------------------------------
 
+const std::string_view ATCmdUPSND::getData(void) const
+{
+    return mData;
+}
+
+size_t ATCmdUPSND::getParameter(void) const
+{
+    return mParameter;
+}
+
+size_t ATCmdUPSND::getSocket(void) const
+{
+    return mSocket;
+}
+
 AT::Return_t ATCmdUPSND::send(const size_t socket, const size_t parameter, const std::chrono::milliseconds timeout)
 {
     const size_t reqLen = std::snprintf(
@@ -342,6 +362,11 @@ AT::Return_t ATCmdUPSND::onResponseMatch(void)
 }
 
 //------------------------ATCmdUSOCR---------------------------------
+
+size_t ATCmdUSOCR::getSocket(void) const
+{
+    return mSocket;
+}
 
 AT::Return_t ATCmdUSOCR::send(const size_t protocol, const std::chrono::milliseconds timeout)
 {
@@ -406,6 +431,21 @@ AT::Return_t ATCmdUSOSO::send(const size_t                    socket,
 }
 
 //------------------------ATCmdUSOCTL---------------------------------
+
+const std::string_view ATCmdUSOCTL::getData(void) const
+{
+    return mData;
+}
+
+size_t ATCmdUSOCTL::getParamId(void) const
+{
+    return mParamId;
+}
+
+size_t ATCmdUSOCTL::getSocket(void) const
+{
+    return mSocket;
+}
 
 AT::Return_t ATCmdUSOCTL::send(const size_t                    socket,
                                const size_t                    paramId,
