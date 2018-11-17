@@ -7,6 +7,7 @@
 #include "trace.h"
 #include "binascii.h"
 #include "os_Task.h"
+#include <cstring>
 #include <algorithm>
 
 using app::DnsSocket;
@@ -311,30 +312,38 @@ DnsSocket::~DnsSocket(void){}
 
 void DnsSocket::sendData(void)
 {
-    //TODO: REFACTOR THIS FUNCTION
-
     static constexpr const size_t MAX_PAYLOAD_LENGTH = 24;
     static short counter = 900;
 
     counter++;
     counter %= 999;
-    std::string counterStr = std::to_string(counter);
+    std::array<char, 4> counterStr;
+    counterStr.fill(0);
+    std::snprintf(counterStr.data(), counterStr.size(), "%03d", counter);
 
-    std::string tmpPayloadStr(std::max(mSendBuffer.bytesAvailable(),
-                                       MAX_PAYLOAD_LENGTH), '\x00');
-    mSendBuffer.receive(tmpPayloadStr.data(), tmpPayloadStr.length(), 1000);
+    std::array<char, MAX_PAYLOAD_LENGTH> tmpPayloadStr;
 
-    std::string hexPayloadStr;
+    mSendBuffer.receive(tmpPayloadStr.data(), std::max(mSendBuffer.bytesAvailable(), MAX_PAYLOAD_LENGTH), 1000);
+
+    std::array<char, MAX_PAYLOAD_LENGTH*2> hexPayloadStr;
+
     hexlify(hexPayloadStr, tmpPayloadStr);
 
-    std::string tmpSendStr(
-                           "\x00\x00\x01\x00\x00\x01\x00\x00\x00\x00\x00\x00\x33\x70\x70\x70\x70\x70\x70\x70\x70\x70\x70\x70\x70\x70\x70\x70\x70\x70\x70\x70\x70\x70\x70\x70\x70\x70\x70\x70\x70\x70\x70\x70\x70\x70\x70\x70\x70\x70\x70\x70\x70\x70\x70\x70\x70\x70\x70\x70\x70\x63\x63\x63\x02\x74\x31\x05\x7a\x69\x6e\x6f\x6f\x02\x69\x74\x00\x00\x1c\x00\x01",
-                           81);
+    std::array<char, 81> tmpSendStr;
+    std::memcpy(
+                tmpSendStr.data(),
+                "\x00\x00\x01\x00\x00\x01\x00\x00\x00\x00\x00\x00\x33\x70\x70\x70\x70\x70\x70\x70\x70\x70\x70\x70\x70\x70\x70\x70\x70\x70\x70\x70\x70\x70\x70\x70\x70\x70\x70\x70\x70\x70\x70\x70\x70\x70\x70\x70\x70\x70\x70\x70\x70\x70\x70\x70\x70\x70\x70\x70\x70\x63\x63\x63\x02\x74\x31\x05\x7a\x69\x6e\x6f\x6f\x02\x69\x74\x00\x00\x1c\x00\x01",
+                tmpSendStr.size());
 
-    tmpSendStr.replace(13, hexPayloadStr.length(), hexPayloadStr);
-    tmpSendStr.replace(64 - counterStr.length(), counterStr.length(), counterStr);
+    std::memcpy(tmpSendStr.data() + 13, hexPayloadStr.data(), hexPayloadStr.size());
+    std::memcpy(tmpSendStr.data() + 61, counterStr.data(), 3);
 
-    auto ret = mATCmdUSOST.send(mSocket, mATCmdUPSND.getData(), "53", tmpSendStr, std::chrono::milliseconds(1000));
+    auto ret =
+        mATCmdUSOST.send(mSocket,
+                         mATCmdUPSND.getData(),
+                         "53",
+                         std::string_view(tmpSendStr.data(), tmpSendStr.size()),
+                         std::chrono::milliseconds(1000));
 
     if (ret == AT::Return_t::ERROR) {
         mHandleError();
@@ -346,32 +355,31 @@ void DnsSocket::sendData(void)
 
 void DnsSocket::receiveData(size_t bytes)
 {
-    //TODO: REFACTOR THIS FUNCTION
-
     Trace(ZONE_INFO, "Start receive over dns %d\r\n", bytes);
     if (bytes == 0) {
         return;
     }
     auto ret = mATCmdUSORF.send(0, bytes, std::chrono::milliseconds(1000));
     if (ret == AT::Return_t::FINISHED) {
-        const auto& data = mATCmdUSORF.getData();
+        const std::string_view& data = mATCmdUSORF.getData();
 
         if (data.length() < 220) {
             Trace(ZONE_VERBOSE, "DNS PKT to short\r\n,");
             return;
         }
 
-        constexpr const auto FRAMEINDICES = {94, 122, 150, 178};
+        static constexpr const auto FRAMEINDICES = {94, 122, 150, 178};
         static constexpr const size_t FRAMELENGTH = 14;
-        std::string rawdata("\x00", FRAMELENGTH* FRAMEINDICES.size());
+        std::array<char, FRAMELENGTH* FRAMEINDICES.size()> rawdata;
+        rawdata.fill(0);
 
         for (const auto idx : FRAMEINDICES) {
             const auto rawdata1 = data.substr(idx, FRAMELENGTH);
             const auto rawdata1Idx = static_cast<size_t>(data[idx + FRAMELENGTH]) - 1 % 4;
-            rawdata.replace(rawdata1Idx * FRAMELENGTH, FRAMELENGTH, rawdata1);
+            std::memcpy(rawdata.data() + rawdata1Idx * FRAMELENGTH, rawdata1.data(), rawdata1.size());
         }
 
-        storeReceivedData(rawdata);
+        storeReceivedData(std::string_view(rawdata.data(), rawdata.size()));
     } else {
         mHandleError();
     }

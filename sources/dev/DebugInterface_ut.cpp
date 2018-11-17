@@ -147,16 +147,16 @@ int ut_Send_to_much_Data(void)
     TestCaseBegin();
 
     std::string teststring =
-        "HELLO_TESTHELLO_TESTHELLO_TESTHELLESTHELLO_TESTHELLO_TESTHELLESTHELLO_TESTHELLO_TESTHEL";
+        "HELLO_TESTHELLHELLO_TESTHELLO_TESTHELLO_TESTHELLO_TESTHELLO_TESTHELLESTHELLO_TESTHELLO_TESTHELLESTHELLO_TESTHELLO_TESTHELO_TESTHELLO_TESTHELLO_TESTHELLO_TESTHELLESTHELLO_TESTHELLO_TESTHELLESTHELLO_TESTHELLO_TESTHEL";
 
     teststring = teststring + teststring + teststring + teststring + teststring +
-                 teststring + teststring;
+                 teststring + teststring + teststring;
 
     out.printf("%s", teststring.c_str());
 
     std::string testout = teststring;
 
-    CHECK_NOT_MEMCMP(testout.c_str(), output.data(), testout.size());
+    CHECK_NOT_MEMCMP(teststring.c_str(), output.data(), std::min(output.size(), teststring.size()));
 
     TestCaseEnd();
 }

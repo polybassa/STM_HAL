@@ -8,6 +8,7 @@
 #include <condition_variable>
 #include <thread>
 #include <mutex>
+#include "os_Queue.h"
 
 static const int __attribute__((unused)) g_DebugZones = 0; //ZONE_ERROR | ZONE_WARNING | ZONE_VERBOSE | ZONE_INFO;
 
@@ -16,53 +17,13 @@ using os::Mutex;
 #define NUM_TEST_LOOPS 255
 
 //--------------------------BUFFERS--------------------------
+bool g_semaphoreGiven = false;
 
 //--------------------------MOCKING--------------------------
-
-class semaphoreMock
-{
-    std::condition_variable cv;
-    std::mutex cv_m;
-    int i = 0;
-public:
-    void give()
-    {
-        i = 1;
-        cv.notify_all();
-    }
-    void take()
-    {
-        std::unique_lock<std::mutex> lk(cv_m);
-        cv.wait(lk, [&](){
-            return i == 1;
-        });
-    }
-};
 
 void os::ThisTask::sleep(const std::chrono::milliseconds ms)
 {
     std::this_thread::sleep_for(ms);
-}
-os::Semaphore::Semaphore(void) :
-    mSemaphoreHandle(reinterpret_cast<void*>(new semaphoreMock))
-{}
-os::Semaphore::~Semaphore(void)
-{
-    auto x = reinterpret_cast<semaphoreMock*>(mSemaphoreHandle);
-    delete x;
-}
-bool os::Semaphore::give(void) const
-{
-    auto x = reinterpret_cast<semaphoreMock*>(mSemaphoreHandle);
-    x->give();
-    return true;
-}
-bool os::Semaphore::take(uint32_t ticksToWait) const
-{
-    auto x = reinterpret_cast<semaphoreMock*>(mSemaphoreHandle);
-
-    x->take();
-    return true;
 }
 
 Mutex::Mutex(void) :
@@ -113,6 +74,59 @@ Mutex::operator bool() const
     return mMutexHandle != nullptr;
 }
 
+QueueHandle_t xQueueGenericCreate(const UBaseType_t uxQueueLength,
+                                  const UBaseType_t uxItemSize,
+                                  const uint8_t     ucQueueType)
+{
+    return (QueueHandle_t)malloc(10);
+}
+
+void vQueueDelete(QueueHandle_t xQueue)
+{
+    delete xQueue;
+}
+
+BaseType_t xQueueGenericSend(QueueHandle_t     xQueue,
+                             const void* const pvItemToQueue,
+                             TickType_t        xTicksToWait,
+                             const BaseType_t  xCopyPosition)
+{
+    return 0;
+}
+
+BaseType_t xQueueSemaphoreTake(QueueHandle_t xQueue, TickType_t xTicksToWait)
+{
+    if (g_semaphoreGiven) {
+        g_semaphoreGiven = false;
+        return true;
+    }
+    return false;
+}
+
+BaseType_t xQueueGenericReset(QueueHandle_t xQueue, BaseType_t xNewQueue)
+{
+    return 0;
+}
+
+BaseType_t xQueueGenericReceive(QueueHandle_t    xQueue,
+                                void* const      pvBuffer,
+                                TickType_t       xTicksToWait,
+                                const BaseType_t xJustPeeking)
+{
+    return 1;
+}
+
+BaseType_t xQueueGiveFromISR(QueueHandle_t xQueue, BaseType_t* const pxHigherPriorityTaskWoken)
+{
+    g_semaphoreGiven = true;
+    return g_semaphoreGiven;
+}
+
+BaseType_t xQueueReceive(QueueHandle_t xQueue, void* const pvBuffer, TickType_t xTicksToWait)
+{
+    return 1;
+}
+
 //-------------------------TESTCASES-------------------------
 
 int ut_BasicTest(void)
@@ -157,11 +171,11 @@ int ut_BasicTest(void)
     auto testee4 = std::shared_ptr<app::AT>(new app::ATCmdOK());
     auto testee5 = std::shared_ptr<app::AT>(new app::ATCmdERROR());
 
-    parser.registerAtCommand(*testee1.get());
-    parser.registerAtCommand(*testee2.get());
-    parser.registerAtCommand(*testee3.get());
-    parser.registerAtCommand(*testee4.get());
-    parser.registerAtCommand(*testee5.get());
+    parser.registerAtCommand(testee1.get());
+    parser.registerAtCommand(testee2.get());
+    parser.registerAtCommand(testee3.get());
+    parser.registerAtCommand(testee4.get());
+    parser.registerAtCommand(testee5.get());
 
     auto send1 = [&](int j = 2)
                  {
@@ -304,11 +318,11 @@ int ut_ATParserURCTest(void)
     auto testee4 = std::shared_ptr<app::AT>(new app::ATCmdOK());
     auto testee5 = std::shared_ptr<app::AT>(new app::ATCmdERROR());
 
-    parser.registerAtCommand(*testee1.get());
-    parser.registerAtCommand(*testee2.get());
-    parser.registerAtCommand(*testee3.get());
-    parser.registerAtCommand(*testee4.get());
-    parser.registerAtCommand(*testee5.get());
+    parser.registerAtCommand(testee1.get());
+    parser.registerAtCommand(testee2.get());
+    parser.registerAtCommand(testee3.get());
+    parser.registerAtCommand(testee4.get());
+    parser.registerAtCommand(testee5.get());
 
     parser.parse();
 
@@ -370,12 +384,12 @@ int ut_USOSTTest(void)
     auto testee5 = std::shared_ptr<app::AT>(new app::ATCmdERROR());
     auto testee6 = std::shared_ptr<app::ATCmdUSOWR>(new app::ATCmdUSOWR(send));
 
-    parser.registerAtCommand(*std::dynamic_pointer_cast<app::AT>(testee1).get());
-    parser.registerAtCommand(*std::dynamic_pointer_cast<app::AT>(testee6).get());
-    parser.registerAtCommand(*testee2.get());
-    parser.registerAtCommand(*testee3.get());
-    parser.registerAtCommand(*testee4.get());
-    parser.registerAtCommand(*testee5.get());
+    parser.registerAtCommand(std::dynamic_pointer_cast<app::AT>(testee1).get());
+    parser.registerAtCommand(std::dynamic_pointer_cast<app::AT>(testee6).get());
+    parser.registerAtCommand(testee2.get());
+    parser.registerAtCommand(testee3.get());
+    parser.registerAtCommand(testee4.get());
+    parser.registerAtCommand(testee5.get());
 
     auto send1 = [&](int j = 2)
                  {
@@ -519,11 +533,11 @@ int ut_TimeoutTest(void)
     auto testee4 = std::shared_ptr<app::AT>(new app::ATCmdOK());
     auto testee5 = std::shared_ptr<app::AT>(new app::ATCmdERROR());
 
-    parser.registerAtCommand(*testee1.get());
-    parser.registerAtCommand(*testee2.get());
-    parser.registerAtCommand(*testee3.get());
-    parser.registerAtCommand(*testee4.get());
-    parser.registerAtCommand(*testee5.get());
+    parser.registerAtCommand(testee1.get());
+    parser.registerAtCommand(testee2.get());
+    parser.registerAtCommand(testee3.get());
+    parser.registerAtCommand(testee4.get());
+    parser.registerAtCommand(testee5.get());
 
     auto send1 = [&](int j = 2)
                  {
@@ -622,10 +636,10 @@ int ut_TimeoutTest(void)
 int main(int argc, const char* argv[])
 {
     UnitTestMainBegin();
-    RunTest(true, ut_BasicTest);
-    RunTest(true, ut_ATParserURCTest);
-    RunTest(true, ut_USOSTTest);
-    RunTest(true, ut_TimeoutTest);
+    RunTest(false, ut_BasicTest);
+    RunTest(false, ut_ATParserURCTest);
+    RunTest(false, ut_USOSTTest);
+    RunTest(false, ut_TimeoutTest);
 
     UnitTestMainEnd();
 }

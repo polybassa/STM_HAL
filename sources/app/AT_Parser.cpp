@@ -688,9 +688,7 @@ std::string_view ATParser::getLineFromInput(std::chrono::milliseconds timeout) c
     while (mReceive(&data, 1, timeout)) {
         ReceiveBuffer[currentPos++] = data;
 
-        const bool terminationFound = (data == '\r') || (data == '\n') || (data == 0);
-
-        if (terminationFound) {
+        if (isLineTermination(data)) {
             return std::string_view(ReceiveBuffer.data(), currentPos);
         }
 
@@ -709,9 +707,7 @@ std::string_view ATParser::getInputUntilComma(char* const termination, std::chro
     size_t currentPos = 0;
 
     while (mReceive(&data, 1, timeout)) {
-        const bool terminationFound = (data == ',') || (data == '\r');
-
-        if (terminationFound || isalpha(data)) {
+        if (isValueTermination(data)) {
             if (termination != nullptr) {
                 *termination = data;
             }
@@ -783,4 +779,35 @@ AT::Return_t ATParser::strToNum(size_t&                number,
 
     number = std::strtoul(tempBuffer.data(), nullptr, 10);
     return AT::Return_t::FINISHED;
+}
+
+bool ATParser::isValueTermination(const char c)
+{
+    switch (c) {
+    case '\r':
+        [[fallthrough]];
+
+    case ',':
+        return true;
+
+    default:
+        return isalpha(c);
+    }
+}
+
+bool ATParser::isLineTermination(const char c)
+{
+    switch (c) {
+    case '\0':
+        [[fallthrough]];
+
+    case '\n':
+        [[fallthrough]];
+
+    case '\r':
+        return true;
+
+    default:
+        return false;
+    }
 }

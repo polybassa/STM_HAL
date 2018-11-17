@@ -289,6 +289,9 @@ struct ATParser final {
     static constexpr const std::chrono::milliseconds defaultTimeout = std::chrono::milliseconds(300);
     static constexpr const std::chrono::milliseconds defaultParseTimeout = std::chrono::milliseconds(45000);
 
+    static bool isValueTermination(const char c);
+    static bool isLineTermination(const char c);
+
     ATParser(const AT::ReceiveFunction& receive) :
         mReceive(receive), mWaitingCmd(nullptr), mWaitingCmdMutex() {}
 
