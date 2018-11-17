@@ -15,12 +15,12 @@
 
 #pragma once
 
-template<typename T, typename U>
-void hexlify(T& dest, const U& src)
+template<typename V, typename W>
+void hexlify(V& dest, const W& src)
 {
     const char hex[] = "0123456789ABCDEF";
 
-    dest.resize(src.size() * 2);
+    static_assert(dest.size() == src.size() * 2);
 
     auto destIt = dest.begin();
 
@@ -29,3 +29,21 @@ void hexlify(T& dest, const U& src)
         *destIt++ = hex[(x & 0x0f)];
     }
 }
+
+/*
+   template<typename V, typename W>
+   void hexlify(V& dest, const W& src)
+   {
+    const char hex[] = "0123456789ABCDEF";
+
+    dest.resize(src.size() * 2);
+
+    auto destIt = dest.begin();
+
+    for (const auto x : src) {
+ * destIt++ = hex[(x & 0xf0) >> 4];
+ * destIt++ = hex[(x & 0x0f)];
+    }
+   }
+
+ */
