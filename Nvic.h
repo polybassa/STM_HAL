@@ -121,6 +121,9 @@ public:
     {
         static_assert(IRQ_Channel < IRQn::FPU_IRQn, "Interrupt Channel not in IRQ range");
 
+        static_assert(CHECK_INTERRUPT_HANDER_ENABLED(IRQ_Channel),
+                      "Interrupt handler is not enabled");
+
         return getByIrqChannel<IRQ_Channel,
                                static_cast<enum Nvic::Description>(Nvic::Description::__ENUM__SIZE - 1)>();
     }
