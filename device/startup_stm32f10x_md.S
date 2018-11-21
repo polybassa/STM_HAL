@@ -93,6 +93,15 @@ LoopFillZerobss:
 /* Call the clock system intitialization function.*/
   bl  SystemInit 	
 /* Call the application's entry point.*/
+
+#ifdef SYSVIEW
+/* INIT SEGGER SYSTEMVIEW */
+  bl  SEGGER_SYSVIEW_Conf
+  bl  SEGGER_SYSVIEW_Start
+#endif /* SYSVIEW */
+
+  bl __libc_init_array
+
 	bl	main
 	bx	lr    
 .size	Reset_Handler, .-Reset_Handler
