@@ -57,6 +57,18 @@ struct Pwm {
      */
     void setPolarityOfComplementaryChannel(const bool& high) const;
 
+    /**
+     * returns whether the complementary channel has a high polarity.
+     * @return bool flag indicating a high polarity of the complementary channel
+     */
+    bool getPolarityOfComplementaryChannel(void) const;
+
+    /**
+     * returns whether the main channel has a high polarity.
+     * @return bool flag indicating a high polarity of the high channel
+     */
+    bool getPolarityOfMainChannel(void) const;
+
 private:
     constexpr Pwm(const enum Description&  desc,
                   const Tim&               timer,

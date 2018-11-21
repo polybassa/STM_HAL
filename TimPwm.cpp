@@ -86,43 +86,32 @@ void Pwm::initialize(void) const
 
 void Pwm::togglePolarityOfComplementaryChannel(void) const
 {
-//	switch (mChannel) {
-//	    case CHANNEL1:
-////	        TIM_OC1Init(mTim.getBasePointer(), &mOcConfiguration);
-////	        TIM_OC1PreloadConfig(mTim.getBasePointer(), TIM_OCPreload_Enable);
-//	        mTim.getBasePointer()->CCER ^= TIM_CCER_CC1NP;
-//	        break;
-//
-//	    case CHANNEL2:
-////	        TIM_OC2Init(mTim.getBasePointer(), &mOcConfiguration);
-////	        TIM_OC2PreloadConfig(mTim.getBasePointer(), TIM_OCPreload_Enable);
-//	        mTim.getBasePointer()->CCER ^= TIM_CCER_CC2NP;
-//	        break;
-//
-//	    case CHANNEL3:
-////	        TIM_OC3Init(mTim.getBasePointer(), &mOcConfiguration);
-////	        TIM_OC3PreloadConfig(mTim.getBasePointer(), TIM_OCPreload_Enable);
-//	        mTim.getBasePointer()->CCER ^= TIM_CCER_CC3NP;
-//	        break;
-//
-//	    case CHANNEL4:
-////	        TIM_OC4Init(mTim.getBasePointer(), &mOcConfiguration);
-////	        TIM_OC4PreloadConfig(mTim.getBasePointer(), TIM_OCPreload_Enable);
     mTim.getBasePointer()->CCER ^= TIM_CCER_CC4NP;
-//	        break;
-//	    }
     const uint16_t TIM_CCxNP_bit = 0x8 << (4 * mChannel);
     mTim.getBasePointer()->CCER ^= TIM_CCxNP_bit;
 }
 
-void Pwm::setPolarityOfComplementaryChannel(const bool& inverted) const
+void Pwm::setPolarityOfComplementaryChannel(const bool& high) const
 {
     const uint16_t TIM_CCxNP_bit = 0x8 << (4 * mChannel);
-    if (inverted) {
+
+    if (high) {
         mTim.getBasePointer()->CCER &= ~TIM_CCxNP_bit;
     } else {
         mTim.getBasePointer()->CCER |= TIM_CCxNP_bit;
     }
+}
+
+bool Pwm::getPolarityOfComplementaryChannel(void) const
+{
+    const uint16_t TIM_CCxNP_bit = 0x8 << (4 * mChannel);
+    return (mTim.getBasePointer()->CCER & TIM_CCxNP_bit) == 0;
+}
+
+bool Pwm::getPolarityOfMainChannel(void) const
+{
+    const uint16_t TIM_CCxNP_bit = 0x2 << (4 * mChannel);
+    return (mTim.getBasePointer()->CCER & TIM_CCxNP_bit) == 0;
 }
 
 constexpr const std::array<const Pwm, Pwm::Description::__ENUM__SIZE> Factory<Pwm>::Container;
