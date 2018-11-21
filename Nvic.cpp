@@ -46,8 +46,8 @@ void Nvic::executeCallback(void) const
 void Nvic::handleInterrupt(void) const
 {
     if (getStatus()) {
-        clearInterruptBit();
         executeCallback();
+        clearInterruptBit();
     }
 }
 
