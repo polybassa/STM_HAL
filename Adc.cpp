@@ -14,7 +14,7 @@
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>. */
 
 #include <cmath>
-#include "stm32f30x_misc.h"
+#include "stm32f4xx_misc.h"
 #include "trace.h"
 #include "LockGuard.h"
 #include "Adc.h"
@@ -26,43 +26,6 @@ static const int __attribute__((unused)) g_DebugZones = ZONE_ERROR | ZONE_WARNIN
 using hal::Adc;
 using hal::Factory;
 
-extern "C" void ADC1_2_IRQHandler(void)
-{
-    constexpr auto& adc1 = Factory<Adc>::get<Adc::Description::PMD_ADC1>();
-
-    if (ADC_GetITStatus(adc1.getBasePointer(), ADC_FLAG_EOC) == SET) {
-        Adc::ConversionCompleteSemaphores[static_cast<size_t>(adc1.mDescription)].giveFromISR();
-        ADC_ClearITPendingBit(adc1.getBasePointer(), ADC_FLAG_EOC);
-    }
-
-    constexpr auto& adc2 = Factory<Adc>::get<Adc::Description::PMD_ADC2>();
-
-    if (ADC_GetITStatus(adc2.getBasePointer(), ADC_FLAG_EOC) == SET) {
-        Adc::ConversionCompleteSemaphores[static_cast<size_t>(adc2.mDescription)].giveFromISR();
-        ADC_ClearITPendingBit(adc2.getBasePointer(), ADC_FLAG_EOC);
-    }
-}
-
-extern "C" void ADC3_IRQHandler(void)
-{
-    constexpr auto& adc = Factory<Adc>::get<Adc::Description::PMD_ADC3>();
-
-    if (ADC_GetITStatus(adc.getBasePointer(), ADC_FLAG_EOC) == SET) {
-        Adc::ConversionCompleteSemaphores[static_cast<size_t>(adc.mDescription)].giveFromISR();
-        ADC_ClearITPendingBit(adc.getBasePointer(), ADC_FLAG_EOC);
-    }
-}
-
-extern "C" void ADC4_IRQHandler(void)
-{
-    constexpr auto& adc = Factory<Adc>::get<Adc::Description::PMD_ADC4>();
-
-    if (ADC_GetITStatus(adc.getBasePointer(), ADC_FLAG_EOC) == SET) {
-        Adc::ConversionCompleteSemaphores[static_cast<size_t>(adc.mDescription)].giveFromISR();
-        ADC_ClearITPendingBit(adc.getBasePointer(), ADC_FLAG_EOC);
-    }
-}
-
 ADC_TypeDef* Adc::getBasePointer(void) const
 {
     return reinterpret_cast<ADC_TypeDef*>(mPeripherie);
@@ -72,43 +35,42 @@ void Adc::initialize(void) const
 {
     auto ADCx = this->getBasePointer();
 
-    ADC_CommonInit(ADCx, &mCommonConfiguration);
-    ADC_Init(ADCx, &mConfiguration);
+    ADC_CommonInitTypeDef tmpCommonConfig = mCommonConfiguration;
+    ADC_CommonInit(&tmpCommonConfig);
 
-    if (mDescription == PMD_ADC1) {
-        ADC_TempSensorCmd(ADCx, ENABLE);
-    }
+    ADC_InitTypeDef tmpConfig = mConfiguration;
+    ADC_Init(ADCx, &tmpConfig);
 
     ADC_ITConfig(ADCx, ADC_IT_EOC, ENABLE);
 
     ADC_Cmd(ADCx, ENABLE);
 
-    while (ADC_GetFlagStatus(ADCx, ADC_FLAG_RDY) == RESET) {
-        os::ThisTask::sleep(std::chrono::milliseconds(1));
+    // ready flag was removed for the STM32F4
+
+    ADC_ClearITPendingBit(ADCx, ADC_IT_EOC);
+
+    mNvic.setPriority(Adc::INTERRUPT_PRIORITY);
+
+    // Interrupt status and cleanup for all available adcs, because all share one IRQ
+    mNvic.registerGetInterruptStatusProcedure([] (void){
+                                                  return (ADC_GetFlagStatus(ADC1, ADC_FLAG_EOC) == SET) ||
+                                                  (ADC_GetFlagStatus(ADC2, ADC_FLAG_EOC) == SET) ||
+                                                  (ADC_GetFlagStatus(ADC3, ADC_FLAG_EOC) == SET);
+                                              });
+
+    mNvic.registerClearInterruptProcedure([] (void){
+                                              ADC_ClearFlag(ADC1, ADC_FLAG_EOC);
+                                              ADC_ClearFlag(ADC2, ADC_FLAG_EOC);
+                                              ADC_ClearFlag(ADC3, ADC_FLAG_EOC);
+                                          });
+
+    mNvic.registerInterruptCallback([] (void){
+                                        hal::Adc::handleInterrupt();
+                                    });
+
+    if (!mNvic.enable()) {
+        // TODO: What to do if the Nvic cannot be enabled?
     }
-
-    ADC_ClearITPendingBit(ADCx, ADC_IT_RDY | ADC_IT_EOC);
-
-    NVIC_SetPriority(mIRQn, Adc::INTERRUPT_PRIORITY);
-    NVIC_EnableIRQ(mIRQn);
-}
-
-void Adc::calibrate(void) const
-{
-    auto ADCx = this->getBasePointer();
-    ADC_VoltageRegulatorCmd(ADCx, ENABLE);
-
-    /* If ADC does not work proper, wait here for some milliseconds */
-    os::ThisTask::sleep(std::chrono::milliseconds(10));
-
-    ADC_SelectCalibrationMode(ADCx, ADC_CalibrationMode_Single);
-    ADC_StartCalibration(ADCx);
-
-    while (ADC_GetCalibrationStatus(ADCx) != RESET) {
-        os::ThisTask::sleep(std::chrono::milliseconds(1));
-    }
-
-    CalibrationValues[static_cast<size_t>(mDescription)] = ADC_GetCalibrationValue(ADCx);
 }
 
 uint32_t Adc::getValue(const Adc::Channel& channel) const
@@ -119,7 +81,7 @@ uint32_t Adc::getValue(const Adc::Channel& channel) const
 
     ADC_RegularChannelConfig(ADCx, channel.mChannel, channel.mRank, channel.mSampleTime);
 
-    ADC_StartConversion(ADCx);
+    ADC_SoftwareStartConv(ADCx);
     ConversionCompleteSemaphores[static_cast<size_t>(mDescription)].take();
 
     uint32_t returnValue = ADC_GetConversionValue(ADCx);
@@ -129,7 +91,7 @@ uint32_t Adc::getValue(const Adc::Channel& channel) const
 
 float Adc::getVoltage(const Adc::Channel& channel) const
 {
-    return (channel.mMaxVoltage / std::pow(2, mResolutionBits)) * getValue(channel);
+    return channel.mMaxVoltage / mResolution* getValue(channel);
 }
 
 uint32_t Adc::getCalibrationValue(void) const
@@ -143,14 +105,22 @@ void Adc::startConversion(const Adc::Channel& channel) const
 
     ADC_RegularChannelConfig(ADCx, channel.mChannel, channel.mRank, channel.mSampleTime);
 
-    ADC_StartConversion(ADCx);
+    ADC_SoftwareStartConv(ADCx);
 }
 
-void Adc::stopConversion(void) const
+void Adc::handleInterrupt(void)
 {
-    auto ADCx = this->getBasePointer();
+    constexpr auto& adc1 = Factory<Adc>::get<Adc::Description::HAL_ADC1>();
+    constexpr auto& adc2 = Factory<Adc>::get<Adc::Description::HAL_ADC2>();
+    constexpr auto& adc3 = Factory<Adc>::get<Adc::Description::HAL_ADC3>();
 
-    ADC_StopConversion(ADCx);
+    if (ADC_GetFlagStatus(adc1.getBasePointer(), ADC_FLAG_EOC) == SET) {
+        Adc::ConversionCompleteSemaphores[static_cast<size_t>(adc1.mDescription)].giveFromISR();
+    } else if (ADC_GetFlagStatus(adc2.getBasePointer(), ADC_FLAG_EOC) == SET) {
+        Adc::ConversionCompleteSemaphores[static_cast<size_t>(adc2.mDescription)].giveFromISR();
+    } else if (ADC_GetFlagStatus(adc3.getBasePointer(), ADC_FLAG_EOC) == SET) {
+        Adc::ConversionCompleteSemaphores[static_cast<size_t>(adc3.mDescription)].giveFromISR();
+    }
 }
 
 std::array<uint32_t, Adc::Description::__ENUM__SIZE> Adc::CalibrationValues;

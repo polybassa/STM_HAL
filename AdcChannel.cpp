@@ -27,23 +27,18 @@ uint32_t Adc::Channel::getValue(void) const
 {
     const int now = static_cast<int>(os::Task::getTickCount());
 
-    if (static_cast<uint32_t>(std::abs(now - static_cast<int>(mLastUpdateTicks))) < mCacheTimeInTicks) {
-        return mCacheValue;
-    }
-    mLastUpdateTicks = now;
+    if (static_cast<uint32_t>(std::abs(now - static_cast<int>(mLastUpdateTicks))) >= mCacheTimeInTicks) {
+        mLastUpdateTicks = now;
 
-    mCacheValue = mBaseAdc.getValue(*this);
+        mCacheValue = mBaseAdc.getValue(*this);
+    }
+
     return mCacheValue;
 }
 
 void Adc::Channel::startConversion(void) const
 {
     mBaseAdc.startConversion(*this);
-}
-
-void Adc::Channel::stopConversion(void) const
-{
-    mBaseAdc.stopConversion();
 }
 
 float Adc::Channel::getVoltage(void) const
@@ -53,12 +48,12 @@ float Adc::Channel::getVoltage(void) const
 
 float Adc::Channel::getVoltage(const uint16_t value) const
 {
-    return (mMaxVoltage * value) / std::pow(2, mBaseAdc.mResolutionBits);
+    return (mMaxVoltage * value) / mBaseAdc.mResolution;
 }
 
 float Adc::Channel::getVoltage(const float value) const
 {
-    return (mMaxVoltage * value) / std::pow(2, mBaseAdc.mResolutionBits);
+    return (mMaxVoltage * value) / mBaseAdc.mResolution;
 }
 
 uint32_t Adc::Channel::getCalibrationValue(void) const

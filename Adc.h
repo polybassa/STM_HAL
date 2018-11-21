@@ -25,10 +25,7 @@
 #include "Mutex.h"
 #include "Semaphore.h"
 #include "hal_Factory.h"
-
-extern "C" void ADC1_2_IRQHandler(void);
-extern "C" void ADC3_IRQHandler(void);
-extern "C" void ADC4_IRQHandler(void);
+#include "Nvic.h"
 
 namespace hal
 {
@@ -51,26 +48,27 @@ private:
                   const uint32_t&              peripherie,
                   const ADC_InitTypeDef&       conf,
                   const ADC_CommonInitTypeDef& commonConf,
-                  const enum IRQn              irqn,
-                  const uint8_t                resolutionBits = 12) :
+                  const uint16_t               resolution = 4095,
+                  const Nvic&                  nvic = Factory<Nvic>::getByIrqChannel<IRQn::ADC_IRQn>()) :
         mDescription(desc), mPeripherie(peripherie),
         mConfiguration(conf),
         mCommonConfiguration(commonConf),
-        mIRQn(irqn), mResolutionBits(resolutionBits) {}
+        mResolution(resolution),
+        mNvic(nvic) {}
 
     const uint32_t mPeripherie;
     const ADC_InitTypeDef mConfiguration;
     const ADC_CommonInitTypeDef mCommonConfiguration;
-    const enum IRQn mIRQn;
-    const uint8_t mResolutionBits;
+    const uint16_t mResolution;
+    const Nvic& mNvic;
 
     ADC_TypeDef* getBasePointer(void) const;
     void initialize(void) const;
-    void calibrate(void) const;
     uint32_t getValue(const Adc::Channel&) const;
     float getVoltage(const Adc::Channel&) const;
     void startConversion(const Adc::Channel&) const;
-    void stopConversion(void) const;
+
+public: static void handleInterrupt(void);
 
     static std::array<uint32_t, Description::__ENUM__SIZE> CalibrationValues;
     static std::array<os::Semaphore, Description::__ENUM__SIZE> ConversionCompleteSemaphores;
@@ -81,9 +79,6 @@ private:
     friend class Factory<Adc>;
     friend class Factory<Adc::Channel>;
     friend struct AdcWithDma;
-    friend void ::ADC1_2_IRQHandler(void);
-    friend void ::ADC3_IRQHandler(void);
-    friend void ::ADC4_IRQHandler(void);
 };
 
 template<>
@@ -93,21 +88,33 @@ class Factory<Adc>
 
     Factory(void)
     {
-        RCC_ADCCLKConfig(RCC_ADC12PLLCLK_Div1); // 72MHz
-        RCC_ADCCLKConfig(RCC_ADC34PLLCLK_Div1);
+        // TODO seems to be impossible and unnecessary on the F4
+//        RCC_ADCCLKConfig(RCC_ADC12PLLCLK_Div1); // 72MHz
+//        RCC_ADCCLKConfig(RCC_ADC34PLLCLK_Div1);
         // INFO: To speedup ADC Conversion, choose a smaller divider e.g. 6
 
-        RCC_AHBPeriphClockCmd(RCC_AHBPeriph_ADC12, ENABLE);
-        RCC_AHBPeriphClockCmd(RCC_AHBPeriph_ADC34, ENABLE);
+        // enable only the adc clocks that are really used
+        for (const hal::Adc& adc : Container) {
+            switch (adc.mPeripherie) {
+            case ADC1_BASE :
+                RCC_APB2PeriphClockCmd(RCC_APB2Periph_ADC1, ENABLE);
+                break;
 
-        ADC_DeInit(ADC1);
-        ADC_DeInit(ADC2);
-        ADC_DeInit(ADC3);
-        ADC_DeInit(ADC4);
+            case ADC2_BASE:
+                RCC_APB2PeriphClockCmd(RCC_APB2Periph_ADC2, ENABLE);
+                break;
 
-        for (const auto& adc : Container) {
-            adc.calibrate();
+            case ADC3_BASE:
+                RCC_APB2PeriphClockCmd(RCC_APB2Periph_ADC3, ENABLE);
+                break;
+
+            default:
+                break;
+            }
         }
+
+        ADC_DeInit();
+
         for (const auto& adc : Container) {
             adc.initialize();
         }
@@ -118,26 +125,30 @@ public:
     static constexpr const Adc& get(void)
     {
         static_assert(index < Container.size(), "Index out of bounds ");
-        static_assert(IS_ADC_ALL_PERIPH_BASE(Container[index].mPeripherie), "Invalid Peripheries ");
         static_assert(Container[index].mDescription < Adc::Description::__ENUM__SIZE, "Invalid Parameter");
-        static_assert(IS_ADC_AUTOINJECMODE(Container[index].mConfiguration.ADC_AutoInjMode), "Invalid Parameter");
-        static_assert(IS_ADC_CONVMODE(Container[index].mConfiguration.ADC_ContinuousConvMode), "Invalid Parameter");
-        static_assert(IS_ADC_DATA_ALIGN(Container[index].mConfiguration.ADC_DataAlign), "Invalid Parameter");
-        static_assert(IS_ADC_EXT_TRIG(Container[index].mConfiguration.ADC_ExternalTrigConvEvent), "Invalid Parameter");
-        static_assert(IS_EXTERNALTRIG_EDGE(
-                                           Container[index].mConfiguration.ADC_ExternalTrigEventEdge),
-                      "Invalid Parameter");
-        static_assert(IS_ADC_CHANNEL(Container[index].mConfiguration.ADC_NbrOfRegChannel), "Invalid Parameter");
-        static_assert(IS_ADC_OVRUNMODE(Container[index].mConfiguration.ADC_OverrunMode), "Invalid Parameter");
-        static_assert(IS_ADC_RESOLUTION(Container[index].mConfiguration.ADC_Resolution), "Invalid Parameter");
-        static_assert(IS_ADC_CLOCKMODE(Container[index].mCommonConfiguration.ADC_Clock), "Invalid Parameter");
+
+        static_assert((Container[index].mPeripherie == ADC1_BASE) ||
+                      (Container[index].mPeripherie == ADC2_BASE) ||
+                      (Container[index].mPeripherie == ADC3_BASE), "Invalid Peripheries ");
+        static_assert(IS_ADC_MODE(Container[index].mCommonConfiguration.ADC_Mode), "Invalid Parameter");
+        static_assert(IS_ADC_PRESCALER(Container[index].mCommonConfiguration.ADC_Prescaler), "Invalid Parameter");
         static_assert(IS_ADC_DMA_ACCESS_MODE(
                                              Container[index].mCommonConfiguration.ADC_DMAAccessMode),
                       "Invalid Parameter");
-        static_assert(IS_ADC_DMA_MODE(Container[index].mCommonConfiguration.ADC_DMAMode), "Invalid Parameter");
-        static_assert(IS_ADC_MODE(Container[index].mCommonConfiguration.ADC_Mode), "Invalid Parameter");
-        static_assert(Container[index].mIRQn & (IRQn::ADC1_2_IRQn | IRQn::ADC3_IRQn | IRQn::ADC4_IRQn),
+        static_assert(IS_ADC_SAMPLING_DELAY(
+                                            Container[index].mCommonConfiguration.ADC_TwoSamplingDelay),
                       "Invalid Parameter");
+
+        static_assert(IS_ADC_RESOLUTION(Container[index].mConfiguration.ADC_Resolution), "Invalid Parameter");
+        static_assert(IS_FUNCTIONAL_STATE(Container[index].mConfiguration.ADC_ScanConvMode), "Invalid Parameter");
+        static_assert(IS_FUNCTIONAL_STATE(Container[index].mConfiguration.ADC_ContinuousConvMode), "Invalid Parameter");
+        static_assert(IS_ADC_EXT_TRIG_EDGE(
+                                           Container[index].mConfiguration.ADC_ExternalTrigConvEdge),
+                      "Invalid Parameter");
+        static_assert(IS_ADC_EXT_TRIG(Container[index].mConfiguration.ADC_ExternalTrigConv), "Invalid Parameter");
+        static_assert(IS_ADC_DATA_ALIGN(Container[index].mConfiguration.ADC_DataAlign), "Invalid Parameter");
+        static_assert(Container[index].mConfiguration.ADC_NbrOfConversion >= 1, "Invalid Parameter");
+        static_assert(Container[index].mConfiguration.ADC_NbrOfConversion <= 16, "Invalid Parameter");
 
         static_assert(index != Adc::Description::__ENUM__SIZE, "__ENUM__SIZE is not accessible");
         static_assert(Container[index].mDescription == index, "Wrong mapping between Description and Container");

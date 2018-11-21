@@ -69,7 +69,6 @@ private:
     void initialize(void) const;
 
     void startConversion(void) const;
-    void stopConversion(void) const;
 
     friend struct Adc;
     friend struct AdcWithDma;
@@ -105,11 +104,11 @@ public:
 
         static_assert(portTICK_PERIOD_MS == 1, "Wrong OS tick rate configuration. 1 ms per tick required");
 
-        static_assert(Container[index].mBaseAdc.mConfiguration.ADC_ContinuousConvMode == 0x00/*TODO changed ADC_ContinuousConvMode_Disable*/,
+        static_assert(Container[index].mBaseAdc.mConfiguration.ADC_ContinuousConvMode == 0x00 /*TODO changed ADC_ContinuousConvMode_Disable*/,
                       "Invalid Parameter of base adc. This Channel can't be used directly");
         static_assert(
-                      Container[index].mBaseAdc.mConfiguration.ADC_ExternalTrigEventEdge !=
-                      ADC_ExternalTrigEventEdge_None,
+                      Container[index].mBaseAdc.mConfiguration.ADC_ExternalTrigConvEdge !=
+                      ADC_ExternalTrigConvEdge_None,
                       "Invalid Parameter of base adc. This Channel can't be used for DMA");
 
         return Container[index];
@@ -130,11 +129,11 @@ public:
 
         static_assert(portTICK_PERIOD_MS == 1, "Wrong OS tick rate configuration. 1 ms per tick required");
 
-        static_assert(Container[index].mBaseAdc.mConfiguration.ADC_ContinuousConvMode == ADC_ContinuousConvMode_Disable,
+        static_assert(Container[index].mBaseAdc.mConfiguration.ADC_ContinuousConvMode == DISABLE,
                       "Invalid Parameter of base adc. This Channel can't be used directly");
         static_assert(
-                      Container[index].mBaseAdc.mConfiguration.ADC_ExternalTrigEventEdge ==
-                      ADC_ExternalTrigEventEdge_None,
+                      Container[index].mBaseAdc.mConfiguration.ADC_ExternalTrigConvEdge ==
+                      ADC_ExternalTrigConvEdge_None,
                       "Invalid Parameter of base adc. This Channel can't be used directly");
 
         return Container[index];
