@@ -66,3 +66,57 @@ const uint16_t hal::TimInterrupt::checkInterruptSource(const uint16_t& tim_it) c
         return TIM_IT_Update;
     }
 }
+
+void hal::TimInterrupt::setCompareValue(const uint32_t& compare) const
+{
+    switch (mInterruptSource) {
+    case TIM_IT_CC1:
+        TIM_SetCompare1(mTim.getBasePointer(), compare);
+        break;
+
+    case TIM_IT_CC2:
+        TIM_SetCompare2(mTim.getBasePointer(), compare);
+        break;
+
+    case TIM_IT_CC3:
+        TIM_SetCompare3(mTim.getBasePointer(), compare);
+        break;
+
+    case TIM_IT_CC4:
+        TIM_SetCompare4(mTim.getBasePointer(), compare);
+        break;
+
+    default:
+        // nothing to be done
+        break;
+    }
+}
+
+const uint32_t hal::TimInterrupt::getCompareValue(void) const
+{
+    uint32_t compVal = 0;
+
+    switch (mInterruptSource) {
+    case TIM_IT_CC1:
+        compVal = mTim.getBasePointer()->CCR1;
+        break;
+
+    case TIM_IT_CC2:
+        compVal = mTim.getBasePointer()->CCR1;
+        break;
+
+    case TIM_IT_CC3:
+        compVal = mTim.getBasePointer()->CCR1;
+        break;
+
+    case TIM_IT_CC4:
+        compVal = mTim.getBasePointer()->CCR1;
+        break;
+
+    default:
+        compVal = 0;
+        break;
+    }
+
+    return compVal;
+}

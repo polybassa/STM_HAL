@@ -27,6 +27,17 @@ public:
     void unregisterInterruptCallback(void) const;
     void handleInterrupt(void) const;
 
+    /**
+     * Sets the compare value if a capture compare event is configured as interrupt source.
+     * If the interrupt source is not a capture compare event, this has no effect.
+     * @param compare the value for the capture compare register of the timer.
+     */
+    void setCompareValue(const uint32_t& compare) const;
+    /**
+     * Returns the corresponding compare value. Zero if no capture compare event is set as interrupt source.
+     */
+    const uint32_t getCompareValue(void) const;
+
 private:
 
     const Tim& mTim;
