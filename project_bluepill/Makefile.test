@@ -32,6 +32,13 @@ ${BINDIR}/binascii_ut.bin: DEFINES+=-DDEBUG
 ${BINDIR}/binascii_ut.bin: DEFINES+=-DUNITTEST
 ${BINDIR}/binascii_ut.bin: ${OBJDIR}/binascii_ut.o
 
+####################################isotp############################################
+
+${BINDIR}/IsoTp_ut.bin: DEFINES+=-DDEBUG
+${BINDIR}/IsoTp_ut.bin: DEFINES+=-DUNITTEST
+${BINDIR}/IsoTp_ut.bin: ${OBJDIR}/IsoTp_ut.o
+${BINDIR}/IsoTp_ut.bin: ${OBJDIR}/IsoTp.o
+
 
 ################################################################################
 
@@ -41,6 +48,7 @@ test: clean-all ${BINDIR} ${OBJDIR} test_binarys
 	#-@${GENHTML} ${OBJDIR}/cov.info -o ${COVERAGEDIR}
 
 TESTS=${BINDIR}/binascii_ut.bin
+TESTS+=${BINDIR}/IsoTp_ut.bin
 
 
 test_binarys: ${TESTS}  
