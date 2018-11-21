@@ -60,7 +60,7 @@ const uint16_t hal::TimInterrupt::checkInterruptSource(const uint16_t& tim_it) c
 {
     //	static_assert(IS_TIM_IT(mInterruptSource), "Invalid interrupt source!");
 
-    if (IS_TIM_IT(tim_it)) {
+    if (IS_TIM_GET_IT(tim_it)) {
         return tim_it;
     } else {
         return TIM_IT_Update;
