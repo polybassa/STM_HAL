@@ -87,6 +87,7 @@ ${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/TaskInterruptable.o
 # App Layer
 
 #TestApps
+${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/TestCan.o
 ${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/TestGpio.o
 
 # device
