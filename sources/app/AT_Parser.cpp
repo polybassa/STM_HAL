@@ -601,10 +601,11 @@ bool ATParser::parse(std::chrono::milliseconds timeout)
 {
     size_t currentPos = 0;
     std::array<AT*, MAXATCMDS> possibleResponses;
-    std::array<AT*, MAXATCMDS> sievedResponses;
+    size_t possibleResponsesCount = 0;
 
     auto resetPossibleResponses = [&] {
                                       currentPos = 0;
+                                      possibleResponsesCount = possibleResponses.size();
                                       possibleResponses.fill(nullptr);
                                       std::copy(mRegisteredATCommands.begin(),
                                                 mRegisteredATCommands.end(),
@@ -628,33 +629,20 @@ bool ATParser::parse(std::chrono::milliseconds timeout)
                 resetPossibleResponses();
             }
 
-            sievedResponses.fill(nullptr);
-
-            std::copy_if(possibleResponses.begin(),
-                         possibleResponses.end(),
-                         sievedResponses.begin(),
-                         [&](AT* atcmd){
-                return atcmd != nullptr && currentData ==
-                atcmd->mResponse.substr(0, currentPos);
-            });
-
-            possibleResponses = sievedResponses;
-            const size_t possibleResponsesCount = std::count_if(possibleResponses.begin(),
-                                                                possibleResponses.end(),
-                                                                [](AT* cmd){
-                return cmd != nullptr;
-            });
+            size_t stillMatchingCount = 0;
+            for (size_t i = 0; i < possibleResponsesCount; ++i) {
+                const auto next = possibleResponses[i];
+                if (next && (currentData == next->mResponse.substr(0, currentPos))) {
+                    possibleResponses[stillMatchingCount++] = next;
+                }
+            }
+            possibleResponsesCount = stillMatchingCount;
 
             if (possibleResponsesCount > 1) { continue; }
 
             if (possibleResponsesCount == 1) {
-                const auto matchIt = std::find_if(possibleResponses.begin(),
-                                                  possibleResponses.end(), [](AT* cmd){
-                    return cmd != nullptr;
-                });
-                if (matchIt == possibleResponses.end()) {
-                    continue;
-                }
+                const auto matchIt = possibleResponses.begin();
+
                 if (currentData != (*matchIt)->mResponse) {
                     continue;
                 }
