@@ -33,5 +33,11 @@ static constexpr const std::array<const Can, Can::__ENUM__SIZE + 1> Container =
                                                   DISABLE, DISABLE, DISABLE, DISABLE})
   }};
 
+static constexpr const std::array<const CAN_FilterInitTypeDef, 1> CanFilterContainer =
+{ {
+      CAN_FilterInitTypeDef{0x0700 << 5, 0x0000, 0x07F0 << 5, 0x0000, 0, 0,
+                            CAN_FilterMode_IdMask, CAN_FilterScale_32bit, ENABLE}
+  }};
+
 #endif /* SOURCES_CAN_CONFIG_CONTAINER_H_ */
 #endif /* SOURCES_CAN_CONFIG_DESCRIPTION_H_ */

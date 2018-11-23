@@ -71,6 +71,10 @@ class Factory<Can>
     {
         RCC_APB1PeriphClockCmd(RCC_APB1Periph_CAN1, ENABLE);
         Container[0].initialize();
+
+        for (const auto& filter : CanFilterContainer) {
+            CAN_FilterInit(&filter);
+        }
     }
 
 public:

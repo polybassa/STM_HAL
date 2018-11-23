@@ -646,7 +646,7 @@ void CAN_DeInit(CAN_TypeDef* CANx);
 
 /* Initialization and Configuration functions *********************************/ 
 uint8_t CAN_Init(CAN_TypeDef* CANx, CAN_InitTypeDef const * CAN_InitStruct);
-void CAN_FilterInit(CAN_FilterInitTypeDef* CAN_FilterInitStruct);
+void CAN_FilterInit(CAN_FilterInitTypeDef const * const CAN_FilterInitStruct);
 void CAN_StructInit(CAN_InitTypeDef* CAN_InitStruct);
 void CAN_SlaveStartBank(uint8_t CAN_BankNumber); 
 void CAN_DBGFreeze(CAN_TypeDef* CANx, FunctionalState NewState);

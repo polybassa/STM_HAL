@@ -289,7 +289,7 @@ uint8_t CAN_Init(CAN_TypeDef* CANx, CAN_InitTypeDef const * CAN_InitStruct)
   *                               information.
   * @retval None.
   */
-void CAN_FilterInit(CAN_FilterInitTypeDef* CAN_FilterInitStruct)
+void CAN_FilterInit(CAN_FilterInitTypeDef const * const CAN_FilterInitStruct)
 {
   uint32_t filter_number_bit_pos = 0;
   /* Check the parameters */

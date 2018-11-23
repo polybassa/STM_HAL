@@ -52,19 +52,6 @@ void Can::initialize() const
     CAN_DeInit(reinterpret_cast<CAN_TypeDef*>(mPeripherie));
     CAN_Init(reinterpret_cast<CAN_TypeDef*>(mPeripherie), &mConfiguration);
 
-    CAN_FilterInitTypeDef CAN_FilterInitStructure;
-    /* CAN filter init */
-    CAN_FilterInitStructure.CAN_FilterNumber = 0;
-    CAN_FilterInitStructure.CAN_FilterMode = CAN_FilterMode_IdMask;
-    CAN_FilterInitStructure.CAN_FilterScale = CAN_FilterScale_32bit;
-    CAN_FilterInitStructure.CAN_FilterIdHigh = 0x0700 << 5;
-    CAN_FilterInitStructure.CAN_FilterIdLow = 0x0000;
-    CAN_FilterInitStructure.CAN_FilterMaskIdHigh = 0x07F0 << 5;
-    CAN_FilterInitStructure.CAN_FilterMaskIdLow = 0x0000;
-    CAN_FilterInitStructure.CAN_FilterFIFOAssignment = 0;
-    CAN_FilterInitStructure.CAN_FilterActivation = ENABLE;
-    CAN_FilterInit(&CAN_FilterInitStructure);
-
     // Initialize Interrupts
     NVIC_SetPriority(USB_LP_CAN1_RX0_IRQn, 0xf);
     NVIC_EnableIRQ(USB_LP_CAN1_RX0_IRQn);
@@ -127,3 +114,4 @@ void Can::clearOverRunError(void) const
 Can::ReceiveCallbackArray Can::ReceiveInterruptCallbacks;
 
 constexpr const std::array<const Can, Can::__ENUM__SIZE + 1> Factory<Can>::Container;
+constexpr const std::array<const CAN_FilterInitTypeDef, 1> Factory<Can>::CanFilterContainer;
