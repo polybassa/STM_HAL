@@ -100,7 +100,7 @@ void Socket::storeReceivedData(const std::string_view data)
     if (mReceiveCallback) {
         mReceiveCallback(data);
     } else {
-        mReceiveBuffer.send(data.data(), data.length(), 1000);
+        mReceiveBuffer.send(data.data(), data.length(), std::chrono::seconds(1));
     }
     Trace(ZONE_INFO, "Data stored\r\n");
     mTimeOfLastReceive = os::Task::getTickCount();
@@ -112,7 +112,9 @@ size_t Socket::loadTemporaryBuffer(void)
 
     Trace(ZONE_VERBOSE, "Send %d \r\n", bytes);
 
-    const size_t receivedLength = mSendBuffer.receive(mTemporaryBuffer.data(), mTemporaryBuffer.size(), 1000);
+    const size_t receivedLength = mSendBuffer.receive(mTemporaryBuffer.data(),
+                                                      mTemporaryBuffer.size(),
+                                                      std::chrono::seconds(1));
 
     if (receivedLength != bytes) {
         Trace(ZONE_ERROR, "Internal buffer didn't contain exact amount of bytes\r\n");
@@ -123,12 +125,13 @@ size_t Socket::loadTemporaryBuffer(void)
 
 size_t Socket::send(std::string_view message, const uint32_t ticksToWait)
 {
-    return mSendBuffer.send(message.data(), message.length(), ticksToWait);
+    //TODO change ticksToWait to chrono milliseconds
+    return mSendBuffer.send(message.data(), message.length(), std::chrono::milliseconds(ticksToWait));
 }
 
 size_t Socket::receive(uint8_t* message, size_t length, uint32_t ticksToWait)
 {
-    return mReceiveBuffer.receive(reinterpret_cast<char*>(message), length, ticksToWait);
+    return mReceiveBuffer.receive(reinterpret_cast<char*>(message), length, std::chrono::milliseconds(ticksToWait));
 }
 
 size_t Socket::bytesAvailable(void) const
@@ -323,7 +326,9 @@ void DnsSocket::sendData(void)
 
     std::array<char, MAX_PAYLOAD_LENGTH> tmpPayloadStr;
 
-    mSendBuffer.receive(tmpPayloadStr.data(), std::max(mSendBuffer.bytesAvailable(), MAX_PAYLOAD_LENGTH), 1000);
+    mSendBuffer.receive(tmpPayloadStr.data(),
+                        std::max(mSendBuffer.bytesAvailable(), MAX_PAYLOAD_LENGTH),
+                        std::chrono::seconds(1));
 
     std::array<char, MAX_PAYLOAD_LENGTH*2> hexPayloadStr;
 

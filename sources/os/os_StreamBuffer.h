@@ -16,6 +16,11 @@ class StreamBuffer
 {
     StreamBufferHandle_t mStreamBufferHandle = nullptr;
 
+    bool send(T message, uint32_t ticksToWait) const;
+    size_t send(T const* message, const size_t length, uint32_t ticksToWait) const;
+    bool receive(T& message, const uint32_t ticksToWait) const;
+    size_t receive(T* message, const size_t length, const uint32_t ticksToWait) const;
+
 public:
     StreamBuffer(const size_t triggerLevel = 1);
     StreamBuffer(const StreamBuffer&) = delete;
@@ -24,11 +29,38 @@ public:
     StreamBuffer& operator=(StreamBuffer&&);
     ~StreamBuffer(void);
 
-    bool send(T message, uint32_t ticksToWait = portMAX_DELAY) const;
-    size_t send(char const* message, const size_t length, uint32_t ticksToWait = portMAX_DELAY) const;
-    bool sendFromISR(T message) const;
-    bool receive(T& message, uint32_t ticksToWait = portMAX_DELAY) const;
-    size_t receive(char* message, const size_t length, uint32_t ticksToWait = portMAX_DELAY) const;
+    template<class rep, class period>
+    inline bool send(const T message, const std::chrono::duration<rep, period>& d) const
+    {
+        return send(message, std::chrono::duration_cast<std::chrono::milliseconds>(d).count() / portTICK_RATE_MS);
+    }
+    inline bool send(const T message) const {return send(message, portMAX_DELAY);}
+
+    template<class rep, class period>
+    inline size_t send(T const* message, const size_t length, const std::chrono::duration<rep, period>& d) const
+    {
+        return send(message, length,
+                    std::chrono::duration_cast<std::chrono::milliseconds>(d).count() / portTICK_RATE_MS);
+    }
+    inline size_t send(T const* message, const size_t length) const { return send(message, length, portMAX_DELAY);}
+
+    bool sendFromISR(const T message) const;
+
+    template<class rep, class period>
+    inline bool receive(T& message, const std::chrono::duration<rep, period>& d) const
+    {
+        return receive(message, std::chrono::duration_cast<std::chrono::milliseconds>(d).count() / portTICK_RATE_MS);
+    }
+    inline bool receive(T& message) const {return receive(message, portMAX_DELAY);}
+
+    template<class rep, class period>
+    inline size_t receive(T* message, const size_t length, const std::chrono::duration<rep, period>& d) const
+    {
+        return receive(message, length,
+                       std::chrono::duration_cast<std::chrono::milliseconds>(d).count() / portTICK_RATE_MS);
+    }
+    inline size_t receive(T* message, const size_t length) const {return receive(message, length, portMAX_DELAY);}
+
     bool receiveFromISR(T& message) const;
 
     bool isFull(void) const;
@@ -38,7 +70,7 @@ public:
     size_t spacesAvailable(void) const;
     size_t bytesAvailable(void) const;
 
-    bool setTriggerLevel(size_t triggerLevel) const;
+    bool setTriggerLevel(const size_t triggerLevel) const;
 
     bool sendCompletedFromISR(void) const;
     bool receiveCompletedFromISR(void) const;
@@ -70,18 +102,18 @@ StreamBuffer<T, n>::~StreamBuffer(void)
 }
 
 template<typename T, size_t n>
-bool StreamBuffer<T, n>::send(T message, uint32_t ticksToWait) const
+bool StreamBuffer<T, n>::send(const T message, const uint32_t ticksToWait) const
 {
     return xStreamBufferSend(mStreamBufferHandle, &message, sizeof(message), ticksToWait) == sizeof(message);
 }
 template<typename T, size_t n>
-size_t StreamBuffer<T, n>::send(char const* message, const size_t length, uint32_t ticksToWait) const
+size_t StreamBuffer<T, n>::send(T const* message, const size_t length, const uint32_t ticksToWait) const
 {
     return xStreamBufferSend(mStreamBufferHandle, message, length, ticksToWait);
 }
 
 template<typename T, size_t n>
-bool StreamBuffer<T, n>::sendFromISR(T message) const
+bool StreamBuffer<T, n>::sendFromISR(const T message) const
 {
     BaseType_t highPriorityTaskWoken = 0;
 
@@ -93,13 +125,13 @@ bool StreamBuffer<T, n>::sendFromISR(T message) const
 }
 
 template<typename T, size_t n>
-size_t StreamBuffer<T, n>::receive(char* message, const size_t length, uint32_t ticksToWait) const
+size_t StreamBuffer<T, n>::receive(T* message, const size_t length, const uint32_t ticksToWait) const
 {
     return xStreamBufferReceive(mStreamBufferHandle, message, length, ticksToWait);
 }
 
 template<typename T, size_t n>
-bool StreamBuffer<T, n>::receive(T& message, uint32_t ticksToWait) const
+bool StreamBuffer<T, n>::receive(T& message, const uint32_t ticksToWait) const
 {
     return xStreamBufferReceive(mStreamBufferHandle, &message, sizeof(message), ticksToWait) == sizeof(message);
 }
@@ -147,7 +179,7 @@ size_t StreamBuffer<T, n>::bytesAvailable(void) const
 }
 
 template<typename T, size_t n>
-bool StreamBuffer<T, n>::setTriggerLevel(size_t triggerLevel) const
+bool StreamBuffer<T, n>::setTriggerLevel(const size_t triggerLevel) const
 {
     return xStreamBufferSetTriggerLevel(mStreamBufferHandle, triggerLevel) == pdTRUE;
 }

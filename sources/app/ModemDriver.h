@@ -29,7 +29,7 @@ class ModemDriver final :
     static constexpr size_t STACKSIZE = 2048;
     static constexpr size_t BUFFERSIZE = 1024;
     static constexpr size_t ERROR_THRESHOLD = 20;
-    static os::StreamBuffer<uint8_t, BUFFERSIZE> InputBuffer;
+    static os::StreamBuffer<char, BUFFERSIZE> InputBuffer;
 
     std::vector<std::shared_ptr<Socket> > mSockets;
 

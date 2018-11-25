@@ -22,8 +22,8 @@ protected:
     static constexpr const std::chrono::milliseconds KEEP_ALIVE_PAUSE = std::chrono::seconds(10);
     static constexpr const char* KEEP_ALIVE_MSG = "\r";
 
-    os::StreamBuffer<uint8_t, BUFFERSIZE> mSendBuffer;
-    os::StreamBuffer<uint8_t, BUFFERSIZE> mReceiveBuffer;
+    os::StreamBuffer<char, BUFFERSIZE> mSendBuffer;
+    os::StreamBuffer<char, BUFFERSIZE> mReceiveBuffer;
     std::array<char, BUFFERSIZE> mTemporaryBuffer;
 
     std::function<void(std::string_view)> mReceiveCallback;

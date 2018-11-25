@@ -29,7 +29,7 @@ RecursiveMutex::~RecursiveMutex(void)
     vSemaphoreDelete(mMutexHandle);
 }
 
-bool RecursiveMutex::take(uint32_t ticksToWait) const
+bool RecursiveMutex::take(const uint32_t ticksToWait) const
 {
     return *this ? xSemaphoreTakeRecursive(mMutexHandle, ticksToWait) : false;
 }
