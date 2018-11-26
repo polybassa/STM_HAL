@@ -81,7 +81,7 @@ void CanTunnel::tunnelTxTaskFunction(const bool& join)
     }
     do {
         uint8_t byte = 0;
-        CanReceiveBuffer.receive(byte, portMAX_DELAY);
+        CanReceiveBuffer.receive(byte);
         mTunnelInterface.mUsart.send(&byte, 1);
     } while (!join);
 
@@ -92,7 +92,7 @@ void CanTunnel::canTxTaskFunction(const bool& join)
 {
     do {
         uint8_t byte = 0;
-        TunnelReceiveBuffer.receive(byte, portMAX_DELAY);
+        TunnelReceiveBuffer.receive(byte);
         mCanInterface.mInterface.mUsart.send(&byte, 1);
     } while (!join);
 
