@@ -19,8 +19,6 @@ script:
         - ./makeWithDocker.sh project_tunnel test
         - ./makeWithDocker.sh project_tunnel clean 
         - ./makeWithDocker.sh project_tunnel firmware 
-        - ./makeWithDocker.sh project_tunnel clean 
-        - ./makeWithDocker.sh project_tunnel debug_firmware
         - ./makeWithDocker.sh project_tunnel clean-all
         - ./configureWithDocker.sh project_maco
         - ./makeWithDocker.sh project_maco test

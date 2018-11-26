@@ -73,7 +73,7 @@ void ModemTunnel::modemTxTaskFunction(const bool& join)
 
     do {
         uint8_t byte = 0;
-        TunnelReceiveBuffer.receive(byte, portMAX_DELAY);
+        TunnelReceiveBuffer.receive(byte);
         mModemInterface.send(&byte, 1);
     } while (!join);
 }
@@ -83,7 +83,7 @@ void ModemTunnel::tunnelTxTaskFunction(const bool& join)
     os::ThisTask::sleep(std::chrono::milliseconds(500));
     do {
         uint8_t byte = 0;
-        ModemReceiveBuffer.receive(byte, portMAX_DELAY);
+        ModemReceiveBuffer.receive(byte);
         mTunnelInterface.send(&byte, 1);
     } while (!join);
 }
