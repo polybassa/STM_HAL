@@ -12,7 +12,7 @@ using app::CanController;
 
 static const int __attribute__((unused)) g_DebugZones = 0; //ZONE_ERROR | ZONE_WARNING | ZONE_VERBOSE | ZONE_INFO;
 
-os::StreamBuffer<uint8_t, CanController::BUFFERSIZE> CanController::ReceiveBuffer;
+os::StreamBuffer<char, CanController::BUFFERSIZE> CanController::ReceiveBuffer;
 
 extern "C" char _binary_start;
 extern "C" char _binary_end;
@@ -59,7 +59,8 @@ void CanController::taskFunction(const bool& join)
             if (ReceiveBuffer.bytesAvailable()) {
                 const size_t length = ReceiveBuffer.receive(
                                                             mTempReceiveCallbackBuffer.data(),
-                                                            mTempReceiveCallbackBuffer.size(), 100);
+                                                            mTempReceiveCallbackBuffer.size(),
+                                                            std::chrono::milliseconds(100));
                 mReceiveCallback(std::string_view(mTempReceiveCallbackBuffer.data(), length));
                 continue;
             }
@@ -120,8 +121,8 @@ bool CanController::receiveResponseFromBootloader(void)
 {
     static constexpr const uint8_t ACK = 0x79;
 
-    uint8_t uret;
-    if (!ReceiveBuffer.receive(uret, 100)) {
+    char uret;
+    if (!ReceiveBuffer.receive(uret, std::chrono::milliseconds(100))) {
         Trace(ZONE_INFO, "Nothing received... \r\n");
         return false;
     }
@@ -261,6 +262,7 @@ size_t CanController::send(std::string_view message, const uint32_t ticksToWait)
     return 0;
 }
 
+//TODO change ticksToWait to chrono
 size_t CanController::receive(uint8_t* message, size_t length, uint32_t ticksToWait)
 {
     if (mIsPerformingFirmwareUpdate) {
@@ -268,7 +270,7 @@ size_t CanController::receive(uint8_t* message, size_t length, uint32_t ticksToW
     } else if (mReceiveCallback != nullptr) {
         Trace(ZONE_ERROR, "A receive callback is registered. Use that one to get data!\r\n ");
     } else {
-        return ReceiveBuffer.receive(reinterpret_cast<char*>(message), length, ticksToWait);
+        return ReceiveBuffer.receive(reinterpret_cast<char*>(message), length, std::chrono::milliseconds(ticksToWait));
     }
     return 0;
 }

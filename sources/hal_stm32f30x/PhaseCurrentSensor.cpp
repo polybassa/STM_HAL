@@ -5,6 +5,7 @@
 
 #include "PhaseCurrentSensor.h"
 #include "trace.h"
+#include "os_Task.h"
 #include <algorithm>
 
 static const int __attribute__((unused)) g_DebugZones = ZONE_ERROR | ZONE_WARNING | ZONE_VERBOSE | ZONE_INFO;

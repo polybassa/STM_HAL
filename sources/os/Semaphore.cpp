@@ -4,6 +4,7 @@
  */
 
 #include "Semaphore.h"
+#include "os_Task.h"
 
 using os::Semaphore;
 
@@ -29,7 +30,7 @@ Semaphore::~Semaphore(void)
     vSemaphoreDelete(mSemaphoreHandle);
 }
 
-bool Semaphore::take(uint32_t ticksToWait) const
+bool Semaphore::take(const uint32_t ticksToWait) const
 {
     return *this ? xSemaphoreTake(mSemaphoreHandle, ticksToWait) : false;
 }

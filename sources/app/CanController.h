@@ -27,7 +27,7 @@ class CanController final :
     static constexpr size_t BUFFERSIZE = 2048;
     static constexpr size_t MAXCHUNKSIZE = 256;
 
-    static os::StreamBuffer<uint8_t, BUFFERSIZE> ReceiveBuffer;
+    static os::StreamBuffer<char, BUFFERSIZE> ReceiveBuffer;
     std::array<char, MAXCHUNKSIZE> mTempReceiveCallbackBuffer;
 
     os::TaskInterruptable mTask;

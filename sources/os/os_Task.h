@@ -22,7 +22,7 @@ protected:
     virtual void taskFunction(void);
 
     xTaskHandle mHandle;
-    std::function<void(const bool&)> mTaskFunction;
+    const std::function<void(const bool&)> mTaskFunction;
 
 public:
     enum Priority {
@@ -35,8 +35,8 @@ public:
         LOWEST = 1
     };
 
-    Task(const char* name, uint16_t stackSize, os::Task::Priority priority,
-         std::function<void(const bool&)> function);
+    Task(char const* const name, const uint16_t stackSize, const os::Task::Priority priority,
+         const std::function<void(const bool&)> function);
     Task(const Task&) = delete;
     Task(Task&&) = delete;
     Task& operator=(const Task&) = delete;
@@ -51,16 +51,14 @@ public:
     uint32_t getPriority(void) const;
     uint32_t getPriorityFromISR(void) const;
     void setPriority(const uint32_t) const;
-
-    static bool isSchedulerRunning(void);
-
     char* getName(void) const;
 
-    static constexpr size_t STACKSIZE_IN_BYTE(size_t n)
+    static constexpr const size_t STACKSIZE_IN_BYTE(const size_t n)
     {
         return n / (sizeof(portSTACK_TYPE));
     }
 
+    static bool isSchedulerRunning(void);
     static void startScheduler(void);
     static void endScheduler(void);
     static void suspendAll(void);

@@ -11,7 +11,7 @@ using app::ModemDriver;
 
 static const int __attribute__((unused)) g_DebugZones = ZONE_ERROR | ZONE_WARNING | ZONE_VERBOSE | ZONE_INFO;
 
-os::StreamBuffer<uint8_t, ModemDriver::BUFFERSIZE> ModemDriver::InputBuffer;
+os::StreamBuffer<char, ModemDriver::BUFFERSIZE> ModemDriver::InputBuffer;
 
 void ModemDriver::ModemDriverInterruptHandler(uint8_t data)
 {
@@ -48,7 +48,7 @@ ModemDriver::ModemDriver(const hal::UsartWithDma& interface,
     return mInterface.send(in, timeout.count());
 }),
     mRecv([&](uint8_t* output, const size_t length, std::chrono::milliseconds timeout) -> bool {
-    return InputBuffer.receive(reinterpret_cast<char*>(output), length, timeout.count());
+    return InputBuffer.receive(reinterpret_cast<char*>(output), length, timeout);
 }),
     mParser(mRecv),
     mUrcCallbackReceive([&](const size_t socket, const size_t bytes){
