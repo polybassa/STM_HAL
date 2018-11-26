@@ -8,18 +8,31 @@ before_install:
 
 script: 
         - cd utilities 
-        - ./configureWithDocker.sh
-        - ./makeWithDocker.sh test
-        - ./makeWithDocker.sh clean 
-        - ./makeWithDocker.sh firmware 
-        - ./makeWithDocker.sh clean 
-        - ./makeWithDocker.sh debug_firmware
-        - ./makeWithDocker.sh clean-all
-        - ./configureMacoWithDocker.sh
-        - ./makeMacoWithDocker.sh test 
-        - ./makeMacoWithDocker.sh clean 
-        - ./makeMacoWithDocker.sh firmware 
-        - ./makeMacoWithDocker.sh clean 
-        - ./makeMacoWithDocker.sh debug_firmware
-        - ./makeMacoWithDocker.sh clean-all
-
+        - ./configureWithDocker.sh project
+        - ./makeWithDocker.sh project test
+        - ./makeWithDocker.sh project clean 
+        - ./makeWithDocker.sh project firmware 
+        - ./makeWithDocker.sh project clean 
+        - ./makeWithDocker.sh project debug_firmware
+        - ./makeWithDocker.sh project clean-all
+        - ./configureWithDocker.sh project_tunnel
+        - ./makeWithDocker.sh project_tunnel test
+        - ./makeWithDocker.sh project_tunnel clean 
+        - ./makeWithDocker.sh project_tunnel firmware 
+        - ./makeWithDocker.sh project_tunnel clean 
+        - ./makeWithDocker.sh project_tunnel debug_firmware
+        - ./makeWithDocker.sh project_tunnel clean-all
+        - ./configureWithDocker.sh project_maco
+        - ./makeWithDocker.sh project_maco test
+        - ./makeWithDocker.sh project_maco clean 
+        - ./makeWithDocker.sh project_maco firmware 
+        - ./makeWithDocker.sh project_maco clean 
+        - ./makeWithDocker.sh project_maco debug_firmware
+        - ./makeWithDocker.sh project_maco clean-all
+        - ./configureWithDocker.sh project_bluepill
+        - ./makeWithDocker.sh project_bluepill test
+        - ./makeWithDocker.sh project_bluepill clean 
+        - ./makeWithDocker.sh project_bluepill firmware 
+        - ./makeWithDocker.sh project_bluepill clean 
+        - ./makeWithDocker.sh project_bluepill debug_firmware
+        - ./makeWithDocker.sh project_bluepill clean-all
