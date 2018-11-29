@@ -11,13 +11,13 @@ RecursiveMutex::RecursiveMutex(void) :
     mMutexHandle(xSemaphoreCreateRecursiveMutex())
 {}
 
-RecursiveMutex::RecursiveMutex(RecursiveMutex&& rhs) :
+RecursiveMutex::RecursiveMutex(RecursiveMutex && rhs) :
     mMutexHandle(rhs.mMutexHandle)
 {
     rhs.mMutexHandle = nullptr;
 }
 
-RecursiveMutex& RecursiveMutex::operator=(RecursiveMutex&& rhs)
+RecursiveMutex& RecursiveMutex::operator=(RecursiveMutex && rhs)
 {
     mMutexHandle = rhs.mMutexHandle;
     rhs.mMutexHandle = nullptr;
@@ -26,7 +26,9 @@ RecursiveMutex& RecursiveMutex::operator=(RecursiveMutex&& rhs)
 
 RecursiveMutex::~RecursiveMutex(void)
 {
-    vSemaphoreDelete(mMutexHandle);
+    if (*this) {
+        vSemaphoreDelete(mMutexHandle);
+    }
 }
 
 bool RecursiveMutex::take(const uint32_t ticksToWait) const
