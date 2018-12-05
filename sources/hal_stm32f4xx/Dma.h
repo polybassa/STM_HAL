@@ -25,20 +25,26 @@
 #include "stm32f4xx_rcc.h"
 #include "Semaphore.h"
 #include "hal_Factory.h"
+#include "Nvic.h"
 
-extern "C" {
-void DMA1_Channel2_IRQHandler(void);
-void DMA1_Channel3_IRQHandler(void);
-void DMA1_Channel4_IRQHandler(void);
-void DMA1_Channel5_IRQHandler(void);
-void DMA1_Channel6_IRQHandler(void);
-void DMA1_Channel7_IRQHandler(void);
-
-void DMA2_Channel1_IRQHandler(void);
-void DMA2_Channel2_IRQHandler(void);
-void DMA2_Channel4_IRQHandler(void);
-void DMA2_Channel5_IRQHandler(void);
-}
+// ================================================================================================
+#define IS_DMA_ALL_PERIPH_BASE(PERIPH) (((PERIPH) == DMA1_Stream0_BASE) || \
+                                        ((PERIPH) == DMA1_Stream1_BASE) || \
+                                        ((PERIPH) == DMA1_Stream2_BASE) || \
+                                        ((PERIPH) == DMA1_Stream3_BASE) || \
+                                        ((PERIPH) == DMA1_Stream4_BASE) || \
+                                        ((PERIPH) == DMA1_Stream5_BASE) || \
+                                        ((PERIPH) == DMA1_Stream6_BASE) || \
+                                        ((PERIPH) == DMA1_Stream7_BASE) || \
+                                        ((PERIPH) == DMA2_Stream0_BASE) || \
+                                        ((PERIPH) == DMA2_Stream1_BASE) || \
+                                        ((PERIPH) == DMA2_Stream2_BASE) || \
+                                        ((PERIPH) == DMA2_Stream3_BASE) || \
+                                        ((PERIPH) == DMA2_Stream4_BASE) || \
+                                        ((PERIPH) == DMA2_Stream5_BASE) || \
+                                        ((PERIPH) == DMA2_Stream6_BASE) || \
+                                        ((PERIPH) == DMA2_Stream7_BASE))
+// ================================================================================================
 
 namespace hal
 {
@@ -74,31 +80,31 @@ struct Dma {
 
     void memcpy(void const* const dest, void const* const src, const size_t length) const;
 
-    inline static void DMA_IRQHandler(const Dma&     peripherie,
-                                      const uint32_t TCFlag,
-                                      const uint32_t HTFlag,
-                                      const uint32_t TEFlag);
+    inline static void ClearInterruptFlag(const Dma* const peripherie);
+    inline static bool GetInterruptFlagStatus(const Dma* const peripherie);
+    inline static void DMA_IRQHandler(const Dma* const peripherie);
     inline static void DMA_TCIRQHandler(const Dma& peripherie);
     inline static void DMA_HTIRQHandler(const Dma& peripherie);
     inline static void DMA_TEIRQHandler(const Dma& peripherie);
+
+    inline static uint32_t getITForStream(const uint32_t& DMAy_Streamx, const uint32_t& DMA_IT);
 
 private:
     constexpr Dma(const enum Description& desc,
                   const uint32_t&         peripherie,
                   const DMA_InitTypeDef&  conf,
                   const uint32_t          interrupt = 0,
-                  const IRQn_Type         interruptNumber = IRQn_Type::UsageFault_IRQn) :
+                  const Nvic*             nvic = nullptr) :
         mDescription(desc),
         mPeripherie(peripherie),
         mConfiguration(conf),
         mDmaInterrupt(interrupt),
-        mDmaIRQn(
-                 interruptNumber) {}
+        mpNvic(nvic) {}
 
     const uint32_t mPeripherie;
     const DMA_InitTypeDef mConfiguration;
     const uint32_t mDmaInterrupt;
-    const IRQn_Type mDmaIRQn;
+    const Nvic* mpNvic;
 
     void initialize(void) const;
 
@@ -106,6 +112,12 @@ private:
     inline static void DMA_IRQHandlerSemaphore(const Dma& peripherie, const SemaphoreArray&);
     using CallbackArray = std::array<std::function<void(void)>, Dma::__ENUM__SIZE>;
     inline static void DMA_IRQHandlerCallback(const Dma& peripherie, const CallbackArray&);
+
+    inline static uint32_t getFEFlagForStream(const uint32_t& DMAy_Streamx);
+    inline static uint32_t getDMEFlagForStream(const uint32_t& DMAy_Streamx);
+    inline static uint32_t getTEFlagForStream(const uint32_t& DMAy_Streamx);
+    inline static uint32_t getHTFlagForStream(const uint32_t& DMAy_Streamx);
+    inline static uint32_t getTCFlagForStream(const uint32_t& DMAy_Streamx);
 
     static SemaphoreArray TCInterruptSemaphores; // Transfer Complete
     static SemaphoreArray HTInterruptSemaphores; // Half Transfer
@@ -124,19 +136,19 @@ class Factory<Dma>
 
     static constexpr const std::array<const uint32_t, 2> Clocks =
     { {
-          RCC_AHBPeriph_DMA1, RCC_AHBPeriph_DMA2
+          RCC_AHB1Periph_DMA1, RCC_AHB1Periph_DMA2
       } };
 
     Factory(void)
     {
         for (const auto& clock : Clocks) {
-            RCC_AHBPeriphClockCmd(clock, ENABLE);
+            RCC_AHB1PeriphClockCmd(clock, ENABLE);
         }
 
-        RCC_AHBPeriphResetCmd(RCC_AHBPeriph_DMA1, ENABLE);
-        RCC_AHBPeriphResetCmd(RCC_AHBPeriph_DMA2, ENABLE);
-        RCC_AHBPeriphResetCmd(RCC_AHBPeriph_DMA1, DISABLE);
-        RCC_AHBPeriphResetCmd(RCC_AHBPeriph_DMA2, DISABLE);
+        RCC_AHB1PeriphResetCmd(RCC_AHB1Periph_DMA1, ENABLE);
+        RCC_AHB1PeriphResetCmd(RCC_AHB1Periph_DMA2, ENABLE);
+        RCC_AHB1PeriphResetCmd(RCC_AHB1Periph_DMA1, DISABLE);
+        RCC_AHB1PeriphResetCmd(RCC_AHB1Periph_DMA2, DISABLE);
 
         for (const auto& dma : Container) {
             if (dma.mDescription != Dma::__ENUM__SIZE) {
@@ -158,21 +170,37 @@ public:
     template<enum Dma::Description index>
     static constexpr const Dma& get(void)
     {
+        static_assert(index != Dma::Description::__ENUM__SIZE, "__ENUM__SIZE is not accessible");
+        static_assert(index < Container[index + 1].mDescription, "Incorrect order of Dmas in DmaFactory");
+        static_assert(Container[index].mDescription == index, "Wrong mapping between Description and Container");
+
         static_assert(IS_DMA_ALL_PERIPH_BASE(Container[index].mPeripherie), "Invalid Peripheries ");
-        static_assert(IS_DMA_DIR(Container[index].mConfiguration.DMA_DIR), "Invalid DIR");
+        static_assert(IS_DMA_CHANNEL(Container[index].mConfiguration.DMA_Channel), "Invalid Channel");
+        static_assert(IS_DMA_DIRECTION(Container[index].mConfiguration.DMA_DIR), "Invalid DIR");
+        static_assert(IS_DMA_BUFFER_SIZE(Container[index].mConfiguration.DMA_BufferSize), "Invalid Buffer Size");
         static_assert(IS_DMA_PERIPHERAL_INC_STATE(
                                                   Container[index].mConfiguration.DMA_PeripheralInc),
                       "Invalid PeripheralInc");
         static_assert(IS_DMA_MEMORY_INC_STATE(Container[index].mConfiguration.DMA_MemoryInc), "Invalid MemoryInc");
+        static_assert(IS_DMA_PERIPHERAL_DATA_SIZE(
+                                                  Container[index].mConfiguration.DMA_PeripheralDataSize),
+                      "Invalid peripheral data size");
+        static_assert(IS_DMA_MEMORY_DATA_SIZE(
+                                              Container[index].mConfiguration.DMA_MemoryDataSize),
+                      "Invalid memory data size");
         static_assert(IS_DMA_MODE(Container[index].mConfiguration.DMA_Mode), "Invalid DMA MODE");
         static_assert(IS_DMA_PRIORITY(Container[index].mConfiguration.DMA_Priority), "Invalid Priority");
-        static_assert(IS_DMA_M2M_STATE(Container[index].mConfiguration.DMA_M2M), "Invalid M2M state");
-        static_assert(Container[index].mDmaInterrupt != 0 || Container[index].mDmaIRQn == IRQn::UsageFault_IRQn,
-                      "Invalid IRQn");
+        static_assert(IS_DMA_FIFO_MODE_STATE(Container[index].mConfiguration.DMA_FIFOMode), "Invalid FIFO Mode state");
+        static_assert(IS_DMA_FIFO_THRESHOLD(
+                                            Container[index].mConfiguration.DMA_FIFOThreshold),
+                      "Invalid FIFO threshold");
+        static_assert(IS_DMA_MEMORY_BURST(Container[index].mConfiguration.DMA_MemoryBurst), "Invalid memory burst");
+        static_assert(IS_DMA_PERIPHERAL_BURST(
+                                              Container[index].mConfiguration.DMA_PeripheralBurst),
+                      "Invalid peripheral burst");
 
-        static_assert(index != Dma::Description::__ENUM__SIZE, "__ENUM__SIZE is not accessible");
-        static_assert(index < Container[index + 1].mDescription, "Incorrect order of Dmas in DmaFactory");
-        static_assert(Container[index].mDescription == index, "Wrong mapping between Description and Container");
+        static_assert(Container[index].mDmaInterrupt != 0 || Container[index].mpNvic == nullptr,
+                      "Invalid Interrupt config (Nvic and DMA_IT)");
 
         return Container[index];
     }
@@ -181,6 +209,7 @@ public:
     static constexpr const Dma& getByPeripherie(void)
     {
         static_assert(IS_DMA_ALL_PERIPH_BASE(peripherieBase), "Invalid Peripheries ");
+
         return getByPeripherie<peripherieBase,
                                static_cast<enum Dma::Description>(Dma::Description::__ENUM__SIZE - 1)>();
     }

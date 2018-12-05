@@ -16,7 +16,7 @@
 #include <cstring>
 #include "Dma.h"
 #include "trace.h"
-#include "stm32f30x_misc.h"
+#include "stm32f4xx_misc.h"
 
 static const int __attribute__((unused)) g_DebugZones = ZONE_ERROR | ZONE_WARNING | ZONE_VERBOSE | ZONE_INFO;
 
@@ -37,18 +37,48 @@ void Dma::DMA_IRQHandlerCallback(const Dma& dma, const Dma::CallbackArray& array
     }
 }
 
-void Dma::DMA_IRQHandler(const Dma& peripherie, const uint32_t TCFlag, const uint32_t HTFlag, const uint32_t TEFlag)
+void Dma::DMA_IRQHandler(const Dma* const peripherie)
 {
-    if (DMA_GetITStatus(TCFlag)) {
-        Dma::DMA_TCIRQHandler(peripherie);
-        DMA_ClearITPendingBit(TCFlag);
-    } else if (DMA_GetITStatus(HTFlag)) {
-        DMA_ClearITPendingBit(HTFlag);
-        Dma::DMA_HTIRQHandler(peripherie);
-    } else if (DMA_GetITStatus(TEFlag)) {
-        DMA_ClearITPendingBit(TEFlag);
-        Dma::DMA_TEIRQHandler(peripherie);
+    DMA_Stream_TypeDef* pPeripheral = reinterpret_cast<DMA_Stream_TypeDef*>(peripherie->mPeripherie);
+    const uint32_t TCFlag = getTCFlagForStream(peripherie->mPeripherie);
+    const uint32_t HTFlag = getHTFlagForStream(peripherie->mPeripherie);
+    const uint32_t TEFlag = getTEFlagForStream(peripherie->mPeripherie);
+
+    if (DMA_GetFlagStatus(pPeripheral, TCFlag)) {
+        Dma::DMA_TCIRQHandler(*peripherie);
+    } else if (DMA_GetFlagStatus(pPeripheral, HTFlag)) {
+        Dma::DMA_HTIRQHandler(*peripherie);
+    } else if (DMA_GetFlagStatus(pPeripheral, TEFlag)) {
+        Dma::DMA_TEIRQHandler(*peripherie);
     }
+}
+
+void Dma::ClearInterruptFlag(const Dma* const peripherie)
+{
+    DMA_Stream_TypeDef* pPeripheral = reinterpret_cast<DMA_Stream_TypeDef*>(peripherie->mPeripherie);
+    const uint32_t TCFlag = getTCFlagForStream(peripherie->mPeripherie);
+    const uint32_t HTFlag = getHTFlagForStream(peripherie->mPeripherie);
+    const uint32_t TEFlag = getTEFlagForStream(peripherie->mPeripherie);
+
+    if (DMA_GetFlagStatus(pPeripheral, TCFlag)) {
+        DMA_ClearFlag(pPeripheral, TCFlag);
+    } else if (DMA_GetFlagStatus(pPeripheral, HTFlag)) {
+        DMA_ClearFlag(pPeripheral, HTFlag);
+    } else if (DMA_GetFlagStatus(pPeripheral, TEFlag)) {
+        DMA_ClearFlag(pPeripheral, TEFlag);
+    }
+}
+
+bool Dma::GetInterruptFlagStatus(const Dma* const peripherie)
+{
+    DMA_Stream_TypeDef* pPeripheral = reinterpret_cast<DMA_Stream_TypeDef*>(peripherie->mPeripherie);
+    const uint32_t TCFlag = getTCFlagForStream(peripherie->mPeripherie);
+    const uint32_t HTFlag = getHTFlagForStream(peripherie->mPeripherie);
+    const uint32_t TEFlag = getTEFlagForStream(peripherie->mPeripherie);
+
+    return DMA_GetFlagStatus(pPeripheral, TCFlag) ||
+           DMA_GetFlagStatus(pPeripheral, HTFlag) ||
+           DMA_GetFlagStatus(pPeripheral, TEFlag);
 }
 
 void Dma::DMA_TCIRQHandler(const Dma& peripherie)
@@ -67,157 +97,25 @@ void Dma::DMA_TEIRQHandler(const Dma& peripherie)
     DMA_IRQHandlerCallback(peripherie, Dma::TEInterruptCallbacks);
 }
 
-#if DMA1_CHANNEL1_INTERRUPT_ENABLED
-void DMA1_Channel1_IRQHandler(void)
-{
-    const uint32_t base = DMA1_Channel1_BASE;
-    const uint32_t TCFlag = DMA1_IT_TC1;
-    const uint32_t HTFlag = DMA1_IT_HT1;
-    const uint32_t TEFlag = DMA1_IT_TE1;
-    constexpr const auto& dma = Factory<Dma>::getByPeripherie<base>();
-    Dma::DMA_IRQHandler(dma, TCFlag, HTFlag, TEFlag);
-}
-#endif
-
-#if DMA1_CHANNEL2_INTERRUPT_ENABLED
-void DMA1_Channel2_IRQHandler(void)
-{
-    const uint32_t base = DMA1_Channel2_BASE;
-    const uint32_t TCFlag = DMA1_IT_TC2;
-    const uint32_t HTFlag = DMA1_IT_HT2;
-    const uint32_t TEFlag = DMA1_IT_TE2;
-    constexpr const auto& dma = Factory<Dma>::getByPeripherie<base>();
-    Dma::DMA_IRQHandler(dma, TCFlag, HTFlag, TEFlag);
-}
-#endif
-
-#if DMA1_CHANNEL3_INTERRUPT_ENABLED
-void DMA1_Channel3_IRQHandler(void)
-{
-    const uint32_t base = DMA1_Channel3_BASE;
-    const uint32_t TCFlag = DMA1_IT_TC3;
-    const uint32_t HTFlag = DMA1_IT_HT3;
-    const uint32_t TEFlag = DMA1_IT_TE3;
-    constexpr const auto& dma = Factory<Dma>::getByPeripherie<base>();
-    Dma::DMA_IRQHandler(dma, TCFlag, HTFlag, TEFlag);
-}
-#endif
-
-#if DMA1_CHANNEL4_INTERRUPT_ENABLED
-void DMA1_Channel4_IRQHandler(void)
-{
-    const uint32_t base = DMA1_Channel4_BASE;
-    const uint32_t TCFlag = DMA1_IT_TC4;
-    const uint32_t HTFlag = DMA1_IT_HT4;
-    const uint32_t TEFlag = DMA1_IT_TE4;
-    constexpr const auto& dma = Factory<Dma>::getByPeripherie<base>();
-    Dma::DMA_IRQHandler(dma, TCFlag, HTFlag, TEFlag);
-}
-#endif
-
-#if DMA1_CHANNEL5_INTERRUPT_ENABLED
-void DMA1_Channel5_IRQHandler(void)
-{
-    const uint32_t base = DMA1_Channel5_BASE;
-    const uint32_t TCFlag = DMA1_IT_TC5;
-    const uint32_t HTFlag = DMA1_IT_HT5;
-    const uint32_t TEFlag = DMA1_IT_TE5;
-    constexpr const auto& dma = Factory<Dma>::getByPeripherie<base>();
-    Dma::DMA_IRQHandler(dma, TCFlag, HTFlag, TEFlag);
-}
-#endif
-
-#if DMA1_CHANNEL6_INTERRUPT_ENABLED
-void DMA1_Channel6_IRQHandler(void)
-{
-    const uint32_t base = DMA1_Channel6_BASE;
-    const uint32_t TCFlag = DMA1_IT_TC6;
-    const uint32_t HTFlag = DMA1_IT_HT6;
-    const uint32_t TEFlag = DMA1_IT_TE6;
-    constexpr const auto& dma = Factory<Dma>::getByPeripherie<base>();
-    Dma::DMA_IRQHandler(dma, TCFlag, HTFlag, TEFlag);
-}
-#endif
-
-#if DMA1_CHANNEL7_INTERRUPT_ENABLED
-void DMA1_Channel7_IRQHandler(void)
-{
-    const uint32_t base = DMA1_Channel7_BASE;
-    const uint32_t TCFlag = DMA1_IT_TC7;
-    const uint32_t HTFlag = DMA1_IT_HT7;
-    const uint32_t TEFlag = DMA1_IT_TE7;
-    constexpr const auto& dma = Factory<Dma>::getByPeripherie<base>();
-    Dma::DMA_IRQHandler(dma, TCFlag, HTFlag, TEFlag);
-}
-#endif
-
-#if DMA2_CHANNEL1_INTERRUPT_ENABLED
-void DMA2_Channel1_IRQHandler(void)
-{
-    const uint32_t base = DMA2_Channel1_BASE;
-    const uint32_t TCFlag = DMA2_IT_TC1;
-    const uint32_t HTFlag = DMA2_IT_HT1;
-    const uint32_t TEFlag = DMA2_IT_TE1;
-    constexpr const auto& dma = Factory<Dma>::getByPeripherie<base>();
-    Dma::DMA_IRQHandler(dma, TCFlag, HTFlag, TEFlag);
-}
-#endif
-
-#if DMA2_CHANNEL2_INTERRUPT_ENABLED
-void DMA2_Channel2_IRQHandler(void)
-{
-    const uint32_t base = DMA2_Channel2_BASE;
-    const uint32_t TCFlag = DMA2_IT_TC2;
-    const uint32_t HTFlag = DMA2_IT_HT2;
-    const uint32_t TEFlag = DMA2_IT_TE2;
-    constexpr const auto& dma = Factory<Dma>::getByPeripherie<base>();
-    Dma::DMA_IRQHandler(dma, TCFlag, HTFlag, TEFlag);
-}
-#endif
-
-#if DMA2_CHANNEL3_INTERRUPT_ENABLED
-void DMA2_Channel3_IRQHandler(void)
-{
-    const uint32_t base = DMA2_Channel3_BASE;
-    const uint32_t TCFlag = DMA2_IT_TC3;
-    const uint32_t HTFlag = DMA2_IT_HT3;
-    const uint32_t TEFlag = DMA2_IT_TE3;
-    constexpr const auto& dma = Factory<Dma>::getByPeripherie<base>();
-    Dma::DMA_IRQHandler(dma, TCFlag, HTFlag, TEFlag);
-}
-#endif
-
-#if DMA2_CHANNEL4_INTERRUPT_ENABLED
-void DMA2_Channel4_IRQHandler(void)
-{
-    const uint32_t base = DMA2_Channel4_BASE;
-    const uint32_t TCFlag = DMA2_IT_TC4;
-    const uint32_t HTFlag = DMA2_IT_HT4;
-    const uint32_t TEFlag = DMA2_IT_TE4;
-    constexpr const auto& dma = Factory<Dma>::getByPeripherie<base>();
-    Dma::DMA_IRQHandler(dma, TCFlag, HTFlag, TEFlag);
-}
-#endif
-
-#if DMA2_CHANNEL5_INTERRUPT_ENABLED
-void DMA2_Channel5_IRQHandler(void)
-{
-    const uint32_t base = DMA2_Channel5_BASE;
-    const uint32_t TCFlag = DMA2_IT_TC5;
-    const uint32_t HTFlag = DMA2_IT_HT5;
-    const uint32_t TEFlag = DMA2_IT_TE5;
-    constexpr const auto& dma = Factory<Dma>::getByPeripherie<base>();
-    Dma::DMA_IRQHandler(dma, TCFlag, HTFlag, TEFlag);
-}
-#endif
-
 void Dma::initialize(void) const
 {
-    DMA_Init(reinterpret_cast<DMA_Channel_TypeDef*>(mPeripherie), &mConfiguration);
+    DMA_Stream_TypeDef* pPeripheral = reinterpret_cast<DMA_Stream_TypeDef*>(mPeripherie);
+    DMA_InitTypeDef tmpInitTypeDef = mConfiguration;
+    DMA_Init(pPeripheral, &tmpInitTypeDef);
     if (mDmaInterrupt) {
-        DMA_ITConfig(reinterpret_cast<DMA_Channel_TypeDef*>(mPeripherie), mDmaInterrupt, ENABLE);
-        NVIC_SetPriority(mDmaIRQn, 0xa);
-        NVIC_EnableIRQ(mDmaIRQn);
+        DMA_ITConfig(pPeripheral, mDmaInterrupt, ENABLE);
+
+        mpNvic->setPriority(0xa);
+        mpNvic->registerClearInterruptProcedure([this](void) {
+                                                    Dma::ClearInterruptFlag(this);
+                                                });
+        mpNvic->registerGetInterruptStatusProcedure([this](void)->bool {
+                                                        return Dma::GetInterruptFlagStatus(this);
+                                                    });
+        mpNvic->registerInterruptCallback([this](void)->void {
+                                              Dma::DMA_IRQHandler(this);
+                                          });
+        mpNvic->enable();
     }
 }
 
@@ -225,7 +123,7 @@ void Dma::setupTransfer(uint8_t const* const data, const size_t length, const bo
 {
     DMA_InitTypeDef initStruct = mConfiguration;
     initStruct.DMA_BufferSize = length;
-    initStruct.DMA_MemoryBaseAddr = reinterpret_cast<uint32_t>(data);
+    initStruct.DMA_Memory0BaseAddr = reinterpret_cast<uint32_t>(data);
     if (repeat) {
         initStruct.DMA_Mode = DMA_Mode_Circular;
     } else {
@@ -233,9 +131,9 @@ void Dma::setupTransfer(uint8_t const* const data, const size_t length, const bo
     }
 
     disable();
-    DMA_Init(reinterpret_cast<DMA_Channel_TypeDef*>(mPeripherie), &initStruct);
+    DMA_Init(reinterpret_cast<DMA_Stream_TypeDef*>(mPeripherie), &initStruct);
     if (mDmaInterrupt) {
-        DMA_ITConfig(reinterpret_cast<DMA_Channel_TypeDef*>(mPeripherie), mDmaInterrupt, ENABLE);
+        DMA_ITConfig(reinterpret_cast<DMA_Stream_TypeDef*>(mPeripherie), mDmaInterrupt, ENABLE);
     }
 }
 
@@ -247,10 +145,11 @@ void Dma::memcpy(void const* const dest, void const* const src, const size_t len
 
     disable();
 
-    const DMA_InitTypeDef initStruct {
+    DMA_InitTypeDef initStruct {
+        mConfiguration.DMA_Channel,
         reinterpret_cast<uint32_t>(src),
         reinterpret_cast<uint32_t>(dest),
-        DMA_DIR_PeripheralSRC,
+        DMA_DIR_MemoryToMemory,
         static_cast<uint16_t>(length),
         DMA_PeripheralInc_Enable,
         DMA_MemoryInc_Enable,
@@ -258,11 +157,14 @@ void Dma::memcpy(void const* const dest, void const* const src, const size_t len
         DMA_MemoryDataSize_Byte,
         DMA_Mode_Normal,
         DMA_Priority_Low,
-        DMA_M2M_Enable
+        DMA_FIFOMode_Disable,
+        DMA_FIFOThreshold_Full,
+        DMA_MemoryBurst_Single,
+        DMA_PeripheralBurst_Single
     };
-
-    DMA_Init(reinterpret_cast<DMA_Channel_TypeDef*>(mPeripherie), &initStruct);
-    DMA_Cmd(reinterpret_cast<DMA_Channel_TypeDef*>(mPeripherie), ENABLE);
+    DMA_Stream_TypeDef* pPeripheral = reinterpret_cast<DMA_Stream_TypeDef*>(mPeripherie);
+    DMA_Init(pPeripheral, &initStruct);
+    DMA_Cmd(pPeripheral, ENABLE);
 }
 
 void Dma::setupSendSingleCharMultipleTimes(uint8_t const* const data, const size_t length) const
@@ -271,23 +173,23 @@ void Dma::setupSendSingleCharMultipleTimes(uint8_t const* const data, const size
 
     DMA_InitTypeDef initStruct = mConfiguration;
     initStruct.DMA_BufferSize = length;
-    initStruct.DMA_MemoryBaseAddr = (uint32_t)data;
+    initStruct.DMA_Memory0BaseAddr = (uint32_t)data;
     initStruct.DMA_MemoryInc = DISABLE;
 
-    DMA_Init(reinterpret_cast<DMA_Channel_TypeDef*>(mPeripherie), &initStruct);
+    DMA_Init(reinterpret_cast<DMA_Stream_TypeDef*>(mPeripherie), &initStruct);
     if (mDmaInterrupt) {
-        DMA_ITConfig(reinterpret_cast<DMA_Channel_TypeDef*>(mPeripherie), mDmaInterrupt, ENABLE);
+        DMA_ITConfig(reinterpret_cast<DMA_Stream_TypeDef*>(mPeripherie), mDmaInterrupt, ENABLE);
     }
 }
 
 void Dma::enable(void) const
 {
-    DMA_Cmd(reinterpret_cast<DMA_Channel_TypeDef*>(mPeripherie), ENABLE);
+    DMA_Cmd(reinterpret_cast<DMA_Stream_TypeDef*>(mPeripherie), ENABLE);
 }
 
 void Dma::disable(void) const
 {
-    DMA_Cmd(reinterpret_cast<DMA_Channel_TypeDef*>(mPeripherie), DISABLE);
+    DMA_Cmd(reinterpret_cast<DMA_Stream_TypeDef*>(mPeripherie), DISABLE);
 }
 
 bool Dma::registerInterruptSemaphore(os::Semaphore* const semaphore, const Dma::InterruptSource source) const
@@ -394,12 +296,271 @@ void Dma::unregisterInterruptCallback(const InterruptSource source) const
 
 uint16_t Dma::getCurrentDataCounter(void) const
 {
-    return DMA_GetCurrDataCounter(reinterpret_cast<DMA_Channel_TypeDef*>(mPeripherie));
+    return DMA_GetCurrDataCounter(reinterpret_cast<DMA_Stream_TypeDef*>(mPeripherie));
 }
 
 void Dma::setCurrentDataCounter(uint16_t value) const
 {
-    DMA_SetCurrDataCounter(reinterpret_cast<DMA_Channel_TypeDef*>(mPeripherie), value);
+    DMA_SetCurrDataCounter(reinterpret_cast<DMA_Stream_TypeDef*>(mPeripherie), value);
+}
+
+uint32_t Dma::getITForStream(const uint32_t& DMAy_Streamx,
+                             const uint32_t& DMA_IT)
+{
+    switch (DMA_IT) {
+    case DMA_IT_TC:
+        return getTCFlagForStream(DMAy_Streamx);
+
+    case DMA_IT_HT:
+        return getHTFlagForStream(DMAy_Streamx);
+
+    case DMA_IT_TE:
+        return getTEFlagForStream(DMAy_Streamx);
+
+    case DMA_IT_DME:
+        return getDMEFlagForStream(DMAy_Streamx);
+
+    case DMA_IT_FE:
+        return getFEFlagForStream(DMAy_Streamx);
+
+    default:
+        return 0;
+    }
+}
+
+uint32_t Dma::getFEFlagForStream(const uint32_t& DMAy_Streamx)
+{
+    // get the bits indicating the stream and devide by the bit offset between the streams
+    const uint32_t stream = (DMAy_Streamx & 0xFF) / 0x18;
+    uint32_t dma_flag = 0;
+
+    switch (stream) {
+    case 0:
+        dma_flag = DMA_FLAG_FEIF0;
+        break;
+
+    case 1:
+        dma_flag = DMA_FLAG_FEIF1;
+        break;
+
+    case 2:
+        dma_flag = DMA_FLAG_FEIF2;
+        break;
+
+    case 3:
+        dma_flag = DMA_FLAG_FEIF3;
+        break;
+
+    case 4:
+        dma_flag = DMA_FLAG_FEIF4;
+        break;
+
+    case 5:
+        dma_flag = DMA_FLAG_FEIF5;
+        break;
+
+    case 6:
+        dma_flag = DMA_FLAG_FEIF6;
+        break;
+
+    case 7:
+        dma_flag = DMA_FLAG_FEIF7;
+        break;
+
+    default:
+        // nothing to do in default case
+        break;
+    }
+
+    return dma_flag;
+}
+
+uint32_t Dma::getDMEFlagForStream(const uint32_t& DMAy_Streamx)
+{
+    // get the bits indicating the stream and devide by the bit offset between the streams
+    const uint32_t stream = (DMAy_Streamx & 0xFF) / 0x18;
+    uint32_t dma_flag = 0;
+
+    switch (stream) {
+    case 0:
+        dma_flag = DMA_FLAG_DMEIF0;
+        break;
+
+    case 1:
+        dma_flag = DMA_FLAG_DMEIF1;
+        break;
+
+    case 2:
+        dma_flag = DMA_FLAG_DMEIF2;
+        break;
+
+    case 3:
+        dma_flag = DMA_FLAG_DMEIF3;
+        break;
+
+    case 4:
+        dma_flag = DMA_FLAG_DMEIF4;
+        break;
+
+    case 5:
+        dma_flag = DMA_FLAG_DMEIF5;
+        break;
+
+    case 6:
+        dma_flag = DMA_FLAG_DMEIF6;
+        break;
+
+    case 7:
+        dma_flag = DMA_FLAG_DMEIF7;
+        break;
+
+    default:
+        // nothing to do here
+        break;
+    }
+
+    return dma_flag;
+}
+
+uint32_t Dma::getTEFlagForStream(const uint32_t& DMAy_Streamx)
+{
+    // get the bits indicating the stream and devide by the bit offset between the streams
+    const uint32_t stream = (DMAy_Streamx & 0xFF) / 0x18;
+    uint32_t dma_flag = 0;
+
+    switch (stream) {
+    case 0:
+        dma_flag = DMA_FLAG_TEIF0;
+        break;
+
+    case 1:
+        dma_flag = DMA_FLAG_TEIF1;
+        break;
+
+    case 2:
+        dma_flag = DMA_FLAG_TEIF2;
+        break;
+
+    case 3:
+        dma_flag = DMA_FLAG_TEIF3;
+        break;
+
+    case 4:
+        dma_flag = DMA_FLAG_TEIF4;
+        break;
+
+    case 5:
+        dma_flag = DMA_FLAG_TEIF5;
+        break;
+
+    case 6:
+        dma_flag = DMA_FLAG_TEIF6;
+        break;
+
+    case 7:
+        dma_flag = DMA_FLAG_TEIF7;
+        break;
+
+    default:
+        // nothing to do here
+        break;
+    }
+
+    return dma_flag;
+}
+
+uint32_t Dma::getHTFlagForStream(const uint32_t& DMAy_Streamx)
+{
+    // get the bits indicating the stream and devide by the bit offset between the streams
+    const uint32_t stream = (DMAy_Streamx & 0xFF) / 0x18;
+    uint32_t dma_flag = 0;
+
+    switch (stream) {
+    case 0:
+        dma_flag = DMA_FLAG_HTIF0;
+        break;
+
+    case 1:
+        dma_flag = DMA_FLAG_HTIF1;
+        break;
+
+    case 2:
+        dma_flag = DMA_FLAG_HTIF2;
+        break;
+
+    case 3:
+        dma_flag = DMA_FLAG_HTIF3;
+        break;
+
+    case 4:
+        dma_flag = DMA_FLAG_HTIF4;
+        break;
+
+    case 5:
+        dma_flag = DMA_FLAG_HTIF5;
+        break;
+
+    case 6:
+        dma_flag = DMA_FLAG_HTIF6;
+        break;
+
+    case 7:
+        dma_flag = DMA_FLAG_HTIF7;
+        break;
+
+    default:
+        // nothing to do here
+        break;
+    }
+
+    return dma_flag;
+}
+
+uint32_t Dma::getTCFlagForStream(const uint32_t& DMAy_Streamx)
+{
+    // get the bits indicating the stream and devide by the bit offset between the streams
+    const uint32_t stream = (DMAy_Streamx & 0xFF) / 0x18;
+    uint32_t dma_flag = 0;
+
+    switch (stream) {
+    case 0:
+        dma_flag = DMA_FLAG_TCIF0;
+        break;
+
+    case 1:
+        dma_flag = DMA_FLAG_TCIF1;
+        break;
+
+    case 2:
+        dma_flag = DMA_FLAG_TCIF2;
+        break;
+
+    case 3:
+        dma_flag = DMA_FLAG_TCIF3;
+        break;
+
+    case 4:
+        dma_flag = DMA_FLAG_TCIF4;
+        break;
+
+    case 5:
+        dma_flag = DMA_FLAG_TCIF5;
+        break;
+
+    case 6:
+        dma_flag = DMA_FLAG_TCIF6;
+        break;
+
+    case 7:
+        dma_flag = DMA_FLAG_TCIF7;
+        break;
+
+    default:
+        // nothing to do here
+        break;
+    }
+
+    return dma_flag;
 }
 
 Dma::SemaphoreArray Dma::TCInterruptSemaphores;
