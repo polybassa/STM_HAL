@@ -27,7 +27,7 @@ hal::TimInterrupt::TimInterrupt(const Tim& tim, const uint16_t& tim_it, const Nv
                                           });
 
     TIM_ClearITPendingBit(timBasePointer, interruptSource);
-    mNvic.enable(); //TODO check for error status
+    mNvic.enable();
 }
 
 void hal::TimInterrupt::enable(void) const
