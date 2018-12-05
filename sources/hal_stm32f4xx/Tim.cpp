@@ -99,4 +99,9 @@ TIM_TypeDef* Tim::getBasePointer(void) const
     return reinterpret_cast<TIM_TypeDef*>(mPeripherie);
 }
 
+bool Tim::isDirectionUp(void) const
+{
+    return (getBasePointer()->CR1 & TIM_CR1_DIR) == 0;
+}
+
 constexpr const std::array<const Tim, Tim::Description::__ENUM__SIZE + 1> Factory<Tim>::Container;
