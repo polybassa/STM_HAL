@@ -30,16 +30,39 @@ void Spi::initialize() const
     SPI_Init(reinterpret_cast<SPI_TypeDef*>(mPeripherie), &mConfiguration);
 
     if (mConfiguration.SPI_NSS == SPI_NSS_Hard) {
-//        SPI_NSSPulseModeCmd(reinterpret_cast<SPI_TypeDef*>(mPeripherie),
-//                            ENABLE); // TODO seems to be obsolete for STM32F4
         SPI_SSOutputCmd(reinterpret_cast<SPI_TypeDef*>(mPeripherie), ENABLE);
-//        SPI_RxFIFOThresholdConfig(reinterpret_cast<SPI_TypeDef*>(mPeripherie), SPI_RxFIFOThreshold_QF);
-        // TODO seems to be obsolete for STM32F4
     }
     SPI_Cmd(reinterpret_cast<SPI_TypeDef*>(mPeripherie), ENABLE);
 }
 
 size_t Spi::send(uint16_t const* const data, const size_t length) const
+{
+    if (data == nullptr) {
+        return 0;
+    }
+    os::LockGuard<os::Mutex> lock(InterfaceAvailableMutex[static_cast<size_t>(mDescription)]);
+
+    size_t halfWordsSend = 0;
+    while ((size_t)halfWordsSend < length) {
+        if (this->isReadyToSend()) {
+            this->send(data[halfWordsSend]);
+            halfWordsSend++;
+        }
+    }
+    return halfWordsSend;
+}
+
+void Spi::send(const uint16_t data) const
+{
+    SPI_I2S_SendData(reinterpret_cast<SPI_TypeDef*>(mPeripherie), data);
+}
+
+void Spi::send(const uint8_t data) const
+{
+    send(static_cast<uint16_t>(data));
+}
+
+size_t Spi::send(uint8_t const* const data, const size_t length) const
 {
     if (data == nullptr) {
         return 0;
@@ -56,11 +79,6 @@ size_t Spi::send(uint16_t const* const data, const size_t length) const
     return bytesSend;
 }
 
-void Spi::send(const uint16_t data) const
-{
-    SPI_I2S_SendData(reinterpret_cast<SPI_TypeDef*>(mPeripherie), data);
-}
-
 bool Spi::isReadyToReceive(void) const
 {
     return (bool)SPI_I2S_GetFlagStatus(
@@ -75,17 +93,38 @@ size_t Spi::receive(uint16_t* const data, const size_t length) const
     os::LockGuard<os::Mutex> lock(InterfaceAvailableMutex[static_cast<size_t>(mDescription)]);
 
     constexpr const uint16_t defaultValueForSend = 0xff;
-    size_t bytesSend = 0;
-    while ((size_t)bytesSend < length) {
+    size_t halfWordsReceived = 0;
+    while ((size_t)halfWordsReceived < length) {
         if (this->isReadyToSend()) {
             this->send(defaultValueForSend);
         }
         if (this->isReadyToReceive()) {
-            data[bytesSend] = this->receive();
-            bytesSend++;
+            data[halfWordsReceived] = this->receive();
+            halfWordsReceived++;
         }
     }
-    return bytesSend;
+    return halfWordsReceived;
+}
+
+size_t Spi::receive(uint8_t* const data, const size_t length) const
+{
+    if (data == nullptr) {
+        return 0;
+    }
+    os::LockGuard<os::Mutex> lock(InterfaceAvailableMutex[static_cast<size_t>(mDescription)]);
+
+    constexpr const uint8_t defaultValueForSend = 0xff;
+    size_t bytesReceived = 0;
+    while ((size_t)bytesReceived < length) {
+        if (this->isReadyToSend()) {
+            this->send(defaultValueForSend);
+        }
+        if (this->isReadyToReceive()) {
+            data[bytesReceived] = this->receive();
+            bytesReceived++;
+        }
+    }
+    return bytesReceived;
 }
 
 uint16_t Spi::receive(void) const

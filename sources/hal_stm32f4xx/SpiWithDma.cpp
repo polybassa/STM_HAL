@@ -27,13 +27,13 @@ std::array<os::Semaphore, Spi::__ENUM__SIZE> SpiWithDma::DmaTransferCompleteSema
 
 void SpiWithDma::initialize() const
 {
-    if (!IS_SPI_I2S_DMA_REQ(mDmaCmd)) {
+    if (!IS_SPI_I2S_DMAREQ(mDmaCmd)) {
         return;
     }
     SPI_I2S_DMACmd(reinterpret_cast<SPI_TypeDef*>(mSpi->mPeripherie), mDmaCmd, ENABLE);
 
     if (!DmaTransferCompleteSemaphores[(size_t)mSpi->mDescription]) {
-        Trace(ZONE_ERROR, "Semaphore allocation failed/r/n");
+        Trace(ZONE_ERROR, "Semaphore allocation failed\r\n");
     } else {
         registerInterruptCallbacks();
     }
@@ -64,7 +64,8 @@ size_t SpiWithDma::send(uint8_t const* const data, const size_t length) const
         // clear Semaphore
         DmaTransferCompleteSemaphores.at(mSpi->mDescription).take(std::chrono::microseconds(1));
         // we have DMA support
-        mTxDma->setupTransfer((uint8_t* const)data, length);
+//        mTxDma->setupTransfer((uint8_t* const)data, length);
+        mTxDma->setupTransfer(data, length, false);
         mTxDma->enable();
 
         DmaTransferCompleteSemaphores.at(mSpi->mDescription).take();

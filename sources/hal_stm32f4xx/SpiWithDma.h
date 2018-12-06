@@ -85,6 +85,13 @@ class Factory<SpiWithDma>
 
     Factory(void)
     {
+//        for (auto & semaphore : SpiWithDma::DmaTransferCompleteSemaphores) {
+//              if (!semaphore) {
+//				os::Semaphore tmpSemahore;
+//				semaphore = std::move(tmpSemahore);
+//              }
+//        }
+
         for (const auto& spi : Container) {
             spi.initialize();
         }

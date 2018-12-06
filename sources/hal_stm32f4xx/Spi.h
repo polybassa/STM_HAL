@@ -46,18 +46,28 @@ struct Spi {
     Spi& operator=(const Spi&) = delete;
     Spi& operator=(Spi &&) = delete;
 
+    // API change: only 16-Bit receive and additional functions for 16-Bit send
     template<size_t n>
     size_t receive(std::array<uint16_t, n>&) const;
 
     template<size_t n>
     size_t send(const std::array<uint16_t, n>&) const;
+    template<size_t n>
+    size_t send(const std::array<uint8_t, n>&) const;
 
-    void send(const uint16_t) const; // TODO API change, check for correctness
+    void send(const uint16_t) const;
     size_t send(uint16_t const* const, const size_t) const;
+
+    void send(const uint8_t) const;
+    size_t send(uint8_t const* const, const size_t) const;
+
     bool isReadyToSend(void) const;
 
-    uint16_t receive(void) const;    // TODO API change, check for correctness
+    uint16_t receive(void) const;
     size_t receive(uint16_t* const, const size_t) const;
+
+    size_t receive(uint8_t* const, const size_t) const;
+
     bool isReadyToReceive(void) const;
 
 private:
@@ -77,6 +87,12 @@ private:
     friend struct SpiWithDma;
 };
 
+template<size_t n>
+size_t Spi::send(const std::array<uint8_t, n>& tx) const
+{
+    return send(tx.data(), tx.size());
+}
+
 template<>
 class Factory<Spi>
 {
@@ -84,12 +100,17 @@ class Factory<Spi>
 
     Factory(void)
     {
-        // TODO: Support all clock domains
         for (const auto& clock : Clocks) {
-            if ((clock == RCC_APB1Periph_SPI2) || (clock == RCC_APB1Periph_SPI3)) {
+            if ((clock == RCC_APB1Periph_SPI2) ||
+                (clock == RCC_APB1Periph_SPI3))
+            {
                 RCC_APB1PeriphClockCmd(clock, ENABLE);
             }
-            if ((clock == RCC_APB2Periph_SPI1) || (clock == RCC_APB2Periph_SPI4)) {
+            if ((clock == RCC_APB2Periph_SPI1) ||
+                (clock == RCC_APB2Periph_SPI4) ||
+                (clock == RCC_APB2Periph_SPI5) ||
+                (clock == RCC_APB2Periph_SPI6))
+            {
                 RCC_APB2PeriphClockCmd(clock, ENABLE);
             }
         }
