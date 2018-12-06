@@ -81,7 +81,8 @@ class Factory<AdcWithDma>
 
     Factory(void)
     {
-        SYSCFG_DMAChannelRemapConfig(SYSCFG_DMARemap_ADC2ADC4, ENABLE);
+        // SYSCFG_DMAChannelRemapConfig(SYSCFG_DMARemap_ADC2ADC4, ENABLE);
+        // Seemingly not necessary on the stm32f4
 
         for (const auto& obj : Container) {
             obj.initialize();

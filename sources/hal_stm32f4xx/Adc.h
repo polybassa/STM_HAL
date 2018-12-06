@@ -39,8 +39,6 @@ struct Adc {
     Adc& operator=(const Adc&) = delete;
     Adc& operator=(Adc &&) = delete;
 
-    uint32_t getCalibrationValue(void) const;
-
     const enum Description mDescription;
 
 private:
@@ -64,13 +62,12 @@ private:
 
     ADC_TypeDef* getBasePointer(void) const;
     void initialize(void) const;
-    uint32_t getValue(const Adc::Channel&) const;
+    uint16_t getValue(const Adc::Channel&) const;
     float getVoltage(const Adc::Channel&) const;
     void startConversion(const Adc::Channel&) const;
 
 public: static void handleInterrupt(void);
 
-    static std::array<uint32_t, Description::__ENUM__SIZE> CalibrationValues;
     static std::array<os::Semaphore, Description::__ENUM__SIZE> ConversionCompleteSemaphores;
     static std::array<os::Mutex, Description::__ENUM__SIZE> ConverterAvailableMutex;
     static constexpr uint8_t TWO_CONVERSION_SAMPLE_DELAY = 0;
@@ -88,9 +85,6 @@ class Factory<Adc>
 
     Factory(void)
     {
-        // TODO seems to be impossible and unnecessary on the F4
-//        RCC_ADCCLKConfig(RCC_ADC12PLLCLK_Div1); // 72MHz
-//        RCC_ADCCLKConfig(RCC_ADC34PLLCLK_Div1);
         // INFO: To speedup ADC Conversion, choose a smaller divider e.g. 6
 
         // enable only the adc clocks that are really used

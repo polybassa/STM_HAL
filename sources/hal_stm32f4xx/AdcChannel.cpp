@@ -14,16 +14,13 @@
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>. */
 
 #include <cmath>
-#include "trace.h"
 #include "AdcChannel.h"
 #include "os_Task.h"
-
-static const int __attribute__((unused)) g_DebugZones = ZONE_ERROR | ZONE_WARNING | ZONE_VERBOSE | ZONE_INFO;
 
 using hal::Adc;
 using hal::Factory;
 
-uint32_t Adc::Channel::getValue(void) const
+uint16_t Adc::Channel::getValue(void) const
 {
     const int now = static_cast<int>(os::Task::getTickCount());
 
@@ -54,11 +51,6 @@ float Adc::Channel::getVoltage(const uint16_t value) const
 float Adc::Channel::getVoltage(const float value) const
 {
     return (mMaxVoltage * value) / mBaseAdc.mResolution;
-}
-
-uint32_t Adc::Channel::getCalibrationValue(void) const
-{
-    return mBaseAdc.getCalibrationValue();
 }
 
 void Adc::Channel::initialize(void) const

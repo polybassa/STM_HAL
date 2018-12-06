@@ -67,12 +67,11 @@ void Adc::initialize(void) const
                                         hal::Adc::handleInterrupt();
                                     });
 
-    if (!mNvic.enable()) {
-        // TODO: What to do if the Nvic cannot be enabled?
-    }
+    // Nvic can always be enabled, because it just checks whether the interrupt procedures were set.
+    mNvic.enable();
 }
 
-uint32_t Adc::getValue(const Adc::Channel& channel) const
+uint16_t Adc::getValue(const Adc::Channel& channel) const
 {
     os::LockGuard<os::Mutex> lock(ConverterAvailableMutex[static_cast<size_t>(mDescription)]);
 
@@ -81,9 +80,11 @@ uint32_t Adc::getValue(const Adc::Channel& channel) const
     ADC_RegularChannelConfig(ADCx, channel.mChannel, channel.mRank, channel.mSampleTime);
 
     ADC_SoftwareStartConv(ADCx);
-    ConversionCompleteSemaphores[static_cast<size_t>(mDescription)].take();
+    if (ConversionCompleteSemaphores[static_cast<size_t>(mDescription)]) {
+        ConversionCompleteSemaphores[static_cast<size_t>(mDescription)].take();
+    }
 
-    uint32_t returnValue = ADC_GetConversionValue(ADCx);
+    uint16_t returnValue = ADC_GetConversionValue(ADCx);
 
     return returnValue;
 }
@@ -91,11 +92,6 @@ uint32_t Adc::getValue(const Adc::Channel& channel) const
 float Adc::getVoltage(const Adc::Channel& channel) const
 {
     return channel.mMaxVoltage / mResolution* getValue(channel);
-}
-
-uint32_t Adc::getCalibrationValue(void) const
-{
-    return CalibrationValues[static_cast<size_t>(mDescription)];
 }
 
 void Adc::startConversion(const Adc::Channel& channel) const
@@ -122,7 +118,6 @@ void Adc::handleInterrupt(void)
     }
 }
 
-std::array<uint32_t, Adc::Description::__ENUM__SIZE> Adc::CalibrationValues;
 std::array<os::Semaphore, Adc::Description::__ENUM__SIZE> Adc::ConversionCompleteSemaphores;
 std::array<os::Mutex, Adc::Description::__ENUM__SIZE> Adc::ConverterAvailableMutex;
 constexpr std::array<const Adc, Adc::Description::__ENUM__SIZE> Factory<Adc>::Container;

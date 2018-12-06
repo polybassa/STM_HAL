@@ -34,8 +34,7 @@ struct Adc::Channel {
     Channel& operator=(const Channel&) = delete;
     Channel& operator=(Channel &&) = delete;
 
-    uint32_t getValue(void) const;
-    uint32_t getCalibrationValue(void) const;
+    uint16_t getValue(void) const;
     float getVoltage(void) const;
     float getVoltage(const uint16_t) const;
     float getVoltage(const float) const;
@@ -104,7 +103,7 @@ public:
 
         static_assert(portTICK_PERIOD_MS == 1, "Wrong OS tick rate configuration. 1 ms per tick required");
 
-        static_assert(Container[index].mBaseAdc.mConfiguration.ADC_ContinuousConvMode == 0x00 /*TODO changed ADC_ContinuousConvMode_Disable*/,
+        static_assert(Container[index].mBaseAdc.mConfiguration.ADC_ContinuousConvMode == DISABLE,
                       "Invalid Parameter of base adc. This Channel can't be used directly");
         static_assert(
                       Container[index].mBaseAdc.mConfiguration.ADC_ExternalTrigConvEdge !=

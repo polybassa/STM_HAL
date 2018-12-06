@@ -25,13 +25,12 @@ using hal::Factory;
 
 void AdcWithDma::initialize(void) const
 {
-    if (!IS_ADC_DMA_MODE(mAdcDmaMode)) {
+    if (!IS_ADC_DMA_ACCESS_MODE(mAdcDmaMode)) {
         return;
     }
 
-    NVIC_DisableIRQ(mAdcChannel.mBaseAdc.mIRQn);
+    mAdcChannel.mBaseAdc.mNvic.disable();
 
-    ADC_DMAConfig(mAdcChannel.mBaseAdc.getBasePointer(), mAdcDmaMode);
     ADC_DMACmd(mAdcChannel.mBaseAdc.getBasePointer(), ENABLE);
 }
 
@@ -59,7 +58,7 @@ void AdcWithDma::startConversion(uint16_t const* const data, const size_t length
 
 void AdcWithDma::stopConversion(void) const
 {
-    mAdcChannel.stopConversion();
+//    mAdcChannel.stopConversion(); // not available on the stm32f4
     mDma.disable();
 }
 
