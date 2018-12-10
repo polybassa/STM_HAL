@@ -198,7 +198,7 @@ size_t Usart::send(uint8_t const* const data, const size_t length) const
 
 bool Usart::isReadyToReceive(void) const
 {
-    return reinterpret_cast<USART_TypeDef*>(mPeripherie)->ISR & USART_ISR_RXNE;
+    return USART_GetFlagStatus(reinterpret_cast<USART_TypeDef*>(mPeripherie), USART_FLAG_RXNE) == SET ? true : false;
 }
 
 uint16_t Usart::receive(void) const
@@ -242,7 +242,7 @@ size_t Usart::receiveAvailableData(uint8_t* const data, const size_t length) con
 
 bool Usart::isReadyToSend(void) const
 {
-    return reinterpret_cast<USART_TypeDef*>(mPeripherie)->ISR & USART_ISR_TXE;
+    return USART_GetFlagStatus(reinterpret_cast<USART_TypeDef*>(mPeripherie), USART_FLAG_TXE) == SET ? true : false;
 }
 
 bool Usart::hasOverRunError(void) const

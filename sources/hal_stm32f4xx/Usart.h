@@ -99,7 +99,8 @@ private:
     constexpr Usart(const enum Description&  desc,
                     const uint32_t&          peripherie,
                     const USART_InitTypeDef& conf) :
-        mDescription(desc), mPeripherie(peripherie),
+        mDescription(desc),
+        mPeripherie(peripherie),
         mConfiguration(conf) {}
 
     const uint32_t mPeripherie;
@@ -139,9 +140,10 @@ class Factory<Usart>
 
     Factory(void)
     {
-        // TODO support all clocks
         for (const auto& clock : Clocks) {
-            if (clock == RCC_APB2Periph_USART1) {
+            if ((clock == RCC_APB2Periph_USART1) ||
+                (clock == RCC_APB2Periph_USART6))
+            {
                 RCC_APB2PeriphClockCmd(clock, ENABLE);
             } else {
                 RCC_APB1PeriphClockCmd(clock, ENABLE);
