@@ -144,7 +144,7 @@ void Usart::enableNonBlockingReceive(std::function<void(uint8_t)> callback) cons
 
 void Usart::disableNonBlockingReceive(void) const
 {
-    ReceiveTimeoutInterruptCallbacks[mDescription] = nullptr;
+    ReceiveInterruptCallbacks[mDescription] = nullptr;
 
     USART_ITConfig(reinterpret_cast<USART_TypeDef*>(mPeripherie), USART_IT_RXNE, DISABLE);
 }
@@ -208,7 +208,7 @@ size_t Usart::receive(uint8_t* const data, const size_t length) const
     size_t bytesReceived = 0;
     while (bytesReceived < length) {
         if (this->isReadyToReceive()) {
-            data[bytesReceived] = (uint8_t)this->receive();
+            data[bytesReceived] = (uint8_t) this->receive();
             bytesReceived++;
         }
     }
