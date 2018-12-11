@@ -23,6 +23,7 @@
 #include "stm32f4xx_usart.h"
 #include "stm32f4xx_rcc.h"
 #include "hal_Factory.h"
+#include "Nvic.h"
 
 // ================================================================================================
 // Added preprocessor macros that are not part of the stm32f4 std periph lib,
@@ -33,14 +34,6 @@
                                           ((PERIPH) == UART4_BASE) || \
                                           ((PERIPH) == UART5_BASE))
 // ================================================================================================
-
-extern "C" {
-void USART1_IRQHandler(void);
-void USART2_IRQHandler(void);
-void USART3_IRQHandler(void);
-void UART4_IRQHandler(void);
-void UART5_IRQHandler(void);
-}
 
 namespace hal
 {
@@ -84,37 +77,29 @@ struct Usart {
 
     void setBaudRate(const size_t) const;
 
-    void enableReceiveTimeout(std::function<void(void)> callback, const size_t) const;
     void enableNonBlockingReceive(std::function<void(uint8_t)> callback) const;
 
-    void disableReceiveTimeout(void) const;
     void disableNonBlockingReceive(void) const;
-
-    void enableReceiveTimeoutIT_Flag(void) const;
-    void disableReceiveTimeoutIT_Flag(void) const;
-
-    static void USART_IRQHandler(const Usart& peripherie);
 
 private:
     constexpr Usart(const enum Description&  desc,
                     const uint32_t&          peripherie,
-                    const USART_InitTypeDef& conf) :
+                    const USART_InitTypeDef& conf,
+                    const Nvic&              nvic) :
         mDescription(desc),
         mPeripherie(peripherie),
-        mConfiguration(conf) {}
+        mConfiguration(conf),
+        mNvic(nvic) {}
 
     const uint32_t mPeripherie;
     const USART_InitTypeDef mConfiguration;
-    // const bool mTxPinActiveLevelInversion;	//TODO semms like the stm32f4 cannot do level inversion
     mutable bool mInitalized = false;
+    const Nvic& mNvic;
 
     void initialize(void) const;
-    IRQn getIRQn(void) const;
 
     using ReceiveCallbackArray = std::array<std::function<void(uint8_t)>, Usart::__ENUM__SIZE>;
-    using ReceiveTimeoutCallbackArray = std::array<std::function<void(void)>, Usart::__ENUM__SIZE>;
 
-    static ReceiveTimeoutCallbackArray ReceiveTimeoutInterruptCallbacks;
     static ReceiveCallbackArray ReceiveInterruptCallbacks;
 
     friend class Factory<Usart>;
@@ -177,7 +162,6 @@ public:
                                                      Container[index].mConfiguration.USART_HardwareFlowControl),
                       "Invalid HwFlowCtrl");
         static_assert(index != Usart::Description::__ENUM__SIZE, "__ENUM__SIZE is not accessible");
-        static_assert(index < Container[index + 1].mDescription, "Incorrect order of instances in Factory");
         static_assert(Container[index].mDescription == index, "Wrong mapping between Description and Container");
 
         return Container[index];

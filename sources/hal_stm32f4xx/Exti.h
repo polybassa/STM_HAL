@@ -143,7 +143,6 @@ public:
     template<uint32_t Exti_Line>
     static constexpr const Exti& getByExtiLine(void)
     {
-        // TODO is this check double performed?
         static_assert(IS_EXTI_LINE(Exti_Line), "Invalid Line ");
         return getByExtiLine<Exti_Line,
                              static_cast<enum Exti::Description>(Exti::Description::__ENUM__SIZE - 1)>();

@@ -57,9 +57,6 @@ struct UsartWithDma {
     void registerTransferCompleteCallback(std::function<void(void)> ) const;
     void registerReceiveCompleteCallback(std::function<void(void)> ) const;
 
-    void enableReceiveTimeout(const size_t bitsUntilTimeout) const;
-    void disableReceiveTimeout(void) const;
-
     const Usart& mUsart;
 
 private:

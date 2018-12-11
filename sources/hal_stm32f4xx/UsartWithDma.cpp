@@ -103,25 +103,10 @@ void UsartWithDma::receiveTimeoutCallback(void) const
     DmaReceiveCompleteSemaphores.at(mUsart.mDescription).giveFromISR();
 }
 
-void UsartWithDma::enableReceiveTimeout(const size_t bitsUntilTimeout) const
-{
-    if (mDmaCmd & USART_DMAReq_Rx) {
-        mUsart.enableReceiveTimeout([this] {receiveTimeoutCallback();
-                                    }, bitsUntilTimeout);
-    }
-}
-
-void UsartWithDma::disableReceiveTimeout(void) const
-{
-    mUsart.disableReceiveTimeout();
-}
-
 size_t UsartWithDma::receiveWithTimeout(uint8_t* const data, const size_t length, const uint32_t ticksToWait) const
 {
     /* Timeout is used to detect the end of a block of data */
-    mUsart.enableReceiveTimeoutIT_Flag();
     const auto retVal = receive(data, length, ticksToWait);
-    mUsart.disableReceiveTimeoutIT_Flag();
     return retVal;
 }
 

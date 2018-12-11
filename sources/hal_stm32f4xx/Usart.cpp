@@ -21,68 +21,6 @@ static const int __attribute__((unused)) g_DebugZones = ZONE_ERROR | ZONE_WARNIN
 using hal::Factory;
 using hal::Usart;
 
-#if USART1_INTERRUPT_ENABLED
-void USART1_IRQHandler(void)
-{
-    constexpr const Usart& uart = Factory<Usart>::getByPeripherie<USART1_BASE>();
-    Usart::USART_IRQHandler(uart);
-}
-#endif
-
-#if USART2_INTERRUPT_ENABLED
-void USART2_IRQHandler(void)
-{
-    constexpr const Usart& uart = Factory<Usart>::getByPeripherie<USART2_BASE>();
-    Usart::USART_IRQHandler(uart);
-}
-#endif
-
-#if USART3_INTERRUPT_ENABLED
-void USART3_IRQHandler(void)
-{
-    constexpr const Usart& uart = Factory<Usart>::getByPeripherie<USART3_BASE>();
-    Usart::USART_IRQHandler(uart);
-}
-#endif
-
-#if USART4_INTERRUPT_ENABLED
-void UART4_IRQHandler(void)
-{
-    constexpr const Usart& uart = Factory<Usart>::getByPeripherie<UART4_BASE>();
-    Usart::USART_IRQHandler(uart);
-}
-#endif
-
-#if USART5_INTERRUPT_ENABLED
-void UART5_IRQHandler(void)
-{
-    constexpr const Usart& uart = Factory<Usart>::getByPeripherie<UART5_BASE>();
-    Usart::USART_IRQHandler(uart);
-}
-#endif
-
-void Usart::USART_IRQHandler(const Usart& peripherie)
-{
-    // TODO: it seems like this interrupt does not exist anymore
-//    if (USART_GetITStatus(reinterpret_cast<USART_TypeDef*>(peripherie.mPeripherie), USART_IT_RTO)) {
-//        if (Usart::ReceiveTimeoutInterruptCallbacks[peripherie.mDescription]) {
-//            Usart::ReceiveTimeoutInterruptCallbacks[peripherie.mDescription]();
-//        }
-//        USART_ClearITPendingBit(reinterpret_cast<USART_TypeDef*>(peripherie.mPeripherie), USART_IT_RTO);
-//    } else
-    if (USART_GetITStatus(reinterpret_cast<USART_TypeDef*>(peripherie.mPeripherie), USART_IT_RXNE)) {
-        if (Usart::ReceiveInterruptCallbacks[peripherie.mDescription]) {
-            uint8_t databyte =
-                static_cast<uint8_t>(USART_ReceiveData(reinterpret_cast<USART_TypeDef*>(peripherie.mPeripherie)));
-            Usart::ReceiveInterruptCallbacks[peripherie.mDescription](databyte);
-        }
-        USART_ClearITPendingBit(reinterpret_cast<USART_TypeDef*>(peripherie.mPeripherie), USART_IT_RXNE);
-    } else {
-        USART_ClearITPendingBit(reinterpret_cast<USART_TypeDef*>(peripherie.mPeripherie), USART_IT_ORE);
-        USART_ClearITPendingBit(reinterpret_cast<USART_TypeDef*>(peripherie.mPeripherie), USART_IT_PE);
-    }
-}
-
 void Usart::initialize() const
 {
     USART_DeInit(reinterpret_cast<USART_TypeDef*>(mPeripherie));
@@ -92,31 +30,54 @@ void Usart::initialize() const
     mInitalized = true;
 
     // Initialize Interrupts
-    NVIC_SetPriority(getIRQn(), 0xf);
-    NVIC_EnableIRQ(getIRQn());
+    // TODO Maybe also TX and not only RX will be needed.
+    mNvic.setPriority(0xf);
+
+    mNvic.registerGetInterruptStatusProcedure([this](void)->bool {
+                                                  return USART_GetITStatus(reinterpret_cast<USART_TypeDef*>(this->
+                                                                                                            mPeripherie),
+                                                                           USART_IT_RXNE) == SET;
+                                              });
+
+    mNvic.registerClearInterruptProcedure([this](void)->void {
+                                              USART_ClearITPendingBit(reinterpret_cast<USART_TypeDef*>(this->
+                                                                                                       mPeripherie),
+                                                                      USART_IT_RXNE);
+                                          });
+
+    mNvic.registerInterruptCallback([this](void)->void {
+                                        uint8_t databyte =
+                                            static_cast<uint8_t>(USART_ReceiveData(reinterpret_cast<USART_TypeDef*>(
+                                                                                                                    this
+                                                                                                                    ->
+                                                                                                                    mPeripherie)));
+                                        Usart::ReceiveInterruptCallbacks[this->mDescription](databyte);
+                                    });
+
+    mNvic.enable();
 }
 
-IRQn Usart::getIRQn(void) const
-{
-    switch (mPeripherie) {
-    case USART1_BASE:
-        return IRQn::USART1_IRQn;
-
-    case USART2_BASE:
-        return IRQn::USART2_IRQn;
-
-    case USART3_BASE:
-        return IRQn::USART3_IRQn;
-
-    case UART4_BASE:
-        return IRQn::UART4_IRQn;
-
-    case UART5_BASE:
-        return IRQn::UART5_IRQn;
-    }
-
-    return IRQn::UsageFault_IRQn;
-}
+//IRQn Usart::getIRQn(void) const
+//{
+//    switch (mPeripherie) {
+//    case USART1_BASE:
+//        return IRQn::USART1_IRQn;
+//
+//    case USART2_BASE:
+//        return IRQn::USART2_IRQn;
+//
+//    case USART3_BASE:
+//        return IRQn::USART3_IRQn;
+//
+//    case UART4_BASE:
+//        return IRQn::UART4_IRQn;
+//
+//    case UART5_BASE:
+//        return IRQn::UART5_IRQn;
+//    }
+//
+//    return IRQn::UsageFault_IRQn;
+//}
 
 bool Usart::isInitalized(void) const
 {
@@ -132,15 +93,6 @@ void Usart::setBaudRate(const size_t baudRate) const
     USART_Cmd(reinterpret_cast<USART_TypeDef*>(mPeripherie), ENABLE);
 }
 
-void Usart::enableReceiveTimeout(std::function<void(void)> callback, const size_t bitsUntilTimeout) const
-{
-    ReceiveTimeoutInterruptCallbacks[mDescription] = callback;
-    // TODO timeouts are also not available the stm32f4 seems to be pretty limited
-//    USART_SetReceiverTimeOut(reinterpret_cast<USART_TypeDef*>(mPeripherie), bitsUntilTimeout);
-//    USART_ReceiverTimeOutCmd(reinterpret_cast<USART_TypeDef*>(mPeripherie), ENABLE);
-    enableReceiveTimeoutIT_Flag();
-}
-
 void Usart::enableNonBlockingReceive(std::function<void(uint8_t)> callback) const
 {
     ReceiveInterruptCallbacks[mDescription] = callback;
@@ -151,28 +103,9 @@ void Usart::enableNonBlockingReceive(std::function<void(uint8_t)> callback) cons
 
 void Usart::disableNonBlockingReceive(void) const
 {
-    ReceiveTimeoutInterruptCallbacks[mDescription] = nullptr;
+    ReceiveInterruptCallbacks[mDescription] = nullptr;
 
     USART_ITConfig(reinterpret_cast<USART_TypeDef*>(mPeripherie), USART_IT_RXNE, DISABLE);
-}
-
-void Usart::disableReceiveTimeout(void) const
-{
-    ReceiveTimeoutInterruptCallbacks[mDescription] = nullptr;
-
-//    USART_ReceiverTimeOutCmd(reinterpret_cast<USART_TypeDef*>(mPeripherie), DISABLE);
-    disableReceiveTimeoutIT_Flag();
-}
-
-void Usart::enableReceiveTimeoutIT_Flag(void) const
-{
-//    USART_ClearITPendingBit(reinterpret_cast<USART_TypeDef*>(mPeripherie), USART_IT_RTO);
-//    USART_ITConfig(reinterpret_cast<USART_TypeDef*>(mPeripherie), USART_IT_RTO, ENABLE);
-}
-
-void Usart::disableReceiveTimeoutIT_Flag(void) const
-{
-//    USART_ITConfig(reinterpret_cast<USART_TypeDef*>(mPeripherie), USART_IT_RTO, DISABLE);
 }
 
 void Usart::send(const uint16_t data) const
@@ -285,8 +218,7 @@ void Usart::clearParityError(void) const
     USART_ClearFlag(reinterpret_cast<USART_TypeDef*>(mPeripherie), USART_FLAG_PE);
 }
 
-Usart::ReceiveTimeoutCallbackArray Usart::ReceiveTimeoutInterruptCallbacks;
 Usart::ReceiveCallbackArray Usart::ReceiveInterruptCallbacks;
 
-constexpr const std::array<const Usart, Usart::__ENUM__SIZE + 1> Factory<Usart>::Container;
+constexpr const std::array<const Usart, Usart::__ENUM__SIZE> Factory<Usart>::Container;
 constexpr const std::array<const uint32_t, Usart::__ENUM__SIZE> Factory<Usart>::Clocks;
