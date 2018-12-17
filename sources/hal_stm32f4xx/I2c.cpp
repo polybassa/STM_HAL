@@ -23,14 +23,16 @@ using hal::I2c;
 
 void I2c::initialize() const
 {
-    if (!IS_I2C_ALL_PERIPH_BASE(mPeripherie)) {
+    I2C_TypeDef* pPeripherie = reinterpret_cast<I2C_TypeDef*>(mPeripherie);
+    if (!IS_I2C_ALL_PERIPH(pPeripherie)) {
         return;
     }
 
-    I2C_DeInit(reinterpret_cast<I2C_TypeDef*>(mPeripherie));
+    I2C_DeInit(pPeripherie);
 
-    I2C_Init(reinterpret_cast<I2C_TypeDef*>(mPeripherie), &mConfiguration);
-    I2C_Cmd(reinterpret_cast<I2C_TypeDef*>(mPeripherie), ENABLE);
+    I2C_InitTypeDef tmpConfiguration = mConfiguration;
+    I2C_Init(pPeripherie, &tmpConfiguration);
+    I2C_Cmd(pPeripherie, ENABLE);
 }
 
 bool I2c::timeoutDuringWaitUntilFlagIsEqualState(const uint32_t flag, const FlagStatus state) const
@@ -46,114 +48,164 @@ bool I2c::timeoutDuringWaitUntilFlagIsEqualState(const uint32_t flag, const Flag
     return false;
 }
 
+bool I2c::timeoutDuringWaitEvent(const uint32_t event) const
+{
+    /* Timeout for I2c write/read routines */
+    static const uint32_t TIMEOUT_CYCLES = 0x5555;
+    uint32_t timeoutCounter = TIMEOUT_CYCLES;
+    while (I2C_CheckEvent(reinterpret_cast<I2C_TypeDef*>(mPeripherie), event) != SUCCESS) {
+        if ((timeoutCounter--) == 0) {
+            return true;
+        }
+    }
+    return false;
+}
+
 size_t I2c::write(const uint16_t deviceAddr, const uint8_t regAddr, uint8_t const* const data,
                   const size_t length) const
 {
-    if (length > 255) {
-        Trace(ZONE_ERROR, "Transferlength greater than 255 not implemented, yet!");
-        return 0;
-    }
-
+    // prepare communication
     os::LockGuard<os::Mutex> lock(MutexArray[static_cast<size_t>(mDescription)]);
 
-    if (timeoutDuringWaitUntilFlagIsEqualState(I2C_FLAG_BUSY, RESET)) {
+    if (!sendRegisterAddress(deviceAddr, regAddr, length)) {
         return 0;
     }
-
-    /* Configure slave address, nbytes, reload, end mode and start or stop generation */
-    I2C_TransferHandling(reinterpret_cast<I2C_TypeDef*>(mPeripherie),
-                         deviceAddr,
-                         1,
-                         I2C_Reload_Mode,
-                         I2C_Generate_Start_Write);
-
-    if (timeoutDuringWaitUntilFlagIsEqualState(I2C_FLAG_TXIS, SET)) {
-        return 0;
-    }
-
-    I2C_SendData(reinterpret_cast<I2C_TypeDef*>(mPeripherie), (uint8_t)regAddr);
-
-    if (timeoutDuringWaitUntilFlagIsEqualState(I2C_FLAG_TCR, SET)) {
-        return 0;
-    }
-
-    I2C_TransferHandling(reinterpret_cast<I2C_TypeDef*>(mPeripherie),
-                         deviceAddr,
-                         length,
-                         I2C_AutoEnd_Mode,
-                         I2C_No_StartStop);
 
     size_t bytesSend = 0;
     while (bytesSend < length) {
-        if (timeoutDuringWaitUntilFlagIsEqualState(I2C_FLAG_TXIS, SET)) {
+        if (timeoutDuringWaitEvent(I2C_EVENT_MASTER_BYTE_TRANSMITTED)) {
             return bytesSend;
         }
-        /* Configure slave address, nbytes, reload, end mode and start or stop generation */
         I2C_SendData(reinterpret_cast<I2C_TypeDef*>(mPeripherie), data[bytesSend]);
         bytesSend++;
     }
 
-    if (timeoutDuringWaitUntilFlagIsEqualState(I2C_FLAG_STOPF, SET)) {
-        return bytesSend;
+    timeoutDuringWaitEvent(I2C_EVENT_MASTER_BYTE_TRANSMITTED);
+
+    I2C_GenerateSTOP(reinterpret_cast<I2C_TypeDef*>(mPeripherie), ENABLE);
+
+    return bytesSend;
+}
+
+size_t I2c::write(const uint16_t deviceAddr, uint8_t const* const data, const size_t length) const
+{
+    // prepare communication
+    os::LockGuard<os::Mutex> lock(MutexArray[static_cast<size_t>(mDescription)]);
+    if (!initMasterCommunication(deviceAddr, length)) {
+        return false;
     }
 
-    I2C_ClearFlag(reinterpret_cast<I2C_TypeDef*>(mPeripherie), I2C_FLAG_STOPF);
+    I2C_Send7bitAddress(reinterpret_cast<I2C_TypeDef*>(mPeripherie),
+                        static_cast<uint8_t>(deviceAddr << 1),
+                        I2C_Direction_Transmitter);
+
+    if (timeoutDuringWaitEvent(I2C_EVENT_MASTER_TRANSMITTER_MODE_SELECTED)) {
+        I2C_GenerateSTOP(reinterpret_cast<I2C_TypeDef*>(mPeripherie), ENABLE);
+        return false;
+    }
+
+    size_t bytesSend = 0;
+    while (bytesSend < length) {
+        I2C_SendData(reinterpret_cast<I2C_TypeDef*>(mPeripherie), data[bytesSend]);
+        bytesSend++;
+        if (timeoutDuringWaitEvent(I2C_EVENT_MASTER_BYTE_TRANSMITTED)) {
+            return bytesSend;
+        }
+    }
+
+    I2C_GenerateSTOP(reinterpret_cast<I2C_TypeDef*>(mPeripherie), ENABLE);
+
     return bytesSend;
 }
 
 size_t I2c::read(const uint16_t deviceAddr, const uint8_t regAddr, uint8_t* const data, const size_t length) const
 {
-    if (length > 255) {
-        Trace(ZONE_ERROR, "Transferlength greater than 255 not implemented, yet!");
-        return 0;
-    }
-
+    // prepare communication
     os::LockGuard<os::Mutex> lock(MutexArray[static_cast<size_t>(mDescription)]);
 
-    if (timeoutDuringWaitUntilFlagIsEqualState(I2C_FLAG_BUSY, RESET)) {
+    if (!sendRegisterAddress(deviceAddr, regAddr, length)) {
         return 0;
     }
 
-    /* Configure slave address, nbytes, reload, end mode and start or stop generation */
-    I2C_TransferHandling(reinterpret_cast<I2C_TypeDef*>(mPeripherie),
-                         deviceAddr,
-                         1,
-                         I2C_SoftEnd_Mode,
-                         I2C_Generate_Start_Write);
+    // restart communication for reading
+    I2C_GenerateSTART(reinterpret_cast<I2C_TypeDef*>(mPeripherie), ENABLE);
 
-    if (timeoutDuringWaitUntilFlagIsEqualState(I2C_FLAG_TXIS, SET)) {
-        return 0;
+    if (timeoutDuringWaitEvent(I2C_EVENT_MASTER_MODE_SELECT)) {
+        I2C_GenerateSTOP(reinterpret_cast<I2C_TypeDef*>(mPeripherie), ENABLE);
+        return false;
     }
 
-    I2C_SendData(reinterpret_cast<I2C_TypeDef*>(mPeripherie), regAddr);
-    if (timeoutDuringWaitUntilFlagIsEqualState(I2C_FLAG_TC, SET)) {
+    I2C_Send7bitAddress(reinterpret_cast<I2C_TypeDef*>(mPeripherie),
+                        static_cast<uint8_t>(deviceAddr << 1),
+                        I2C_Direction_Receiver);
+
+    if (timeoutDuringWaitEvent(I2C_EVENT_MASTER_RECEIVER_MODE_SELECTED)) {
+        I2C_GenerateSTOP(reinterpret_cast<I2C_TypeDef*>(mPeripherie), ENABLE);
         return 0;
     }
-
-    /* Configure slave address, nbytes, reload, end mode and start or stop generation */
-    I2C_TransferHandling(reinterpret_cast<I2C_TypeDef*>(mPeripherie),
-                         deviceAddr,
-                         length,
-                         I2C_AutoEnd_Mode,
-                         I2C_Generate_Start_Read);
 
     size_t bytesReceived = 0;
     while (bytesReceived < length) {
-        if (timeoutDuringWaitUntilFlagIsEqualState(I2C_FLAG_RXNE, SET)) {
+        if (timeoutDuringWaitEvent(I2C_EVENT_MASTER_BYTE_RECEIVED)) {
+            I2C_GenerateSTOP(reinterpret_cast<I2C_TypeDef*>(mPeripherie), ENABLE);
             return bytesReceived;
         }
         data[bytesReceived] = I2C_ReceiveData(reinterpret_cast<I2C_TypeDef*>(mPeripherie));
-
         bytesReceived++;
     }
 
-    if (timeoutDuringWaitUntilFlagIsEqualState(I2C_FLAG_STOPF, SET)) {
-        return bytesReceived;
-    }
-
-    I2C_ClearFlag(reinterpret_cast<I2C_TypeDef*>(mPeripherie), I2C_ICR_STOPCF);
+    // end communication
+    I2C_GenerateSTOP(reinterpret_cast<I2C_TypeDef*>(mPeripherie), ENABLE);
 
     return bytesReceived;
+}
+
+bool I2c::initMasterCommunication(const uint16_t deviceAddr, const size_t length) const
+{
+    if (length > 255) {
+        Trace(ZONE_ERROR, "Transfer length greater than 255 not implemented, yet!");
+        return false;
+    }
+
+    if ((deviceAddr & 0xFF80) != 0) {
+        // 10 bit addressing
+        Trace(ZONE_ERROR, "10 Bit addresses are not yet supported!");
+        return false;
+    }
+
+    if (timeoutDuringWaitUntilFlagIsEqualState(I2C_FLAG_BUSY, RESET)) {
+        return false;
+    }
+
+    I2C_GenerateSTART(reinterpret_cast<I2C_TypeDef*>(mPeripherie), ENABLE);
+
+    if (timeoutDuringWaitEvent(I2C_EVENT_MASTER_MODE_SELECT)) {
+        // end communication
+        I2C_GenerateSTOP(reinterpret_cast<I2C_TypeDef*>(mPeripherie), ENABLE);
+        return false;
+    }
+
+    return true;
+}
+
+bool I2c::sendRegisterAddress(const uint16_t deviceAddr, const uint8_t regAddr, const size_t length) const
+{
+    if (!initMasterCommunication(deviceAddr, length)) {
+        return false;
+    }
+
+    I2C_Send7bitAddress(reinterpret_cast<I2C_TypeDef*>(mPeripherie),
+                        static_cast<uint8_t>(deviceAddr << 1),
+                        I2C_Direction_Transmitter);
+
+    if (timeoutDuringWaitEvent(I2C_EVENT_MASTER_TRANSMITTER_MODE_SELECTED)) {
+        I2C_GenerateSTOP(reinterpret_cast<I2C_TypeDef*>(mPeripherie), ENABLE);
+        return false;
+    }
+
+    I2C_SendData(reinterpret_cast<I2C_TypeDef*>(mPeripherie), regAddr);
+
+    return true;
 }
 
 constexpr const std::array<const I2c, I2c::__ENUM__SIZE> hal::Factory<I2c>::Container;

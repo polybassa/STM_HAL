@@ -26,6 +26,18 @@
 #include "semphr.h"
 #include "Mutex.h"
 
+///////////////////////////////////////////////////////////////////////////////
+#define IS_I2C_ALL_PERIPH_BASE(PERIPH) (((PERIPH) == I2C1_BASE) || \
+                                        ((PERIPH) == I2C2_BASE) || \
+                                        ((PERIPH) == I2C3_BASE))
+///////////////////////////////////////////////////////////////////////////////
+/**
+ * Note: Currently only master mode is implemented.
+ * Missing:
+ *  - 10 bit addressing
+ *  - Slave mode
+ *  - Multimaster
+ */
 namespace hal
 {
 struct I2c {
@@ -33,12 +45,13 @@ struct I2c {
 
     I2c() = delete;
     I2c(const I2c&) = delete;
-    I2c(I2c &&) = default;
+    I2c(I2c&&) = default;
     I2c& operator=(const I2c&) = delete;
-    I2c& operator=(I2c &&) = delete;
+    I2c& operator=(I2c&&) = delete;
 
     size_t write(const uint16_t deviceAddr, const uint8_t regAddr, uint8_t const* const data,
                  const size_t length) const;
+    size_t write(const uint16_t deviceAddr, uint8_t const* const data, const size_t length) const;
     size_t read(const uint16_t deviceAddr, const uint8_t regAddr, uint8_t* const data, const size_t length) const;
 
 private:
@@ -55,8 +68,10 @@ private:
 
     void initialize(void) const;
     bool timeoutDuringWaitUntilFlagIsEqualState(const uint32_t flag, const FlagStatus state) const;
+    bool timeoutDuringWaitEvent(const uint32_t event) const;
+    bool initMasterCommunication(const uint16_t deviceAddr, const size_t length) const;
+    bool sendRegisterAddress(const uint16_t deviceAddr, const uint8_t regAddr, const size_t length) const;
 
-    //static std::array<xSemaphoreHandle, I2c::__ENUM__SIZE> MutexArray;
     static std::array<os::Mutex, Description::__ENUM__SIZE> MutexArray;
 
     friend class Factory<I2c>;
@@ -69,9 +84,6 @@ class Factory<I2c>
 
     Factory(void)
     {
-        RCC_I2CCLKConfig(RCC_I2C1CLK_HSI);
-
-        //TODO support all clock domains
         for (const auto& clock : Clocks) {
             RCC_APB1PeriphClockCmd(clock, ENABLE);
         }
@@ -85,11 +97,12 @@ public:
     static constexpr const I2c& get(void)
     {
         static_assert(IS_I2C_ALL_PERIPH_BASE(Container[index].mPeripherie), "Invalid");
-        static_assert(IS_I2C_ACK(Container[index].mConfiguration.I2C_Ack), "Invalid");
-        static_assert(IS_I2C_ACKNOWLEDGE_ADDRESS(Container[index].mConfiguration.I2C_AcknowledgedAddress), "Invalid");
-        static_assert(IS_I2C_ANALOG_FILTER(Container[index].mConfiguration.I2C_AnalogFilter), "Invalid");
-        static_assert(IS_I2C_DIGITAL_FILTER(Container[index].mConfiguration.I2C_DigitalFilter), "Invalid");
+        static_assert(IS_I2C_DIGITAL_FILTER(0x3), "Invalid Filter!"); // TODO compare with which value?
+        static_assert(IS_I2C_CLOCK_SPEED(Container[index].mConfiguration.I2C_ClockSpeed), "Invalid clock speed!");
         static_assert(IS_I2C_MODE(Container[index].mConfiguration.I2C_Mode), "Invalid");
+        static_assert(IS_I2C_DUTY_CYCLE(Container[index].mConfiguration.I2C_DutyCycle), "Invalid duty cycle");
+        static_assert(IS_I2C_ACK_STATE(Container[index].mConfiguration.I2C_Ack), "Invalid");
+        static_assert(IS_I2C_ACKNOWLEDGE_ADDRESS(Container[index].mConfiguration.I2C_AcknowledgedAddress), "Invalid");
         static_assert(IS_I2C_OWN_ADDRESS1(Container[index].mConfiguration.I2C_OwnAddress1), "Invalid");
 
         static_assert(index != I2c::Description::__ENUM__SIZE, "__ENUM__SIZE is not accessible");
