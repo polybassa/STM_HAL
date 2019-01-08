@@ -28,8 +28,21 @@ void Crc::initialize(void) const
     CRC_ResetDR();
 }
 
-uint32_t Crc::getCrc(uint8_t const* const data, const size_t length) const
+uint32_t Crc::getCrc(uint8_t const* const data, const size_t bytes) const
 {
+    return getCrc<uint8_t>(data, bytes);
+}
+
+uint32_t Crc::getCrc(uint32_t const* const data, const size_t words) const
+{
+    return getCrc<uint32_t>(data, words);
+}
+
+template<typename T>
+uint32_t Crc::getCrc(T const* const data, const size_t length) const
+{
+    static_assert(std::is_same<uint32_t, T>::value || std::is_same<uint8_t, T>::value, "Method not implemented!");
+
     if ((data == nullptr) || (length == 0)) {
         Trace(ZONE_WARNING, "Invalid parameters\r\n");
         return 0;

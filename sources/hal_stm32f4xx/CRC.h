@@ -30,11 +30,15 @@ struct Crc {
 
     Crc() = delete;
     Crc(const Crc&) = delete;
-    Crc(Crc &&) = default;
+    Crc(Crc&&) = default;
     Crc& operator=(const Crc&) = delete;
-    Crc& operator=(Crc &&) = delete;
+    Crc& operator=(Crc&&) = delete;
 
-    uint32_t getCrc(uint8_t const* const data, const size_t length) const;
+    uint32_t getCrc(uint8_t const* const data, const size_t bytes) const;
+    uint32_t getCrc(uint32_t const* const data, const size_t words) const;
+
+    template<typename T>
+    uint32_t getCrc(T const* const data, const size_t length) const;
 
 private:
     constexpr Crc(const enum Description desc) :
@@ -68,9 +72,6 @@ public:
     template<enum Crc::Description index>
     static constexpr const Crc& get(void)
     {
-//        static_assert(IS_CRC_REVERSE_INPUT_DATA(Container[index].mReverseInputSelection), "Invalid");
-//        static_assert(IS_CRC_POL_SIZE(Container[index].mPolynomialSize), "Invalid");
-
         static_assert(index != Crc::Description::__ENUM__SIZE, "__ENUM__SIZE is not accessible");
         static_assert(Container[index].mDescription == index, "Wrong mapping between Description and Container");
 
