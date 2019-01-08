@@ -94,7 +94,12 @@ size_t UsartWithDma::send(uint8_t const* const data, const size_t length, const 
             return 0;
         }
     } else {
-        return mUsart.send(data, length);
+        // Dangerous, if you want to rely on the timeout, so I consider a failure the cleaner way.
+        if (ticksToWait == portMAX_DELAY) {
+            return mUsart.send(data, length);
+        } else {
+            return 0;
+        }
     }
 }
 
@@ -128,12 +133,22 @@ size_t UsartWithDma::receive(uint8_t* const data, const size_t length, const uin
         mRxDma->setupTransfer(data, length);
         mRxDma->enable();
 
-        DmaReceiveCompleteSemaphores.at(mUsart.mDescription).take(std::chrono::milliseconds(ticksToWait));
+        bool deadlineNotExpired =
+            DmaReceiveCompleteSemaphores.at(mUsart.mDescription).take(std::chrono::milliseconds(ticksToWait));
 
         mRxDma->disable();
-        return length - mRxDma->getCurrentDataCounter();
+        if (deadlineNotExpired) {
+            return length - mRxDma->getCurrentDataCounter();
+        } else {
+            return 0;
+        }
     } else {
-        return mUsart.receive(data, length);
+        // Dangerous, if you want to rely on the timeout, so I consider a failure the cleaner way.
+        if (ticksToWait == portMAX_DELAY) {
+            return mUsart.receive(data, length);
+        } else {
+            return 0;
+        }
     }
 }
 
