@@ -21,9 +21,9 @@ struct Nvic {
 
     Nvic() = delete;
     Nvic(const Nvic&) = delete;
-    Nvic(Nvic &&) = default;
+    Nvic(Nvic&&) = default;
     Nvic& operator=(const Nvic&) = delete;
-    Nvic& operator=(Nvic &&) = delete;
+    Nvic& operator=(Nvic&&) = delete;
 
     /**
      * Enables the specific interrupt service routine, but only if the procedures
@@ -62,13 +62,13 @@ private:
     const enum Description mDescription;
     const IRQn mInterruptChannel;
 
-    using CallbackArray = std::array<std::function<void(void)>, Nvic::__ENUM__SIZE>;
+    using CallbackArray = std::array<std::function<void (void)>, Nvic::__ENUM__SIZE>;
     static CallbackArray NvicCallbacks;
 
-    using GetInterruptStatusProcedureArray = std::array<std::function<bool(void)>, Nvic::__ENUM__SIZE>;
+    using GetInterruptStatusProcedureArray = std::array<std::function<bool (void)>, Nvic::__ENUM__SIZE>;
     static GetInterruptStatusProcedureArray NvicGetInterruptStatusProcedeures;
 
-    using ClearInterruptProcedureArray = std::array<std::function<void(void)>, Nvic::__ENUM__SIZE>;
+    using ClearInterruptProcedureArray = std::array<std::function<void (void)>, Nvic::__ENUM__SIZE>;
     static ClearInterruptProcedureArray NvicClearInterruptProcedeures;
 
     void clearInterruptBit(void) const;
@@ -110,7 +110,7 @@ public:
                       "Interrupt handler is not enabled");
 
         static_assert(index != Nvic::Description::__ENUM__SIZE, "__ENUM__SIZE is not accessible");
-//      static_assert(index < Container[index + 1].mDescription, "Incorrect order of Nvics in Factory");
+        static_assert(index < Container[index + 1].mDescription, "Incorrect order of Nvics in Factory");
         static_assert(Container[index].mDescription == index, "Wrong mapping between Description and Container");
 
         return Container[index];

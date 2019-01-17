@@ -96,7 +96,7 @@ void Nvic::disable(void) const
     NVIC_DisableIRQ(mInterruptChannel);
 }
 
-constexpr const std::array<const Nvic, Nvic::Description::__ENUM__SIZE> Factory<Nvic>::Container;
+constexpr const std::array<const Nvic, Nvic::Description::__ENUM__SIZE + 1> Factory<Nvic>::Container;
 }
 
 // ****** Interrupt service routines (mapped to the configured hal::Nvics) *********************************
