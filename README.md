@@ -1,6 +1,9 @@
 # STM_HAL
 ===========
-Current Build Status: ![status](https://travis-ci.org/polybassa/STM_HAL.svg?branch=master)
+
+Current Build Status: 
+
+![status](https://travis-ci.org/polybassa/STM_HAL.svg?branch=master)
 
 Setup: 
 ----------
