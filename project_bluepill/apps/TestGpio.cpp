@@ -27,9 +27,6 @@ const os::TaskEndless gpioTest("Gpio_Test", 1024, os::Task::Priority::MEDIUM, []
                                    out = true;
                                    os::ThisTask::sleep(std::chrono::milliseconds(300));
                                    out = false;
-
                                    Trace(ZONE_INFO, "loop\r\n");
-
-                                   os::ThisTask::sleep(std::chrono::milliseconds(300));
                                }
     });

@@ -85,9 +85,11 @@ ${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/TaskEndless.o
 ${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/TaskInterruptable.o
 
 # App Layer
+${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/IsoTp.o
 
 #TestApps
-${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/TestCan.o
+${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/TestIsoTp.o
+#${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/TestCan.o
 ${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/TestGpio.o
 
 # device

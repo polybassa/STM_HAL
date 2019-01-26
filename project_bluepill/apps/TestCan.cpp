@@ -2,11 +2,10 @@
 /*
  * Copyright (c) 2014-2018 Nils Weiss
  */
-
-#include "TestCan.h"
-#include "Can.h"
-#include "trace.h"
 #include <cstring>
+#include "trace.h"
+#include "Can.h"
+#include "TestCan.h"
 
 static const int __attribute__((unused)) g_DebugZones = ZONE_ERROR | ZONE_WARNING | ZONE_VERBOSE | ZONE_INFO;
 
@@ -23,16 +22,17 @@ const os::TaskEndless canTest("Can_Test",
                                   msg.IDE = 0;
                                   msg.RTR = 0;
                                   msg.DLC = 5;
-                                  msg.Data[0] = 'H';
+                                  msg.Data[0] = 'D';
                                   msg.Data[1] = 'e';
-                                  msg.Data[2] = 'l';
-                                  msg.Data[3] = 'l';
-                                  msg.Data[4] = 'o';
+                                  msg.Data[2] = 'n';
+                                  msg.Data[3] = 'i';
+                                  msg.Data[4] = 's';
 
-                                  can.send(msg);
+                                  auto ret = can.send(msg);
+
+                                  Trace(ZONE_INFO, "sent on  MainCan %d\r\n", ret);
 
                                   os::ThisTask::sleep(std::chrono::milliseconds(300));
-                                  Trace(ZONE_INFO, "pending %d\r\n", can.messagePending());
 
                                   CanRxMsg rxmsg;
                                   std::memset(&rxmsg, 0, sizeof(rxmsg));
