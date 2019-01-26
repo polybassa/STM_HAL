@@ -1,5 +1,5 @@
 # STM_HAL
-===========
+----------
 
 Current Build Status: 
 
