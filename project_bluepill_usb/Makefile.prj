@@ -1,0 +1,138 @@
+ifeq ($(MAKECMDGOALS),debug_firmware)
+DEFINES+=-DDEBUG
+#DEFINES+=-DSYSVIEW
+#DEFINES+=-DUSART_DEBUG
+DEFINES+=-g
+DEFINES+=-O0
+DEFINES+=-DUSE_FULL_ASSERT
+LDFLAGS+=-O0
+#LDFLAGS+=-u _printf_float
+endif
+
+ifeq ($(MAKECMDGOALS),firmware)
+DEFINES+=-Os
+LDFLAGS+=-Os
+endif
+
+ifneq (,$(filter debug_firmware firmware,$(MAKECMDGOALS)))
+
+DEFINES+=-DUSE_FREERTOS
+DEFINES+=-DHSE_VALUE=8000000
+
+# Where to find source files that do not live in this directory.
+VPATH+=${ROOT}/sources
+VPATH+=${ROOT}/sources/hal_stm32f10x
+VPATH+=${ROOT}/sources/os
+VPATH+=${ROOT}/sources/dev
+VPATH+=${ROOT}/sources/app
+VPATH+=${RTOS_SOURCE_DIR}
+VPATH+=${RTOS_SOURCE_DIR}/portable/MemMang
+VPATH+=${RTOS_SOURCE_DIR}/portable/GCC/ARM_CM3
+VPATH+=${ROOT}/libraries/CMSIS/Source
+VPATH+=${ROOT}/libraries/CMSIS/Device/ST/STM32F10x
+VPATH+=${ROOT}/libraries/STM32F10x_StdPeriph_Driver/src
+VPATH+=${ROOT}/libraries/STM32_USB-FS-Device_Driver/src
+VPATH+=${SEGGER_SOURCE_DIR}/SEGGER
+VPATH+=${SEGGER_SOURCE_DIR}/Config
+VPATH+=${SEGGER_SOURCE_DIR}/Sample/FreeRTOSV10
+VPATH+=${SEGGER_SOURCE_DIR}/Sample/FreeRTOSV10/Config
+VPATH+=${RTT_SOURCE_DIR}/RTT
+VPATH+=${RTT_SOURCE_DIR}/Syscalls
+
+VPATH+=${ROOT}/device
+
+VPATH+=${PRJ_PATH}
+VPATH+=${PRJ_PATH}/apps
+
+
+# Where to find header files that do not live in the source directory.
+IPATH=${ROOT}/sources
+IPATH+=${PRJ_PATH}
+IPATH+=${PRJ_PATH}/config
+IPATH+=${PRJ_PATH}/apps
+IPATH+=${ROOT}/sources/hal_stm32f10x
+IPATH+=${ROOT}/sources/os
+IPATH+=${ROOT}/sources/dev
+IPATH+=${ROOT}/sources/utility
+IPATH+=${ROOT}/sources/app
+IPATH+=${RTOS_SOURCE_DIR}/include
+IPATH+=${RTOS_SOURCE_DIR}
+IPATH+=${RTOS_SOURCE_DIR}/portable/GCC/ARM_CM3
+IPATH+=${ROOT}/libraries/CMSIS/Include
+IPATH+=${ROOT}/libraries/CMSIS/Device/ST/STM32F10x
+IPATH+=${ROOT}/libraries/STM32F10x_StdPeriph_Driver/inc
+IPATH+=${ROOT}/libraries/STM32_USB-FS-Device_Driver/inc
+IPATH+=${ROOT}/libraries
+IPATH+=${SEGGER_SOURCE_DIR}/SEGGER
+IPATH+=${SEGGER_SOURCE_DIR}/Config
+IPATH+=${SEGGER_SOURCE_DIR}/Sample/FreeRTOSV10
+IPATH+=${SEGGER_SOURCE_DIR}/Sample/FreeRTOSV10/Config
+
+# USB
+${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/hw_config.o
+${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/usb_core.o
+${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/usb_desc.o
+${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/usb_endp.o
+${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/usb_init.o
+${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/usb_int.o
+${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/usb_istr.o
+${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/usb_mem.o
+${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/usb_prop.o
+${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/usb_pwr.o
+${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/usb_regs.o
+${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/usb_sil.o
+
+# PMD firmware
+${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/main.o
+${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/versionfile.o
+
+# HAL Layer
+${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/Gpio.o
+#${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/Can.o
+
+# DEV Layer
+
+# OS Layer
+${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/DeepSleepInterface.o
+${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/Mutex.o
+${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/Semaphore.o
+${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/os_Task.o
+${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/TaskEndless.o
+${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/TaskInterruptable.o
+
+# App Layer
+
+#TestApps
+${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/TestUSB.o
+${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/TestGpio.o
+
+# device
+${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/startup_stm32f10x_md.o
+${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/system_stm32f10x.o
+${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/syscalls.o
+${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/stm32f10x_it.o
+
+# driverlib
+${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/stm32f10x_rcc.o
+${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/stm32f10x_pwr.o
+${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/stm32f10x_exti.o
+${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/stm32f10x_gpio.o
+${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/misc.o
+
+# freeRTOS
+${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/croutine.o
+${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/list.o
+${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/queue.o
+${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/stream_buffer.o
+${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/tasks.o
+${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/port.o
+${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/heap_3.o
+
+# SEGGER_SYSVIEW
+${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/SEGGER_RTT.o
+${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/SEGGER_RTT_printf.o
+${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/SEGGER_SYSVIEW_Config_FreeRTOS.o
+${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/SEGGER_SYSVIEW.o
+${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/SEGGER_SYSVIEW_FreeRTOS.o
+
+endif
