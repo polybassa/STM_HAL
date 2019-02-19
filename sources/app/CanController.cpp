@@ -241,7 +241,9 @@ void CanController::off(void)
 
 void CanController::triggerFirmwareUpdate(void)
 {
-    mIsPerformingFirmwareUpdate = true;
+    if (!mIsPerformingFirmwareUpdate) {
+        mIsPerformingFirmwareUpdate = true;
+    }
 }
 
 bool CanController::isPerformingFirmwareUpdate(void) const

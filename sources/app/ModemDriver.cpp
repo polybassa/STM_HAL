@@ -104,7 +104,10 @@ void ModemDriver::exitDeepSleep(void)
 
 void ModemDriver::modemTxTaskFunction(const bool& join)
 {
+    constexpr const hal::Gpio& out = hal::Factory<hal::Gpio>::get<hal::Gpio::LED>();
+
     do {
+        out = true;
         modemReset();
 
         if (!modemStartup()) {
@@ -115,18 +118,21 @@ void ModemDriver::modemTxTaskFunction(const bool& join)
         while (mErrorCount < ERROR_THRESHOLD) {
             for (auto& sock : mSockets) {
                 if (!sock->isCreated) {
+                    out = true;
                     sock->create();
                 }
 
                 if (sock->isCreated && !sock->isOpen) {
+                    out = true;
                     sock->open();
                 }
 
                 if (!sock->isOpen) {
+                    out = true;
                     handleError();
                     continue;
                 }
-
+                out = false;
                 sock->checkAndSendData();
                 sock->checkAndReceiveData();
             }

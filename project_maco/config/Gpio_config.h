@@ -16,6 +16,7 @@ enum Description {
     SWCLK,
     // ===PORTB===
     SECCO_PWR,
+    LED,
     USART3_TX,
     USART3_RX,
     SPI2_NSS,
@@ -68,6 +69,9 @@ static constexpr const std::array<const Gpio, Gpio::__ENUM__SIZE + 1> Container 
       Gpio(Gpio::SECCO_PWR,
            GPIOB_BASE,
            GPIO_InitTypeDef {GPIO_Pin_0, GPIO_Speed_50MHz, GPIO_Mode_Out_PP}),
+      Gpio(Gpio::LED,
+           GPIOB_BASE,
+           GPIO_InitTypeDef {GPIO_Pin_8, GPIO_Speed_50MHz, GPIO_Mode_Out_PP}),
       Gpio(Gpio::USART3_TX,
            GPIOB_BASE,
            GPIO_InitTypeDef {GPIO_Pin_10, GPIO_Speed_50MHz, GPIO_Mode_AF_PP},
