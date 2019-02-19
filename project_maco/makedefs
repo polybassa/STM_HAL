@@ -20,7 +20,7 @@
 
 ROOT=..
 RTOS_SOURCE_DIR=${ROOT}/libraries/FreeRTOS/Source_10_1_1
-SEGGER_SOURCE_DIR=${ROOT}/libraries/SystemView_Src_V252c
+SEGGER_SOURCE_DIR=${ROOT}/libraries/SystemView_Src_V252f
 RTT_SOURCE_DIR=${ROOT}/libraries/SEGGER_RTT_V635g
 PRJ_DIR=$(shell basename ${PRJ_PATH})
 OBJDIR?=obj
