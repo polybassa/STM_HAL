@@ -334,7 +334,7 @@ void DnsSocket::sendData(void)
 
     mSendBuffer.receive(tmpPayloadStr.data(),
                         std::max(mSendBuffer.bytesAvailable(), MAX_PAYLOAD_LENGTH),
-                        std::chrono::seconds(1));
+                        std::chrono::milliseconds(10));
 
     std::array<char, MAX_PAYLOAD_LENGTH*2> hexPayloadStr;
 
