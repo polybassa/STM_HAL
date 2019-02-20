@@ -1,7 +1,5 @@
 ifeq ($(MAKECMDGOALS),debug_firmware)
 DEFINES+=-DDEBUG
-DEFINES+=-DRTT_USE_ASM
-DEFINES+=-D__SES_ARM
 #DEFINES+=-DSYSVIEW
 #DEFINES+=-DUSART_DEBUG
 DEFINES+=-g
@@ -19,6 +17,8 @@ ifneq (,$(filter debug_firmware firmware,$(MAKECMDGOALS)))
 
 DEFINES+=-DUSE_FREERTOS
 DEFINES+=-DHSE_VALUE=12000000
+DEFINES+=-DRTT_USE_ASM
+DEFINES+=-D__SES_ARM
 
 # Where to find source files that do not live in this directory.
 VPATH+=${ROOT}/sources
@@ -135,7 +135,6 @@ ${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/port.o
 ${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/heap_3.o
 #${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/event_groups.o
 
-ifeq ($(MAKECMDGOALS),debug_firmware)
 # SEGGER_SYSVIEW
 ${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/SEGGER_RTT.o
 ${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/SEGGER_RTT_ASM_ARMv7M.o
@@ -143,6 +142,5 @@ ${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/SEGGER_RTT_printf.o
 ${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/SEGGER_SYSVIEW_Config_FreeRTOS.o
 ${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/SEGGER_SYSVIEW.o
 ${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/SEGGER_SYSVIEW_FreeRTOS.o
-endif
 
 endif

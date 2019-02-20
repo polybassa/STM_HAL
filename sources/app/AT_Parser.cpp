@@ -569,7 +569,7 @@ AT::Return_t ATCmdERROR::onResponseMatch(void)
 std::array<char, ATParser::BUFFERSIZE> ATParser::ReceiveBuffer;
 
 ATParser::ATParser(const AT::ReceiveFunction& receive) :
-    mReceive(receive), mRegisteredATCommands(15), mWaitingCmd(nullptr), mWaitingCmdMutex() {}
+    mReceive(receive), mWaitingCmd(nullptr), mWaitingCmdMutex() {}
 
 void ATParser::reset(void)
 {

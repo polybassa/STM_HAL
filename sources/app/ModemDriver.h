@@ -59,7 +59,7 @@ class ModemDriver final
     void modemReset(void);
     bool modemStartup(void);
 
-    void handleError(void);
+    void handleError(const char* str = "");
 
 public:
     ModemDriver(const hal::UsartWithDma& interface,

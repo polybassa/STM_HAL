@@ -120,7 +120,7 @@ void ModemDriver::modemTxTaskFunction(const bool& join)
 
                 if (!sock->isOpen) {
                     out = true;
-                    handleError();
+                    handleError("0");
                     continue;
                 }
                 out = false;
@@ -189,9 +189,9 @@ void ModemDriver::modemReset(void)
     os::ThisTask::sleep(std::chrono::milliseconds(2000));
 }
 
-void ModemDriver::handleError(void)
+void ModemDriver::handleError(const char* str)
 {
-    Trace(ZONE_ERROR, "Error\r\n");
+    Trace(ZONE_ERROR, "Error %s\r\n", str);
     if (mErrorCount >= ERROR_THRESHOLD) {
         mErrorCount = 0;
     }
@@ -205,20 +205,20 @@ std::shared_ptr<app::Socket> ModemDriver::getSocket(app::Socket::Protocol protoc
     if (protocol == Socket::Protocol::TCP) {
         sock = std::make_shared<TcpSocket>(mParser, mSend, ip, port,
                                            mUrcCallbackReceive, [&] {
-            handleError();
+            handleError("1");
         });
     }
 
     if (protocol == Socket::Protocol::UDP) {
         sock = std::make_shared<UdpSocket>(mParser, mSend, ip, port,
                                            mUrcCallbackReceive, [&] {
-            handleError();
+            handleError("2");
         });
     }
 
     if (protocol == Socket::Protocol::DNS) {
         sock = std::make_shared<DnsSocket>(mParser, mSend, mUrcCallbackReceive, [&] {
-            handleError();
+            handleError("3");
         });
     }
     if (sock) {

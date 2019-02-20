@@ -15,7 +15,7 @@ using app::Socket;
 using app::TcpSocket;
 using app::UdpSocket;
 
-static const int __attribute__((unused)) g_DebugZones = 0;//ZONE_ERROR | ZONE_WARNING | ZONE_VERBOSE | ZONE_INFO;
+static const int __attribute__((unused)) g_DebugZones = ZONE_ERROR;//ZONE_ERROR | ZONE_WARNING | ZONE_VERBOSE | ZONE_INFO;
 
 Socket::Socket(const Protocol                   protocol,
                ATParser&                        parser,
@@ -181,6 +181,7 @@ void TcpSocket::sendData(void)
                                           receivedLength),
                          std::chrono::milliseconds(5000)) == AT::Return_t::ERROR)
     {
+        Trace(ZONE_ERROR, "send_data_failed\r\n");
         mHandleError();
     }
     mTimeOfLastSend = os::Task::getTickCount();
@@ -196,6 +197,7 @@ void TcpSocket::receiveData(size_t bytes)
     if (mATCmdUSORD.send(mSocket, bytes, std::chrono::milliseconds(1000)) == AT::Return_t::FINISHED) {
         storeReceivedData(mATCmdUSORD.getData());
     } else {
+        Trace(ZONE_ERROR, "receive failed\r\n");
         mHandleError();
     }
 }
@@ -228,6 +230,7 @@ bool TcpSocket::open(void)
 void TcpSocket::checkIfDataAvailable(void)
 {
     if (mATCmdUSORD.send(mSocket, 0, std::chrono::milliseconds(1000)) != AT::Return_t::FINISHED) {
+        Trace(ZONE_ERROR, "query available data failed\r\n");
         mHandleError();
     }
     mTimeOfLastReceive = os::Task::getTickCount();
@@ -260,6 +263,7 @@ void UdpSocket::sendData(void)
                          std::string_view(mTemporaryBuffer.data(),
                                           receivedLength), std::chrono::milliseconds(5000)) == AT::Return_t::ERROR)
     {
+        Trace(ZONE_ERROR, "send_data_failed\r\n");
         mHandleError();
     }
     mTimeOfLastSend = os::Task::getTickCount();
@@ -276,6 +280,7 @@ void UdpSocket::receiveData(size_t bytes)
     if (mATCmdUSORF.send(mSocket, bytes, std::chrono::milliseconds(1000)) == AT::Return_t::FINISHED) {
         storeReceivedData(mATCmdUSORF.getData());
     } else {
+        Trace(ZONE_ERROR, "receive_data_failed\r\n");
         mHandleError();
     }
 }

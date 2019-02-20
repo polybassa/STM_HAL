@@ -72,7 +72,7 @@ void Usart::initialize() const
     mInitalized = true;
 
     // Initialize Interrupts
-    NVIC_SetPriority(getIRQn(), 0xf);
+    NVIC_SetPriority(getIRQn(), 0x6);
     NVIC_EnableIRQ(getIRQn());
 }
 
