@@ -10,7 +10,7 @@
 #include <mutex>
 #include "os_Queue.h"
 
-static const int __attribute__((unused)) g_DebugZones = 0;//ZONE_ERROR | ZONE_WARNING | ZONE_VERBOSE | ZONE_INFO;
+static const int __attribute__((unused)) g_DebugZones = ZONE_ERROR | ZONE_WARNING | ZONE_VERBOSE | ZONE_INFO;
 
 using os::Mutex;
 
@@ -27,10 +27,8 @@ void os::ThisTask::sleep(const std::chrono::milliseconds ms)
 }
 
 Mutex::Mutex(void) :
-    mMutexHandle((SemaphoreHandle_t) new int)
-{
-    this->give();
-}
+    mMutexHandle((SemaphoreHandle_t) new std::mutex)
+{}
 
 Mutex::Mutex(Mutex&& rhs) :
     mMutexHandle(rhs.mMutexHandle)
@@ -48,12 +46,14 @@ Mutex& Mutex::operator=(Mutex&& rhs)
 Mutex::~Mutex(void)
 {
     delete (int*)mMutexHandle;
+    mMutexHandle = nullptr;
 }
 
 bool Mutex::take(uint32_t ticksToWait) const
 {
-    if (*this && (*(reinterpret_cast<int*>(mMutexHandle)) == 1)) {
-        *(reinterpret_cast<int*>(mMutexHandle)) = 0;
+    if (*this) {
+        std::mutex* m = reinterpret_cast<std::mutex*>(mMutexHandle);
+        m->lock();
         return true;
     }
 
@@ -63,7 +63,8 @@ bool Mutex::take(uint32_t ticksToWait) const
 bool Mutex::give(void) const
 {
     if (*this) {
-        *(reinterpret_cast<int*>(mMutexHandle)) = 1;
+        std::mutex* m = reinterpret_cast<std::mutex*>(mMutexHandle);
+        m->unlock();
         return true;
     }
     return false;
@@ -516,9 +517,418 @@ int ut_USOSTTest(void)
 
     TestCaseEnd();
 }
+int ut_USOWR1Test(void)
+{
+    Trace(ZONE_INFO, "ut_USOWR1Test\r\n");
+
+    TestCaseBegin();
+
+    std::condition_variable cv;
+    std::mutex cv_m;
+    const int MAXSIGNALS = 4;
+    int globalSignal = 0;
+
+    static std::string testString = " ";
+    static std::string recvString(80, '\x00');
+    static auto pos_r = recvString.begin();
+
+    std::function<size_t(uint8_t*, const size_t, std::chrono::milliseconds)> recv =
+        [&](uint8_t* data, const size_t length, std::chrono::milliseconds timeout) -> size_t {
+            static size_t position = 0;
+            size_t i = 0;
+
+            if (testString.length() - position <= 0) {
+                Trace(ZONE_INFO, "recv Sleep;\r\n");
+                std::unique_lock<std::mutex> lk(cv_m);
+                cv.wait_for(lk, timeout, [&] {
+                return testString.length() - position > 0;
+            });
+            }
+
+            for ( ; i < length && position < testString.length(); i++) {
+                *data = testString[position++];
+            }
+            return i;
+        };
+
+    std::function<size_t(std::string_view, std::chrono::milliseconds)> send =
+        [&](std::string_view in, std::chrono::milliseconds) -> size_t {
+            size_t i = 0;
+            for ( ; i < in.length() && pos_r != recvString.end(); i++) {
+                *pos_r++ = in[i];
+            }
+            return i;
+        };
+
+    app::ATParser parser(recv);
+
+    auto testee1 = std::shared_ptr<app::ATCmdUSOST>(new app::ATCmdUSOST(send));
+    auto testee2 = std::shared_ptr<app::AT>(new app::ATCmd("CMD_2", "REQ2", "RESP2"));
+    auto testee3 = std::shared_ptr<app::AT>(new app::ATCmd("CMD_3", "REQ3", "REsp3"));
+    auto testee4 = std::shared_ptr<app::AT>(new app::ATCmdOK());
+    auto testee5 = std::shared_ptr<app::AT>(new app::ATCmdERROR());
+    auto testee6 = std::shared_ptr<app::ATCmdUSOWR>(new app::ATCmdUSOWR(send));
+
+    parser.registerAtCommand(std::dynamic_pointer_cast<app::AT>(testee1).get());
+    parser.registerAtCommand(std::dynamic_pointer_cast<app::AT>(testee6).get());
+    parser.registerAtCommand(testee2.get());
+    parser.registerAtCommand(testee3.get());
+    parser.registerAtCommand(testee4.get());
+    parser.registerAtCommand(testee5.get());
+
+    auto waitForSignal = [&globalSignal](const int sig, std::condition_variable& cv, std::mutex& m,
+                                         std::function<void()> doSomethingWithMutexLock = [] {}){
+                             Trace(ZONE_INFO, "Sleep %d\r\n", sig);
+                             {
+                                 std::unique_lock<std::mutex> lk(m);
+                                 auto eval = [&] {
+                                                 return sig == globalSignal;
+                                             };
+                                 cv.wait(lk, eval);
+                                 doSomethingWithMutexLock();
+                                 Trace(ZONE_INFO, "Hello %d\r\n", sig);
+                             }
+                         };
+
+    auto send2 = [&](int j)
+                 {
+                     waitForSignal(j, cv, cv_m, [&] {
+            testString += "\rOK\r";
+        });
+                     auto ptr = std::dynamic_pointer_cast<app::ATCmd>(testee3);
+                     auto ret = ptr->send(send, std::chrono::milliseconds(1000));
+                     CHECK(ret == app::AT::Return_t::FINISHED);
+                 };
+
+    auto send1 = [&](int j)
+                 {
+                     waitForSignal(j, cv, cv_m, [&] {
+            testString += "ERROR\rOK\rERROR\r";
+        });
+                     Trace(ZONE_INFO, "sending\r\n");
+                     auto ptr = std::dynamic_pointer_cast<app::ATCmdUSOWR>(testee6);
+                     auto ret = ptr->send(0, "hello", std::chrono::milliseconds(1000));
+                     CHECK(ret == app::AT::Return_t::ERROR);
+                 };
+
+    auto parse = [&](int j)
+                 {
+                     waitForSignal(j, cv, cv_m);
+                     for (auto i = 0; i < 2; i++) {
+                         parser.parse(std::chrono::milliseconds(1000));
+                     }
+                     Trace(ZONE_INFO, "parser END \r\n");
+                 };
+
+    auto signals = [&]
+                   {
+                       for (int i = 0; i < MAXSIGNALS; i++) {
+                           std::this_thread::sleep_for(std::chrono::milliseconds(200));
+                           {
+                               std::lock_guard<std::mutex> lk(cv_m);
+                               globalSignal = i;
+                           }
+                           cv.notify_all();
+                       }
+                   };
+
+    std::vector<std::thread> threads;
+    threads.emplace_back(send1, 1);
+    threads.emplace_back(parse, 0);
+    threads.emplace_back(send2, 2);
+    threads.emplace_back(signals);
+
+    for (auto& x : threads) {
+        x.join();
+    }
+
+    TestCaseEnd();
+}
+
+int ut_USOWR2Test(void)
+{
+    Trace(ZONE_INFO, "ut_USOWR2Test\r\n");
+
+    TestCaseBegin();
+
+    std::condition_variable cv;
+    std::mutex cv_m;
+    const int MAXSIGNALS = 5;
+    int globalSignal = 0;
+
+    static std::string testString = " ";
+    static std::string recvString(80, '\x00');
+    static auto pos_r = recvString.begin();
+
+    std::function<size_t(uint8_t*, const size_t, std::chrono::milliseconds)> recv =
+        [&](uint8_t* data, const size_t length, std::chrono::milliseconds timeout) -> size_t {
+            static size_t position = 0;
+            size_t i = 0;
+
+            if (testString.length() - position <= 0) {
+                Trace(ZONE_INFO, "recv Sleep;\r\n");
+                std::unique_lock<std::mutex> lk(cv_m);
+                cv.wait_for(lk, timeout, [&] {
+                return testString.length() - position > 0;
+            });
+            }
+
+            for ( ; i < length && position < testString.length(); i++) {
+                *data = testString[position++];
+            }
+            return i;
+        };
+
+    std::function<size_t(std::string_view, std::chrono::milliseconds)> send =
+        [&](std::string_view in, std::chrono::milliseconds) -> size_t {
+            size_t i = 0;
+            for ( ; i < in.length() && pos_r != recvString.end(); i++) {
+                *pos_r++ = in[i];
+            }
+            return i;
+        };
+
+    app::ATParser parser(recv);
+
+    auto testee1 = std::shared_ptr<app::ATCmdUSOST>(new app::ATCmdUSOST(send));
+    auto testee2 = std::shared_ptr<app::AT>(new app::ATCmd("CMD_2", "REQ2", "RESP2"));
+    auto testee3 = std::shared_ptr<app::AT>(new app::ATCmd("CMD_3", "REQ3", "REsp3"));
+    auto testee4 = std::shared_ptr<app::AT>(new app::ATCmdOK());
+    auto testee5 = std::shared_ptr<app::AT>(new app::ATCmdERROR());
+    auto testee6 = std::shared_ptr<app::ATCmdUSOWR>(new app::ATCmdUSOWR(send));
+
+    parser.registerAtCommand(std::dynamic_pointer_cast<app::AT>(testee1).get());
+    parser.registerAtCommand(std::dynamic_pointer_cast<app::AT>(testee6).get());
+    parser.registerAtCommand(testee2.get());
+    parser.registerAtCommand(testee3.get());
+    parser.registerAtCommand(testee4.get());
+    parser.registerAtCommand(testee5.get());
+
+    auto waitForSignal = [&globalSignal](const int sig, std::condition_variable& cv, std::mutex& m,
+                                         std::function<void()> doSomethingWithMutexLock = [] {}){
+                             Trace(ZONE_INFO, "Sleep %d\r\n", sig);
+                             {
+                                 std::unique_lock<std::mutex> lk(m);
+                                 auto eval = [&] {
+                                                 return sig == globalSignal;
+                                             };
+                                 cv.wait(lk, eval);
+                                 doSomethingWithMutexLock();
+                                 Trace(ZONE_INFO, "Hello %d\r\n", sig);
+                             }
+                         };
+
+    auto send2 = [&](int j)
+                 {
+                     waitForSignal(j, cv, cv_m, [&] {
+            testString += "@\r";
+        });
+                 };
+
+    auto send3 = [&](int j)
+                 {
+                     waitForSignal(j, cv, cv_m, [&] {
+            testString += "OK\r";
+        });
+                     auto ptr = std::dynamic_pointer_cast<app::ATCmd>(testee3);
+                     auto ret = ptr->send(send, std::chrono::milliseconds(1000));
+                     CHECK(ret == app::AT::Return_t::TRY_AGAIN);
+                     Trace(ZONE_INFO, "received: %s\r\n", recvString.c_str());
+                     CHECK(recvString.find("hello") != std::string::npos)
+                 };
+
+    auto send1 = [&](int j)
+                 {
+                     waitForSignal(j, cv, cv_m, [&] {
+            testString += "@\rERROR\rERROR\r";
+        });
+                     Trace(ZONE_INFO, "sending\r\n");
+                     auto ptr = std::dynamic_pointer_cast<app::ATCmdUSOWR>(testee6);
+                     auto ret = ptr->send(0, "hello", std::chrono::milliseconds(1000));
+                     CHECK(ret == app::AT::Return_t::ERROR);
+                     ret = ptr->send(0, "hello", std::chrono::milliseconds(2000));
+                     CHECK(ret == app::AT::Return_t::FINISHED);
+                 };
+
+    auto parse = [&](int j)
+                 {
+                     waitForSignal(j, cv, cv_m);
+                     for (auto i = 0; i < 2; i++) {
+                         parser.parse(std::chrono::milliseconds(1000));
+                     }
+                     Trace(ZONE_INFO, "parser END \r\n");
+                 };
+
+    auto signals = [&]
+                   {
+                       for (int i = 0; i < MAXSIGNALS; i++) {
+                           std::this_thread::sleep_for(std::chrono::milliseconds(200));
+                           {
+                               std::lock_guard<std::mutex> lk(cv_m);
+                               globalSignal = i;
+                           }
+                           cv.notify_all();
+                       }
+                   };
+
+    std::vector<std::thread> threads;
+    threads.emplace_back(send1, 1);
+    threads.emplace_back(parse, 0);
+    threads.emplace_back(send2, 2);
+    threads.emplace_back(send3, 3);
+    threads.emplace_back(signals);
+
+    for (auto& x : threads) {
+        x.join();
+    }
+
+    TestCaseEnd();
+}
+
+int ut_USOWR3Test(void)
+{
+    Trace(ZONE_INFO, "ut_USOWR3Test\r\n");
+
+    TestCaseBegin();
+
+    std::condition_variable cv;
+    std::mutex cv_m;
+    const int MAXSIGNALS = 5;
+    int globalSignal = 0;
+
+    static std::string testString = " ";
+    static std::string recvString(80, '\x00');
+    static auto pos_r = recvString.begin();
+
+    std::function<size_t(uint8_t*, const size_t, std::chrono::milliseconds)> recv =
+        [&](uint8_t* data, const size_t length, std::chrono::milliseconds timeout) -> size_t {
+            static size_t position = 0;
+            size_t i = 0;
+
+            if (testString.length() - position <= 0) {
+                Trace(ZONE_INFO, "recv Sleep;\r\n");
+                std::unique_lock<std::mutex> lk(cv_m);
+                cv.wait_for(lk, timeout, [&] {
+                return testString.length() - position > 0;
+            });
+            }
+
+            for ( ; i < length && position < testString.length(); i++) {
+                *data = testString[position++];
+            }
+            return i;
+        };
+
+    std::function<size_t(std::string_view, std::chrono::milliseconds)> send =
+        [&](std::string_view in, std::chrono::milliseconds) -> size_t {
+            size_t i = 0;
+            for ( ; i < in.length() && pos_r != recvString.end(); i++) {
+                *pos_r++ = in[i];
+            }
+            return i;
+        };
+
+    app::ATParser parser(recv);
+
+    auto testee1 = std::shared_ptr<app::ATCmdUSOST>(new app::ATCmdUSOST(send));
+    auto testee2 = std::shared_ptr<app::AT>(new app::ATCmd("CMD_2", "REQ2", "RESP2"));
+    auto testee3 = std::shared_ptr<app::AT>(new app::ATCmd("CMD_3", "REQ3", "REsp3"));
+    auto testee4 = std::shared_ptr<app::AT>(new app::ATCmdOK());
+    auto testee5 = std::shared_ptr<app::AT>(new app::ATCmdERROR());
+    auto testee6 = std::shared_ptr<app::ATCmdUSOWR>(new app::ATCmdUSOWR(send));
+
+    parser.registerAtCommand(std::dynamic_pointer_cast<app::AT>(testee1).get());
+    parser.registerAtCommand(std::dynamic_pointer_cast<app::AT>(testee6).get());
+    parser.registerAtCommand(testee2.get());
+    parser.registerAtCommand(testee3.get());
+    parser.registerAtCommand(testee4.get());
+    parser.registerAtCommand(testee5.get());
+
+    auto waitForSignal = [&globalSignal](const int sig, std::condition_variable& cv, std::mutex& m,
+                                         std::function<void()> doSomethingWithMutexLock = [] {}){
+                             Trace(ZONE_INFO, "Sleep %d\r\n", sig);
+                             {
+                                 std::unique_lock<std::mutex> lk(m);
+                                 auto eval = [&] {
+                                                 return sig == globalSignal;
+                                             };
+                                 cv.wait(lk, eval);
+                                 doSomethingWithMutexLock();
+                                 Trace(ZONE_INFO, "Hello %d\r\n", sig);
+                             }
+                         };
+
+    auto send2 = [&](int j)
+                 {
+                     waitForSignal(j, cv, cv_m, [&] {
+            testString += "@\r";
+        });
+                 };
+
+    auto send3 = [&](int j)
+                 {
+                     waitForSignal(j, cv, cv_m, [&] {
+            testString += "ERROR\r";
+        });
+                     auto ptr = std::dynamic_pointer_cast<app::ATCmd>(testee3);
+                     auto ret = ptr->send(send, std::chrono::milliseconds(1000));
+                     CHECK(ret == app::AT::Return_t::TRY_AGAIN);
+                     Trace(ZONE_INFO, "received: %s\r\n", recvString.c_str());
+                     CHECK(recvString.find("hello") != std::string::npos)
+                 };
+
+    auto send1 = [&](int j)
+                 {
+                     waitForSignal(j, cv, cv_m, [&] {
+            testString += "@\rERROR\rERROR\r";
+        });
+                     Trace(ZONE_INFO, "sending\r\n");
+                     auto ptr = std::dynamic_pointer_cast<app::ATCmdUSOWR>(testee6);
+                     auto ret = ptr->send(0, "hello", std::chrono::milliseconds(1000));
+                     CHECK(ret == app::AT::Return_t::ERROR);
+                     ret = ptr->send(0, "hello", std::chrono::milliseconds(2000));
+                     CHECK(ret == app::AT::Return_t::ERROR);
+                 };
+
+    auto parse = [&](int j)
+                 {
+                     waitForSignal(j, cv, cv_m);
+                     for (auto i = 0; i < 2; i++) {
+                         parser.parse(std::chrono::milliseconds(1000));
+                     }
+                     Trace(ZONE_INFO, "parser END \r\n");
+                 };
+
+    auto signals = [&]
+                   {
+                       for (int i = 0; i < MAXSIGNALS; i++) {
+                           std::this_thread::sleep_for(std::chrono::milliseconds(200));
+                           {
+                               std::lock_guard<std::mutex> lk(cv_m);
+                               globalSignal = i;
+                           }
+                           cv.notify_all();
+                       }
+                   };
+
+    std::vector<std::thread> threads;
+    threads.emplace_back(send1, 1);
+    threads.emplace_back(parse, 0);
+    threads.emplace_back(send2, 2);
+    threads.emplace_back(send3, 3);
+    threads.emplace_back(signals);
+
+    for (auto& x : threads) {
+        x.join();
+    }
+
+    TestCaseEnd();
+}
 
 int ut_USOST2Test(void)
 {
+    Trace(ZONE_INFO, "ut_USOST2Test\r\n");
+
     TestCaseBegin();
 
     std::condition_variable cv;
@@ -644,6 +1054,8 @@ int ut_USOST2Test(void)
 
 int ut_TimeoutTest(void)
 {
+    Trace(ZONE_INFO, "ut_TimeoutTest\r\n");
+
     TestCaseBegin();
 
     std::condition_variable cv;
@@ -791,6 +1203,9 @@ int main(int argc, const char* argv[])
     RunTest(true, ut_ATParserURCTest);
     RunTest(true, ut_USOSTTest);
     RunTest(true, ut_USOST2Test);
+    RunTest(true, ut_USOWR1Test);
+    RunTest(true, ut_USOWR2Test);
+    RunTest(true, ut_USOWR3Test);
     RunTest(true, ut_TimeoutTest);
 
     UnitTestMainEnd();
