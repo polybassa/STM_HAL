@@ -89,7 +89,7 @@ void Socket::checkAndSendData(void)
     if ((os::Task::getTickCount() - mTimeOfLastSend >= KEEP_ALIVE_PAUSE.count()) &&
         (os::Task::getTickCount() - mTimeOfLastReceive >= KEEP_ALIVE_PAUSE.count()))
     {
-        send(KEEP_ALIVE_MSG, std::chrono::milliseconds(100).count());
+        this->send(KEEP_ALIVE_MSG, std::chrono::milliseconds(100).count());
     }
 }
 
