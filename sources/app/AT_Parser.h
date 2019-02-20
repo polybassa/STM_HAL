@@ -292,8 +292,7 @@ struct ATParser final {
     static bool isValueTermination(const char c);
     static bool isLineTermination(const char c);
 
-    ATParser(const AT::ReceiveFunction& receive) :
-        mReceive(receive), mWaitingCmd(nullptr), mWaitingCmdMutex() {}
+    ATParser(const AT::ReceiveFunction& receive);
 
     void reset(void);
     void triggerMatch(AT* match);
