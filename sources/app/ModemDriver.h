@@ -21,7 +21,7 @@ namespace app
 {
 class ModemDriver final
 {
-    static constexpr size_t STACKSIZE = 3056;
+    static constexpr size_t STACKSIZE = 2048;
     static constexpr size_t BUFFERSIZE = 1024;
     static constexpr size_t ERROR_THRESHOLD = 20;
     static os::StreamBuffer<char, BUFFERSIZE> InputBuffer;
