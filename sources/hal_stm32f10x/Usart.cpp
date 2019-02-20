@@ -53,6 +53,10 @@ void UART5_IRQHandler(void)
 
 void Usart::USART_IRQHandler(const Usart& peripherie)
 {
+    if (USART_GetITStatus(reinterpret_cast<USART_TypeDef*>(peripherie.mPeripherie), USART_IT_ORE)) {
+        Trace(ZONE_ERROR, "Overrun ERROR\r\n");
+    }
+
     if (USART_GetITStatus(reinterpret_cast<USART_TypeDef*>(peripherie.mPeripherie), USART_IT_RXNE)) {
         if (Usart::ReceiveInterruptCallbacks[peripherie.mDescription]) {
             uint8_t databyte =
