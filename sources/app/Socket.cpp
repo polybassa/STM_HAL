@@ -113,8 +113,8 @@ size_t Socket::loadTemporaryBuffer(void)
     Trace(ZONE_VERBOSE, "Send %d \r\n", bytes);
 
     const size_t receivedLength = mSendBuffer.receive(mTemporaryBuffer.data(),
-                                                      mTemporaryBuffer.size(),
-                                                      std::chrono::seconds(1));
+                                                      bytes,
+                                                      std::chrono::milliseconds(10));
 
     if (receivedLength != bytes) {
         Trace(ZONE_ERROR, "Internal buffer didn't contain exact amount of bytes\r\n");
@@ -183,9 +183,10 @@ void TcpSocket::sendData(void)
     {
         Trace(ZONE_ERROR, "send_data_failed\r\n");
         mHandleError();
+    } else {
+        mTimeOfLastSend = os::Task::getTickCount();
+        mATCmdUSORD.send(mSocket, 0, std::chrono::milliseconds(1000));
     }
-    mTimeOfLastSend = os::Task::getTickCount();
-    mATCmdUSORD.send(mSocket, 0, std::chrono::milliseconds(1000));
 }
 
 void TcpSocket::receiveData(size_t bytes)
