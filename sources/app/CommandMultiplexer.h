@@ -8,19 +8,14 @@
 #include <string_view>
 #include <memory>
 #include "TaskInterruptable.h"
-#include "DeepSleepInterface.h"
 #include "Socket.h"
 #include "CanController.h"
 #include "DemoExecuter.h"
 
 namespace app
 {
-class CommandMultiplexer final :
-    private os::DeepSleepModule
+class CommandMultiplexer final
 {
-    virtual void enterDeepSleep(void) override;
-    virtual void exitDeepSleep(void) override;
-
     static constexpr uint32_t STACKSIZE = 1024;
     static constexpr size_t MAXCOMMANDSIZE = 64;
     std::array<char, MAXCOMMANDSIZE> mCommandBuffer;

@@ -27,7 +27,6 @@ ModemDriver::ModemDriver(const hal::UsartWithDma& interface,
                          const hal::Gpio&         resetPin,
                          const hal::Gpio&         powerPin,
                          const hal::Gpio&         supplyPin) :
-    os::DeepSleepModule(),
     mModemTxTask("ModemTxTask",
                  ModemDriver::STACKSIZE,
                  os::Task::Priority::HIGH,
@@ -89,17 +88,9 @@ ModemDriver::ModemDriver(const hal::UsartWithDma& interface,
     mParser.registerAtCommand(&mATUUSOCL);
 }
 
-void ModemDriver::enterDeepSleep(void)
+ModemDriver::~ModemDriver(void)
 {
-    modemOff();
-    mModemTxTask.join();
-    mParserTask.join();
-}
-
-void ModemDriver::exitDeepSleep(void)
-{
-    mParserTask.start();
-    mModemTxTask.start();
+    Trace(ZONE_ERROR, "Destructor shouldn't be called");
 }
 
 void ModemDriver::modemTxTaskFunction(const bool& join)

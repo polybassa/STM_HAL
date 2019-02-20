@@ -10,7 +10,6 @@
 #include <array>
 #include <memory>
 #include "TaskInterruptable.h"
-#include "DeepSleepInterface.h"
 #include "os_StreamBuffer.h"
 #include "os_Queue.h"
 #include "UsartWithDma.h"
@@ -20,12 +19,8 @@
 
 namespace app
 {
-class ModemDriver final :
-    private os::DeepSleepModule
+class ModemDriver final
 {
-    virtual void enterDeepSleep(void) override;
-    virtual void exitDeepSleep(void) override;
-
     static constexpr size_t STACKSIZE = 3056;
     static constexpr size_t BUFFERSIZE = 1024;
     static constexpr size_t ERROR_THRESHOLD = 20;
@@ -76,6 +71,7 @@ public:
     ModemDriver(ModemDriver&&) = delete;
     ModemDriver& operator=(const ModemDriver&) = delete;
     ModemDriver& operator=(ModemDriver&&) = delete;
+    ~ModemDriver(void);
 
     static void ModemDriverInterruptHandler(uint8_t);
 

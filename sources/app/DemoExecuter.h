@@ -7,19 +7,14 @@
 
 #include "CanController.h"
 #include "TaskInterruptable.h"
-#include "DeepSleepInterface.h"
 #include "os_Queue.h"
 #include <array>
 #include <string_view>
 
 namespace app
 {
-class DemoExecuter final :
-    private os::DeepSleepModule
+class DemoExecuter final
 {
-    virtual void enterDeepSleep(void) override;
-    virtual void exitDeepSleep(void) override;
-
     static constexpr uint32_t STACKSIZE = 1024;
 
     os::TaskInterruptable mDemoExecuterTask;

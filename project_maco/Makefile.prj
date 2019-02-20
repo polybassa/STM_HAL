@@ -1,11 +1,11 @@
 ifeq ($(MAKECMDGOALS),debug_firmware)
-#DEFINES+=-DDEBUG
+DEFINES+=-DDEBUG
 DEFINES+=-DRTT_USE_ASM
 DEFINES+=-D__SES_ARM
-DEFINES+=-DSYSVIEW
+#DEFINES+=-DSYSVIEW
 #DEFINES+=-DUSART_DEBUG
 DEFINES+=-g
-DEFINES+=-O2
+DEFINES+=-O0
 DEFINES+=-DUSE_FULL_ASSERT
 #LDFLAGS+=-u _printf_float
 endif
@@ -84,7 +84,6 @@ ${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/DebugInterface.o
 
 # OS Layer
 ${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/CountingSemaphore.o
-${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/DeepSleepInterface.o
 ${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/Mutex.o
 ${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/RecursiveMutex.o
 ${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/Semaphore.o

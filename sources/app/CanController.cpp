@@ -25,7 +25,6 @@ void CanController::CanControllerInterruptHandler(uint8_t data)
 CanController::CanController(const hal::UsartWithDma& interface,
                              const hal::Gpio&         supplyPin,
                              const hal::Gpio&         usartTxPin) :
-    os::DeepSleepModule(),
     mTask("CanTask",
           CanController::STACKSIZE,
           os::Task::Priority::HIGH,
@@ -40,27 +39,20 @@ CanController::CanController(const hal::UsartWithDma& interface,
     mInterface.mUsart.enableNonBlockingReceive(CanControllerInterruptHandler);
 }
 
-void CanController::enterDeepSleep(void)
+CanController::~CanController(void)
 {
-    off();
-    mTask.join();
-}
-
-void CanController::exitDeepSleep(void)
-{
-    mTask.start();
-    on();
+    Trace(ZONE_ERROR, "Destructor shouldn't be called");
 }
 
 void CanController::taskFunction(const bool& join)
 {
     do {
         if (mReceiveCallback) {
-            if (ReceiveBuffer.bytesAvailable()) {
-                const size_t length = ReceiveBuffer.receive(
-                                                            mTempReceiveCallbackBuffer.data(),
-                                                            mTempReceiveCallbackBuffer.size(),
-                                                            std::chrono::milliseconds(100));
+            const size_t length = ReceiveBuffer.receive(
+                                                        mTempReceiveCallbackBuffer.data(),
+                                                        mTempReceiveCallbackBuffer.size(),
+                                                        std::chrono::milliseconds(100));
+            if (length > 0) {
                 mReceiveCallback(std::string_view(mTempReceiveCallbackBuffer.data(), length));
                 continue;
             }
