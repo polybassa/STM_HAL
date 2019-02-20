@@ -59,9 +59,9 @@ AT::Return_t ATCmd::send(AT::SendFunction& sendFunction, const std::chrono::mill
         Trace(ZONE_VERBOSE, "waiting\r\n");
     }
     bool commandSuccess = false;
-    if (mSendResult.receive(commandSuccess, timeout) && commandSuccess) {
-        Trace(ZONE_VERBOSE, "done\r\n");
-        return Return_t::FINISHED;
+    if (mSendResult.receive(commandSuccess, timeout)) {
+        Trace(ZONE_VERBOSE, "done %d\r\n", commandSuccess);
+        return commandSuccess ? Return_t::FINISHED : Return_t::ERROR;
     }
     {
         os::LockGuard<os::Mutex> lock(mParser->mWaitingCmdMutex);
