@@ -85,6 +85,8 @@
 /* Ensure stdint is only used by the compiler, and not the assembler. */
 #include <stdint.h>
 #include "SEGGER_SYSVIEW_FreeRTOS.h"
+#include "SEGGER_RTT.h"
+
 extern uint32_t SystemCoreClock;
 
 #define configUSE_PREEMPTION 1
@@ -167,5 +169,9 @@ extern uint32_t SystemCoreClock;
 #define vPortSVCHandler SVC_Handler
 #define xPortPendSVHandler PendSV_Handler
 #define xPortSysTickHandler SysTick_Handler
+#ifdef DEBUG
+#define traceFREE(p, ...) SEGGER_RTT_printf(0, "free   0x%08x\r\n", p)
+#define traceMALLOC(p, s) SEGGER_RTT_printf(0, "malloc 0x%08x  %03d\r\n", p, s)
+#endif
 
 #endif /* FREERTOS_CONFIG_H */
