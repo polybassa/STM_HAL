@@ -11,13 +11,13 @@ Mutex::Mutex(void) :
     mMutexHandle(xSemaphoreCreateMutex())
 {}
 
-Mutex::Mutex(Mutex && rhs) :
+Mutex::Mutex(Mutex&& rhs) :
     mMutexHandle(rhs.mMutexHandle)
 {
     rhs.mMutexHandle = nullptr;
 }
 
-Mutex& Mutex::operator=(Mutex && rhs)
+Mutex& Mutex::operator=(Mutex&& rhs)
 {
     mMutexHandle = rhs.mMutexHandle;
     rhs.mMutexHandle = nullptr;
