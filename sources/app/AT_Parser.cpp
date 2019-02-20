@@ -613,6 +613,7 @@ ATParser::ATParser(const AT::ReceiveFunction& receive) :
 void ATParser::reset(void)
 {
     if (mWaitingCmd) {
+        os::LockGuard<os::Mutex> lock(mWaitingCmdMutex);
         Trace(ZONE_INFO, "Toogle Error on waiting cmd\r\n");
         mWaitingCmd->errorReceived();
         mWaitingCmd = nullptr;
@@ -669,6 +670,7 @@ bool ATParser::parse(std::chrono::milliseconds timeout)
                 Trace(ZONE_INFO, "Waiting MATCH: %s\n", mWaitingCmd->mName.data());
                 triggerMatch(mWaitingCmd);
                 resetPossibleResponses();
+                continue;
             }
 
             size_t stillMatchingCount = 0;
