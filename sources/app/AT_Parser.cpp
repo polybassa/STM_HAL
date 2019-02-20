@@ -123,6 +123,10 @@ AT::Return_t ATCmdUSOST::send(const size_t                    socket,
                                         ip.data(),
                                         port.data(),
                                         data.length());
+    if (reqLen >= mRequestBuffer.size()) {
+        Trace(ZONE_ERROR, "snprintf failed\r\n");
+        return AT::Return_t::ERROR;
+    }
 
     mRequest = std::string_view(mRequestBuffer.data(), reqLen);
 
@@ -146,6 +150,10 @@ AT::Return_t ATCmdUSOWR::send(const size_t                    socket,
                                         "AT+USOWR=%d,%d\r",
                                         socket,
                                         data.length());
+    if (reqLen >= mRequestBuffer.size()) {
+        Trace(ZONE_ERROR, "snprintf failed\r\n");
+        return AT::Return_t::ERROR;
+    }
 
     mRequest = std::string_view(mRequestBuffer.data(), reqLen);
 
@@ -196,6 +204,11 @@ AT::Return_t ATCmdUSORF::send(const size_t                    socket,
                                         mRequestBuffer.size(),
                                         "AT+USORF=%d,%d\r",
                                         socket, bytesToRead);
+
+    if (reqLen >= mRequestBuffer.size()) {
+        Trace(ZONE_ERROR, "snprintf failed\r\n");
+        return AT::Return_t::ERROR;
+    }
 
     mRequest = std::string_view(mRequestBuffer.data(), reqLen);
     return ATCmd::send(mSendFunction, timeout);
@@ -274,6 +287,10 @@ AT::Return_t ATCmdUSORD::send(const size_t socket, size_t bytesToRead, const std
                                         mRequestBuffer.size(),
                                         "AT+USORD=%d,%d\r",
                                         socket, bytesToRead);
+    if (reqLen >= mRequestBuffer.size()) {
+        Trace(ZONE_ERROR, "snprintf failed\r\n");
+        return AT::Return_t::ERROR;
+    }
 
     mRequest = std::string_view(mRequestBuffer.data(), reqLen);
     return ATCmd::send(mSendFunction, timeout);
@@ -330,6 +347,10 @@ AT::Return_t ATCmdUPSND::send(const size_t socket, const size_t parameter, const
                                         mRequestBuffer.size(),
                                         "AT+UPSND=%d,%d\r",
                                         socket, parameter);
+    if (reqLen >= mRequestBuffer.size()) {
+        Trace(ZONE_ERROR, "snprintf failed\r\n");
+        return AT::Return_t::ERROR;
+    }
 
     mRequest = std::string_view(mRequestBuffer.data(), reqLen);
     return ATCmd::send(mSendFunction, timeout);
@@ -377,6 +398,10 @@ AT::Return_t ATCmdUSOCR::send(const size_t protocol, const std::chrono::millisec
                                         mRequestBuffer.size(),
                                         "AT+USOCR=%d\r",
                                         protocol);
+    if (reqLen >= mRequestBuffer.size()) {
+        Trace(ZONE_ERROR, "snprintf failed\r\n");
+        return AT::Return_t::ERROR;
+    }
 
     mRequest = std::string_view(mRequestBuffer.data(), reqLen);
     return ATCmd::send(mSendFunction, timeout);
@@ -404,6 +429,10 @@ AT::Return_t ATCmdUSOCO::send(const size_t                    socket,
                                         socket,
                                         ip.data(),
                                         port.data());
+    if (reqLen >= mRequestBuffer.size()) {
+        Trace(ZONE_ERROR, "snprintf failed\r\n");
+        return AT::Return_t::ERROR;
+    }
 
     mRequest = std::string_view(mRequestBuffer.data(), reqLen);
 
@@ -426,6 +455,10 @@ AT::Return_t ATCmdUSOSO::send(const size_t                    socket,
                                         level,
                                         optName,
                                         optVal);
+    if (reqLen >= mRequestBuffer.size()) {
+        Trace(ZONE_ERROR, "snprintf failed\r\n");
+        return AT::Return_t::ERROR;
+    }
 
     mRequest = std::string_view(mRequestBuffer.data(), reqLen);
 
@@ -460,6 +493,10 @@ AT::Return_t ATCmdUSOCTL::send(const size_t                    socket,
                                         socket,
                                         paramId
                                         );
+    if (reqLen >= mRequestBuffer.size()) {
+        Trace(ZONE_ERROR, "snprintf failed\r\n");
+        return AT::Return_t::ERROR;
+    }
 
     mRequest = std::string_view(mRequestBuffer.data(), reqLen);
 
