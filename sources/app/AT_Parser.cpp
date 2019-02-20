@@ -93,6 +93,8 @@ AT::Return_t ATCmd::onResponseMatch(void)
 
 AT::Return_t ATCmdTX::onResponseMatch(void)
 {
+    Trace(ZONE_INFO, "Sleep for the Modem \r\n");
+    os::ThisTask::sleep(std::chrono::milliseconds(50));
     if (mSendFunction(mData, ATParser::defaultTimeout) != mData.length()) {
         Trace(ZONE_ERROR, "Couldn't send data\n");
         return Return_t::ERROR;
