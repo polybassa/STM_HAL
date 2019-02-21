@@ -201,15 +201,12 @@ void ModemDriver::modemReset(void)
     mErrorCount = 0;
     os::ThisTask::sleep(std::chrono::milliseconds(2000));
     modemOn();
-    os::ThisTask::sleep(std::chrono::milliseconds(2000));
+    os::ThisTask::sleep(std::chrono::milliseconds(1000));
 }
 
 void ModemDriver::handleError(const char* str)
 {
     Trace(ZONE_ERROR, "Error %s\r\n", str);
-    if (mErrorCount >= ERROR_THRESHOLD) {
-        mErrorCount = 0;
-    }
     mErrorCount++;
 }
 
@@ -224,21 +221,21 @@ app::Socket* ModemDriver::getSocket(app::Socket::Protocol protocol,
     app::Socket* sock = nullptr;
     if (protocol == Socket::Protocol::TCP) {
         sock = new TcpSocket(mParser, mSend, ip, port,
-                             mUrcCallbackReceive, [] {
-            Trace(ZONE_ERROR, "Error 1\r\n");
+                             mUrcCallbackReceive, [&] {
+            handleError("1");
         });
     }
 
     if (protocol == Socket::Protocol::UDP) {
         sock = new UdpSocket(mParser, mSend, ip, port,
-                             mUrcCallbackReceive, [] {
-            Trace(ZONE_ERROR, "Error 2\r\n");
+                             mUrcCallbackReceive, [&] {
+            handleError("2");
         });
     }
 
     if (protocol == Socket::Protocol::DNS) {
         sock = new DnsSocket(mParser, mSend, mUrcCallbackReceive, [&] {
-            Trace(ZONE_ERROR, "Error 3\r\n");
+            handleError("3");
         });
     }
     if (sock) {
