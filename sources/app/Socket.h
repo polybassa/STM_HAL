@@ -53,7 +53,7 @@ protected:
     bool isOpen = false;
     bool isCreated = false;
 
-    const std::function<void(void)>& mHandleError;
+    const std::function<void(void)> mHandleError;
 
 public:
     enum class Protocol { UDP, TCP, DNS };
