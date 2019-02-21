@@ -12,10 +12,10 @@ using app::Socket;
 
 static const int __attribute__((used)) g_DebugZones = 0; // ZONE_ERROR | ZONE_WARNING | ZONE_VERBOSE | ZONE_INFO;
 
-CommandMultiplexer::CommandMultiplexer(std::shared_ptr<Socket> control,
-                                       std::shared_ptr<Socket> data,
-                                       CanController&          can,
-                                       DemoExecuter&           demo) :
+CommandMultiplexer::CommandMultiplexer(Socket*        control,
+                                       Socket*        data,
+                                       CanController& can,
+                                       DemoExecuter&  demo) :
     mCommandMultiplexerTask("CommandMultiplexer",
                             CommandMultiplexer::STACKSIZE, os::Task::Priority::MEDIUM,
                             [&](const bool& join)

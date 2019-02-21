@@ -8,7 +8,6 @@
 #include <string>
 #include <string_view>
 #include <array>
-#include <memory>
 #include "TaskInterruptable.h"
 #include "os_StreamBuffer.h"
 #include "os_Queue.h"
@@ -24,9 +23,10 @@ class ModemDriver final
     static constexpr size_t STACKSIZE = 2048;
     static constexpr size_t BUFFERSIZE = 1024;
     static constexpr size_t ERROR_THRESHOLD = 20;
+    static constexpr const size_t MAXNUMOFSOCKETS = 5;
     static os::StreamBuffer<char, BUFFERSIZE> InputBuffer;
 
-    std::vector<std::shared_ptr<Socket> > mSockets;
+    std::array<Socket*, MAXNUMOFSOCKETS> mSockets;
 
     os::TaskInterruptable mModemTxTask;
     os::TaskInterruptable mParserTask;
@@ -50,6 +50,7 @@ class ModemDriver final
     app::ATCmdURC mATUUSOCL;
 
     size_t mErrorCount = 0;
+    size_t mNumOfSockets = 0;
 
     void modemTxTaskFunction(const bool&);
     void parserTaskFunction(const bool&);
@@ -75,7 +76,7 @@ public:
 
     static void ModemDriverInterruptHandler(uint8_t);
 
-    std::shared_ptr<Socket> getSocket(Socket::Protocol,
-                                      std::string_view ip, std::string_view port);
+    Socket* getSocket(Socket::Protocol,
+                      std::string_view ip, std::string_view port);
 };
 }

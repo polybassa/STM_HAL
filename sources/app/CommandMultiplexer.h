@@ -6,7 +6,6 @@
 #pragma once
 
 #include <string_view>
-#include <memory>
 #include "TaskInterruptable.h"
 #include "Socket.h"
 #include "CanController.h"
@@ -33,8 +32,8 @@ class CommandMultiplexer final
     };
 
     os::TaskInterruptable mCommandMultiplexerTask;
-    std::shared_ptr<Socket> mCtrlSock;
-    std::shared_ptr<Socket> mDataSock;
+    Socket* mCtrlSock;
+    Socket* mDataSock;
     CanController& mCan;
     DemoExecuter& mDemo;
     bool mCanRxEnabled = false;
@@ -48,10 +47,10 @@ class CommandMultiplexer final
     void showHelp(void) const;
 
 public:
-    CommandMultiplexer(std::shared_ptr<Socket> control,
-                       std::shared_ptr<Socket> data,
-                       CanController&          can,
-                       DemoExecuter&           demo);
+    CommandMultiplexer(Socket*        control,
+                       Socket*        data,
+                       CanController& can,
+                       DemoExecuter&  demo);
 
     CommandMultiplexer(const CommandMultiplexer&) = delete;
     CommandMultiplexer(CommandMultiplexer&&) = delete;

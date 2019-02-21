@@ -51,7 +51,8 @@ ModemDriver::ModemDriver(const hal::UsartWithDma& interface,
 }),
     mParser(mRecv),
     mUrcCallbackReceive([&](const size_t socket, const size_t bytes){
-    for (auto& sock: mSockets) {
+    for (size_t i = 0; i < mNumOfSockets; i++) {
+        auto sock = mSockets[i];
         if (sock->mSocket == socket) {
             if (bytes) {
                 Trace(ZONE_INFO, "S%d: %d bytes available\r\n", socket, bytes);
@@ -64,7 +65,8 @@ ModemDriver::ModemDriver(const hal::UsartWithDma& interface,
 }),
     mUrcCallbackClose([&](const size_t socket, const size_t bytes){
     Trace(ZONE_INFO, "Socket %d closed\r\n", socket);
-    for (auto& sock: mSockets) {
+    for (size_t i = 0; i < mNumOfSockets; i++) {
+        auto sock = mSockets[i];
         if (sock->mSocket == socket) {
             sock->isOpen = false;
             sock->isCreated = false;
@@ -107,7 +109,8 @@ void ModemDriver::modemTxTaskFunction(const bool& join)
         }
 
         while (mErrorCount < ERROR_THRESHOLD) {
-            for (auto& sock : mSockets) {
+            for (size_t i = 0; i < mNumOfSockets; i++) {
+                auto sock = mSockets[i];
                 if (!sock->isCreated) {
                     out = true;
                     sock->create();
@@ -180,7 +183,8 @@ void ModemDriver::modemReset(void)
     Trace(ZONE_INFO, "Modem Reset\r\n");
     modemOff();
     InputBuffer.reset();
-    for (auto& sock : mSockets) {
+    for (size_t i = 0; i < mNumOfSockets; i++) {
+        auto sock = mSockets[i];
         sock->reset();
     }
     mErrorCount = 0;
@@ -198,31 +202,36 @@ void ModemDriver::handleError(const char* str)
     mErrorCount++;
 }
 
-std::shared_ptr<app::Socket> ModemDriver::getSocket(app::Socket::Protocol protocol,
-                                                    std::string_view ip, std::string_view port)
+app::Socket* ModemDriver::getSocket(app::Socket::Protocol protocol,
+                                    std::string_view ip, std::string_view port)
 {
-    std::shared_ptr<app::Socket> sock;
+    if (mNumOfSockets > MAXNUMOFSOCKETS) {
+        Trace(ZONE_ERROR, "Maximum number of sockets reached\r\n");
+        return nullptr;
+    }
+
+    app::Socket* sock = nullptr;
     if (protocol == Socket::Protocol::TCP) {
-        sock = std::make_shared<TcpSocket>(mParser, mSend, ip, port,
-                                           mUrcCallbackReceive, [&] {
-            handleError("1");
+        sock = new TcpSocket(mParser, mSend, ip, port,
+                             mUrcCallbackReceive, [] {
+            Trace(ZONE_ERROR, "Error 1\r\n");
         });
     }
 
     if (protocol == Socket::Protocol::UDP) {
-        sock = std::make_shared<UdpSocket>(mParser, mSend, ip, port,
-                                           mUrcCallbackReceive, [&] {
-            handleError("2");
+        sock = new UdpSocket(mParser, mSend, ip, port,
+                             mUrcCallbackReceive, [] {
+            Trace(ZONE_ERROR, "Error 2\r\n");
         });
     }
 
     if (protocol == Socket::Protocol::DNS) {
-        sock = std::make_shared<DnsSocket>(mParser, mSend, mUrcCallbackReceive, [&] {
-            handleError("3");
+        sock = new DnsSocket(mParser, mSend, mUrcCallbackReceive, [&] {
+            Trace(ZONE_ERROR, "Error 3\r\n");
         });
     }
     if (sock) {
-        mSockets.push_back(sock);
+        mSockets[mNumOfSockets++] = sock;
     }
     return sock;
 }
