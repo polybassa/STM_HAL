@@ -53,17 +53,14 @@ protected:
     bool isOpen = false;
     bool isCreated = false;
 
-    const std::function<void(void)>& mHandleError;
-
 public:
     enum class Protocol { UDP, TCP, DNS };
 
     Socket(const Protocol,
-           ATParser&                        parser,
-           AT::SendFunction&                send,
-           const std::string_view           ip,
-           const std::string_view           port,
-           const std::function<void(void)>& errorCallback);
+           ATParser&              parser,
+           AT::SendFunction&      send,
+           const std::string_view ip,
+           const std::string_view port);
 
     Socket(const Socket&) = delete;
     Socket(Socket&&) = delete;
@@ -105,8 +102,7 @@ public:
               AT::SendFunction& send,
               const std::string_view ip,
               const std::string_view port,
-              const std::function<void(size_t, size_t)>& callback,
-              const std::function<void(void)>& errorCallback);
+              const std::function<void(size_t, size_t)>& callback);
 
     TcpSocket(const TcpSocket&) = delete;
     TcpSocket(TcpSocket&&) = delete;
@@ -136,8 +132,7 @@ public:
               AT::SendFunction& send,
               std::string_view ip,
               std::string_view port,
-              const std::function<void(size_t, size_t)>& callback,
-              const std::function<void(void)>& errorCallback);
+              const std::function<void(size_t, size_t)>& callback);
 
     UdpSocket(const UdpSocket&) = delete;
     UdpSocket(UdpSocket&&) = delete;
@@ -164,8 +159,7 @@ class DnsSocket :
 public:
     DnsSocket(ATParser& parser,
               AT::SendFunction& send,
-              const std::function<void(size_t, size_t)>& callback,
-              const std::function<void(void)>& errorCallback);
+              const std::function<void(size_t, size_t)>& callback);
 
     DnsSocket(const DnsSocket&) = delete;
     DnsSocket(DnsSocket&&) = delete;
