@@ -19,6 +19,10 @@ void ModemDriver::ModemDriverInterruptHandler(uint8_t data)
     //TODO: Remove this debug lines
     USART1->DR = (data & (uint16_t)0x01FF);
 #endif
+    if (InputBuffer.isFull()) {
+        Trace(ZONE_ERROR, "ModemBuffer full. \r\n");
+        return;
+    }
     InputBuffer.sendFromISR(data);
 }
 

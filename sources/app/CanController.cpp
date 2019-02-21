@@ -19,6 +19,9 @@ extern "C" char _binary_end;
 
 void CanController::CanControllerInterruptHandler(uint8_t data)
 {
+    if (ReceiveBuffer.isFull()) {
+        return;
+    }
     ReceiveBuffer.sendFromISR(data);
 }
 
