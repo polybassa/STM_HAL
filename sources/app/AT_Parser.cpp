@@ -7,6 +7,7 @@
 #include "trace.h"
 #include "binascii.h"
 #include "LockGuard.h"
+#include "os_Task.h"
 #include <cstring>
 
 using app::AT;

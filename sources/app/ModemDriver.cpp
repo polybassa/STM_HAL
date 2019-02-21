@@ -5,7 +5,6 @@
 
 #include "ModemDriver.h"
 #include "trace.h"
-#include <memory>
 
 using app::ModemDriver;
 

@@ -7,6 +7,7 @@
 
 #include "FreeRTOS.h"
 #include "queue.h"
+#include "os_Task.h"
 #include <chrono>
 
 namespace os
