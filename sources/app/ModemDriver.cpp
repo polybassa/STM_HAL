@@ -148,7 +148,7 @@ void ModemDriver::modemTxTaskFunction(const bool& join)
 void ModemDriver::parserTaskFunction(const bool& join)
 {
     do {
-        auto x = mParser.parse(std::chrono::milliseconds(35000));
+        auto x = mParser.parse(std::chrono::milliseconds(45000));
         Trace(ZONE_INFO, "Parser terminated with %d\r\n", x);
     } while (!join);
 }
@@ -180,11 +180,12 @@ bool ModemDriver::modemStartup(void)
 void ModemDriver::modemOn(void) const
 {
     mModemSupplyVoltage = true;
+    mModemReset = false;
 }
 
 void ModemDriver::modemOff(void) const
 {
-    mModemReset = false;
+    mModemReset = true;
     mModemPower = false;
     mModemSupplyVoltage = false;
 }
@@ -199,9 +200,9 @@ void ModemDriver::modemReset(void)
         sock->reset();
     }
     mErrorCount = 0;
-    os::ThisTask::sleep(std::chrono::milliseconds(2000));
+    os::ThisTask::sleep(std::chrono::milliseconds(500));
     modemOn();
-    os::ThisTask::sleep(std::chrono::milliseconds(1000));
+    os::ThisTask::sleep(std::chrono::milliseconds(2000));
 }
 
 void ModemDriver::handleError(const char* str)
