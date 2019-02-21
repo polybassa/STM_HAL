@@ -8,9 +8,7 @@
 #include <string>
 #include <string_view>
 #include <array>
-#include <memory>
 #include "TaskInterruptable.h"
-#include "DeepSleepInterface.h"
 #include "os_StreamBuffer.h"
 #include "os_Queue.h"
 #include "UsartWithDma.h"
@@ -20,18 +18,15 @@
 
 namespace app
 {
-class ModemDriver final :
-    private os::DeepSleepModule
+class ModemDriver final
 {
-    virtual void enterDeepSleep(void) override;
-    virtual void exitDeepSleep(void) override;
-
     static constexpr size_t STACKSIZE = 2048;
     static constexpr size_t BUFFERSIZE = 1024;
     static constexpr size_t ERROR_THRESHOLD = 20;
+    static constexpr const size_t MAXNUMOFSOCKETS = 5;
     static os::StreamBuffer<char, BUFFERSIZE> InputBuffer;
 
-    std::vector<std::shared_ptr<Socket> > mSockets;
+    std::array<Socket*, MAXNUMOFSOCKETS> mSockets;
 
     os::TaskInterruptable mModemTxTask;
     os::TaskInterruptable mParserTask;
@@ -53,8 +48,10 @@ class ModemDriver final :
     app::ATCmdURC mATUUSORD;
     app::ATCmdURC mATUUPSDD;
     app::ATCmdURC mATUUSOCL;
+    app::ATCmdCGATT mATCGATT;
 
     size_t mErrorCount = 0;
+    size_t mNumOfSockets = 0;
 
     void modemTxTaskFunction(const bool&);
     void parserTaskFunction(const bool&);
@@ -64,7 +61,7 @@ class ModemDriver final :
     void modemReset(void);
     bool modemStartup(void);
 
-    void handleError(void);
+    void handleError(const char* str = "");
 
 public:
     ModemDriver(const hal::UsartWithDma& interface,
@@ -76,10 +73,11 @@ public:
     ModemDriver(ModemDriver&&) = delete;
     ModemDriver& operator=(const ModemDriver&) = delete;
     ModemDriver& operator=(ModemDriver&&) = delete;
+    ~ModemDriver(void);
 
     static void ModemDriverInterruptHandler(uint8_t);
 
-    std::shared_ptr<Socket> getSocket(Socket::Protocol,
-                                      std::string_view ip, std::string_view port);
+    Socket* getSocket(Socket::Protocol,
+                      std::string_view ip, std::string_view port);
 };
 }

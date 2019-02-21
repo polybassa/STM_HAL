@@ -6,7 +6,6 @@
 #pragma once
 
 #include "TaskInterruptable.h"
-#include "DeepSleepInterface.h"
 #include "os_StreamBuffer.h"
 #include "UsartWithDma.h"
 #include "Gpio.h"
@@ -17,12 +16,8 @@ namespace app
 {
 class CanTunnel;
 
-class CanController final :
-    private os::DeepSleepModule
+class CanController final
 {
-    virtual void enterDeepSleep(void) override;
-    virtual void exitDeepSleep(void) override;
-
     static constexpr size_t STACKSIZE = 1024;
     static constexpr size_t BUFFERSIZE = 2048;
     static constexpr size_t MAXCHUNKSIZE = 256;
@@ -62,6 +57,7 @@ public:
     CanController(CanController&&) = delete;
     CanController& operator=(const CanController&) = delete;
     CanController& operator=(CanController&&) = delete;
+    ~CanController(void);
 
     static void CanControllerInterruptHandler(uint8_t);
 

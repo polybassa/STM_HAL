@@ -6,21 +6,15 @@
 #pragma once
 
 #include <string_view>
-#include <memory>
 #include "TaskInterruptable.h"
-#include "DeepSleepInterface.h"
 #include "Socket.h"
 #include "CanController.h"
 #include "DemoExecuter.h"
 
 namespace app
 {
-class CommandMultiplexer final :
-    private os::DeepSleepModule
+class CommandMultiplexer final
 {
-    virtual void enterDeepSleep(void) override;
-    virtual void exitDeepSleep(void) override;
-
     static constexpr uint32_t STACKSIZE = 1024;
     static constexpr size_t MAXCOMMANDSIZE = 64;
     std::array<char, MAXCOMMANDSIZE> mCommandBuffer;
@@ -38,8 +32,8 @@ class CommandMultiplexer final :
     };
 
     os::TaskInterruptable mCommandMultiplexerTask;
-    std::shared_ptr<Socket> mCtrlSock;
-    std::shared_ptr<Socket> mDataSock;
+    Socket* mCtrlSock;
+    Socket* mDataSock;
     CanController& mCan;
     DemoExecuter& mDemo;
     bool mCanRxEnabled = false;
@@ -53,10 +47,10 @@ class CommandMultiplexer final :
     void showHelp(void) const;
 
 public:
-    CommandMultiplexer(std::shared_ptr<Socket> control,
-                       std::shared_ptr<Socket> data,
-                       CanController&          can,
-                       DemoExecuter&           demo);
+    CommandMultiplexer(Socket*        control,
+                       Socket*        data,
+                       CanController& can,
+                       DemoExecuter&  demo);
 
     CommandMultiplexer(const CommandMultiplexer&) = delete;
     CommandMultiplexer(CommandMultiplexer&&) = delete;

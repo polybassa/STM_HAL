@@ -7,10 +7,12 @@
 #include "trace.h"
 #include "binascii.h"
 #include "LockGuard.h"
+#include "os_Task.h"
 #include <cstring>
 
 using app::AT;
 using app::ATCmd;
+using app::ATCmdCGATT;
 using app::ATCmdERROR;
 using app::ATCmdOK;
 using app::ATCmdRXData;
@@ -59,9 +61,9 @@ AT::Return_t ATCmd::send(AT::SendFunction& sendFunction, const std::chrono::mill
         Trace(ZONE_VERBOSE, "waiting\r\n");
     }
     bool commandSuccess = false;
-    if (mSendResult.receive(commandSuccess, timeout) && commandSuccess) {
-        Trace(ZONE_VERBOSE, "done\r\n");
-        return Return_t::FINISHED;
+    if (mSendResult.receive(commandSuccess, timeout)) {
+        Trace(ZONE_VERBOSE, "done %d\r\n", commandSuccess);
+        return commandSuccess ? Return_t::FINISHED : Return_t::ERROR;
     }
     {
         os::LockGuard<os::Mutex> lock(mParser->mWaitingCmdMutex);
@@ -89,10 +91,29 @@ AT::Return_t ATCmd::onResponseMatch(void)
     return Return_t::WAITING;
 }
 
+//------------------------ATCmdCGATT---------------------------------
+AT::Return_t ATCmdCGATT::onResponseMatch(void)
+{
+    std::string_view line = mParser->getLineFromInput(mParser->defaultTimeout);
+    if ((line.size() > 5) || (line.size() < 1)) {
+        return Return_t::ERROR;
+    }
+    if (line.find("0") != std::string::npos) {
+        mResult = false;
+    } else if (line.find("1") != std::string::npos) {
+        mResult = true;
+    } else {
+        return Return_t::ERROR;
+    }
+    return Return_t::WAITING;
+}
+
 //------------------------ATCmdTX---------------------------------
 
 AT::Return_t ATCmdTX::onResponseMatch(void)
 {
+    Trace(ZONE_INFO, "Sleep for the Modem \r\n");
+    os::ThisTask::sleep(std::chrono::milliseconds(50));
     if (mSendFunction(mData, ATParser::defaultTimeout) != mData.length()) {
         Trace(ZONE_ERROR, "Couldn't send data\n");
         return Return_t::ERROR;
@@ -121,6 +142,10 @@ AT::Return_t ATCmdUSOST::send(const size_t                    socket,
                                         ip.data(),
                                         port.data(),
                                         data.length());
+    if (reqLen >= mRequestBuffer.size()) {
+        Trace(ZONE_ERROR, "snprintf failed\r\n");
+        return AT::Return_t::ERROR;
+    }
 
     mRequest = std::string_view(mRequestBuffer.data(), reqLen);
 
@@ -144,6 +169,10 @@ AT::Return_t ATCmdUSOWR::send(const size_t                    socket,
                                         "AT+USOWR=%d,%d\r",
                                         socket,
                                         data.length());
+    if (reqLen >= mRequestBuffer.size()) {
+        Trace(ZONE_ERROR, "snprintf failed\r\n");
+        return AT::Return_t::ERROR;
+    }
 
     mRequest = std::string_view(mRequestBuffer.data(), reqLen);
 
@@ -185,15 +214,20 @@ AT::Return_t ATCmdUSORF::send(const size_t                    socket,
                               size_t                          bytesToRead,
                               const std::chrono::milliseconds timeout)
 {
-    if (bytesToRead > sizeof(mDataBuffer)) {
+    if (bytesToRead > sizeof(mDataBuffer) - 2) {
         Trace(ZONE_INFO, "More bytes available than readable\r\n");
-        bytesToRead = sizeof(mDataBuffer);
+        bytesToRead = sizeof(mDataBuffer) - 2;
     }
     const size_t reqLen = std::snprintf(
                                         mRequestBuffer.data(),
                                         mRequestBuffer.size(),
                                         "AT+USORF=%d,%d\r",
                                         socket, bytesToRead);
+
+    if (reqLen >= mRequestBuffer.size()) {
+        Trace(ZONE_ERROR, "snprintf failed\r\n");
+        return AT::Return_t::ERROR;
+    }
 
     mRequest = std::string_view(mRequestBuffer.data(), reqLen);
     return ATCmd::send(mSendFunction, timeout);
@@ -263,15 +297,19 @@ AT::Return_t ATCmdUSORF::onResponseMatch(void)
 
 AT::Return_t ATCmdUSORD::send(const size_t socket, size_t bytesToRead, const std::chrono::milliseconds timeout)
 {
-    if (bytesToRead > sizeof(mDataBuffer)) {
+    if (bytesToRead > sizeof(mDataBuffer) - 2) {
         Trace(ZONE_INFO, "More bytes available than readable\r\n");
-        bytesToRead = sizeof(mDataBuffer);
+        bytesToRead = sizeof(mDataBuffer) - 2;
     }
     const size_t reqLen = std::snprintf(
                                         mRequestBuffer.data(),
                                         mRequestBuffer.size(),
                                         "AT+USORD=%d,%d\r",
                                         socket, bytesToRead);
+    if (reqLen >= mRequestBuffer.size()) {
+        Trace(ZONE_ERROR, "snprintf failed\r\n");
+        return AT::Return_t::ERROR;
+    }
 
     mRequest = std::string_view(mRequestBuffer.data(), reqLen);
     return ATCmd::send(mSendFunction, timeout);
@@ -328,6 +366,10 @@ AT::Return_t ATCmdUPSND::send(const size_t socket, const size_t parameter, const
                                         mRequestBuffer.size(),
                                         "AT+UPSND=%d,%d\r",
                                         socket, parameter);
+    if (reqLen >= mRequestBuffer.size()) {
+        Trace(ZONE_ERROR, "snprintf failed\r\n");
+        return AT::Return_t::ERROR;
+    }
 
     mRequest = std::string_view(mRequestBuffer.data(), reqLen);
     return ATCmd::send(mSendFunction, timeout);
@@ -375,6 +417,10 @@ AT::Return_t ATCmdUSOCR::send(const size_t protocol, const std::chrono::millisec
                                         mRequestBuffer.size(),
                                         "AT+USOCR=%d\r",
                                         protocol);
+    if (reqLen >= mRequestBuffer.size()) {
+        Trace(ZONE_ERROR, "snprintf failed\r\n");
+        return AT::Return_t::ERROR;
+    }
 
     mRequest = std::string_view(mRequestBuffer.data(), reqLen);
     return ATCmd::send(mSendFunction, timeout);
@@ -402,6 +448,10 @@ AT::Return_t ATCmdUSOCO::send(const size_t                    socket,
                                         socket,
                                         ip.data(),
                                         port.data());
+    if (reqLen >= mRequestBuffer.size()) {
+        Trace(ZONE_ERROR, "snprintf failed\r\n");
+        return AT::Return_t::ERROR;
+    }
 
     mRequest = std::string_view(mRequestBuffer.data(), reqLen);
 
@@ -424,6 +474,10 @@ AT::Return_t ATCmdUSOSO::send(const size_t                    socket,
                                         level,
                                         optName,
                                         optVal);
+    if (reqLen >= mRequestBuffer.size()) {
+        Trace(ZONE_ERROR, "snprintf failed\r\n");
+        return AT::Return_t::ERROR;
+    }
 
     mRequest = std::string_view(mRequestBuffer.data(), reqLen);
 
@@ -458,6 +512,10 @@ AT::Return_t ATCmdUSOCTL::send(const size_t                    socket,
                                         socket,
                                         paramId
                                         );
+    if (reqLen >= mRequestBuffer.size()) {
+        Trace(ZONE_ERROR, "snprintf failed\r\n");
+        return AT::Return_t::ERROR;
+    }
 
     mRequest = std::string_view(mRequestBuffer.data(), reqLen);
 
@@ -568,9 +626,16 @@ AT::Return_t ATCmdERROR::onResponseMatch(void)
 
 std::array<char, ATParser::BUFFERSIZE> ATParser::ReceiveBuffer;
 
+ATParser::ATParser(const AT::ReceiveFunction& receive) :
+    mReceive(receive), mWaitingCmd(nullptr), mWaitingCmdMutex()
+{
+    mRegisteredATCommands.fill(nullptr);
+}
+
 void ATParser::reset(void)
 {
     if (mWaitingCmd) {
+        os::LockGuard<os::Mutex> lock(mWaitingCmdMutex);
         Trace(ZONE_INFO, "Toogle Error on waiting cmd\r\n");
         mWaitingCmd->errorReceived();
         mWaitingCmd = nullptr;
@@ -627,6 +692,7 @@ bool ATParser::parse(std::chrono::milliseconds timeout)
                 Trace(ZONE_INFO, "Waiting MATCH: %s\n", mWaitingCmd->mName.data());
                 triggerMatch(mWaitingCmd);
                 resetPossibleResponses();
+                continue;
             }
 
             size_t stillMatchingCount = 0;
@@ -660,9 +726,9 @@ bool ATParser::parse(std::chrono::milliseconds timeout)
 
 void ATParser::registerAtCommand(AT* cmd)
 {
-    if (mRegisteredATCommands.size() < MAXATCMDS) {
+    if (mNumberOfRegisteredATCommands < MAXATCMDS) {
         cmd->mParser = this;
-        mRegisteredATCommands.push_back(cmd);
+        mRegisteredATCommands[mNumberOfRegisteredATCommands++] = cmd;
     } else {
         Trace(ZONE_ERROR, "Can't register more AT commands");
     }

@@ -15,7 +15,7 @@ using app::Socket;
 using app::TcpSocket;
 using app::UdpSocket;
 
-static const int __attribute__((unused)) g_DebugZones = 0;//ZONE_ERROR | ZONE_WARNING | ZONE_VERBOSE | ZONE_INFO;
+static const int __attribute__((unused)) g_DebugZones = ZONE_ERROR;//ZONE_ERROR | ZONE_WARNING | ZONE_VERBOSE | ZONE_INFO;
 
 Socket::Socket(const Protocol                   protocol,
                ATParser&                        parser,
@@ -89,7 +89,7 @@ void Socket::checkAndSendData(void)
     if ((os::Task::getTickCount() - mTimeOfLastSend >= KEEP_ALIVE_PAUSE.count()) &&
         (os::Task::getTickCount() - mTimeOfLastReceive >= KEEP_ALIVE_PAUSE.count()))
     {
-        send(KEEP_ALIVE_MSG, std::chrono::milliseconds(100).count());
+        this->send(KEEP_ALIVE_MSG, std::chrono::milliseconds(100).count());
     }
 }
 
@@ -113,8 +113,8 @@ size_t Socket::loadTemporaryBuffer(void)
     Trace(ZONE_VERBOSE, "Send %d \r\n", bytes);
 
     const size_t receivedLength = mSendBuffer.receive(mTemporaryBuffer.data(),
-                                                      mTemporaryBuffer.size(),
-                                                      std::chrono::seconds(1));
+                                                      bytes,
+                                                      std::chrono::milliseconds(10));
 
     if (receivedLength != bytes) {
         Trace(ZONE_ERROR, "Internal buffer didn't contain exact amount of bytes\r\n");
@@ -181,10 +181,12 @@ void TcpSocket::sendData(void)
                                           receivedLength),
                          std::chrono::milliseconds(5000)) == AT::Return_t::ERROR)
     {
+        Trace(ZONE_ERROR, "send_data_failed\r\n");
         mHandleError();
+    } else {
+        mTimeOfLastSend = os::Task::getTickCount();
+        mATCmdUSORD.send(mSocket, 0, std::chrono::milliseconds(1000));
     }
-    mTimeOfLastSend = os::Task::getTickCount();
-    mATCmdUSORD.send(mSocket, 0, std::chrono::milliseconds(1000));
 }
 
 void TcpSocket::receiveData(size_t bytes)
@@ -196,6 +198,7 @@ void TcpSocket::receiveData(size_t bytes)
     if (mATCmdUSORD.send(mSocket, bytes, std::chrono::milliseconds(1000)) == AT::Return_t::FINISHED) {
         storeReceivedData(mATCmdUSORD.getData());
     } else {
+        Trace(ZONE_ERROR, "receive failed\r\n");
         mHandleError();
     }
 }
@@ -228,6 +231,7 @@ bool TcpSocket::open(void)
 void TcpSocket::checkIfDataAvailable(void)
 {
     if (mATCmdUSORD.send(mSocket, 0, std::chrono::milliseconds(1000)) != AT::Return_t::FINISHED) {
+        Trace(ZONE_ERROR, "query available data failed\r\n");
         mHandleError();
     }
     mTimeOfLastReceive = os::Task::getTickCount();
@@ -260,6 +264,7 @@ void UdpSocket::sendData(void)
                          std::string_view(mTemporaryBuffer.data(),
                                           receivedLength), std::chrono::milliseconds(5000)) == AT::Return_t::ERROR)
     {
+        Trace(ZONE_ERROR, "send_data_failed\r\n");
         mHandleError();
     }
     mTimeOfLastSend = os::Task::getTickCount();
@@ -276,6 +281,7 @@ void UdpSocket::receiveData(size_t bytes)
     if (mATCmdUSORF.send(mSocket, bytes, std::chrono::milliseconds(1000)) == AT::Return_t::FINISHED) {
         storeReceivedData(mATCmdUSORF.getData());
     } else {
+        Trace(ZONE_ERROR, "receive_data_failed\r\n");
         mHandleError();
     }
 }
@@ -328,7 +334,7 @@ void DnsSocket::sendData(void)
 
     mSendBuffer.receive(tmpPayloadStr.data(),
                         std::max(mSendBuffer.bytesAvailable(), MAX_PAYLOAD_LENGTH),
-                        std::chrono::seconds(1));
+                        std::chrono::milliseconds(10));
 
     std::array<char, MAX_PAYLOAD_LENGTH*2> hexPayloadStr;
 

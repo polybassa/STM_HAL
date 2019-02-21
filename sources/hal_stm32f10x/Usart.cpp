@@ -53,6 +53,10 @@ void UART5_IRQHandler(void)
 
 void Usart::USART_IRQHandler(const Usart& peripherie)
 {
+    if (USART_GetITStatus(reinterpret_cast<USART_TypeDef*>(peripherie.mPeripherie), USART_IT_ORE)) {
+        Trace(ZONE_ERROR, "Overrun ERROR\r\n");
+    }
+
     if (USART_GetITStatus(reinterpret_cast<USART_TypeDef*>(peripherie.mPeripherie), USART_IT_RXNE)) {
         if (Usart::ReceiveInterruptCallbacks[peripherie.mDescription]) {
             uint8_t databyte =
@@ -72,7 +76,7 @@ void Usart::initialize() const
     mInitalized = true;
 
     // Initialize Interrupts
-    NVIC_SetPriority(getIRQn(), 0xf);
+    NVIC_SetPriority(getIRQn(), 0x6);
     NVIC_EnableIRQ(getIRQn());
 }
 
@@ -167,7 +171,7 @@ size_t Usart::receive(uint8_t* const data, const size_t length) const
     size_t bytesReceived = 0;
     while (bytesReceived < length) {
         if (this->isReadyToReceive()) {
-            data[bytesReceived] = (uint8_t) this->receive();
+            data[bytesReceived] = (uint8_t)this->receive();
             bytesReceived++;
         }
     }

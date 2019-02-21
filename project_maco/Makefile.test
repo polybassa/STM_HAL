@@ -56,7 +56,7 @@ test: clean-all ${BINDIR} ${OBJDIR} test_binarys
 	#-@${GENHTML} ${OBJDIR}/cov.info -o ${COVERAGEDIR}
 
 TESTS=${BINDIR}/DebugInterface_ut.bin
-TESTS+=${BINDIR}/AT_Cmd_ut.bin
+#TESTS+=${BINDIR}/AT_Cmd_ut.bin
 TESTS+=${BINDIR}/binascii_ut.bin
 
 

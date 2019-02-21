@@ -13,23 +13,13 @@ using app::DemoExecuter;
 static const int __attribute__((unused)) g_DebugZones = ZONE_ERROR | ZONE_WARNING | ZONE_VERBOSE | ZONE_INFO;
 
 DemoExecuter::DemoExecuter(CanController& can) :
-    os::DeepSleepModule(), mDemoExecuterTask("DemoExecuter",
-                                             DemoExecuter::STACKSIZE, os::Task::Priority::LOW,
-                                             [this](const bool& join)
+    mDemoExecuterTask("DemoExecuter",
+                      DemoExecuter::STACKSIZE, os::Task::Priority::LOW,
+                      [this](const bool& join)
 {
     DemoExecuterTaskFunction(join);
 }), mCan(can), mDemoQueue()
 {}
-
-void DemoExecuter::enterDeepSleep(void)
-{
-    mDemoExecuterTask.join();
-}
-
-void DemoExecuter::exitDeepSleep(void)
-{
-    mDemoExecuterTask.start();
-}
 
 void DemoExecuter::send_GM_tester_present_twice()
 {

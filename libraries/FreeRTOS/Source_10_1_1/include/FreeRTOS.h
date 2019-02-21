@@ -743,7 +743,7 @@ extern "C" {
 #endif
 
 #ifndef configUSE_MALLOC_FAILED_HOOK
-	#define configUSE_MALLOC_FAILED_HOOK 0
+	#define configUSE_MALLOC_FAILED_HOOK 1
 #endif
 
 #ifndef portPRIVILEGE_BIT

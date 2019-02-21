@@ -9,8 +9,6 @@
 #include <string_view>
 #include <functional>
 #include <chrono>
-#include <vector>
-#include "os_StreamBuffer.h"
 #include "os_Queue.h"
 #include "Mutex.h"
 
@@ -72,6 +70,18 @@ protected:
 
     virtual void okReceived(void) override;
     virtual void errorReceived(void) override;
+    virtual Return_t onResponseMatch(void) override;
+};
+
+struct ATCmdCGATT final :
+    ATCmd {
+    ATCmdCGATT(void) :
+        ATCmd("AT+CGATT", "AT+CGATT?\r", "+CGATT:"){}
+
+    bool getResult(void) {return mResult;}
+private:
+
+    bool mResult = false;
     virtual Return_t onResponseMatch(void) override;
 };
 
@@ -292,8 +302,7 @@ struct ATParser final {
     static bool isValueTermination(const char c);
     static bool isLineTermination(const char c);
 
-    ATParser(const AT::ReceiveFunction& receive) :
-        mReceive(receive), mWaitingCmd(nullptr), mWaitingCmdMutex() {}
+    ATParser(const AT::ReceiveFunction& receive);
 
     void reset(void);
     void triggerMatch(AT* match);
@@ -317,7 +326,8 @@ private:
     static std::array<char, BUFFERSIZE> ReceiveBuffer;
 
     const AT::ReceiveFunction& mReceive;
-    std::vector<AT*> mRegisteredATCommands;
+    std::array<AT*, MAXATCMDS> mRegisteredATCommands;
+    size_t mNumberOfRegisteredATCommands = 0;
     AT* mWaitingCmd;
     os::Mutex mWaitingCmdMutex;
 

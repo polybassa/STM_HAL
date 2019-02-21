@@ -12,13 +12,13 @@ using app::Socket;
 
 static const int __attribute__((used)) g_DebugZones = 0; // ZONE_ERROR | ZONE_WARNING | ZONE_VERBOSE | ZONE_INFO;
 
-CommandMultiplexer::CommandMultiplexer(std::shared_ptr<Socket> control,
-                                       std::shared_ptr<Socket> data,
-                                       CanController&          can,
-                                       DemoExecuter&           demo) :
-    os::DeepSleepModule(), mCommandMultiplexerTask("CommandMultiplexer",
-                                                   CommandMultiplexer::STACKSIZE, os::Task::Priority::MEDIUM,
-                                                   [&](const bool& join)
+CommandMultiplexer::CommandMultiplexer(Socket*        control,
+                                       Socket*        data,
+                                       CanController& can,
+                                       DemoExecuter&  demo) :
+    mCommandMultiplexerTask("CommandMultiplexer",
+                            CommandMultiplexer::STACKSIZE, os::Task::Priority::MEDIUM,
+                            [&](const bool& join)
 {
     commandMultiplexerTaskFunction(join);
 }),
@@ -32,16 +32,6 @@ CommandMultiplexer::CommandMultiplexer(std::shared_ptr<Socket> control,
             mDataSock->send(data, 1000);
         }
     });
-}
-
-void CommandMultiplexer::enterDeepSleep(void)
-{
-    mCommandMultiplexerTask.join();
-}
-
-void CommandMultiplexer::exitDeepSleep(void)
-{
-    mCommandMultiplexerTask.start();
 }
 
 void CommandMultiplexer::multiplexCommand(const std::string_view input)
