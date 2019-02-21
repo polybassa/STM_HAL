@@ -17,11 +17,12 @@ using app::UdpSocket;
 
 static const int __attribute__((unused)) g_DebugZones = ZONE_ERROR;//ZONE_ERROR | ZONE_WARNING | ZONE_VERBOSE | ZONE_INFO;
 
-Socket::Socket(const Protocol         protocol,
-               ATParser&              parser,
-               AT::SendFunction&      send,
-               const std::string_view ip,
-               const std::string_view port) :
+Socket::Socket(const Protocol                   protocol,
+               ATParser&                        parser,
+               AT::SendFunction&                send,
+               const std::string_view           ip,
+               const std::string_view           port,
+               const std::function<void(void)>& errorCallback) :
     mNumberOfBytesForReceive(),
     mATCmdUSOCR(send),
     mATCmdUSOCO(send),
@@ -30,6 +31,7 @@ Socket::Socket(const Protocol         protocol,
     mSocket(0),
     mTimeOfLastSend(os::Task::getTickCount()),
     mTimeOfLastReceive(os::Task::getTickCount()),
+    mHandleError(errorCallback),
     mProtocol(protocol),
     mIP(ip),
     mPort(port)
@@ -155,8 +157,9 @@ TcpSocket::TcpSocket(ATParser& parser,
                      AT::SendFunction& send,
                      const std::string_view ip,
                      const std::string_view port,
-                     const std::function<void(size_t, size_t)>& callback) :
-    Socket(Protocol::TCP, parser, send, ip, port),
+                     const std::function<void(size_t, size_t)>& callback,
+                     const std::function<void(void)>& errorCallback) :
+    Socket(Protocol::TCP, parser, send, ip, port, errorCallback),
     mATCmdUSOWR(send),
     mATCmdUSORD(send, callback)
 {
@@ -179,6 +182,7 @@ void TcpSocket::sendData(void)
                          std::chrono::milliseconds(5000)) == AT::Return_t::ERROR)
     {
         Trace(ZONE_ERROR, "send_data_failed\r\n");
+        mHandleError();
     } else {
         mTimeOfLastSend = os::Task::getTickCount();
         mATCmdUSORD.send(mSocket, 0, std::chrono::milliseconds(1000));
@@ -195,6 +199,7 @@ void TcpSocket::receiveData(size_t bytes)
         storeReceivedData(mATCmdUSORD.getData());
     } else {
         Trace(ZONE_ERROR, "receive failed\r\n");
+        mHandleError();
     }
 }
 
@@ -227,6 +232,7 @@ void TcpSocket::checkIfDataAvailable(void)
 {
     if (mATCmdUSORD.send(mSocket, 0, std::chrono::milliseconds(1000)) != AT::Return_t::FINISHED) {
         Trace(ZONE_ERROR, "query available data failed\r\n");
+        mHandleError();
     }
     mTimeOfLastReceive = os::Task::getTickCount();
 }
@@ -235,8 +241,9 @@ UdpSocket::UdpSocket(ATParser& parser,
                      AT::SendFunction& send,
                      std::string_view ip,
                      std::string_view port,
-                     const std::function<void(size_t, size_t)>& callback) :
-    Socket(Protocol::UDP, parser, send, ip, port),
+                     const std::function<void(size_t, size_t)>& callback,
+                     const std::function<void(void)>& errorCallback) :
+    Socket(Protocol::UDP, parser, send, ip, port, errorCallback),
     mATCmdUSOST(send),
     mATCmdUSORF(send, callback)
 {
@@ -258,6 +265,7 @@ void UdpSocket::sendData(void)
                                           receivedLength), std::chrono::milliseconds(5000)) == AT::Return_t::ERROR)
     {
         Trace(ZONE_ERROR, "send_data_failed\r\n");
+        mHandleError();
     }
     mTimeOfLastSend = os::Task::getTickCount();
     mATCmdUSORF.send(mSocket, 0, std::chrono::milliseconds(1000));
@@ -274,6 +282,7 @@ void UdpSocket::receiveData(size_t bytes)
         storeReceivedData(mATCmdUSORF.getData());
     } else {
         Trace(ZONE_ERROR, "receive_data_failed\r\n");
+        mHandleError();
     }
 }
 
@@ -293,13 +302,16 @@ bool UdpSocket::open(void)
 
 void UdpSocket::checkIfDataAvailable(void)
 {
-    if (mATCmdUSORF.send(mSocket, 0, std::chrono::milliseconds(1000)) != AT::Return_t::FINISHED) {}
+    if (mATCmdUSORF.send(mSocket, 0, std::chrono::milliseconds(1000)) != AT::Return_t::FINISHED) {
+        mHandleError();
+    }
 }
 
 DnsSocket::DnsSocket(ATParser& parser,
                      AT::SendFunction& send,
-                     const std::function<void(size_t, size_t)>& callback) :
-    UdpSocket(parser, send, "", "", callback),
+                     const std::function<void(size_t, size_t)>& callback,
+                     const std::function<void(void)>& errorCallback) :
+    UdpSocket(parser, send, "", "", callback, errorCallback),
     mATCmdUPSND(send)
 {
     parser.registerAtCommand(&mATCmdUPSND);
@@ -345,7 +357,7 @@ void DnsSocket::sendData(void)
                          std::chrono::milliseconds(1000));
 
     if (ret == AT::Return_t::ERROR) {
-        Trace(ZONE_ERROR, "send_data_failed\r\n");
+        mHandleError();
     } else if (ret == AT::Return_t::FINISHED) {
         mTimeOfLastSend = os::Task::getTickCount();
     }
@@ -379,6 +391,8 @@ void DnsSocket::receiveData(size_t bytes)
         }
 
         storeReceivedData(std::string_view(rawdata.data(), rawdata.size()));
+    } else {
+        mHandleError();
     }
 }
 
@@ -399,7 +413,7 @@ bool DnsSocket::queryDnsServerIP(void)
     const auto ret = mATCmdUPSND.send(mSocket, 1, std::chrono::milliseconds(1000));
 
     if (ret == AT::Return_t::ERROR) {
-        Trace(ZONE_ERROR, "query DNS failed\r\n");
+        mHandleError();
     }
     return ret == AT::Return_t::FINISHED;
 }

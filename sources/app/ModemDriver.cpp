@@ -199,6 +199,9 @@ void ModemDriver::modemReset(void)
 void ModemDriver::handleError(const char* str)
 {
     Trace(ZONE_ERROR, "Error %s\r\n", str);
+    if (mErrorCount >= ERROR_THRESHOLD) {
+        mErrorCount = 0;
+    }
     mErrorCount++;
 }
 
@@ -213,16 +216,22 @@ app::Socket* ModemDriver::getSocket(app::Socket::Protocol protocol,
     app::Socket* sock = nullptr;
     if (protocol == Socket::Protocol::TCP) {
         sock = new TcpSocket(mParser, mSend, ip, port,
-                             mUrcCallbackReceive);
+                             mUrcCallbackReceive, [] {
+            Trace(ZONE_ERROR, "Error 1\r\n");
+        });
     }
 
     if (protocol == Socket::Protocol::UDP) {
         sock = new UdpSocket(mParser, mSend, ip, port,
-                             mUrcCallbackReceive);
+                             mUrcCallbackReceive, [] {
+            Trace(ZONE_ERROR, "Error 2\r\n");
+        });
     }
 
     if (protocol == Socket::Protocol::DNS) {
-        sock = new DnsSocket(mParser, mSend, mUrcCallbackReceive);
+        sock = new DnsSocket(mParser, mSend, mUrcCallbackReceive, [&] {
+            Trace(ZONE_ERROR, "Error 3\r\n");
+        });
     }
     if (sock) {
         mSockets[mNumOfSockets++] = sock;
