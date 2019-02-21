@@ -12,6 +12,7 @@
 
 using app::AT;
 using app::ATCmd;
+using app::ATCmdCGATT;
 using app::ATCmdERROR;
 using app::ATCmdOK;
 using app::ATCmdRXData;
@@ -87,6 +88,23 @@ void ATCmd::errorReceived(void)
 AT::Return_t ATCmd::onResponseMatch(void)
 {
     Trace(ZONE_INFO, "Hello from %s\n", mName.data());
+    return Return_t::WAITING;
+}
+
+//------------------------ATCmdCGATT---------------------------------
+AT::Return_t ATCmdCGATT::onResponseMatch(void)
+{
+    std::string_view line = mParser->getLineFromInput(mParser->defaultTimeout);
+    if ((line.size() > 5) || (line.size() < 1)) {
+        return Return_t::ERROR;
+    }
+    if (line.find("0") != std::string::npos) {
+        mResult = false;
+    } else if (line.find("1") != std::string::npos) {
+        mResult = true;
+    } else {
+        return Return_t::ERROR;
+    }
     return Return_t::WAITING;
 }
 

@@ -73,6 +73,18 @@ protected:
     virtual Return_t onResponseMatch(void) override;
 };
 
+struct ATCmdCGATT final :
+    ATCmd {
+    ATCmdCGATT(void) :
+        ATCmd("AT+CGATT", "AT+CGATT?\r", "+CGATT:"){}
+
+    bool getResult(void) {return mResult;}
+private:
+
+    bool mResult = false;
+    virtual Return_t onResponseMatch(void) override;
+};
+
 struct ATCmdTX :
     ATCmd {
 protected:
