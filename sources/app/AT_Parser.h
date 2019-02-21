@@ -9,7 +9,6 @@
 #include <string_view>
 #include <functional>
 #include <chrono>
-#include <vector>
 #include "os_StreamBuffer.h"
 #include "os_Queue.h"
 #include "Mutex.h"
@@ -316,7 +315,8 @@ private:
     static std::array<char, BUFFERSIZE> ReceiveBuffer;
 
     const AT::ReceiveFunction& mReceive;
-    std::vector<AT*> mRegisteredATCommands;
+    std::array<AT*, MAXATCMDS> mRegisteredATCommands;
+    size_t mNumberOfRegisteredATCommands = 0;
     AT* mWaitingCmd;
     os::Mutex mWaitingCmdMutex;
 

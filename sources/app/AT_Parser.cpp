@@ -608,7 +608,10 @@ AT::Return_t ATCmdERROR::onResponseMatch(void)
 std::array<char, ATParser::BUFFERSIZE> ATParser::ReceiveBuffer;
 
 ATParser::ATParser(const AT::ReceiveFunction& receive) :
-    mReceive(receive), mWaitingCmd(nullptr), mWaitingCmdMutex() {}
+    mReceive(receive), mWaitingCmd(nullptr), mWaitingCmdMutex()
+{
+    mRegisteredATCommands.fill(nullptr);
+}
 
 void ATParser::reset(void)
 {
@@ -704,9 +707,9 @@ bool ATParser::parse(std::chrono::milliseconds timeout)
 
 void ATParser::registerAtCommand(AT* cmd)
 {
-    if (mRegisteredATCommands.size() < MAXATCMDS) {
+    if (mNumberOfRegisteredATCommands < MAXATCMDS) {
         cmd->mParser = this;
-        mRegisteredATCommands.push_back(cmd);
+        mRegisteredATCommands[mNumberOfRegisteredATCommands++] = cmd;
     } else {
         Trace(ZONE_ERROR, "Can't register more AT commands");
     }
