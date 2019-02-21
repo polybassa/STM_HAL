@@ -48,6 +48,7 @@ class ModemDriver final
     app::ATCmdURC mATUUSORD;
     app::ATCmdURC mATUUPSDD;
     app::ATCmdURC mATUUSOCL;
+    app::ATCmdCGATT mATCGATT;
 
     size_t mErrorCount = 0;
     size_t mNumOfSockets = 0;

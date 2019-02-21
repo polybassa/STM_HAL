@@ -81,7 +81,8 @@ ModemDriver::ModemDriver(const hal::UsartWithDma& interface,
     mATUUSORF("UUSORF", "+UUSORF: ", mUrcCallbackReceive),
     mATUUSORD("UUSORD", "+UUSORD: ", mUrcCallbackReceive),
     mATUUPSDD("UUPSDD", "+UUPSDD: ", mUrcCallbackClose),
-    mATUUSOCL("UUSOCL", "+UUSOCL: ", mUrcCallbackClose)
+    mATUUSOCL("UUSOCL", "+UUSOCL: ", mUrcCallbackClose),
+    mATCGATT()
 {
     mInterface.mUsart.enableNonBlockingReceive(ModemDriverInterruptHandler);
 
@@ -91,6 +92,7 @@ ModemDriver::ModemDriver(const hal::UsartWithDma& interface,
     mParser.registerAtCommand(&mATUUSORD);
     mParser.registerAtCommand(&mATUUPSDD);
     mParser.registerAtCommand(&mATUUSOCL);
+    mParser.registerAtCommand(&mATCGATT);
 }
 
 ModemDriver::~ModemDriver(void)
@@ -102,10 +104,10 @@ void ModemDriver::modemTxTaskFunction(const bool& join)
 {
     constexpr const hal::Gpio& out = hal::Factory<hal::Gpio>::get<hal::Gpio::LED>();
 
+    static uint32_t lastGPRSCheck = os::Task::getTickCount();
     do {
-        out = true;
         modemReset();
-
+        out = true;
         if (!modemStartup()) {
             Trace(ZONE_VERBOSE, "ERROR modemStartup\r\n");
             continue;
@@ -115,23 +117,29 @@ void ModemDriver::modemTxTaskFunction(const bool& join)
             for (size_t i = 0; i < mNumOfSockets; i++) {
                 auto sock = mSockets[i];
                 if (!sock->isCreated) {
-                    out = true;
                     sock->create();
                 }
 
                 if (sock->isCreated && !sock->isOpen) {
-                    out = true;
                     sock->open();
                 }
 
                 if (!sock->isOpen) {
-                    out = true;
                     handleError("0");
                     continue;
                 }
-                out = false;
                 sock->checkAndSendData();
                 sock->checkAndReceiveData();
+            }
+
+            if (os::Task::getTickCount() - 2000 > lastGPRSCheck) {
+                auto result = mATCGATT.send(mSend, std::chrono::milliseconds(2000));
+                if (result == AT::Return_t::FINISHED) {
+                    out = !mATCGATT.getResult();
+                } else {
+                    handleError("5");
+                }
+                lastGPRSCheck = os::Task::getTickCount();
             }
         }
     } while (!join);
