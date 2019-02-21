@@ -195,9 +195,9 @@ AT::Return_t ATCmdUSORF::send(const size_t                    socket,
                               size_t                          bytesToRead,
                               const std::chrono::milliseconds timeout)
 {
-    if (bytesToRead > sizeof(mDataBuffer)) {
+    if (bytesToRead > sizeof(mDataBuffer) - 2) {
         Trace(ZONE_INFO, "More bytes available than readable\r\n");
-        bytesToRead = sizeof(mDataBuffer);
+        bytesToRead = sizeof(mDataBuffer) - 2;
     }
     const size_t reqLen = std::snprintf(
                                         mRequestBuffer.data(),
@@ -278,9 +278,9 @@ AT::Return_t ATCmdUSORF::onResponseMatch(void)
 
 AT::Return_t ATCmdUSORD::send(const size_t socket, size_t bytesToRead, const std::chrono::milliseconds timeout)
 {
-    if (bytesToRead > sizeof(mDataBuffer)) {
+    if (bytesToRead > sizeof(mDataBuffer) - 2) {
         Trace(ZONE_INFO, "More bytes available than readable\r\n");
-        bytesToRead = sizeof(mDataBuffer);
+        bytesToRead = sizeof(mDataBuffer) - 2;
     }
     const size_t reqLen = std::snprintf(
                                         mRequestBuffer.data(),
