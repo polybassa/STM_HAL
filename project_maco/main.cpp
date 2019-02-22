@@ -37,7 +37,6 @@
 #include "CanController.h"
 #include "CommandMultiplexer.h"
 #include "DemoExecuter.h"
-#include "Endpoint.h"
 
 /* GLOBAL VARIABLES */
 static const int __attribute__((used)) g_DebugZones = ZONE_ERROR | ZONE_WARNING |
@@ -64,8 +63,8 @@ int main(void)
                                       hal::Factory<hal::Gpio>::get<hal::Gpio::MODEM_POWER>(),
                                       hal::Factory<hal::Gpio>::get<hal::Gpio::MODEM_SUPPLY>());
 
-    auto controlsocket = modem->getSocket(app::Socket::Protocol::TCP, ENDPOINT_IP, "62938");
-    auto datasocket = modem->getSocket(app::Socket::Protocol::TCP, ENDPOINT_IP, "62979");
+    auto controlsocket = modem->getSocket(app::Socket::Protocol::TCP, "xxx.xxx.xxx.xxx", "xxxxx");
+    auto datasocket = modem->getSocket(app::Socket::Protocol::TCP, "xxx.xxx.xxx.xxx", "xxxxx");
 
     auto can = new app::CanController(hal::Factory<hal::UsartWithDma>::get<hal::Usart::SECCO_COM>(),
                                       hal::Factory<hal::Gpio>::get<hal::Gpio::SECCO_PWR>(),
