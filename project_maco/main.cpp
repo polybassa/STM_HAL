@@ -63,8 +63,8 @@ int main(void)
                                       hal::Factory<hal::Gpio>::get<hal::Gpio::MODEM_POWER>(),
                                       hal::Factory<hal::Gpio>::get<hal::Gpio::MODEM_SUPPLY>());
 
-    auto controlsocket = modem->getSocket(app::Socket::Protocol::TCP, "95.143.172.237", "62938");
-    auto datasocket = modem->getSocket(app::Socket::Protocol::TCP, "95.143.172.237", "62979");
+    auto controlsocket = modem->getSocket(app::Socket::Protocol::TCP, "xxx.xxx.xxx.xxx", "xxxxx");
+    auto datasocket = modem->getSocket(app::Socket::Protocol::TCP, "xxx.xxx.xxx.xxx", "xxxxx");
 
     auto can = new app::CanController(hal::Factory<hal::UsartWithDma>::get<hal::Usart::SECCO_COM>(),
                                       hal::Factory<hal::Gpio>::get<hal::Gpio::SECCO_PWR>(),
