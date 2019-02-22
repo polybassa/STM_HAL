@@ -23,6 +23,7 @@ Socket::Socket(const Protocol                   protocol,
                const std::string_view           ip,
                const std::string_view           port,
                const std::function<void(void)>& errorCallback) :
+    mHandleError(errorCallback),
     mNumberOfBytesForReceive(),
     mATCmdUSOCR(send),
     mATCmdUSOCO(send),
@@ -31,7 +32,6 @@ Socket::Socket(const Protocol                   protocol,
     mSocket(0),
     mTimeOfLastSend(os::Task::getTickCount()),
     mTimeOfLastReceive(os::Task::getTickCount()),
-    mHandleError(errorCallback),
     mProtocol(protocol),
     mIP(ip),
     mPort(port)
@@ -89,7 +89,7 @@ void Socket::checkAndSendData(void)
     if ((os::Task::getTickCount() - mTimeOfLastSend >= KEEP_ALIVE_PAUSE.count()) &&
         (os::Task::getTickCount() - mTimeOfLastReceive >= KEEP_ALIVE_PAUSE.count()))
     {
-        this->send(KEEP_ALIVE_MSG, std::chrono::milliseconds(100).count());
+        this->send(KEEP_ALIVE_MSG, std::chrono::milliseconds(100));
     }
 }
 
@@ -123,15 +123,14 @@ size_t Socket::loadTemporaryBuffer(void)
     return receivedLength;
 }
 
-size_t Socket::send(std::string_view message, const uint32_t ticksToWait)
+size_t Socket::send(std::string_view message, const std::chrono::milliseconds timeout)
 {
-    //TODO change ticksToWait to chrono milliseconds
-    return mSendBuffer.send(message.data(), message.length(), std::chrono::milliseconds(ticksToWait));
+    return mSendBuffer.send(message.data(), message.length(), timeout);
 }
 
-size_t Socket::receive(uint8_t* message, size_t length, uint32_t ticksToWait)
+size_t Socket::receive(uint8_t* message, size_t length, const std::chrono::milliseconds timeout)
 {
-    return mReceiveBuffer.receive(reinterpret_cast<char*>(message), length, std::chrono::milliseconds(ticksToWait));
+    return mReceiveBuffer.receive(reinterpret_cast<char*>(message), length, timeout);
 }
 
 size_t Socket::bytesAvailable(void) const

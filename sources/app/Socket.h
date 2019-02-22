@@ -7,6 +7,7 @@
 
 #include <string_view>
 #include <array>
+#include <chrono>
 #include "AT_Parser.h"
 #include "os_Queue.h"
 #include "os_StreamBuffer.h"
@@ -27,6 +28,8 @@ protected:
     std::array<char, BUFFERSIZE> mTemporaryBuffer;
 
     std::function<void(std::string_view)> mReceiveCallback;
+    const std::function<void(void)> mHandleError;
+
     os::Queue<size_t, 1> mNumberOfBytesForReceive;
 
     virtual void sendData(void) = 0;
@@ -53,8 +56,6 @@ protected:
     bool isOpen = false;
     bool isCreated = false;
 
-    const std::function<void(void)> mHandleError;
-
 public:
     enum class Protocol { UDP, TCP, DNS };
 
@@ -76,8 +77,9 @@ public:
     const std::string_view mIP;
     const std::string_view mPort;
 
-    size_t send(std::string_view, const uint32_t ticksToWait = portMAX_DELAY);
-    size_t receive(uint8_t*, size_t, uint32_t ticksToWait = portMAX_DELAY);
+    size_t send(std::string_view, const std::chrono::milliseconds timeout = std::chrono::milliseconds(portMAX_DELAY));
+    size_t receive(uint8_t*, size_t,
+                   const std::chrono::milliseconds timeout = std::chrono::milliseconds(portMAX_DELAY));
 
     size_t bytesAvailable(void) const;
     size_t getTimeOfLastSend(void) const;

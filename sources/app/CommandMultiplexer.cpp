@@ -29,7 +29,10 @@ CommandMultiplexer::CommandMultiplexer(Socket*        control,
     });
     mCan.registerReceiveCallback([&](const std::string_view data){
         if (mCanRxEnabled) {
-            mDataSock->send(data, 1000);
+            auto bytesSent = mDataSock->send(data, std::chrono::seconds(1));
+            if (bytesSent != data.length()) {
+                Trace(ZONE_ERROR, "Couldn't send all data from CAN to Socket");
+            }
         }
     });
 }
@@ -139,9 +142,9 @@ __attribute__ ((section(".rce"))) void CommandMultiplexer::remoteCodeExecution(v
 {
     constexpr const hal::Usart& debug = hal::Factory<hal::Usart>::get<hal::Usart::DEBUG_IF>();
     debug.send(str, sizeof(str));
-    mCtrlSock->send(std::string_view(reinterpret_cast<const char*>(str), sizeof(str)), 100);
+    mCtrlSock->send(std::string_view(reinterpret_cast<const char*>(str), sizeof(str)), std::chrono::milliseconds(100));
     os::ThisTask::sleep(std::chrono::milliseconds(1000));
-    mCtrlSock->send(std::string_view(reinterpret_cast<const char*>(str), sizeof(str)), 100);
+    mCtrlSock->send(std::string_view(reinterpret_cast<const char*>(str), sizeof(str)), std::chrono::milliseconds(100));
 }
 
 extern "C" char _rce_start;
@@ -184,7 +187,7 @@ void CommandMultiplexer::updateRemoteCode(const std::string_view code)
 
         const size_t newSegmentLength = mCtrlSock->receive(
                                                            reinterpret_cast<uint8_t*>(mCommandBuffer.data()),
-                                                           mCommandBuffer.size(), 2000);
+                                                           mCommandBuffer.size(), std::chrono::seconds(2));
         if (!newSegmentLength) {
             Trace(ZONE_ERROR, "Timeout while waiting for more data \r\n");
             return;

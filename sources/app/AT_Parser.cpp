@@ -133,6 +133,10 @@ AT::Return_t ATCmdUSOST::send(const size_t                    socket,
         Trace(ZONE_WARNING, "Nodata %d\r\n", data.length());
         return AT::Return_t::FINISHED;
     }
+    if (data.length() > 1024) {
+        Trace(ZONE_WARNING, "Maximum data length exceeded\r\n");
+        return AT::Return_t::ERROR;
+    }
     mData = data;
     const size_t reqLen = std::snprintf(
                                         mRequestBuffer.data(),
@@ -161,6 +165,10 @@ AT::Return_t ATCmdUSOWR::send(const size_t                    socket,
     if (data.length() == 0) {
         Trace(ZONE_WARNING, "Nodata %d\r\n", data.length());
         return AT::Return_t::FINISHED;
+    }
+    if (data.length() > 1024) {
+        Trace(ZONE_WARNING, "Maximum data length exceeded\r\n");
+        return AT::Return_t::ERROR;
     }
     mData = data;
     const size_t reqLen = std::snprintf(
