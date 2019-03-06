@@ -12,13 +12,13 @@ Semaphore::Semaphore(void) :
     mSemaphoreHandle(xSemaphoreCreateBinary())
 {}
 
-Semaphore::Semaphore(Semaphore && rhs) :
+Semaphore::Semaphore(Semaphore&& rhs) :
     mSemaphoreHandle(rhs.mSemaphoreHandle)
 {
     rhs.mSemaphoreHandle = nullptr;
 }
 
-Semaphore& Semaphore::operator=(Semaphore && rhs)
+Semaphore& Semaphore::operator=(Semaphore&& rhs)
 {
     mSemaphoreHandle = rhs.mSemaphoreHandle;
     rhs.mSemaphoreHandle = nullptr;
