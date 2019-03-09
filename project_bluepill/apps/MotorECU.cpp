@@ -164,8 +164,8 @@ const os::TaskEndless MotorECUSimu("MotorECUSimu",
                                            if (!start & !ignition) {
                                                state = state::ignitionOff;
                                            }
-                                           if(start & !ignition){
-                                        	   state = state::ignitionOff;
+                                           if (start & !ignition) {
+                                               state = state::ignitionOff;
                                            }
                                            if (tempomat == 130) {
                                                challangeSolved = true;
