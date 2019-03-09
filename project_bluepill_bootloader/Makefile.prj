@@ -32,6 +32,8 @@ VPATH+=${ROOT}/libraries/CMSIS/Source
 VPATH+=${ROOT}/libraries/CMSIS/Device/ST/STM32F10x
 VPATH+=${ROOT}/libraries/STM32F10x_StdPeriph_Driver/src
 VPATH+=${ROOT}/libraries/STM32_USB-FS-Device_Driver/src
+VPATH+=${ROOT}/libraries/wolfssl-3.15.7/wolfcrypt/src
+
 VPATH+=${SEGGER_SOURCE_DIR}/SEGGER
 VPATH+=${SEGGER_SOURCE_DIR}/Config
 VPATH+=${SEGGER_SOURCE_DIR}/Sample/FreeRTOSV10
@@ -61,6 +63,8 @@ IPATH+=${ROOT}/libraries/CMSIS/Device/ST/STM32F10x
 IPATH+=${ROOT}/libraries/STM32F10x_StdPeriph_Driver/inc
 IPATH+=${ROOT}/libraries/STM32_USB-FS-Device_Driver/inc
 IPATH+=${ROOT}/libraries
+IPATH+=${ROOT}/libraries/wolfssl-3.15.7/wolfssl/wolfcrypt
+IPATH+=${ROOT}/libraries/wolfssl-3.15.7
 IPATH+=${SEGGER_SOURCE_DIR}/SEGGER
 IPATH+=${SEGGER_SOURCE_DIR}/Config
 IPATH+=${SEGGER_SOURCE_DIR}/Sample/FreeRTOSV10
@@ -104,5 +108,9 @@ ${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/misc.o
 # SEGGER_SYSVIEW
 ${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/SEGGER_RTT.o
 ${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/SEGGER_RTT_printf.o
+
+# WOLFSSL
+${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/sha256.o
+
 
 endif

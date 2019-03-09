@@ -29,6 +29,7 @@ extern "C" {
 #include "hal_Factory.h"
 #include "Gpio.h"
 #include "stm32f10x_dbgmcu.h"
+#include "sha256.h"
 
 /* DEV LAYER INLCUDES */
 
@@ -110,6 +111,9 @@ const std::string_view VERSION(&_version_start, (&_version_end - &_version_start
 
 int main(void)
 {
+	wc_Sha256 sha;
+	wc_InitSha256(&sha);
+
     SystemInit();
     hal::initFactory<hal::Factory<hal::Gpio> >();
 

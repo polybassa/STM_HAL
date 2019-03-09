@@ -181,6 +181,18 @@
 /* Uncomment next line if using Espressif ESP32-WROOM-32 */
 /* #define WOLFSSL_ESPWROOM32 */
 
+	#define NO_WRITEV
+    #define NO_WOLFSSL_DIR
+    #define SINGLE_THREADED
+    #define NO_DEV_RANDOM
+    #define WOLFSSL_USER_IO
+    #define HAVE_ECC
+    #define NO_DH
+    #define NO_SESSION_CACHE
+    #define USE_SLOW_SHA
+    #define NO_WOLFSSL_SERVER
+    #define NO_ERROR_STRINGS
+
 #include <wolfssl/wolfcrypt/visibility.h>
 
 #ifdef WOLFSSL_USER_SETTINGS
