@@ -88,9 +88,13 @@ ${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/TaskInterruptable.o
 ${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/IsoTp.o
 
 #TestApps
-${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/TestIsoTp.o
+#${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/TestIsoTp.o
 #${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/TestCan.o
-${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/TestGpio.o
+#${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/TestGpio.o
+#${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/MITMChallange.o
+#${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/DashBoard.o
+${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/MotorECU.o
+${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/CANFrames.o
 
 # device
 ${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/startup_stm32f10x_md.o
