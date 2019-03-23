@@ -84,6 +84,10 @@ typedef struct
                                    ((PERIPH) == ADC2) || \
                                    ((PERIPH) == ADC3))
 
+#define IS_ADC_ALL_PERIPH_BASE(PERIPH) (((PERIPH) == ADC1_BASE) || \
+                                   	    ((PERIPH) == ADC2_BASE) || \
+									    ((PERIPH) == ADC3_BASE))
+
 #define IS_ADC_DMA_PERIPH(PERIPH) (((PERIPH) == ADC1) || \
                                    ((PERIPH) == ADC3))
 
@@ -426,7 +430,7 @@ typedef struct
   */
 
 void ADC_DeInit(ADC_TypeDef* ADCx);
-void ADC_Init(ADC_TypeDef* ADCx, ADC_InitTypeDef* ADC_InitStruct);
+void ADC_Init(ADC_TypeDef* ADCx, ADC_InitTypeDef const * const ADC_InitStruct);
 void ADC_StructInit(ADC_InitTypeDef* ADC_InitStruct);
 void ADC_Cmd(ADC_TypeDef* ADCx, FunctionalState NewState);
 void ADC_DMACmd(ADC_TypeDef* ADCx, FunctionalState NewState);

@@ -223,7 +223,7 @@ void TIM_DeInit(TIM_TypeDef* TIMx)
   *         specified TIM peripheral.
   * @retval None
   */
-void TIM_TimeBaseInit(TIM_TypeDef* TIMx, TIM_TimeBaseInitTypeDef* TIM_TimeBaseInitStruct)
+void TIM_TimeBaseInit(TIM_TypeDef* TIMx, TIM_TimeBaseInitTypeDef const * const TIM_TimeBaseInitStruct)
 {
   uint16_t tmpcr1 = 0;
 
