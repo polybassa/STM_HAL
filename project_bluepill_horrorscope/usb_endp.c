@@ -42,6 +42,7 @@
 #include "hw_config.h"
 #include "usb_istr.h"
 #include "usb_pwr.h"
+#include "string.h"
 #include "SEGGER_RTT.h"
 /* Private typedef -----------------------------------------------------------*/
 /* Private define ------------------------------------------------------------*/
@@ -83,4 +84,5 @@ void EP3_OUT_Callback(void)
     packet_receive = 1;
     Receive_length = GetEPRxCount(ENDP3);
     PMAToUserBufferCopy((unsigned char*)Receive_Buffer, ENDP3_RXADDR, Receive_length);
+    Receive_Buffer[Receive_length] = 0;
 }
