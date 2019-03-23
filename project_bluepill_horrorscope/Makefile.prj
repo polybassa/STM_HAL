@@ -88,7 +88,11 @@ ${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/versionfile.o
 
 # HAL Layer
 ${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/Gpio.o
-#${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/Can.o
+${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/Adc.o
+${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/Dma.o
+${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/Exti.o
+${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/Usb.o
+${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/Tim.o
 
 # DEV Layer
 
@@ -103,7 +107,9 @@ ${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/TaskInterruptable.o
 # App Layer
 
 #TestApps
-${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/TestUSB.o
+#${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/TestUSB.o
+${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/Horrorscope.o
+${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/HorrorscopeLib.o
 #${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/TestGpio.o
 
 # device
