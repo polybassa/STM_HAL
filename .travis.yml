@@ -34,3 +34,10 @@ script:
         - ./makeWithDocker.sh project_bluepill clean 
         - ./makeWithDocker.sh project_bluepill debug_firmware
         - ./makeWithDocker.sh project_bluepill clean-all
+        - ./configureWithDocker.sh project_bluepill_horrorscope
+        - ./makeWithDocker.sh project_bluepill_horrorscope test
+        - ./makeWithDocker.sh project_bluepill_horrorscope clean 
+        - ./makeWithDocker.sh project_bluepill_horrorscope firmware 
+        - ./makeWithDocker.sh project_bluepill_horrorscope clean 
+        - ./makeWithDocker.sh project_bluepill_horrorscope debug_firmware
+        - ./makeWithDocker.sh project_bluepill_horrorscope clean-all
