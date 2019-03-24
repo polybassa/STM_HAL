@@ -84,8 +84,8 @@ private:
         mPeripherie(peripherie),
         mConfiguration(conf),
         mDmaInterrupt(interrupt),
-        mDmaIRQn(
-                 interruptNumber) {}
+        mDmaIRQn(interruptNumber)
+    {}
 
     const uint32_t mPeripherie;
     const DMA_InitTypeDef mConfiguration;
@@ -154,7 +154,8 @@ public:
         static_assert(IS_DMA_MODE(Container[index].mConfiguration.DMA_Mode), "Invalid DMA MODE");
         static_assert(IS_DMA_PRIORITY(Container[index].mConfiguration.DMA_Priority), "Invalid Priority");
         static_assert(IS_DMA_M2M_STATE(Container[index].mConfiguration.DMA_M2M), "Invalid M2M state");
-        static_assert(Container[index].mDmaInterrupt != 0 || Container[index].mDmaIRQn == IRQn::UsageFault_IRQn,
+        static_assert(IS_DMA_GET_IT(Container[index].mDmaInterrupt) || Container[index].mDmaInterrupt != 0 ||
+                      Container[index].mDmaIRQn == IRQn::UsageFault_IRQn,
                       "Invalid IRQn");
 
         static_assert(index != Dma::Description::__ENUM__SIZE, "__ENUM__SIZE is not accessible");

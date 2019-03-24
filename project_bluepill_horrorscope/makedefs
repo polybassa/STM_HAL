@@ -1,0 +1,220 @@
+#******************************************************************************
+# Copyright (C) 2015 Nils Weiss
+#
+# This file is part of PMD_Project.
+#
+# PMD_Project is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# PMD_Project is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with WyLight.  If not, see <http://www.gnu.org/licenses/>.
+#******************************************************************************
+
+
+ROOT=..
+RTOS_SOURCE_DIR=${ROOT}/libraries/FreeRTOS/Source_10_1_1
+SEGGER_SOURCE_DIR=${ROOT}/libraries/SystemView_Src_V252c
+RTT_SOURCE_DIR=${ROOT}/libraries/SEGGER_RTT_V635g
+PRJ_DIR=$(shell basename ${PRJ_PATH})
+OBJDIR?=obj
+BINDIR?=exe
+COVERAGEDIR?=testcoverage
+OUT_DIR=${BINDIR}
+
+ifeq (${PREFIX}, arm-none-eabi-)
+
+AFLAGS=-mthumb \
+       -mcpu=cortex-m3  \
+       -mfloat-abi=soft \
+       -MD
+
+#-fstack-usage for compile time stack usage estimation
+
+CFLAGS=	-ffunction-sections \
+		-fno-strict-aliasing \
+        --specs=nano.specs \
+		-fno-common \
+		-pedantic \
+		-Werror=narrowing \
+    	-fmessage-length=0 \
+        -fdata-sections     \
+        -mcpu=cortex-m3 \
+        -fno-builtin \
+        -std=c11 \
+        -mthumb \
+        -Wall \
+        -MD 
+        
+CPPFLAGS= \
+	    -pedantic \
+	    -Werror=narrowing \
+	    -Wno-register \
+	    -ffunction-sections \
+	    -fno-strict-aliasing \
+	    --specs=nano.specs \
+	    -fno-common \
+	    -fmessage-length=0 \
+	    -fdata-sections \
+	    -fno-exceptions \
+	    -mcpu=cortex-m3 \
+	    -fno-builtin \
+	    -std=c++17 \
+	    -fno-rtti \
+	    -mthumb \
+	    -Wall \
+	    -MD \
+	    -c 
+
+LDFLAGS= 	-ffunction-sections \
+			-fno-strict-aliasing \
+    		--specs=nano.specs \
+    		-fno-common \
+    		-fmessage-length=0 \
+    		-fdata-sections \
+    		-fno-exceptions \
+    		-mcpu=cortex-m3 \
+    		-fno-builtin \
+    		-std=c++17 \
+    		-pedantic \
+    		-fno-rtti \
+    		-mthumb \
+    		-Wall \
+    		-MD \
+			-Wl,--gc-sections \
+         	-static \
+         	-Wl,-Map=${@:.elf=.map} \
+         	-lgcc \
+         	-lm \
+         	-lc \
+         	-lstdc++ \
+         	-lsupc++
+
+LIBRARYS=	-lgcc \
+ 		-lm \
+ 	 	-lc \
+ 		-lstdc++ \
+ 	 	-lsupc++
+         	
+CC=${ARM_GCC}
+CPP=${ARM_GPP}
+AR=${ARM_AR}
+LD=${ARM_LD}
+OBJCOPY=${ARM_OBJCOPY}
+SIZE=${ARM_SIZE}
+         	
+else 
+# The flags passed to the compiler when we are not using arm-none-eabi tools.
+CFLAGS= -pedantic \
+		-pthread \
+		-fprofile-arcs \
+		-ftest-coverage \
+        -std=c11 \
+        -Wall \
+        -O1 \
+        -g \
+        -c
+
+CPPFLAGS= \
+    --coverage \
+    -pthread \
+    -std=c++17 \
+    -Wall \
+    -Wno-deprecated-register \
+    -Wno-register \
+    -c \
+    -g
+
+LDFLAGS+= -pthread \
+		-std=c++17 \
+		-lcrypto \
+		--coverage 
+							
+CPP=${CXX}
+
+endif
+
+DEFINES= -D${DEVICE} 
+
+ifeq (${DEVICE}, STM32F303xE)
+LDSCRIPT = ${ROOT}/device/ldscripts/STM32F303VD_FLASH.ld
+endif
+
+ifeq (${DEVICE}, STM32F303xC)
+LDSCRIPT = ${ROOT}/device/ldscripts/STM32F303VC_FLASH.ld
+endif
+
+ifeq (${DEVICE}, STM32F10X_HD)
+LDSCRIPT = ${ROOT}/device/ldscripts/STM32F10x_HD_FLASH.ld
+endif
+
+ifeq (${DEVICE}, STM32F10X_MD)
+LDSCRIPT = ${ROOT}/project_bluepill_horrorscope/STM32F10x_MD_FLASH.ld
+endif
+
+# Add the include file paths to AFLAGS and CFLAGS.
+AFLAGS+=${patsubst %,-I%,${subst :, ,${IPATH}}}
+CFLAGS+=${patsubst %,-I%,${subst :, ,${IPATH}}}
+CPPFLAGS+=${patsubst %,-I%,${subst :, ,${IPATH}}}
+
+${OBJDIR}/versionfile.o: versionfile.txt
+	 @${OBJCOPY} \
+	 --rename-section .data=.version,contents,alloc,load,readonly,data \
+	 --input binary --output elf32-littlearm --binary-architecture arm ${<} ${@}
+	 @${OBJCOPY} --redefine-sym _binary_versionfile_txt_start=_version_start ${@}
+	 @${OBJCOPY} --redefine-sym _binary_versionfile_txt_end=_version_end ${@}
+	 @${OBJCOPY} --redefine-sym _binary_versionfile_txt_size=_version_size ${@}
+	 @echo OBJ ${@}
+	 @echo "                         ${<}"                                           
+	 
+${OBJDIR}/binaryfile.o: binaryfile.bin
+	 @${OBJCOPY} \
+	 --rename-section .data=.binary,contents,alloc,load,readonly,data \
+	 --input binary --output elf32-littlearm --binary-architecture arm ${<} ${@}
+	 @${OBJCOPY} --redefine-sym _binary_binaryfile_bin_start=_binary_start ${@}
+	 @${OBJCOPY} --redefine-sym _binary_binaryfile_bin_end=_binary_end ${@}
+	 @${OBJCOPY} --redefine-sym _binary_binaryfile_bin_size=_binary_size ${@}
+	 @echo OBJ ${@}
+	 @echo "                         ${<}"                                           
+
+${OBJDIR}/%.o: %.cpp
+	 @${CPP} ${CPPFLAGS} ${DEFINES} -o ${@} ${<}
+	 @echo CPP ${@}
+	 @echo "                         ${<}"                                           
+
+${OBJDIR}/%.o: %.c
+	 @${CC} ${CFLAGS} ${DEFINES} -c -Dgcc -o ${@} ${<}
+	 @echo CC ${@}
+	 @echo "                         ${<}"                                           
+
+${OBJDIR}/%.o: %.S
+	@${CC} ${AFLAGS} ${DEFINES} -Dgcc -o ${@} -c ${<}
+	@echo AS ${@}
+	@echo "                         ${<}"                                           
+	
+${OBJDIR}/%.o: %.s
+	@${CC} ${AFLAGS} ${DEFINES} -Dgcc -o ${@} -c ${<}
+	@echo AS ${@}
+	@echo "                         ${<}"                                           
+
+${BINDIR}/%.a:
+	 @${AR} -cr ${@} ${^}
+	 @echo AR ${@}
+	 @echo "                         ${<}"                                           
+
+${BINDIR}/%.elf:
+	 @${CPP} -T ${LDSCRIPT} ${LDFLAGS} ${LIBPATHS} -o ${@} $(filter %.o %.a, ${?}) ${LIBRARYS} 
+	 @${OBJCOPY} -O binary ${@} ${@:.elf=.bin}
+	 @${OBJCOPY} -O ihex ${@} ${@:.elf=.hex}
+	 @${PREFIX}objdump -D ${@} > ${@:.elf=.lst}
+	 @echo LD ${@} for ${DEVICE}
+	 @${SIZE} ${@}
+
+${BINDIR}/%.bin:
+	@${CPP} ${LDFLAGS} ${DEFINES} -o ${@} $(filter %.o %.a, ${^})

@@ -8,7 +8,9 @@
 #if  defined(USE_FREERTOS) && defined(__cplusplus)
 
 #include "FreeRTOS.h"
+#ifdef DEBUG
 #include "SEGGER_RTT.h"
+#endif
 
 //Override C++ new/delete operators to reduce memory footprint
 void* operator new(size_t size)

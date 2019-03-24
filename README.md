@@ -9,16 +9,24 @@ Setup:
 ----------
 * Install Docker: [Docker](https://www.docker.com)
 * Go to project folder: `cd STM_HAL/utilities`
-* Start build environment: `./enterBuildEnvironment.sh`
+* Start build environment: `./enterBuildEnvironment.sh` (for the default project)
 
 Build:
 -----------
-Inside the pmd docker container, you can run
+Inside the docker container, you can run
 ```
 ./configure
 make <Target>
 ```
 
+Alternative build ways:
+-----------
+If you want to build for example the Horrorscope project
+```
+cd utilities
+./configureWithDocker project_XYZ
+./makeWithDocker.sh project_XYZ <target>
+```
 
 Targets:
 -----------

@@ -184,6 +184,24 @@ typedef struct
                                    ((PERIPH) == TIM16)|| \
                                    ((PERIPH) == TIM17))
 
+#define IS_TIM_ALL_PERIPH_BASE(PERIPH) (((PERIPH) == TIM1_BASE) || \
+                                   ((PERIPH) == TIM2_BASE) || \
+                                   ((PERIPH) == TIM3_BASE) || \
+                                   ((PERIPH) == TIM4_BASE) || \
+                                   ((PERIPH) == TIM5_BASE) || \
+                                   ((PERIPH) == TIM6_BASE) || \
+                                   ((PERIPH) == TIM7_BASE) || \
+                                   ((PERIPH) == TIM8_BASE) || \
+                                   ((PERIPH) == TIM9_BASE) || \
+                                   ((PERIPH) == TIM10_BASE)|| \
+                                   ((PERIPH) == TIM11_BASE)|| \
+                                   ((PERIPH) == TIM12_BASE)|| \
+                                   ((PERIPH) == TIM13_BASE)|| \
+                                   ((PERIPH) == TIM14_BASE)|| \
+                                   ((PERIPH) == TIM15_BASE)|| \
+                                   ((PERIPH) == TIM16_BASE)|| \
+                                   ((PERIPH) == TIM17_BASE))
+
 /* LIST1: TIM 1 and 8 */
 #define IS_TIM_LIST1_PERIPH(PERIPH)  (((PERIPH) == TIM1) || \
                                       ((PERIPH) == TIM8))
@@ -1052,7 +1070,7 @@ typedef struct
   */
 
 void TIM_DeInit(TIM_TypeDef* TIMx);
-void TIM_TimeBaseInit(TIM_TypeDef* TIMx, TIM_TimeBaseInitTypeDef* TIM_TimeBaseInitStruct);
+void TIM_TimeBaseInit(TIM_TypeDef* TIMx, TIM_TimeBaseInitTypeDef const * const TIM_TimeBaseInitStruct);
 void TIM_OC1Init(TIM_TypeDef* TIMx, TIM_OCInitTypeDef* TIM_OCInitStruct);
 void TIM_OC2Init(TIM_TypeDef* TIMx, TIM_OCInitTypeDef* TIM_OCInitStruct);
 void TIM_OC3Init(TIM_TypeDef* TIMx, TIM_OCInitTypeDef* TIM_OCInitStruct);

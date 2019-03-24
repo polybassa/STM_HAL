@@ -66,6 +66,7 @@ void DMA1_Channel1_IRQHandler(void)
     const uint32_t TEFlag = DMA1_IT_TE1;
     constexpr const auto& dma = Factory<Dma>::getByPeripherie<base>();
     Dma::DMA_IRQHandler(dma, TCFlag, HTFlag, TEFlag);
+    DMA_ClearITPendingBit(DMA1_IT_GL1);
 }
 #endif
 
@@ -78,6 +79,7 @@ void DMA1_Channel2_IRQHandler(void)
     const uint32_t TEFlag = DMA1_IT_TE2;
     constexpr const auto& dma = Factory<Dma>::getByPeripherie<base>();
     Dma::DMA_IRQHandler(dma, TCFlag, HTFlag, TEFlag);
+    DMA_ClearITPendingBit(DMA1_IT_GL2);
 }
 #endif
 
@@ -90,6 +92,7 @@ void DMA1_Channel3_IRQHandler(void)
     const uint32_t TEFlag = DMA1_IT_TE3;
     constexpr const auto& dma = Factory<Dma>::getByPeripherie<base>();
     Dma::DMA_IRQHandler(dma, TCFlag, HTFlag, TEFlag);
+    DMA_ClearITPendingBit(DMA1_IT_GL3);
 }
 #endif
 
@@ -102,6 +105,7 @@ void DMA1_Channel4_IRQHandler(void)
     const uint32_t TEFlag = DMA1_IT_TE4;
     constexpr const auto& dma = Factory<Dma>::getByPeripherie<base>();
     Dma::DMA_IRQHandler(dma, TCFlag, HTFlag, TEFlag);
+    DMA_ClearITPendingBit(DMA1_IT_GL4);
 }
 #endif
 
@@ -114,6 +118,7 @@ void DMA1_Channel5_IRQHandler(void)
     const uint32_t TEFlag = DMA1_IT_TE5;
     constexpr const auto& dma = Factory<Dma>::getByPeripherie<base>();
     Dma::DMA_IRQHandler(dma, TCFlag, HTFlag, TEFlag);
+    DMA_ClearITPendingBit(DMA1_IT_GL5);
 }
 #endif
 
@@ -126,6 +131,7 @@ void DMA1_Channel6_IRQHandler(void)
     const uint32_t TEFlag = DMA1_IT_TE6;
     constexpr const auto& dma = Factory<Dma>::getByPeripherie<base>();
     Dma::DMA_IRQHandler(dma, TCFlag, HTFlag, TEFlag);
+    DMA_ClearITPendingBit(DMA1_IT_GL6);
 }
 #endif
 
@@ -138,6 +144,7 @@ void DMA1_Channel7_IRQHandler(void)
     const uint32_t TEFlag = DMA1_IT_TE7;
     constexpr const auto& dma = Factory<Dma>::getByPeripherie<base>();
     Dma::DMA_IRQHandler(dma, TCFlag, HTFlag, TEFlag);
+    DMA_ClearITPendingBit(DMA1_IT_GL7);
 }
 #endif
 
@@ -150,6 +157,7 @@ void DMA2_Channel1_IRQHandler(void)
     const uint32_t TEFlag = DMA2_IT_TE1;
     constexpr const auto& dma = Factory<Dma>::getByPeripherie<base>();
     Dma::DMA_IRQHandler(dma, TCFlag, HTFlag, TEFlag);
+    DMA_ClearITPendingBit(DMA2_IT_GL1);
 }
 #endif
 
@@ -162,6 +170,7 @@ void DMA2_Channel2_IRQHandler(void)
     const uint32_t TEFlag = DMA2_IT_TE2;
     constexpr const auto& dma = Factory<Dma>::getByPeripherie<base>();
     Dma::DMA_IRQHandler(dma, TCFlag, HTFlag, TEFlag);
+    DMA_ClearITPendingBit(DMA2_IT_GL2);
 }
 #endif
 
@@ -174,6 +183,7 @@ void DMA2_Channel3_IRQHandler(void)
     const uint32_t TEFlag = DMA2_IT_TE3;
     constexpr const auto& dma = Factory<Dma>::getByPeripherie<base>();
     Dma::DMA_IRQHandler(dma, TCFlag, HTFlag, TEFlag);
+    DMA_ClearITPendingBit(DMA2_IT_GL3);
 }
 #endif
 
@@ -186,6 +196,7 @@ void DMA2_Channel4_IRQHandler(void)
     const uint32_t TEFlag = DMA2_IT_TE4;
     constexpr const auto& dma = Factory<Dma>::getByPeripherie<base>();
     Dma::DMA_IRQHandler(dma, TCFlag, HTFlag, TEFlag);
+    DMA_ClearITPendingBit(DMA2_IT_GL4);
 }
 #endif
 
@@ -198,6 +209,7 @@ void DMA2_Channel5_IRQHandler(void)
     const uint32_t TEFlag = DMA2_IT_TE5;
     constexpr const auto& dma = Factory<Dma>::getByPeripherie<base>();
     Dma::DMA_IRQHandler(dma, TCFlag, HTFlag, TEFlag);
+    DMA_ClearITPendingBit(DMA2_IT_GL5);
 }
 #endif
 
@@ -206,7 +218,6 @@ void Dma::initialize(void) const
     DMA_Init(reinterpret_cast<DMA_Channel_TypeDef*>(mPeripherie), &mConfiguration);
     if (mDmaInterrupt) {
         DMA_ITConfig(reinterpret_cast<DMA_Channel_TypeDef*>(mPeripherie), mDmaInterrupt, ENABLE);
-        NVIC_SetPriority(mDmaIRQn, 0xa);
         NVIC_EnableIRQ(mDmaIRQn);
     }
 }
