@@ -93,7 +93,7 @@
 #define HAVE__BOOL 1
 
 /* Define to the address where bug reports for this package should be sent. */
-#define PACKAGE_BUGREPORT "nils.weiss@st.oth-regensburg.de"
+#define PACKAGE_BUGREPORT "nils@we155.de"
 
 /* Define to the full name of this package. */
 #define PACKAGE_NAME "STM_HAL"

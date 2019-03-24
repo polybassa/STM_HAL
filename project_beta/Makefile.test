@@ -55,15 +55,6 @@ ${BINDIR}/PIDController_ut.bin: DEFINES+=-DUNITTEST
 ${BINDIR}/PIDController_ut.bin: ${OBJDIR}/PIDController.o
 ${BINDIR}/PIDController_ut.bin: ${OBJDIR}/PIDController_ut.o
 
-####################################DirectMotorController############################################
-
-${BINDIR}/DirectMotorController_ut.bin: DEFINES+=-DUNITTEST
-${BINDIR}/DirectMotorController_ut.bin: ${OBJDIR}/DirectMotorController.o
-${BINDIR}/DirectMotorController_ut.bin: ${OBJDIR}/DeepSleepInterface.o 
-${BINDIR}/DirectMotorController_ut.bin: ${OBJDIR}/DirectMotorController_ut.o
-
-################################################################################
-
 test: clean-all ${BINDIR} ${OBJDIR} test_binarys
 	@echo "Generate coverage report. See ${COVERAGEDIR}/index.html"
 	-@${LCOV} --directory ${OBJDIR}/ --base-directory ${OBJDIR}/ --gcov-tool ${GCOV} --capture -o ${OBJDIR}/cov.info
