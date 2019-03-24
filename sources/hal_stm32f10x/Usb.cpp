@@ -64,7 +64,7 @@ size_t Usb::send(uint8_t const* const data, const size_t length, const std::chro
     while (bytesSend < length) {
         if (this->isReadyToSend()) {
             packet_sent = 0;
-            const size_t chunkLength = std::min((size_t)(VIRTUAL_COM_PORT_DATA_SIZE - 1), length - bytesSend);
+            const size_t chunkLength = std::min((size_t)(VIRTUAL_COM_PORT_DATA_SIZE), length - bytesSend);
             UserToPMABufferCopy((unsigned char*)data + bytesSend, ENDP1_TXADDR, chunkLength);
             SetEPTxCount(ENDP1, chunkLength);
             SetEPTxValid(ENDP1);
