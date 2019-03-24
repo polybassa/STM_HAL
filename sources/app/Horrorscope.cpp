@@ -79,8 +79,9 @@ void Horrorscope::putChar(const char data)
 void Horrorscope::putBuffer(uint8_t const* const data, const uint16_t len)
 {
     if (scope->mUsb.isConfigured()) {
-        Trace(ZONE_INFO, "sending buffer\r\n");
-        scope->mUsb.send(data, len);
+        Trace(ZONE_INFO, "sending buffer %d \r\n", len);
+        const auto sent = scope->mUsb.send(data, len);
+        Trace(ZONE_INFO, "sent %d \r\n", sent);
     }
 }
 

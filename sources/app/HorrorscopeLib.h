@@ -49,9 +49,9 @@ typedef struct {
 
 typedef struct {
 #ifdef DEBUG
-    uint8_t scopeBuf[4096];
+    uint8_t scopeBuf[0x1000];
 #else
-    uint8_t scopeBuf[8192];
+    uint8_t scopeBuf[0x2800];
 #endif
     uint32_t timeout;
     uint16_t delay;

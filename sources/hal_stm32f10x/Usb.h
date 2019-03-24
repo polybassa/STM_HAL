@@ -24,7 +24,7 @@ struct Usb {
 
     size_t send(uint8_t const* const            data,
                 const size_t                    length,
-                const std::chrono::milliseconds timeout = std::chrono::milliseconds(100)) const;
+                const std::chrono::milliseconds timeout = std::chrono::milliseconds(500)) const;
     bool isReadyToSend(void) const;
 
     size_t receive(uint8_t* const, const size_t,

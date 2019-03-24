@@ -45,6 +45,8 @@ const std::string VERSION(&_version_start, (&_version_end - &_version_start));
 
 int main(void)
 {
+    RCC_PCLK2Config(RCC_HCLK_Div2);
+
     TraceInit();
     Trace(ZONE_INFO, "Version: %s \r\n", VERSION.c_str());
 
@@ -56,13 +58,13 @@ int main(void)
     hal::initFactory<hal::Factory<hal::Dma> > ();
     hal::initFactory<hal::Factory<hal::Tim> > ();
 
-    auto __attribute__((used)) scope = new app::Horrorscope(hal::Factory<hal::Exti>::get<hal::Exti::TRIGGER>(),
-                                                            hal::Factory<hal::Adc>::get<hal::Adc::HORROR_ADC1>(),
-                                                            hal::Factory<hal::Adc>::get<hal::Adc::HORROR_ADC2>(),
-                                                            hal::Factory<hal::Dma>::get<hal::Dma::ADC>(),
-                                                            hal::Factory<hal::Usb>::get(),
-                                                            hal::Factory<hal::Tim>::get<hal::Tim::HORRORTIMER>(),
-                                                            hal::Factory<hal::Gpio>::get<hal::Gpio::LED>());
+    static auto __attribute__((used)) scope = app::Horrorscope(hal::Factory<hal::Exti>::get<hal::Exti::TRIGGER>(),
+                                                               hal::Factory<hal::Adc>::get<hal::Adc::HORROR_ADC1>(),
+                                                               hal::Factory<hal::Adc>::get<hal::Adc::HORROR_ADC2>(),
+                                                               hal::Factory<hal::Dma>::get<hal::Dma::ADC>(),
+                                                               hal::Factory<hal::Usb>::get(),
+                                                               hal::Factory<hal::Tim>::get<hal::Tim::HORRORTIMER>(),
+                                                               hal::Factory<hal::Gpio>::get<hal::Gpio::LED>());
 
     os::Task::startScheduler();
     Trace(ZONE_ERROR, "This shouldn't happen!\r\n");
