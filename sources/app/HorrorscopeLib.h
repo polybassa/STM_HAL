@@ -48,7 +48,11 @@ typedef struct {
 } HorrorscopeFunctions;
 
 typedef struct {
+#ifdef DEBUG
     uint8_t scopeBuf[4096];
+#else
+    uint8_t scopeBuf[8192];
+#endif
     uint32_t timeout;
     uint16_t delay;
     uint16_t numberOfSamples;

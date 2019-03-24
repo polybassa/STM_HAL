@@ -63,9 +63,10 @@ uint16_t Horrorscope::getShort(void)
             return 0;
         }
     }
-    Trace(ZONE_INFO, "Receive Short 0x%04x bytesLeft = %d\r\n", ret, Receive_length);
+    uint16_t r = ret >> 8 | ((ret & 0xff) << 8);
+    Trace(ZONE_INFO, "Receive Short 0x%04x bytesLeft = %d\r\n", r, Receive_length);
 
-    return ret;
+    return r;
 }
 
 void Horrorscope::putChar(const char data)
@@ -79,12 +80,6 @@ void Horrorscope::putBuffer(uint8_t const* const data, const uint16_t len)
 {
     if (scope->mUsb.isConfigured()) {
         Trace(ZONE_INFO, "sending buffer\r\n");
-
-        for (int i = 0; i < len; i = i + 2) {
-            SEGGER_RTT_printf(0, "0x%02x%02x ", data[i + 1], data[i]);
-        }
-        SEGGER_RTT_printf(0, "\r\n");
-
         scope->mUsb.send(data, len);
     }
 }
@@ -103,8 +98,16 @@ uint8_t Horrorscope::triggerWaitFunction(const uint32_t timeout, const uint16_t 
     scope->mTrigger.enable();
 
     for (size_t i = 0; (i < timeout) && scope->mCaptureDone == false; i++) {
+        if (i % 50 == 0) {
+            scope->mLed = true;
+        }
         os::ThisTask::sleep(std::chrono::milliseconds(1));
+        if (i % 100 == 0) {
+            scope->mLed = false;
+        }
     }
+    scope->mLed = true;
+
     Trace(ZONE_INFO, scope->mCaptureDone ? "captured\r\n" : "timeout\r\n");
     return scope->mCaptureDone ? 0 : 1;
 }

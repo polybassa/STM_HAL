@@ -61,7 +61,7 @@ class Factory<Adc>
 
     Factory(void)
     {
-        RCC_ADCCLKConfig(RCC_PCLK2_Div8);
+        RCC_ADCCLKConfig(RCC_PCLK2_Div4);
         RCC_APB2PeriphClockCmd(RCC_APB2Periph_ADC1, ENABLE);
         RCC_APB2PeriphClockCmd(RCC_APB2Periph_ADC2, ENABLE);
 

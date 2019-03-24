@@ -118,9 +118,9 @@ void Exti::executeCallback(void) const
 void Exti::handleInterrupt(void) const
 {
     if (getStatus()) {
-        clearInterruptBit();
         executeCallback();
     }
+    clearInterruptBit();
 }
 
 IRQn Exti::getIRQChannel(const EXTI_InitTypeDef& config) const

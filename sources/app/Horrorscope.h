@@ -17,7 +17,11 @@ namespace app
 {
 class Horrorscope final
 {
+#ifdef DEBUG
     static constexpr size_t STACKSIZE = 1024;
+#else
+    static constexpr size_t STACKSIZE = 512;
+#endif
 
     os::TaskInterruptable mTask;
     const hal::Exti& mTrigger;

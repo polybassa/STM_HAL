@@ -23,6 +23,7 @@ void HorrorscopeExecute(HorrorscopeData* const data, HorrorscopeFunctions* const
 
     while (1) {
         char command = func->usb_get_char();
+        if (command == 0) {continue;}
 
         switch (command) {
         case 'T':

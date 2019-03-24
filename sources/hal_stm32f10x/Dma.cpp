@@ -218,7 +218,6 @@ void Dma::initialize(void) const
     DMA_Init(reinterpret_cast<DMA_Channel_TypeDef*>(mPeripherie), &mConfiguration);
     if (mDmaInterrupt) {
         DMA_ITConfig(reinterpret_cast<DMA_Channel_TypeDef*>(mPeripherie), mDmaInterrupt, ENABLE);
-        NVIC_SetPriority(mDmaIRQn, 0xa);
         NVIC_EnableIRQ(mDmaIRQn);
     }
 }

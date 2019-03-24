@@ -10,8 +10,8 @@ LDFLAGS+=-O0
 endif
 
 ifeq ($(MAKECMDGOALS),firmware)
-DEFINES+=-Os
-LDFLAGS+=-Os
+DEFINES+=-O3
+LDFLAGS+=-O3
 endif
 
 ifneq (,$(filter debug_firmware firmware,$(MAKECMDGOALS)))
