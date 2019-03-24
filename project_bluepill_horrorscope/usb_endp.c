@@ -43,7 +43,6 @@
 #include "usb_istr.h"
 #include "usb_pwr.h"
 #include "string.h"
-#include "SEGGER_RTT.h"
 /* Private typedef -----------------------------------------------------------*/
 /* Private define ------------------------------------------------------------*/
 

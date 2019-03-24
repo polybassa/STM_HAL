@@ -84,7 +84,9 @@
 
 /* Ensure stdint is only used by the compiler, and not the assembler. */
 #include <stdint.h>
+#ifdef DEBUG
 #include "SEGGER_SYSVIEW_FreeRTOS.h"
+#endif
 extern uint32_t SystemCoreClock;
 
 #define configUSE_PREEMPTION 1
