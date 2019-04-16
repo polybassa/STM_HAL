@@ -67,8 +67,12 @@ BaseType_t xQueueGenericReceive(QueueHandle_t    xQueue,
 void RCC_GetClocksFreq(RCC_ClocksTypeDef*) {}
 
 constexpr const hal::Usart& dev::DebugInterface::interface;
-
+#ifdef __STM32F4xx_H // usage of stm32 f4 hal
+constexpr const std::array<const hal::Usart, hal::Usart::__ENUM__SIZE> hal::Factory<hal::Usart>::Container;
+constexpr const std::array<const hal::Nvic, hal::Nvic::__ENUM__SIZE + 1> hal::Factory<hal::Nvic>::Container;
+#else
 constexpr const std::array<const hal::Usart, hal::Usart::__ENUM__SIZE + 1> hal::Factory<hal::Usart>::Container;
+#endif
 
 //-------------------------TESTCASES-------------------------
 
