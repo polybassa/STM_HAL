@@ -39,6 +39,7 @@ struct Spi {
 
     bool isReadyToReceive(void) const;
     bool isReadyToSend(void) const;
+    bool isBusy(void) const;
 
 private:
     constexpr Spi(const enum Description& desc,

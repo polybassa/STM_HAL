@@ -6,6 +6,7 @@
 #include "Spi.h"
 #include "trace.h"
 #include "LockGuard.h"
+#include "os_Task.h"
 
 static const int __attribute__((unused)) g_DebugZones = ZONE_ERROR |
                                                         ZONE_WARNING | ZONE_VERBOSE | ZONE_INFO;
@@ -22,6 +23,7 @@ void Spi::initialize() const
     if (mConfiguration.SPI_NSS == SPI_NSS_Hard) {
         SPI_SSOutputCmd(reinterpret_cast<SPI_TypeDef*>(mPeripherie), ENABLE);
     }
+
     SPI_Cmd(reinterpret_cast<SPI_TypeDef*>(mPeripherie), ENABLE);
 }
 
@@ -62,11 +64,14 @@ size_t Spi::receive(uint8_t* const data, const size_t length) const
 
     constexpr const uint8_t defaultValueForSend = 0xff;
     size_t bytesSend = 0;
+    //clear RXNE flag
+    this->receive();
     while ((size_t)bytesSend < length) {
         if (this->isReadyToSend()) {
             this->send(defaultValueForSend);
-        }
-        if (this->isReadyToReceive()) {
+            while (this->isReadyToReceive() == false) {
+                ; // will stuck here if peripherial goes down
+            }
             data[bytesSend] = this->receive();
             bytesSend++;
         }
@@ -84,6 +89,12 @@ bool Spi::isReadyToSend(void) const
 {
     return (bool)SPI_I2S_GetFlagStatus(reinterpret_cast<SPI_TypeDef*>(mPeripherie),
                                        SPI_I2S_FLAG_TXE);
+}
+
+bool Spi::isBusy(void) const
+{
+    return (bool)SPI_I2S_GetFlagStatus(reinterpret_cast<SPI_TypeDef*>(mPeripherie),
+                                       SPI_I2S_FLAG_BSY);
 }
 
 std::array<os::Mutex, Spi::Description::__ENUM__SIZE> Spi::InterfaceAvailableMutex;
