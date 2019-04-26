@@ -45,7 +45,7 @@ const std::string VERSION(&_version_start, (&_version_end - &_version_start));
 
 int main(void)
 {
-    RCC_PCLK2Config(RCC_HCLK_Div2);
+    //RCC_PCLK2Config(RCC_HCLK_Div2);
 
     TraceInit();
     Trace(ZONE_INFO, "Version: %s \r\n", VERSION.c_str());
