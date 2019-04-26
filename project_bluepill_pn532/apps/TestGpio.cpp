@@ -22,6 +22,7 @@
 #include <array>
 #include "binascii.h"
 #include "PN_532.h"
+#include <cstring>
 
 static const int __attribute__((unused)) g_DebugZones = ZONE_ERROR | ZONE_WARNING | ZONE_VERBOSE | ZONE_INFO;
 
@@ -43,7 +44,7 @@ char getChar(void)
 }
 
 const os::TaskEndless gpioTest("Gpio_Test", 2048, os::Task::Priority::MEDIUM, [](const bool&){
-                               Trace(ZONE_INFO, "HI Markus\r\n");
+                               Trace(ZONE_INFO, "Started\r\n");
 
                                constexpr const hal::Gpio& out = hal::Factory<hal::Gpio>::get<hal::Gpio::LED>();
                                constexpr const hal::Gpio& spi_cs = hal::Factory<hal::Gpio>::get<hal::Gpio::SPI1_NSS>();
@@ -52,7 +53,7 @@ const os::TaskEndless gpioTest("Gpio_Test", 2048, os::Task::Priority::MEDIUM, []
 
                                Adafruit_PN532 nfc(spi_cs, spi);
 
-                               os::ThisTask::sleep(std::chrono::milliseconds(10000));
+                               os::ThisTask::sleep(std::chrono::milliseconds(3000));
                                nfc.begin();
 
                                uint32_t versiondata = nfc.getFirmwareVersion();
@@ -155,7 +156,15 @@ const os::TaskEndless gpioTest("Gpio_Test", 2048, os::Task::Priority::MEDIUM, []
                                                        // Read successful
                                                        Trace(ZONE_INFO, "Block %d \r\n", currentblock);
                                                        // Dump the raw data
-                                                       nfc.PrintHex(data, 16);
+                                                       std::array<uint8_t, 128> dataBuffer;
+                                                       std::array<uint8_t, 256> printBuffer;
+
+                                                       const size_t dataLength = 16;
+                                                       std::memcpy(dataBuffer.data(), data, dataLength);
+
+                                                       hexlify(printBuffer, dataBuffer);
+                                                       printBuffer[dataLength] = 0;
+                                                       Trace(ZONE_INFO, "%s\r\n", printBuffer.data());
                                                    } else {
                                                        // Oops ... something happened
                                                        Trace(ZONE_INFO,
@@ -171,5 +180,6 @@ const os::TaskEndless gpioTest("Gpio_Test", 2048, os::Task::Priority::MEDIUM, []
                                    }
                                    // Wait a bit before trying again
                                    Trace(ZONE_INFO, "\n\nSend a character to run the mem dumper again!\r\n");
+                                   os::ThisTask::sleep(std::chrono::milliseconds(10000));
                                }
     });

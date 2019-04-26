@@ -206,6 +206,8 @@ private:
     static const uint8_t pn532ack[6];
     static const uint8_t pn532response_firmwarevers[6];
 
+    static constexpr const size_t PN532_PACKBUFFSIZ = 64;
+
     // Low level communication functions that handle both SPI and I2C.
     void readdata(uint8_t* buff, uint8_t n);
     void writecommand(uint8_t* cmd, uint8_t cmdlen);
