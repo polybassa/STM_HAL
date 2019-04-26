@@ -155,7 +155,7 @@ LDSCRIPT = ${ROOT}/device/ldscripts/STM32F10x_HD_FLASH.ld
 endif
 
 ifeq (${DEVICE}, STM32F10X_MD)
-LDSCRIPT = ${ROOT}/project_bluepill_horrorscope/STM32F10x_MD_FLASH.ld
+LDSCRIPT = ${ROOT}/project_bluepill_pn532/STM32F10x_MD_FLASH.ld
 endif
 
 # Add the include file paths to AFLAGS and CFLAGS.

@@ -100,6 +100,7 @@ ${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/Tim.o
 ${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/Spi.o
 
 # DEV Layer
+${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/PN_532.o
 
 # OS Layer
 ${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/Semaphore.o

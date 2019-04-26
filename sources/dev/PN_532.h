@@ -26,7 +26,7 @@
 
 #pragma once
 
-#include <cstdint.h>
+#include <cstdint>
 #include "Gpio.h"
 #include "Spi.h"
 
@@ -202,6 +202,9 @@ private:
     uint8_t _uidLen;       // uid len
     uint8_t _key[6];       // Mifare Classic key
     uint8_t _inListedTag;  // Tg number of inlisted tag.
+
+    static const uint8_t pn532ack[6];
+    static const uint8_t pn532response_firmwarevers[6];
 
     // Low level communication functions that handle both SPI and I2C.
     void readdata(uint8_t* buff, uint8_t n);

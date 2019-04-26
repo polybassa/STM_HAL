@@ -50,7 +50,7 @@ int main(void)
     Trace(ZONE_INFO, "Version: %s \r\n", VERSION.c_str());
 
     hal::initFactory<hal::Factory<hal::Gpio> >();
-    hal::initFactory<hal::Factory<hal::Usb> >();
+    //hal::initFactory<hal::Factory<hal::Usb> >();
     hal::initFactory<hal::Factory<hal::Spi> > ();
 
     os::Task::startScheduler();
