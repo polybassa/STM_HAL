@@ -448,7 +448,7 @@ bool Adafruit_PN532::inDataExchange(uint8_t* send, uint8_t sendLength, uint8_t* 
     uint8_t i;
 
     pn532_packetbuffer[0] = 0x40; // PN532_COMMAND_INDATAEXCHANGE;
-    pn532_packetbuffer[1] = _inListedTag;
+    pn532_packetbuffer[1] = mInListedTag;
     for (i = 0; i < sendLength; ++i) {
         pn532_packetbuffer[i + 2] = send[i];
     }
@@ -555,10 +555,10 @@ bool Adafruit_PN532::inListPassiveTarget()
                 return false;
             }
 
-            _inListedTag = pn532_packetbuffer[8];
+            mInListedTag = pn532_packetbuffer[8];
 #ifdef PN532DEBUG
             Trace(ZONE_VERBOSE, "Tag number: ");
-            PN532DEBUGPRINT.println(_inListedTag);
+            PN532DEBUGPRINT.println(mInListedTag);
 #endif
             return true;
         } else {
@@ -634,6 +634,9 @@ uint8_t Adafruit_PN532::mifareclassic_AuthenticateBlock(uint8_t* uid,
     std::array<uint8_t, PN532_PACKBUFFSIZ> pn532_packetbuffer;
 
     uint8_t i;
+    uint8_t _uid[7];       // ISO14443A uid
+    uint8_t _uidLen;       // uid len
+    uint8_t _key[6];       // Mifare Classic key
 
     // Hang on to the key and uid data
     memcpy(_key, keyData, 6);

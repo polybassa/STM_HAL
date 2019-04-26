@@ -95,10 +95,16 @@ const os::TaskEndless gpioTest("Gpio_Test", 2048, os::Task::Priority::MEDIUM, []
                                    if (success) {
                                        // Display some basic information about the card
                                        Trace(ZONE_INFO,
-                                             "Found an ISO14443A card  UID Length: %d bytes  UID Value: ",
-                                             uidLength);
-                                       nfc.PrintHex(uid, uidLength);
-                                       Trace(ZONE_INFO, "\r\n");
+                                             "Found an ISO14443A card  UID Length: %d bytes  UID Value: %02x%02x%02x%02x%02x%02x%02x\r\n",
+                                             uidLength,
+                                             uid[0],
+                                             uid[1],
+                                             uid[2],
+                                             uid[3],
+                                             uid[4],
+                                             uid[5],
+                                             uid[6],
+                                             uid[7]);
 
                                        if (uidLength == 4) {
                                            // We probably have a Mifare Classic card ...

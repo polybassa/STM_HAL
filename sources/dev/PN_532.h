@@ -82,12 +82,6 @@
 #define PN532_SPI_DATAREAD                  (0x03)
 #define PN532_SPI_READY                     (0x01)
 
-#define PN532_I2C_ADDRESS                   (0x48 >> 1)
-#define PN532_I2C_READBIT                   (0x01)
-#define PN532_I2C_BUSY                      (0x00)
-#define PN532_I2C_READY                     (0x01)
-#define PN532_I2C_READYTIMEOUT              (20)
-
 #define PN532_MIFARE_ISO14443A              (0x00)
 
 // Mifare Commands
@@ -198,10 +192,7 @@ private:
     const hal::Gpio& mSpiCs;
     const hal::Spi& mSpi;
 
-    uint8_t _uid[7];       // ISO14443A uid
-    uint8_t _uidLen;       // uid len
-    uint8_t _key[6];       // Mifare Classic key
-    uint8_t _inListedTag;  // Tg number of inlisted tag.
+    uint8_t mInListedTag = 0;
 
     static const uint8_t pn532ack[6];
     static const uint8_t pn532response_firmwarevers[6];
