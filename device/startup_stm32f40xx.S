@@ -140,13 +140,9 @@ Infinite_Loop:
 .type WWDG_IRQHandlerSV, %function
 WWDG_IRQHandlerSV:
     push    {r7,lr}
-    sub     sp, #8
-    add     r7, sp, #0
     bl SEGGER_SYSVIEW_RecordEnterISR
     bl WWDG_IRQHandler
     bl SEGGER_SYSVIEW_RecordExitISR
-    adds    r7, #8
-    mov     sp, r7
     pop     {r7, pc}
 .size WWDG_IRQHandlerSV, .-WWDG_IRQHandlerSV
 
@@ -155,13 +151,9 @@ WWDG_IRQHandlerSV:
 .type PVD_IRQHandlerSV, %function
 PVD_IRQHandlerSV:
     push    {r7,lr}
-    sub     sp, #8
-    add     r7, sp, #0
     bl SEGGER_SYSVIEW_RecordEnterISR
     bl PVD_IRQHandler
     bl SEGGER_SYSVIEW_RecordExitISR
-    adds    r7, #8
-    mov     sp, r7
     pop     {r7, pc}
 .size PVD_IRQHandlerSV, .-PVD_IRQHandlerSV
 
@@ -170,13 +162,9 @@ PVD_IRQHandlerSV:
 .type TAMP_STAMP_IRQHandlerSV, %function
 TAMP_STAMP_IRQHandlerSV:
     push    {r7,lr}
-    sub     sp, #8
-    add     r7, sp, #0
     bl SEGGER_SYSVIEW_RecordEnterISR
     bl TAMP_STAMP_IRQHandler
     bl SEGGER_SYSVIEW_RecordExitISR
-    adds    r7, #8
-    mov     sp, r7
     pop     {r7, pc}
 .size TAMP_STAMP_IRQHandlerSV, .-TAMP_STAMP_IRQHandlerSV
 
@@ -185,13 +173,9 @@ TAMP_STAMP_IRQHandlerSV:
 .type RTC_WKUP_IRQHandlerSV, %function
 RTC_WKUP_IRQHandlerSV:
     push    {r7,lr}
-    sub     sp, #8
-    add     r7, sp, #0
     bl SEGGER_SYSVIEW_RecordEnterISR
     bl RTC_WKUP_IRQHandler
     bl SEGGER_SYSVIEW_RecordExitISR
-    adds    r7, #8
-    mov     sp, r7
     pop     {r7, pc}
 .size RTC_WKUP_IRQHandlerSV, .-RTC_WKUP_IRQHandlerSV
 
@@ -200,13 +184,9 @@ RTC_WKUP_IRQHandlerSV:
 .type FLASH_IRQHandlerSV, %function
 FLASH_IRQHandlerSV:
     push    {r7,lr}
-    sub     sp, #8
-    add     r7, sp, #0
     bl SEGGER_SYSVIEW_RecordEnterISR
     bl FLASH_IRQHandler
     bl SEGGER_SYSVIEW_RecordExitISR
-    adds    r7, #8
-    mov     sp, r7
     pop     {r7, pc}
 .size FLASH_IRQHandlerSV, .-FLASH_IRQHandlerSV
 
@@ -215,13 +195,9 @@ FLASH_IRQHandlerSV:
 .type RCC_IRQHandlerSV, %function
 RCC_IRQHandlerSV:
     push    {r7,lr}
-    sub     sp, #8
-    add     r7, sp, #0
     bl SEGGER_SYSVIEW_RecordEnterISR
     bl RCC_IRQHandler
     bl SEGGER_SYSVIEW_RecordExitISR
-    adds    r7, #8
-    mov     sp, r7
     pop     {r7, pc}
 .size RCC_IRQHandlerSV, .-RCC_IRQHandlerSV
 
@@ -230,13 +206,9 @@ RCC_IRQHandlerSV:
 .type EXTI0_IRQHandlerSV, %function
 EXTI0_IRQHandlerSV:
     push    {r7,lr}
-    sub     sp, #8
-    add     r7, sp, #0
     bl SEGGER_SYSVIEW_RecordEnterISR
     bl EXTI0_IRQHandler
     bl SEGGER_SYSVIEW_RecordExitISR
-    adds    r7, #8
-    mov     sp, r7
     pop     {r7, pc}
 .size EXTI0_IRQHandlerSV, .-EXTI0_IRQHandlerSV
 
@@ -245,13 +217,9 @@ EXTI0_IRQHandlerSV:
 .type EXTI1_IRQHandlerSV, %function
 EXTI1_IRQHandlerSV:
     push    {r7,lr}
-    sub     sp, #8
-    add     r7, sp, #0
     bl SEGGER_SYSVIEW_RecordEnterISR
     bl EXTI1_IRQHandler
     bl SEGGER_SYSVIEW_RecordExitISR
-    adds    r7, #8
-    mov     sp, r7
     pop     {r7, pc}
 .size EXTI1_IRQHandlerSV, .-EXTI1_IRQHandlerSV
 
@@ -260,13 +228,9 @@ EXTI1_IRQHandlerSV:
 .type EXTI2_IRQHandlerSV, %function
 EXTI2_IRQHandlerSV:
     push    {r7,lr}
-    sub     sp, #8
-    add     r7, sp, #0
     bl SEGGER_SYSVIEW_RecordEnterISR
     bl EXTI2_IRQHandler
     bl SEGGER_SYSVIEW_RecordExitISR
-    adds    r7, #8
-    mov     sp, r7
     pop     {r7, pc}
 .size EXTI2_IRQHandlerSV, .-EXTI2_IRQHandlerSV
 
@@ -275,13 +239,9 @@ EXTI2_IRQHandlerSV:
 .type EXTI3_IRQHandlerSV, %function
 EXTI3_IRQHandlerSV:
     push    {r7,lr}
-    sub     sp, #8
-    add     r7, sp, #0
     bl SEGGER_SYSVIEW_RecordEnterISR
     bl EXTI3_IRQHandler
     bl SEGGER_SYSVIEW_RecordExitISR
-    adds    r7, #8
-    mov     sp, r7
     pop     {r7, pc}
 .size EXTI3_IRQHandlerSV, .-EXTI3_IRQHandlerSV
 
@@ -290,13 +250,9 @@ EXTI3_IRQHandlerSV:
 .type EXTI4_IRQHandlerSV, %function
 EXTI4_IRQHandlerSV:
     push    {r7,lr}
-    sub     sp, #8
-    add     r7, sp, #0
     bl SEGGER_SYSVIEW_RecordEnterISR
     bl EXTI4_IRQHandler
     bl SEGGER_SYSVIEW_RecordExitISR
-    adds    r7, #8
-    mov     sp, r7
     pop     {r7, pc}
 .size EXTI4_IRQHandlerSV, .-EXTI4_IRQHandlerSV
 
@@ -305,13 +261,9 @@ EXTI4_IRQHandlerSV:
 .type DMA1_Stream0_IRQHandlerSV, %function
 DMA1_Stream0_IRQHandlerSV:
     push    {r7,lr}
-    sub     sp, #8
-    add     r7, sp, #0
     bl SEGGER_SYSVIEW_RecordEnterISR
     bl DMA1_Stream0_IRQHandler
     bl SEGGER_SYSVIEW_RecordExitISR
-    adds    r7, #8
-    mov     sp, r7
     pop     {r7, pc}
 .size DMA1_Stream0_IRQHandlerSV, .-DMA1_Stream0_IRQHandlerSV
 
@@ -320,13 +272,9 @@ DMA1_Stream0_IRQHandlerSV:
 .type DMA1_Stream1_IRQHandlerSV, %function
 DMA1_Stream1_IRQHandlerSV:
     push    {r7,lr}
-    sub     sp, #8
-    add     r7, sp, #0
     bl SEGGER_SYSVIEW_RecordEnterISR
     bl DMA1_Stream1_IRQHandler
     bl SEGGER_SYSVIEW_RecordExitISR
-    adds    r7, #8
-    mov     sp, r7
     pop     {r7, pc}
 .size DMA1_Stream1_IRQHandlerSV, .-DMA1_Stream1_IRQHandlerSV
 
@@ -335,13 +283,9 @@ DMA1_Stream1_IRQHandlerSV:
 .type DMA1_Stream2_IRQHandlerSV, %function
 DMA1_Stream2_IRQHandlerSV:
     push    {r7,lr}
-    sub     sp, #8
-    add     r7, sp, #0
     bl SEGGER_SYSVIEW_RecordEnterISR
     bl DMA1_Stream2_IRQHandler
     bl SEGGER_SYSVIEW_RecordExitISR
-    adds    r7, #8
-    mov     sp, r7
     pop     {r7, pc}
 .size DMA1_Stream2_IRQHandlerSV, .-DMA1_Stream2_IRQHandlerSV
 
@@ -350,13 +294,9 @@ DMA1_Stream2_IRQHandlerSV:
 .type DMA1_Stream3_IRQHandlerSV, %function
 DMA1_Stream3_IRQHandlerSV:
     push    {r7,lr}
-    sub     sp, #8
-    add     r7, sp, #0
     bl SEGGER_SYSVIEW_RecordEnterISR
     bl DMA1_Stream3_IRQHandler
     bl SEGGER_SYSVIEW_RecordExitISR
-    adds    r7, #8
-    mov     sp, r7
     pop     {r7, pc}
 .size DMA1_Stream3_IRQHandlerSV, .-DMA1_Stream3_IRQHandlerSV
 
@@ -365,13 +305,9 @@ DMA1_Stream3_IRQHandlerSV:
 .type DMA1_Stream4_IRQHandlerSV, %function
 DMA1_Stream4_IRQHandlerSV:
     push    {r7,lr}
-    sub     sp, #8
-    add     r7, sp, #0
     bl SEGGER_SYSVIEW_RecordEnterISR
     bl DMA1_Stream4_IRQHandler
     bl SEGGER_SYSVIEW_RecordExitISR
-    adds    r7, #8
-    mov     sp, r7
     pop     {r7, pc}
 .size DMA1_Stream4_IRQHandlerSV, .-DMA1_Stream4_IRQHandlerSV
 
@@ -380,13 +316,9 @@ DMA1_Stream4_IRQHandlerSV:
 .type DMA1_Stream5_IRQHandlerSV, %function
 DMA1_Stream5_IRQHandlerSV:
     push    {r7,lr}
-    sub     sp, #8
-    add     r7, sp, #0
     bl SEGGER_SYSVIEW_RecordEnterISR
     bl DMA1_Stream5_IRQHandler
     bl SEGGER_SYSVIEW_RecordExitISR
-    adds    r7, #8
-    mov     sp, r7
     pop     {r7, pc}
 .size DMA1_Stream5_IRQHandlerSV, .-DMA1_Stream5_IRQHandlerSV
 
@@ -395,13 +327,9 @@ DMA1_Stream5_IRQHandlerSV:
 .type DMA1_Stream6_IRQHandlerSV, %function
 DMA1_Stream6_IRQHandlerSV:
     push    {r7,lr}
-    sub     sp, #8
-    add     r7, sp, #0
     bl SEGGER_SYSVIEW_RecordEnterISR
     bl DMA1_Stream6_IRQHandler
     bl SEGGER_SYSVIEW_RecordExitISR
-    adds    r7, #8
-    mov     sp, r7
     pop     {r7, pc}
 .size DMA1_Stream6_IRQHandlerSV, .-DMA1_Stream6_IRQHandlerSV
 
@@ -410,13 +338,9 @@ DMA1_Stream6_IRQHandlerSV:
 .type ADC_IRQHandlerSV, %function
 ADC_IRQHandlerSV:
     push    {r7,lr}
-    sub     sp, #8
-    add     r7, sp, #0
     bl SEGGER_SYSVIEW_RecordEnterISR
     bl ADC_IRQHandler
     bl SEGGER_SYSVIEW_RecordExitISR
-    adds    r7, #8
-    mov     sp, r7
     pop     {r7, pc}
 .size ADC_IRQHandlerSV, .-ADC_IRQHandlerSV
 
@@ -425,13 +349,9 @@ ADC_IRQHandlerSV:
 .type CAN1_TX_IRQHandlerSV, %function
 CAN1_TX_IRQHandlerSV:
     push    {r7,lr}
-    sub     sp, #8
-    add     r7, sp, #0
     bl SEGGER_SYSVIEW_RecordEnterISR
     bl CAN1_TX_IRQHandler
     bl SEGGER_SYSVIEW_RecordExitISR
-    adds    r7, #8
-    mov     sp, r7
     pop     {r7, pc}
 .size CAN1_TX_IRQHandlerSV, .-CAN1_TX_IRQHandlerSV
 
@@ -440,13 +360,9 @@ CAN1_TX_IRQHandlerSV:
 .type CAN1_RX0_IRQHandlerSV, %function
 CAN1_RX0_IRQHandlerSV:
     push    {r7,lr}
-    sub     sp, #8
-    add     r7, sp, #0
     bl SEGGER_SYSVIEW_RecordEnterISR
     bl CAN1_RX0_IRQHandler
     bl SEGGER_SYSVIEW_RecordExitISR
-    adds    r7, #8
-    mov     sp, r7
     pop     {r7, pc}
 .size CAN1_RX0_IRQHandlerSV, .-CAN1_RX0_IRQHandlerSV
 
@@ -455,13 +371,9 @@ CAN1_RX0_IRQHandlerSV:
 .type CAN1_RX1_IRQHandlerSV, %function
 CAN1_RX1_IRQHandlerSV:
     push    {r7,lr}
-    sub     sp, #8
-    add     r7, sp, #0
     bl SEGGER_SYSVIEW_RecordEnterISR
     bl CAN1_RX1_IRQHandler
     bl SEGGER_SYSVIEW_RecordExitISR
-    adds    r7, #8
-    mov     sp, r7
     pop     {r7, pc}
 .size CAN1_RX1_IRQHandlerSV, .-CAN1_RX1_IRQHandlerSV
 
@@ -470,13 +382,9 @@ CAN1_RX1_IRQHandlerSV:
 .type CAN1_SCE_IRQHandlerSV, %function
 CAN1_SCE_IRQHandlerSV:
     push    {r7,lr}
-    sub     sp, #8
-    add     r7, sp, #0
     bl SEGGER_SYSVIEW_RecordEnterISR
     bl CAN1_SCE_IRQHandler
     bl SEGGER_SYSVIEW_RecordExitISR
-    adds    r7, #8
-    mov     sp, r7
     pop     {r7, pc}
 .size CAN1_SCE_IRQHandlerSV, .-CAN1_SCE_IRQHandlerSV
 
@@ -485,13 +393,9 @@ CAN1_SCE_IRQHandlerSV:
 .type EXTI9_5_IRQHandlerSV, %function
 EXTI9_5_IRQHandlerSV:
     push    {r7,lr}
-    sub     sp, #8
-    add     r7, sp, #0
     bl SEGGER_SYSVIEW_RecordEnterISR
     bl EXTI9_5_IRQHandler
     bl SEGGER_SYSVIEW_RecordExitISR
-    adds    r7, #8
-    mov     sp, r7
     pop     {r7, pc}
 .size EXTI9_5_IRQHandlerSV, .-EXTI9_5_IRQHandlerSV
 
@@ -500,13 +404,9 @@ EXTI9_5_IRQHandlerSV:
 .type TIM1_BRK_TIM9_IRQHandlerSV, %function
 TIM1_BRK_TIM9_IRQHandlerSV:
     push    {r7,lr}
-    sub     sp, #8
-    add     r7, sp, #0
     bl SEGGER_SYSVIEW_RecordEnterISR
     bl TIM1_BRK_TIM9_IRQHandler
     bl SEGGER_SYSVIEW_RecordExitISR
-    adds    r7, #8
-    mov     sp, r7
     pop     {r7, pc}
 .size TIM1_BRK_TIM9_IRQHandlerSV, .-TIM1_BRK_TIM9_IRQHandlerSV
 
@@ -515,13 +415,9 @@ TIM1_BRK_TIM9_IRQHandlerSV:
 .type TIM1_UP_TIM10_IRQHandlerSV, %function
 TIM1_UP_TIM10_IRQHandlerSV:
     push    {r7,lr}
-    sub     sp, #8
-    add     r7, sp, #0
     bl SEGGER_SYSVIEW_RecordEnterISR
     bl TIM1_UP_TIM10_IRQHandler
     bl SEGGER_SYSVIEW_RecordExitISR
-    adds    r7, #8
-    mov     sp, r7
     pop     {r7, pc}
 .size TIM1_UP_TIM10_IRQHandlerSV, .-TIM1_UP_TIM10_IRQHandlerSV
 
@@ -530,13 +426,9 @@ TIM1_UP_TIM10_IRQHandlerSV:
 .type TIM1_TRG_COM_TIM11_IRQHandlerSV, %function
 TIM1_TRG_COM_TIM11_IRQHandlerSV:
     push    {r7,lr}
-    sub     sp, #8
-    add     r7, sp, #0
     bl SEGGER_SYSVIEW_RecordEnterISR
     bl TIM1_TRG_COM_TIM11_IRQHandler
     bl SEGGER_SYSVIEW_RecordExitISR
-    adds    r7, #8
-    mov     sp, r7
     pop     {r7, pc}
 .size TIM1_TRG_COM_TIM11_IRQHandlerSV, .-TIM1_TRG_COM_TIM11_IRQHandlerSV
 
@@ -545,13 +437,9 @@ TIM1_TRG_COM_TIM11_IRQHandlerSV:
 .type TIM1_CC_IRQHandlerSV, %function
 TIM1_CC_IRQHandlerSV:
     push    {r7,lr}
-    sub     sp, #8
-    add     r7, sp, #0
     bl SEGGER_SYSVIEW_RecordEnterISR
     bl TIM1_CC_IRQHandler
     bl SEGGER_SYSVIEW_RecordExitISR
-    adds    r7, #8
-    mov     sp, r7
     pop     {r7, pc}
 .size TIM1_CC_IRQHandlerSV, .-TIM1_CC_IRQHandlerSV
 
@@ -560,13 +448,9 @@ TIM1_CC_IRQHandlerSV:
 .type TIM2_IRQHandlerSV, %function
 TIM2_IRQHandlerSV:
     push    {r7,lr}
-    sub     sp, #8
-    add     r7, sp, #0
     bl SEGGER_SYSVIEW_RecordEnterISR
     bl TIM2_IRQHandler
     bl SEGGER_SYSVIEW_RecordExitISR
-    adds    r7, #8
-    mov     sp, r7
     pop     {r7, pc}
 .size TIM2_IRQHandlerSV, .-TIM2_IRQHandlerSV
 
@@ -575,13 +459,9 @@ TIM2_IRQHandlerSV:
 .type TIM3_IRQHandlerSV, %function
 TIM3_IRQHandlerSV:
     push    {r7,lr}
-    sub     sp, #8
-    add     r7, sp, #0
     bl SEGGER_SYSVIEW_RecordEnterISR
     bl TIM3_IRQHandler
     bl SEGGER_SYSVIEW_RecordExitISR
-    adds    r7, #8
-    mov     sp, r7
     pop     {r7, pc}
 .size TIM3_IRQHandlerSV, .-TIM3_IRQHandlerSV
 
@@ -590,13 +470,9 @@ TIM3_IRQHandlerSV:
 .type TIM4_IRQHandlerSV, %function
 TIM4_IRQHandlerSV:
     push    {r7,lr}
-    sub     sp, #8
-    add     r7, sp, #0
     bl SEGGER_SYSVIEW_RecordEnterISR
     bl TIM4_IRQHandler
     bl SEGGER_SYSVIEW_RecordExitISR
-    adds    r7, #8
-    mov     sp, r7
     pop     {r7, pc}
 .size TIM4_IRQHandlerSV, .-TIM4_IRQHandlerSV
 
@@ -605,13 +481,9 @@ TIM4_IRQHandlerSV:
 .type I2C1_EV_IRQHandlerSV, %function
 I2C1_EV_IRQHandlerSV:
     push    {r7,lr}
-    sub     sp, #8
-    add     r7, sp, #0
     bl SEGGER_SYSVIEW_RecordEnterISR
     bl I2C1_EV_IRQHandler
     bl SEGGER_SYSVIEW_RecordExitISR
-    adds    r7, #8
-    mov     sp, r7
     pop     {r7, pc}
 .size I2C1_EV_IRQHandlerSV, .-I2C1_EV_IRQHandlerSV
 
@@ -620,13 +492,9 @@ I2C1_EV_IRQHandlerSV:
 .type I2C1_ER_IRQHandlerSV, %function
 I2C1_ER_IRQHandlerSV:
     push    {r7,lr}
-    sub     sp, #8
-    add     r7, sp, #0
     bl SEGGER_SYSVIEW_RecordEnterISR
     bl I2C1_ER_IRQHandler
     bl SEGGER_SYSVIEW_RecordExitISR
-    adds    r7, #8
-    mov     sp, r7
     pop     {r7, pc}
 .size I2C1_ER_IRQHandlerSV, .-I2C1_ER_IRQHandlerSV
 
@@ -635,13 +503,9 @@ I2C1_ER_IRQHandlerSV:
 .type I2C2_EV_IRQHandlerSV, %function
 I2C2_EV_IRQHandlerSV:
     push    {r7,lr}
-    sub     sp, #8
-    add     r7, sp, #0
     bl SEGGER_SYSVIEW_RecordEnterISR
     bl I2C2_EV_IRQHandler
     bl SEGGER_SYSVIEW_RecordExitISR
-    adds    r7, #8
-    mov     sp, r7
     pop     {r7, pc}
 .size I2C2_EV_IRQHandlerSV, .-I2C2_EV_IRQHandlerSV
 
@@ -650,13 +514,9 @@ I2C2_EV_IRQHandlerSV:
 .type I2C2_ER_IRQHandlerSV, %function
 I2C2_ER_IRQHandlerSV:
     push    {r7,lr}
-    sub     sp, #8
-    add     r7, sp, #0
     bl SEGGER_SYSVIEW_RecordEnterISR
     bl I2C2_ER_IRQHandler
     bl SEGGER_SYSVIEW_RecordExitISR
-    adds    r7, #8
-    mov     sp, r7
     pop     {r7, pc}
 .size I2C2_ER_IRQHandlerSV, .-I2C2_ER_IRQHandlerSV
 
@@ -665,13 +525,9 @@ I2C2_ER_IRQHandlerSV:
 .type SPI1_IRQHandlerSV, %function
 SPI1_IRQHandlerSV:
     push    {r7,lr}
-    sub     sp, #8
-    add     r7, sp, #0
     bl SEGGER_SYSVIEW_RecordEnterISR
     bl SPI1_IRQHandler
     bl SEGGER_SYSVIEW_RecordExitISR
-    adds    r7, #8
-    mov     sp, r7
     pop     {r7, pc}
 .size SPI1_IRQHandlerSV, .-SPI1_IRQHandlerSV
 
@@ -680,13 +536,9 @@ SPI1_IRQHandlerSV:
 .type SPI2_IRQHandlerSV, %function
 SPI2_IRQHandlerSV:
     push    {r7,lr}
-    sub     sp, #8
-    add     r7, sp, #0
     bl SEGGER_SYSVIEW_RecordEnterISR
     bl SPI2_IRQHandler
     bl SEGGER_SYSVIEW_RecordExitISR
-    adds    r7, #8
-    mov     sp, r7
     pop     {r7, pc}
 .size SPI2_IRQHandlerSV, .-SPI2_IRQHandlerSV
 
@@ -695,13 +547,9 @@ SPI2_IRQHandlerSV:
 .type USART1_IRQHandlerSV, %function
 USART1_IRQHandlerSV:
     push    {r7,lr}
-    sub     sp, #8
-    add     r7, sp, #0
     bl SEGGER_SYSVIEW_RecordEnterISR
     bl USART1_IRQHandler
     bl SEGGER_SYSVIEW_RecordExitISR
-    adds    r7, #8
-    mov     sp, r7
     pop     {r7, pc}
 .size USART1_IRQHandlerSV, .-USART1_IRQHandlerSV
 
@@ -710,13 +558,9 @@ USART1_IRQHandlerSV:
 .type USART2_IRQHandlerSV, %function
 USART2_IRQHandlerSV:
     push    {r7,lr}
-    sub     sp, #8
-    add     r7, sp, #0
     bl SEGGER_SYSVIEW_RecordEnterISR
     bl USART2_IRQHandler
     bl SEGGER_SYSVIEW_RecordExitISR
-    adds    r7, #8
-    mov     sp, r7
     pop     {r7, pc}
 .size USART2_IRQHandlerSV, .-USART2_IRQHandlerSV
 
@@ -725,13 +569,9 @@ USART2_IRQHandlerSV:
 .type USART3_IRQHandlerSV, %function
 USART3_IRQHandlerSV:
     push    {r7,lr}
-    sub     sp, #8
-    add     r7, sp, #0
     bl SEGGER_SYSVIEW_RecordEnterISR
     bl USART3_IRQHandler
     bl SEGGER_SYSVIEW_RecordExitISR
-    adds    r7, #8
-    mov     sp, r7
     pop     {r7, pc}
 .size USART3_IRQHandlerSV, .-USART3_IRQHandlerSV
 
@@ -740,13 +580,9 @@ USART3_IRQHandlerSV:
 .type EXTI15_10_IRQHandlerSV, %function
 EXTI15_10_IRQHandlerSV:
     push    {r7,lr}
-    sub     sp, #8
-    add     r7, sp, #0
     bl SEGGER_SYSVIEW_RecordEnterISR
     bl EXTI15_10_IRQHandler
     bl SEGGER_SYSVIEW_RecordExitISR
-    adds    r7, #8
-    mov     sp, r7
     pop     {r7, pc}
 .size EXTI15_10_IRQHandlerSV, .-EXTI15_10_IRQHandlerSV
 
@@ -755,13 +591,9 @@ EXTI15_10_IRQHandlerSV:
 .type RTC_Alarm_IRQHandlerSV, %function
 RTC_Alarm_IRQHandlerSV:
     push    {r7,lr}
-    sub     sp, #8
-    add     r7, sp, #0
     bl SEGGER_SYSVIEW_RecordEnterISR
     bl RTC_Alarm_IRQHandler
     bl SEGGER_SYSVIEW_RecordExitISR
-    adds    r7, #8
-    mov     sp, r7
     pop     {r7, pc}
 .size RTC_Alarm_IRQHandlerSV, .-RTC_Alarm_IRQHandlerSV
 
@@ -770,13 +602,9 @@ RTC_Alarm_IRQHandlerSV:
 .type OTG_FS_WKUP_IRQHandlerSV, %function
 OTG_FS_WKUP_IRQHandlerSV:
     push    {r7,lr}
-    sub     sp, #8
-    add     r7, sp, #0
     bl SEGGER_SYSVIEW_RecordEnterISR
     bl OTG_FS_WKUP_IRQHandler
     bl SEGGER_SYSVIEW_RecordExitISR
-    adds    r7, #8
-    mov     sp, r7
     pop     {r7, pc}
 .size OTG_FS_WKUP_IRQHandlerSV, .-OTG_FS_WKUP_IRQHandlerSV
 
@@ -785,13 +613,9 @@ OTG_FS_WKUP_IRQHandlerSV:
 .type TIM8_BRK_TIM12_IRQHandlerSV, %function
 TIM8_BRK_TIM12_IRQHandlerSV:
     push    {r7,lr}
-    sub     sp, #8
-    add     r7, sp, #0
     bl SEGGER_SYSVIEW_RecordEnterISR
     bl TIM8_BRK_TIM12_IRQHandler
     bl SEGGER_SYSVIEW_RecordExitISR
-    adds    r7, #8
-    mov     sp, r7
     pop     {r7, pc}
 .size TIM8_BRK_TIM12_IRQHandlerSV, .-TIM8_BRK_TIM12_IRQHandlerSV
 
@@ -800,13 +624,9 @@ TIM8_BRK_TIM12_IRQHandlerSV:
 .type TIM8_UP_TIM13_IRQHandlerSV, %function
 TIM8_UP_TIM13_IRQHandlerSV:
     push    {r7,lr}
-    sub     sp, #8
-    add     r7, sp, #0
     bl SEGGER_SYSVIEW_RecordEnterISR
     bl TIM8_UP_TIM13_IRQHandler
     bl SEGGER_SYSVIEW_RecordExitISR
-    adds    r7, #8
-    mov     sp, r7
     pop     {r7, pc}
 .size TIM8_UP_TIM13_IRQHandlerSV, .-TIM8_UP_TIM13_IRQHandlerSV
 
@@ -815,13 +635,9 @@ TIM8_UP_TIM13_IRQHandlerSV:
 .type TIM8_TRG_COM_TIM14_IRQHandlerSV, %function
 TIM8_TRG_COM_TIM14_IRQHandlerSV:
     push    {r7,lr}
-    sub     sp, #8
-    add     r7, sp, #0
     bl SEGGER_SYSVIEW_RecordEnterISR
     bl TIM8_TRG_COM_TIM14_IRQHandler
     bl SEGGER_SYSVIEW_RecordExitISR
-    adds    r7, #8
-    mov     sp, r7
     pop     {r7, pc}
 .size TIM8_TRG_COM_TIM14_IRQHandlerSV, .-TIM8_TRG_COM_TIM14_IRQHandlerSV
 
@@ -830,13 +646,9 @@ TIM8_TRG_COM_TIM14_IRQHandlerSV:
 .type TIM8_CC_IRQHandlerSV, %function
 TIM8_CC_IRQHandlerSV:
     push    {r7,lr}
-    sub     sp, #8
-    add     r7, sp, #0
     bl SEGGER_SYSVIEW_RecordEnterISR
     bl TIM8_CC_IRQHandler
     bl SEGGER_SYSVIEW_RecordExitISR
-    adds    r7, #8
-    mov     sp, r7
     pop     {r7, pc}
 .size TIM8_CC_IRQHandlerSV, .-TIM8_CC_IRQHandlerSV
 
@@ -845,13 +657,9 @@ TIM8_CC_IRQHandlerSV:
 .type DMA1_Stream7_IRQHandlerSV, %function
 DMA1_Stream7_IRQHandlerSV:
     push    {r7,lr}
-    sub     sp, #8
-    add     r7, sp, #0
     bl SEGGER_SYSVIEW_RecordEnterISR
     bl DMA1_Stream7_IRQHandler
     bl SEGGER_SYSVIEW_RecordExitISR
-    adds    r7, #8
-    mov     sp, r7
     pop     {r7, pc}
 .size DMA1_Stream7_IRQHandlerSV, .-DMA1_Stream7_IRQHandlerSV
 
@@ -860,13 +668,9 @@ DMA1_Stream7_IRQHandlerSV:
 .type FSMC_IRQHandlerSV, %function
 FSMC_IRQHandlerSV:
     push    {r7,lr}
-    sub     sp, #8
-    add     r7, sp, #0
     bl SEGGER_SYSVIEW_RecordEnterISR
     bl FSMC_IRQHandler
     bl SEGGER_SYSVIEW_RecordExitISR
-    adds    r7, #8
-    mov     sp, r7
     pop     {r7, pc}
 .size FSMC_IRQHandlerSV, .-FSMC_IRQHandlerSV
 
@@ -875,13 +679,9 @@ FSMC_IRQHandlerSV:
 .type SDIO_IRQHandlerSV, %function
 SDIO_IRQHandlerSV:
     push    {r7,lr}
-    sub     sp, #8
-    add     r7, sp, #0
     bl SEGGER_SYSVIEW_RecordEnterISR
     bl SDIO_IRQHandler
     bl SEGGER_SYSVIEW_RecordExitISR
-    adds    r7, #8
-    mov     sp, r7
     pop     {r7, pc}
 .size SDIO_IRQHandlerSV, .-SDIO_IRQHandlerSV
 
@@ -890,13 +690,9 @@ SDIO_IRQHandlerSV:
 .type TIM5_IRQHandlerSV, %function
 TIM5_IRQHandlerSV:
     push    {r7,lr}
-    sub     sp, #8
-    add     r7, sp, #0
     bl SEGGER_SYSVIEW_RecordEnterISR
     bl TIM5_IRQHandler
     bl SEGGER_SYSVIEW_RecordExitISR
-    adds    r7, #8
-    mov     sp, r7
     pop     {r7, pc}
 .size TIM5_IRQHandlerSV, .-TIM5_IRQHandlerSV
 
@@ -905,13 +701,9 @@ TIM5_IRQHandlerSV:
 .type SPI3_IRQHandlerSV, %function
 SPI3_IRQHandlerSV:
     push    {r7,lr}
-    sub     sp, #8
-    add     r7, sp, #0
     bl SEGGER_SYSVIEW_RecordEnterISR
     bl SPI3_IRQHandler
     bl SEGGER_SYSVIEW_RecordExitISR
-    adds    r7, #8
-    mov     sp, r7
     pop     {r7, pc}
 .size SPI3_IRQHandlerSV, .-SPI3_IRQHandlerSV
 
@@ -920,13 +712,9 @@ SPI3_IRQHandlerSV:
 .type UART4_IRQHandlerSV, %function
 UART4_IRQHandlerSV:
     push    {r7,lr}
-    sub     sp, #8
-    add     r7, sp, #0
     bl SEGGER_SYSVIEW_RecordEnterISR
     bl UART4_IRQHandler
     bl SEGGER_SYSVIEW_RecordExitISR
-    adds    r7, #8
-    mov     sp, r7
     pop     {r7, pc}
 .size UART4_IRQHandlerSV, .-UART4_IRQHandlerSV
 
@@ -935,13 +723,9 @@ UART4_IRQHandlerSV:
 .type UART5_IRQHandlerSV, %function
 UART5_IRQHandlerSV:
     push    {r7,lr}
-    sub     sp, #8
-    add     r7, sp, #0
     bl SEGGER_SYSVIEW_RecordEnterISR
     bl UART5_IRQHandler
     bl SEGGER_SYSVIEW_RecordExitISR
-    adds    r7, #8
-    mov     sp, r7
     pop     {r7, pc}
 .size UART5_IRQHandlerSV, .-UART5_IRQHandlerSV
 
@@ -950,13 +734,9 @@ UART5_IRQHandlerSV:
 .type TIM6_DAC_IRQHandlerSV, %function
 TIM6_DAC_IRQHandlerSV:
     push    {r7,lr}
-    sub     sp, #8
-    add     r7, sp, #0
     bl SEGGER_SYSVIEW_RecordEnterISR
     bl TIM6_DAC_IRQHandler
     bl SEGGER_SYSVIEW_RecordExitISR
-    adds    r7, #8
-    mov     sp, r7
     pop     {r7, pc}
 .size TIM6_DAC_IRQHandlerSV, .-TIM6_DAC_IRQHandlerSV
 
@@ -965,13 +745,9 @@ TIM6_DAC_IRQHandlerSV:
 .type TIM7_IRQHandlerSV, %function
 TIM7_IRQHandlerSV:
     push    {r7,lr}
-    sub     sp, #8
-    add     r7, sp, #0
     bl SEGGER_SYSVIEW_RecordEnterISR
     bl TIM7_IRQHandler
     bl SEGGER_SYSVIEW_RecordExitISR
-    adds    r7, #8
-    mov     sp, r7
     pop     {r7, pc}
 .size TIM7_IRQHandlerSV, .-TIM7_IRQHandlerSV
 
@@ -980,13 +756,9 @@ TIM7_IRQHandlerSV:
 .type DMA2_Stream0_IRQHandlerSV, %function
 DMA2_Stream0_IRQHandlerSV:
     push    {r7,lr}
-    sub     sp, #8
-    add     r7, sp, #0
     bl SEGGER_SYSVIEW_RecordEnterISR
     bl DMA2_Stream0_IRQHandler
     bl SEGGER_SYSVIEW_RecordExitISR
-    adds    r7, #8
-    mov     sp, r7
     pop     {r7, pc}
 .size DMA2_Stream0_IRQHandlerSV, .-DMA2_Stream0_IRQHandlerSV
 
@@ -995,13 +767,9 @@ DMA2_Stream0_IRQHandlerSV:
 .type DMA2_Stream1_IRQHandlerSV, %function
 DMA2_Stream1_IRQHandlerSV:
     push    {r7,lr}
-    sub     sp, #8
-    add     r7, sp, #0
     bl SEGGER_SYSVIEW_RecordEnterISR
     bl DMA2_Stream1_IRQHandler
     bl SEGGER_SYSVIEW_RecordExitISR
-    adds    r7, #8
-    mov     sp, r7
     pop     {r7, pc}
 .size DMA2_Stream1_IRQHandlerSV, .-DMA2_Stream1_IRQHandlerSV
 
@@ -1010,13 +778,9 @@ DMA2_Stream1_IRQHandlerSV:
 .type DMA2_Stream2_IRQHandlerSV, %function
 DMA2_Stream2_IRQHandlerSV:
     push    {r7,lr}
-    sub     sp, #8
-    add     r7, sp, #0
     bl SEGGER_SYSVIEW_RecordEnterISR
     bl DMA2_Stream2_IRQHandler
     bl SEGGER_SYSVIEW_RecordExitISR
-    adds    r7, #8
-    mov     sp, r7
     pop     {r7, pc}
 .size DMA2_Stream2_IRQHandlerSV, .-DMA2_Stream2_IRQHandlerSV
 
@@ -1025,13 +789,9 @@ DMA2_Stream2_IRQHandlerSV:
 .type DMA2_Stream3_IRQHandlerSV, %function
 DMA2_Stream3_IRQHandlerSV:
     push    {r7,lr}
-    sub     sp, #8
-    add     r7, sp, #0
     bl SEGGER_SYSVIEW_RecordEnterISR
     bl DMA2_Stream3_IRQHandler
     bl SEGGER_SYSVIEW_RecordExitISR
-    adds    r7, #8
-    mov     sp, r7
     pop     {r7, pc}
 .size DMA2_Stream3_IRQHandlerSV, .-DMA2_Stream3_IRQHandlerSV
 
@@ -1040,13 +800,9 @@ DMA2_Stream3_IRQHandlerSV:
 .type DMA2_Stream4_IRQHandlerSV, %function
 DMA2_Stream4_IRQHandlerSV:
     push    {r7,lr}
-    sub     sp, #8
-    add     r7, sp, #0
     bl SEGGER_SYSVIEW_RecordEnterISR
     bl DMA2_Stream4_IRQHandler
     bl SEGGER_SYSVIEW_RecordExitISR
-    adds    r7, #8
-    mov     sp, r7
     pop     {r7, pc}
 .size DMA2_Stream4_IRQHandlerSV, .-DMA2_Stream4_IRQHandlerSV
 
@@ -1055,13 +811,9 @@ DMA2_Stream4_IRQHandlerSV:
 .type ETH_IRQHandlerSV, %function
 ETH_IRQHandlerSV:
     push    {r7,lr}
-    sub     sp, #8
-    add     r7, sp, #0
     bl SEGGER_SYSVIEW_RecordEnterISR
     bl ETH_IRQHandler
     bl SEGGER_SYSVIEW_RecordExitISR
-    adds    r7, #8
-    mov     sp, r7
     pop     {r7, pc}
 .size ETH_IRQHandlerSV, .-ETH_IRQHandlerSV
 
@@ -1070,13 +822,9 @@ ETH_IRQHandlerSV:
 .type ETH_WKUP_IRQHandlerSV, %function
 ETH_WKUP_IRQHandlerSV:
     push    {r7,lr}
-    sub     sp, #8
-    add     r7, sp, #0
     bl SEGGER_SYSVIEW_RecordEnterISR
     bl ETH_WKUP_IRQHandler
     bl SEGGER_SYSVIEW_RecordExitISR
-    adds    r7, #8
-    mov     sp, r7
     pop     {r7, pc}
 .size ETH_WKUP_IRQHandlerSV, .-ETH_WKUP_IRQHandlerSV
 
@@ -1085,13 +833,9 @@ ETH_WKUP_IRQHandlerSV:
 .type CAN2_TX_IRQHandlerSV, %function
 CAN2_TX_IRQHandlerSV:
     push    {r7,lr}
-    sub     sp, #8
-    add     r7, sp, #0
     bl SEGGER_SYSVIEW_RecordEnterISR
     bl CAN2_TX_IRQHandler
     bl SEGGER_SYSVIEW_RecordExitISR
-    adds    r7, #8
-    mov     sp, r7
     pop     {r7, pc}
 .size CAN2_TX_IRQHandlerSV, .-CAN2_TX_IRQHandlerSV
 
@@ -1100,13 +844,9 @@ CAN2_TX_IRQHandlerSV:
 .type CAN2_RX0_IRQHandlerSV, %function
 CAN2_RX0_IRQHandlerSV:
     push    {r7,lr}
-    sub     sp, #8
-    add     r7, sp, #0
     bl SEGGER_SYSVIEW_RecordEnterISR
     bl CAN2_RX0_IRQHandler
     bl SEGGER_SYSVIEW_RecordExitISR
-    adds    r7, #8
-    mov     sp, r7
     pop     {r7, pc}
 .size CAN2_RX0_IRQHandlerSV, .-CAN2_RX0_IRQHandlerSV
 
@@ -1115,13 +855,9 @@ CAN2_RX0_IRQHandlerSV:
 .type CAN2_RX1_IRQHandlerSV, %function
 CAN2_RX1_IRQHandlerSV:
     push    {r7,lr}
-    sub     sp, #8
-    add     r7, sp, #0
     bl SEGGER_SYSVIEW_RecordEnterISR
     bl CAN2_RX1_IRQHandler
     bl SEGGER_SYSVIEW_RecordExitISR
-    adds    r7, #8
-    mov     sp, r7
     pop     {r7, pc}
 .size CAN2_RX1_IRQHandlerSV, .-CAN2_RX1_IRQHandlerSV
 
@@ -1130,13 +866,9 @@ CAN2_RX1_IRQHandlerSV:
 .type CAN2_SCE_IRQHandlerSV, %function
 CAN2_SCE_IRQHandlerSV:
     push    {r7,lr}
-    sub     sp, #8
-    add     r7, sp, #0
     bl SEGGER_SYSVIEW_RecordEnterISR
     bl CAN2_SCE_IRQHandler
     bl SEGGER_SYSVIEW_RecordExitISR
-    adds    r7, #8
-    mov     sp, r7
     pop     {r7, pc}
 .size CAN2_SCE_IRQHandlerSV, .-CAN2_SCE_IRQHandlerSV
 
@@ -1145,13 +877,9 @@ CAN2_SCE_IRQHandlerSV:
 .type OTG_FS_IRQHandlerSV, %function
 OTG_FS_IRQHandlerSV:
     push    {r7,lr}
-    sub     sp, #8
-    add     r7, sp, #0
     bl SEGGER_SYSVIEW_RecordEnterISR
     bl OTG_FS_IRQHandler
     bl SEGGER_SYSVIEW_RecordExitISR
-    adds    r7, #8
-    mov     sp, r7
     pop     {r7, pc}
 .size OTG_FS_IRQHandlerSV, .-OTG_FS_IRQHandlerSV
 
@@ -1160,13 +888,9 @@ OTG_FS_IRQHandlerSV:
 .type DMA2_Stream5_IRQHandlerSV, %function
 DMA2_Stream5_IRQHandlerSV:
     push    {r7,lr}
-    sub     sp, #8
-    add     r7, sp, #0
     bl SEGGER_SYSVIEW_RecordEnterISR
     bl DMA2_Stream5_IRQHandler
     bl SEGGER_SYSVIEW_RecordExitISR
-    adds    r7, #8
-    mov     sp, r7
     pop     {r7, pc}
 .size DMA2_Stream5_IRQHandlerSV, .-DMA2_Stream5_IRQHandlerSV
 
@@ -1175,13 +899,9 @@ DMA2_Stream5_IRQHandlerSV:
 .type DMA2_Stream6_IRQHandlerSV, %function
 DMA2_Stream6_IRQHandlerSV:
     push    {r7,lr}
-    sub     sp, #8
-    add     r7, sp, #0
     bl SEGGER_SYSVIEW_RecordEnterISR
     bl DMA2_Stream6_IRQHandler
     bl SEGGER_SYSVIEW_RecordExitISR
-    adds    r7, #8
-    mov     sp, r7
     pop     {r7, pc}
 .size DMA2_Stream6_IRQHandlerSV, .-DMA2_Stream6_IRQHandlerSV
 
@@ -1190,13 +910,9 @@ DMA2_Stream6_IRQHandlerSV:
 .type DMA2_Stream7_IRQHandlerSV, %function
 DMA2_Stream7_IRQHandlerSV:
     push    {r7,lr}
-    sub     sp, #8
-    add     r7, sp, #0
     bl SEGGER_SYSVIEW_RecordEnterISR
     bl DMA2_Stream7_IRQHandler
     bl SEGGER_SYSVIEW_RecordExitISR
-    adds    r7, #8
-    mov     sp, r7
     pop     {r7, pc}
 .size DMA2_Stream7_IRQHandlerSV, .-DMA2_Stream7_IRQHandlerSV
 
@@ -1205,13 +921,9 @@ DMA2_Stream7_IRQHandlerSV:
 .type USART6_IRQHandlerSV, %function
 USART6_IRQHandlerSV:
     push    {r7,lr}
-    sub     sp, #8
-    add     r7, sp, #0
     bl SEGGER_SYSVIEW_RecordEnterISR
     bl USART6_IRQHandler
     bl SEGGER_SYSVIEW_RecordExitISR
-    adds    r7, #8
-    mov     sp, r7
     pop     {r7, pc}
 .size USART6_IRQHandlerSV, .-USART6_IRQHandlerSV
 
@@ -1220,13 +932,9 @@ USART6_IRQHandlerSV:
 .type I2C3_EV_IRQHandlerSV, %function
 I2C3_EV_IRQHandlerSV:
     push    {r7,lr}
-    sub     sp, #8
-    add     r7, sp, #0
     bl SEGGER_SYSVIEW_RecordEnterISR
     bl I2C3_EV_IRQHandler
     bl SEGGER_SYSVIEW_RecordExitISR
-    adds    r7, #8
-    mov     sp, r7
     pop     {r7, pc}
 .size I2C3_EV_IRQHandlerSV, .-I2C3_EV_IRQHandlerSV
 
@@ -1235,13 +943,9 @@ I2C3_EV_IRQHandlerSV:
 .type I2C3_ER_IRQHandlerSV, %function
 I2C3_ER_IRQHandlerSV:
     push    {r7,lr}
-    sub     sp, #8
-    add     r7, sp, #0
     bl SEGGER_SYSVIEW_RecordEnterISR
     bl I2C3_ER_IRQHandler
     bl SEGGER_SYSVIEW_RecordExitISR
-    adds    r7, #8
-    mov     sp, r7
     pop     {r7, pc}
 .size I2C3_ER_IRQHandlerSV, .-I2C3_ER_IRQHandlerSV
 
@@ -1250,13 +954,9 @@ I2C3_ER_IRQHandlerSV:
 .type OTG_HS_EP1_OUT_IRQHandlerSV, %function
 OTG_HS_EP1_OUT_IRQHandlerSV:
     push    {r7,lr}
-    sub     sp, #8
-    add     r7, sp, #0
     bl SEGGER_SYSVIEW_RecordEnterISR
     bl OTG_HS_EP1_OUT_IRQHandler
     bl SEGGER_SYSVIEW_RecordExitISR
-    adds    r7, #8
-    mov     sp, r7
     pop     {r7, pc}
 .size OTG_HS_EP1_OUT_IRQHandlerSV, .-OTG_HS_EP1_OUT_IRQHandlerSV
 
@@ -1265,13 +965,9 @@ OTG_HS_EP1_OUT_IRQHandlerSV:
 .type OTG_HS_EP1_IN_IRQHandlerSV, %function
 OTG_HS_EP1_IN_IRQHandlerSV:
     push    {r7,lr}
-    sub     sp, #8
-    add     r7, sp, #0
     bl SEGGER_SYSVIEW_RecordEnterISR
     bl OTG_HS_EP1_IN_IRQHandler
     bl SEGGER_SYSVIEW_RecordExitISR
-    adds    r7, #8
-    mov     sp, r7
     pop     {r7, pc}
 .size OTG_HS_EP1_IN_IRQHandlerSV, .-OTG_HS_EP1_IN_IRQHandlerSV
 
@@ -1280,13 +976,9 @@ OTG_HS_EP1_IN_IRQHandlerSV:
 .type OTG_HS_WKUP_IRQHandlerSV, %function
 OTG_HS_WKUP_IRQHandlerSV:
     push    {r7,lr}
-    sub     sp, #8
-    add     r7, sp, #0
     bl SEGGER_SYSVIEW_RecordEnterISR
     bl OTG_HS_WKUP_IRQHandler
     bl SEGGER_SYSVIEW_RecordExitISR
-    adds    r7, #8
-    mov     sp, r7
     pop     {r7, pc}
 .size OTG_HS_WKUP_IRQHandlerSV, .-OTG_HS_WKUP_IRQHandlerSV
 
@@ -1295,13 +987,9 @@ OTG_HS_WKUP_IRQHandlerSV:
 .type OTG_HS_IRQHandlerSV, %function
 OTG_HS_IRQHandlerSV:
     push    {r7,lr}
-    sub     sp, #8
-    add     r7, sp, #0
     bl SEGGER_SYSVIEW_RecordEnterISR
     bl OTG_HS_IRQHandler
     bl SEGGER_SYSVIEW_RecordExitISR
-    adds    r7, #8
-    mov     sp, r7
     pop     {r7, pc}
 .size OTG_HS_IRQHandlerSV, .-OTG_HS_IRQHandlerSV
 
@@ -1310,13 +998,9 @@ OTG_HS_IRQHandlerSV:
 .type DCMI_IRQHandlerSV, %function
 DCMI_IRQHandlerSV:
     push    {r7,lr}
-    sub     sp, #8
-    add     r7, sp, #0
     bl SEGGER_SYSVIEW_RecordEnterISR
     bl DCMI_IRQHandler
     bl SEGGER_SYSVIEW_RecordExitISR
-    adds    r7, #8
-    mov     sp, r7
     pop     {r7, pc}
 .size DCMI_IRQHandlerSV, .-DCMI_IRQHandlerSV
 
@@ -1325,13 +1009,9 @@ DCMI_IRQHandlerSV:
 .type CRYP_IRQHandlerSV, %function
 CRYP_IRQHandlerSV:
     push    {r7,lr}
-    sub     sp, #8
-    add     r7, sp, #0
     bl SEGGER_SYSVIEW_RecordEnterISR
     bl CRYP_IRQHandler
     bl SEGGER_SYSVIEW_RecordExitISR
-    adds    r7, #8
-    mov     sp, r7
     pop     {r7, pc}
 .size CRYP_IRQHandlerSV, .-CRYP_IRQHandlerSV
 
@@ -1340,13 +1020,9 @@ CRYP_IRQHandlerSV:
 .type HASH_RNG_IRQHandlerSV, %function
 HASH_RNG_IRQHandlerSV:
     push    {r7,lr}
-    sub     sp, #8
-    add     r7, sp, #0
     bl SEGGER_SYSVIEW_RecordEnterISR
     bl HASH_RNG_IRQHandler
     bl SEGGER_SYSVIEW_RecordExitISR
-    adds    r7, #8
-    mov     sp, r7
     pop     {r7, pc}
 .size HASH_RNG_IRQHandlerSV, .-HASH_RNG_IRQHandlerSV
 
@@ -1355,13 +1031,9 @@ HASH_RNG_IRQHandlerSV:
 .type FPU_IRQHandlerSV, %function
 FPU_IRQHandlerSV:
     push    {r7,lr}
-    sub     sp, #8
-    add     r7, sp, #0
     bl SEGGER_SYSVIEW_RecordEnterISR
     bl FPU_IRQHandler
     bl SEGGER_SYSVIEW_RecordExitISR
-    adds    r7, #8
-    mov     sp, r7
     pop     {r7, pc}
 .size FPU_IRQHandlerSV, .-FPU_IRQHandlerSV
 
