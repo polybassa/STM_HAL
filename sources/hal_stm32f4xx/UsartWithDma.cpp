@@ -195,4 +195,4 @@ void UsartWithDma::stopNonBlockingReceive(void) const
     }
 }
 
-constexpr const std::array<const UsartWithDma, 1> Factory<UsartWithDma>::Container;
+constexpr const std::array<const UsartWithDma, UsartWithDma::NUMBER_OF_INSTANCES> Factory<UsartWithDma>::Container;
