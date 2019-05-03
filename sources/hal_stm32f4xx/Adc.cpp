@@ -48,24 +48,24 @@ void Adc::initialize(void) const
 
     ADC_ClearITPendingBit(ADCx, ADC_IT_EOC);
 
-    mNvic.setPriority(Adc::INTERRUPT_PRIORITY);
+    mNvic.setPriority(static_cast<const uint32_t>(Adc::INTERRUPT_PRIORITY));
 
     // Interrupt status and cleanup for all available adcs, because all share one IRQ
-    mNvic.registerGetInterruptStatusProcedure([] (void){
-                                                  return (ADC_GetFlagStatus(ADC1, ADC_FLAG_EOC) == SET) ||
-                                                  (ADC_GetFlagStatus(ADC2, ADC_FLAG_EOC) == SET) ||
-                                                  (ADC_GetFlagStatus(ADC3, ADC_FLAG_EOC) == SET);
-                                              });
+    mNvic.registerGetInterruptStatusProcedure([](void){
+        return (ADC_GetFlagStatus(ADC1, ADC_FLAG_EOC) == SET) ||
+        (ADC_GetFlagStatus(ADC2, ADC_FLAG_EOC) == SET) ||
+        (ADC_GetFlagStatus(ADC3, ADC_FLAG_EOC) == SET);
+    });
 
-    mNvic.registerClearInterruptProcedure([] (void){
-                                              ADC_ClearFlag(ADC1, ADC_FLAG_EOC);
-                                              ADC_ClearFlag(ADC2, ADC_FLAG_EOC);
-                                              ADC_ClearFlag(ADC3, ADC_FLAG_EOC);
-                                          });
+    mNvic.registerClearInterruptProcedure([](void){
+        ADC_ClearFlag(ADC1, ADC_FLAG_EOC);
+        ADC_ClearFlag(ADC2, ADC_FLAG_EOC);
+        ADC_ClearFlag(ADC3, ADC_FLAG_EOC);
+    });
 
-    mNvic.registerInterruptCallback([] (void){
-                                        hal::Adc::handleInterrupt();
-                                    });
+    mNvic.registerInterruptCallback([](void){
+        hal::Adc::handleInterrupt();
+    });
 
     // Nvic can always be enabled, because it just checks whether the interrupt procedures were set.
     mNvic.enable();
@@ -91,7 +91,7 @@ uint16_t Adc::getValue(const Adc::Channel& channel) const
 
 float Adc::getVoltage(const Adc::Channel& channel) const
 {
-    return channel.mMaxVoltage / mResolution* getValue(channel);
+    return channel.mMaxVoltage / mResolution * getValue(channel);
 }
 
 void Adc::startConversion(const Adc::Channel& channel) const

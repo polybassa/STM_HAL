@@ -16,9 +16,30 @@ Nvic::CallbackArray Nvic::NvicCallbacks;
 Nvic::GetInterruptStatusProcedureArray Nvic::NvicGetInterruptStatusProcedeures;
 Nvic::ClearInterruptProcedureArray Nvic::NvicClearInterruptProcedeures;
 
-void Nvic::setPriority(const uint16_t& prio) const
+void hal::Nvic::initialize(void) const
+{
+    if ((mInitialIntPriority != NON_VALID_PRIORITY) && (mInitialSubPriority != NON_VALID_PRIORITY)) {
+        setPriority(mInitialIntPriority, mInitialSubPriority);
+    } else if (mInitialIntPriority != NON_VALID_PRIORITY) {
+        setPriority(mInitialIntPriority);
+    }
+}
+
+void Nvic::setPriority(const uint32_t& prio) const
 {
     NVIC_SetPriority(mInterruptChannel, prio);
+}
+
+void Nvic::setPriority(const uint32_t& intPrio, const uint32_t subPrio) const
+{
+    uint32_t priorityGroup = NVIC_GetPriorityGrouping();
+    uint32_t mergedPriority = NVIC_EncodePriority(priorityGroup, intPrio, subPrio);
+    NVIC_SetPriority(mInterruptChannel, mergedPriority);
+}
+
+uint32_t Nvic::getPriority(void) const
+{
+    return NVIC_GetPriority(mInterruptChannel);
 }
 
 bool Nvic::getStatus(void) const

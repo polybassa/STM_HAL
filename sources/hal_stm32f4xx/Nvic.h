@@ -48,17 +48,22 @@ struct Nvic {
     void unregisterInterruptCallback(void) const;
     void handleInterrupt(void) const;
 
-    void setPriority(const uint16_t& prio) const;
-
-protected:
-    constexpr Nvic(
-                   const enum Description& desc,
-                   const IRQn&             interruptName) :
-        mDescription(desc),
-        mInterruptChannel(interruptName)
-    {}
+    void setPriority(const uint32_t& prio) const;
+    void setPriority(const uint32_t& intPrio, const uint32_t subPrio) const;
+    uint32_t getPriority(void) const;
 
 private:
+    constexpr Nvic(
+                   const enum Description& desc,
+                   const IRQn&             interruptName,
+                   const uint32_t          interruptPriority = NON_VALID_PRIORITY,
+                   const uint32_t          subPriority = NON_VALID_PRIORITY) :
+        mDescription(desc),
+        mInterruptChannel(interruptName),
+        mInitialIntPriority(interruptPriority),
+        mInitialSubPriority(subPriority)
+    {}
+
     const enum Description mDescription;
     const IRQn mInterruptChannel;
 
@@ -76,6 +81,10 @@ private:
     void initialize(void) const;
     bool getStatus(void) const;
 
+    static constexpr uint32_t NON_VALID_PRIORITY = 0xFFFFFFFF;
+    const uint32_t mInitialIntPriority;
+    const uint32_t mInitialSubPriority;
+
     friend class Factory<Nvic>;
 };
 
@@ -87,9 +96,9 @@ private:
 
     Factory(void)
     {
-//      for (const auto& obj : Container) {
-//              obj.initialize();
-//      }
+        for (const auto& obj : Container) {
+            obj.initialize();
+        }
     }
 
     template<enum IRQn IRQ_Channel, enum Nvic::Description index>

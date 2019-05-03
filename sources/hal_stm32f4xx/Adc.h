@@ -35,9 +35,9 @@ struct Adc {
 
     Adc() = delete;
     Adc(const Adc&) = delete;
-    Adc(Adc &&) = default;
+    Adc(Adc&&) = default;
     Adc& operator=(const Adc&) = delete;
-    Adc& operator=(Adc &&) = delete;
+    Adc& operator=(Adc&&) = delete;
 
     const enum Description mDescription;
 
@@ -66,12 +66,13 @@ private:
     float getVoltage(const Adc::Channel&) const;
     void startConversion(const Adc::Channel&) const;
 
-public: static void handleInterrupt(void);
+public:
+    static void handleInterrupt(void);
 
     static std::array<os::Semaphore, Description::__ENUM__SIZE> ConversionCompleteSemaphores;
     static std::array<os::Mutex, Description::__ENUM__SIZE> ConverterAvailableMutex;
-    static constexpr uint8_t TWO_CONVERSION_SAMPLE_DELAY = 0;
-    static constexpr uint32_t INTERRUPT_PRIORITY = 0xa;
+    static constexpr const uint8_t TWO_CONVERSION_SAMPLE_DELAY = 0;
+    static constexpr const uint32_t INTERRUPT_PRIORITY = 0xa;
 
     friend class Factory<Adc>;
     friend class Factory<Adc::Channel>;
@@ -90,7 +91,7 @@ class Factory<Adc>
         // enable only the adc clocks that are really used
         for (const hal::Adc& adc : Container) {
             switch (adc.mPeripherie) {
-            case ADC1_BASE :
+            case ADC1_BASE:
                 RCC_APB2PeriphClockCmd(RCC_APB2Periph_ADC1, ENABLE);
                 break;
 
