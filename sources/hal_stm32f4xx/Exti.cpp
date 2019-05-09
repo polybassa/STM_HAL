@@ -1,4 +1,4 @@
-/* Copyright (C) 2015  Nils Weiss, Markus Wildgruber
+/* Copyright (C) 2018  Nils Weiss, Markus Wildgruber and Henning Mende
  *
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -100,10 +100,12 @@ void Exti::initialize(void) const
 
     mNvic.setPriority(mPriority);
 
-    mNvic.registerGetInterruptStatusProcedure([this]()->bool {return this->getStatus();
-                                              });
-    mNvic.registerClearInterruptProcedure([this] {this->clearInterruptBit();
-                                          });
+    mNvic.registerGetInterruptStatusProcedure([this]() -> bool {
+        return this->getStatus();
+    });
+    mNvic.registerClearInterruptProcedure([this] {
+        this->clearInterruptBit();
+    });
     mNvic.enable();
 }
 

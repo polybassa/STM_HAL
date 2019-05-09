@@ -1,4 +1,4 @@
-/* Copyright (C) 2015  Nils Weiss
+/* Copyright (C) 2018  Nils Weiss and Henning Mende
  *
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -28,9 +28,9 @@ namespace hal
 struct SpiWithDma {
     SpiWithDma() = delete;
     SpiWithDma(const SpiWithDma&) = delete;
-    SpiWithDma(SpiWithDma &&) = default;
+    SpiWithDma(SpiWithDma&&) = default;
     SpiWithDma& operator=(const SpiWithDma&) = delete;
-    SpiWithDma& operator=(SpiWithDma &&) = delete;
+    SpiWithDma& operator=(SpiWithDma&&) = delete;
 
     template<size_t n>
     size_t receive(std::array<uint8_t, n>&) const;

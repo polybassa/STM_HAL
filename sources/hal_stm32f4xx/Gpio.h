@@ -1,4 +1,4 @@
-/* Copyright (C) 2015  Nils Weiss, Markus Wildgruber
+/* Copyright (C) 2018  Nils Weiss, Markus Wildgruber and Henning Mende
  *
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -48,20 +48,20 @@ struct Gpio {
 
     Gpio() = delete;
     Gpio(const Gpio&) = delete;
-    Gpio(Gpio &&) = default;
+    Gpio(Gpio&&) = default;
     Gpio& operator=(const Gpio&) = delete;
-    Gpio& operator=(Gpio &&) = delete;
+    Gpio& operator=(Gpio&&) = delete;
 
     explicit operator bool() const;
 
     void operator=(const bool& state) const;
 
 private:
-    constexpr Gpio(const Description&        desc,
-                   const uint32_t&           peripherie,
-                   const GPIO_InitTypeDef && conf,
-                   const uint16_t&           pinSource = std::numeric_limits<uint16_t>::max(),
-                   const uint8_t&            AF = std::numeric_limits<uint8_t>::max()) :
+    constexpr Gpio(const Description&       desc,
+                   const uint32_t&          peripherie,
+                   const GPIO_InitTypeDef&& conf,
+                   const uint16_t&          pinSource = std::numeric_limits<uint16_t>::max(),
+                   const uint8_t&           AF = std::numeric_limits<uint8_t>::max()) :
         mDescription(desc),
         mPeripherie(peripherie),
         mConfiguration(std::move(conf)),

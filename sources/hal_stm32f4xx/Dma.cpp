@@ -1,4 +1,4 @@
-/* Copyright (C) 2015  Nils Weiss
+/* Copyright (C) 2018  Nils Weiss and Henning Mende
  *
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -107,14 +107,14 @@ void Dma::initialize(void) const
 
         mpNvic->setPriority(0xa);
         mpNvic->registerClearInterruptProcedure([this](void) {
-                                                    Dma::ClearInterruptFlag(this);
-                                                });
-        mpNvic->registerGetInterruptStatusProcedure([this](void)->bool {
-                                                        return Dma::GetInterruptFlagStatus(this);
-                                                    });
-        mpNvic->registerInterruptCallback([this](void)->void {
-                                              Dma::DMA_IRQHandler(this);
-                                          });
+            Dma::ClearInterruptFlag(this);
+        });
+        mpNvic->registerGetInterruptStatusProcedure([this](void) -> bool {
+            return Dma::GetInterruptFlagStatus(this);
+        });
+        mpNvic->registerInterruptCallback([this](void) -> void {
+            Dma::DMA_IRQHandler(this);
+        });
         mpNvic->enable();
     }
 }

@@ -1,4 +1,4 @@
-/* Copyright (C) 2015  Nils Weiss
+/* Copyright (C) 2018  Nils Weiss and Henning Mende
  *
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -42,9 +42,9 @@ struct Spi {
 
     Spi() = delete;
     Spi(const Spi&) = delete;
-    Spi(Spi &&) = default;
+    Spi(Spi&&) = default;
     Spi& operator=(const Spi&) = delete;
-    Spi& operator=(Spi &&) = delete;
+    Spi& operator=(Spi&&) = delete;
 
     // API change: only 16-Bit receive and additional functions for 16-Bit send
     template<size_t n>

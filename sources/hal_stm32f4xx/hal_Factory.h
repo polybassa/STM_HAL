@@ -1,4 +1,4 @@
-/* Copyright (C) 2015  Nils Weiss
+/* Copyright (C) 2018  Nils Weiss and Henning Mende
  *
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -38,9 +38,9 @@ class Factory
 
 public:
     Factory(const Factory&) = delete;
-    Factory(Factory &&) = delete;
+    Factory(Factory&&) = delete;
     Factory& operator=(const Factory&) = delete;
-    Factory& operator=(Factory &&) = delete;
+    Factory& operator=(Factory&&) = delete;
 };
 }
 

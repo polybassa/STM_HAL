@@ -1,4 +1,4 @@
-/* Copyright (C) 2015  Nils Weiss
+/* Copyright (C) 2018  Nils Weiss and Henning Mende
  *
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -44,9 +44,9 @@ struct Usart {
 
     Usart() = delete;
     Usart(const Usart&) = delete;
-    Usart(Usart &&) = default;
+    Usart(Usart&&) = default;
     Usart& operator=(const Usart&) = delete;
-    Usart& operator=(Usart &&) = delete;
+    Usart& operator=(Usart&&) = delete;
 
     template<size_t n>
     size_t send(const std::array<uint8_t, n>&) const;
@@ -98,7 +98,7 @@ private:
 
     void initialize(void) const;
 
-    using ReceiveCallbackArray = std::array<std::function<void(uint8_t)>, Usart::__ENUM__SIZE>;
+    using ReceiveCallbackArray = std::array<std::function<void (uint8_t)>, Usart::__ENUM__SIZE>;
 
     static ReceiveCallbackArray ReceiveInterruptCallbacks;
 

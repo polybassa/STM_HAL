@@ -1,4 +1,4 @@
-/* Copyright (C) 2015  Nils Weiss
+/* Copyright (C) 2018  Nils Weiss and Henning Mende
  *
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -31,9 +31,9 @@ struct Rtc {
 
     Rtc() = delete;
     Rtc(const Rtc&) = delete;
-    Rtc(Rtc &&) = default;
+    Rtc(Rtc&&) = default;
     Rtc& operator=(const Rtc&) = delete;
-    Rtc& operator=(Rtc &&) = delete;
+    Rtc& operator=(Rtc&&) = delete;
 
     /* Definitions for std::chrono::clock */
     typedef std::chrono::seconds duration;

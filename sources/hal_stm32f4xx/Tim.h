@@ -1,4 +1,4 @@
-/* Copyright (C) 2015  Nils Weiss
+/* Copyright (C) 2018  Nils Weiss and Henning Mende
  *
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -58,9 +58,9 @@ struct Tim {
 
     Tim() = delete;
     Tim(const Tim&) = delete;
-    Tim(Tim &&) = default;
+    Tim(Tim&&) = default;
     Tim& operator=(const Tim&) = delete;
-    Tim& operator=(Tim &&) = delete;
+    Tim& operator=(Tim&&) = delete;
 
     void setCounterValue(const uint32_t) const;
     void setAutoReloadValue(const uint32_t) const;

@@ -1,4 +1,4 @@
-/* Copyright (C) 2015  Nils Weiss
+/* Copyright (C) 2018  Nils Weiss and Henning Mende
  *
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -29,9 +29,9 @@ namespace hal
 struct AdcWithDma {
     AdcWithDma() = delete;
     AdcWithDma(const AdcWithDma&) = delete;
-    AdcWithDma(AdcWithDma &&) = default;
+    AdcWithDma(AdcWithDma&&) = default;
     AdcWithDma& operator=(const AdcWithDma&) = delete;
-    AdcWithDma& operator=(AdcWithDma &&) = delete;
+    AdcWithDma& operator=(AdcWithDma&&) = delete;
 
     template<size_t n>
     void startConversion(const std::array<uint16_t, n>& data, os::Semaphore* dataAvailable = nullptr) const;

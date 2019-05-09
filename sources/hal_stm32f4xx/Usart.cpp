@@ -1,4 +1,4 @@
-/* Copyright (C) 2015  Nils Weiss
+/* Copyright (C) 2018  Nils Weiss and Henning Mende
  *
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -33,26 +33,26 @@ void Usart::initialize() const
     // TODO Maybe also TX and not only RX will be needed.
     mNvic.setPriority(0xf);
 
-    mNvic.registerGetInterruptStatusProcedure([this](void)->bool {
-                                                  return USART_GetITStatus(reinterpret_cast<USART_TypeDef*>(this->
-                                                                                                            mPeripherie),
-                                                                           USART_IT_RXNE) == SET;
-                                              });
+    mNvic.registerGetInterruptStatusProcedure([this](void) -> bool {
+        return USART_GetITStatus(reinterpret_cast<USART_TypeDef*>(this->
+                                                                  mPeripherie),
+                                 USART_IT_RXNE) == SET;
+    });
 
-    mNvic.registerClearInterruptProcedure([this](void)->void {
-                                              USART_ClearITPendingBit(reinterpret_cast<USART_TypeDef*>(this->
-                                                                                                       mPeripherie),
-                                                                      USART_IT_RXNE);
-                                          });
+    mNvic.registerClearInterruptProcedure([this](void) -> void {
+        USART_ClearITPendingBit(reinterpret_cast<USART_TypeDef*>(this->
+                                                                 mPeripherie),
+                                USART_IT_RXNE);
+    });
 
-    mNvic.registerInterruptCallback([this](void)->void {
-                                        uint8_t databyte =
-                                            static_cast<uint8_t>(USART_ReceiveData(reinterpret_cast<USART_TypeDef*>(
-                                                                                                                    this
-                                                                                                                    ->
-                                                                                                                    mPeripherie)));
-                                        Usart::ReceiveInterruptCallbacks[this->mDescription](databyte);
-                                    });
+    mNvic.registerInterruptCallback([this](void) -> void {
+        uint8_t databyte =
+            static_cast<uint8_t>(USART_ReceiveData(reinterpret_cast<USART_TypeDef*>(
+                                                                                    this
+                                                                                    ->
+                                                                                    mPeripherie)));
+        Usart::ReceiveInterruptCallbacks[this->mDescription](databyte);
+    });
 
     mNvic.enable();
 }
@@ -148,7 +148,7 @@ size_t Usart::receive(uint8_t* const data, const size_t length) const
     size_t bytesReceived = 0;
     while (bytesReceived < length) {
         if (this->isReadyToReceive()) {
-            data[bytesReceived] = (uint8_t) this->receive();
+            data[bytesReceived] = (uint8_t)this->receive();
             bytesReceived++;
         }
     }

@@ -1,4 +1,4 @@
-/* Copyright (C) 2015  Nils Weiss
+/* Copyright (C) 2018  Nils Weiss and Henning Mende
  *
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -35,9 +35,9 @@ struct Pwm {
 
     Pwm() = delete;
     Pwm(const Pwm&) = delete;
-    Pwm(Pwm &&) = default;
+    Pwm(Pwm&&) = default;
     Pwm& operator=(const Pwm&) = delete;
-    Pwm& operator=(Pwm &&) = delete;
+    Pwm& operator=(Pwm&&) = delete;
 
     void setPulsWidthInMill(uint32_t) const;
 
