@@ -160,7 +160,7 @@ void os::ThisTask::sleep(const std::chrono::milliseconds ms)
 /**
  * Method for fixed period scheduling.
  * @params lastWakeTickCount last time the task was unblocked, initialize this once with the current system tick.
- *             This value is upodated automatically between each iteration.
+ *             This value is updated automatically between each iteration.
  * @params increment period duration (measured from the lastWakeTickCount)
  */
 void os::ThisTask::sleepUntil(uint32_t& lastWakeTickCount, const std::chrono::milliseconds& increment)
