@@ -19,7 +19,7 @@
  *      Author: Henning Mende
  */
 
-#include "discovery_board_f407vg/LedBlinker.h"
+#include "LedBlinker.h"
 #include "Exti.h"
 
 app::LedBlinker::LedBlinker(int frequency, std::chrono::milliseconds initialWaitTime) :
