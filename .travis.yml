@@ -41,3 +41,10 @@ script:
         - ./makeWithDocker.sh project_bluepill_horrorscope clean 
         - ./makeWithDocker.sh project_bluepill_horrorscope debug_firmware
         - ./makeWithDocker.sh project_bluepill_horrorscope clean-all
+        - ./configureWithDocker.sh project_stm32f4_discovery
+        - ./makeWithDocker.sh project_stm32f4_discovery test
+        - ./makeWithDocker.sh project_stm32f4_discovery clean 
+        - ./makeWithDocker.sh project_stm32f4_discovery firmware 
+        - ./makeWithDocker.sh project_stm32f4_discovery clean 
+        - ./makeWithDocker.sh project_stm32f4_discovery debug_firmware
+        - ./makeWithDocker.sh project_stm32f4_discovery clean-all
