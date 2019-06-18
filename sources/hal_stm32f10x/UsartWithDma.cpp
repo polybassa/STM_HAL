@@ -43,6 +43,11 @@ bool UsartWithDma::isReadyToReceive(void) const
     return mUsart.isReadyToReceive();
 }
 
+bool UsartWithDma::isReadyToSend(void) const
+{
+    return mUsart.isReadyToSend();
+}
+
 bool UsartWithDma::isInitalized(void) const
 {
     return mInitialized;

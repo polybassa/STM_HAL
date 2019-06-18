@@ -13,6 +13,12 @@
     defined (STM32F10X_HD) || defined (STM32F10X_HD_VL) || defined (STM32F10X_XL) || defined (STM32F10X_CL)
 #include "stm32f10x_rcc.h"
 #endif
+#if defined(STM32F40_41xxx) || defined(STM32F427_437xx) || defined(STM32F429_439xx) || defined(STM32F401xx) || \
+    defined(STM32F410xx) || \
+    defined(STM32F411xE) || defined(STM32F412xG) || defined(STM32F413_423xx) || defined(STM32F446xx) || \
+    defined(STM32F469_479xx)
+#include "stm32f4xx_rcc.h"
+#endif
 #include <utility>
 
 namespace dev
@@ -83,6 +89,15 @@ public:
         SEGGER_RTT_printf(0, "PCLK2: %d\r\n", clocks.PCLK2_Frequency);
         SEGGER_RTT_printf(0, "SYSCLK: %d\r\n", clocks.SYSCLK_Frequency);
 
+#endif
+#if defined(STM32F40_41xxx) || defined(STM32F427_437xx) || defined(STM32F429_439xx) || defined(STM32F401xx) || \
+        defined(STM32F410xx) || \
+        defined(STM32F411xE) || defined(STM32F412xG) || defined(STM32F413_423xx) || defined(STM32F446xx) || \
+        defined(STM32F469_479xx)
+        SEGGER_RTT_printf(0, "HCLK: %d\r\n", clocks.HCLK_Frequency);
+        SEGGER_RTT_printf(0, "PCLK1: %d\r\n", clocks.PCLK1_Frequency);
+        SEGGER_RTT_printf(0, "PCLK2: %d\r\n", clocks.PCLK2_Frequency);
+        SEGGER_RTT_printf(0, "SYSCLK: %d\r\n", clocks.SYSCLK_Frequency);
 #endif
     }
 };

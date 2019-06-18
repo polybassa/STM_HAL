@@ -25,6 +25,7 @@ struct UsartWithDma {
 
     bool isInitalized(void) const;
     bool isReadyToReceive(void) const;
+    bool isReadyToSend(void) const;
 
     template<size_t n>
     size_t send(const std::array<uint8_t, n>&) const;

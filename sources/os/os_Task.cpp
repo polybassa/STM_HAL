@@ -19,6 +19,14 @@ static const int __attribute__((unused)) g_DebugZones = ZONE_ERROR | ZONE_WARNIN
 #include "misc.h"
 #include "system_stm32f10x.h"
 #endif
+#if defined(STM32F40_41xxx) || defined(STM32F427_437xx) || defined(STM32F429_439xx) || defined(STM32F401xx) || \
+    defined(STM32F410xx) || \
+    defined(STM32F411xE) || defined(STM32F412xG) || defined(STM32F413_423xx) || defined(STM32F446xx) || \
+    defined(STM32F469_479xx)
+#include "stm32f4xx_it.h"
+#include "stm32f4xx_misc.h"
+#include "system_stm32f4xx.h"
+#endif
 
 using os::Task;
 
@@ -143,6 +151,24 @@ void os::ThisTask::sleep(const std::chrono::milliseconds ms)
         vTaskDelay(ms.count() / portTICK_RATE_MS);
     } else {
         const size_t countervalue = ms.count() * (SystemCoreClock / 5000);
+        for (size_t i = 0; i < countervalue; i++) {
+            __NOP();
+        }
+    }
+}
+
+/**
+ * Method for fixed period scheduling.
+ * @params lastWakeTickCount last time the task was unblocked, initialize this once with the current system tick.
+ *             This value is updated automatically between each iteration.
+ * @params increment period duration (measured from the lastWakeTickCount)
+ */
+void os::ThisTask::sleepUntil(uint32_t& lastWakeTickCount, const std::chrono::milliseconds& increment)
+{
+    if (os::Task::isSchedulerRunning()) {
+        vTaskDelayUntil(&lastWakeTickCount, ((increment.count() / portTICK_RATE_MS)));
+    } else {
+        const size_t countervalue = increment.count() * (SystemCoreClock / 5000);
         for (size_t i = 0; i < countervalue; i++) {
             __NOP();
         }

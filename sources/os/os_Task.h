@@ -78,6 +78,7 @@ struct ThisTask {
     }
 
     static void sleep(const std::chrono::milliseconds ms);
+    static void sleepUntil(uint32_t& lastWakeTick, const std::chrono::milliseconds& increment);
     static void yield(void);
 
     static void enterCriticalSection(void);
