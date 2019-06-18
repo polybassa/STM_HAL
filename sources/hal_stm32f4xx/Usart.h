@@ -32,7 +32,8 @@
                                           ((PERIPH) == USART2_BASE) || \
                                           ((PERIPH) == USART3_BASE) || \
                                           ((PERIPH) == UART4_BASE) || \
-                                          ((PERIPH) == UART5_BASE))
+                                          ((PERIPH) == UART5_BASE) || \
+                                          ((PERIPH) == USART6_BASE))
 // ================================================================================================
 
 namespace hal
