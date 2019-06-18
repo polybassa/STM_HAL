@@ -56,23 +56,38 @@ struct Gpio {
 
     void operator=(const bool& state) const;
 
+    /// If this gpio is not reconfigurable, this method has no effect.
+    void changeAlternateFunction(const uint8_t afMode) const;
+    /// If this gpio is not reconfigurable, this method has no effect.
+    void changeGpioMode(const GPIOMode_TypeDef mode) const;
+
+    GPIOMode_TypeDef getModeFromHardware(void) const;
+
+    constexpr bool isReconfigurable(void) const
+    {
+        return mReconfigurable;
+    }
+
 private:
     constexpr Gpio(const Description&       desc,
                    const uint32_t&          peripherie,
                    const GPIO_InitTypeDef&& conf,
                    const uint16_t&          pinSource = std::numeric_limits<uint16_t>::max(),
-                   const uint8_t&           AF = std::numeric_limits<uint8_t>::max()) :
+                   const uint8_t&           AF = std::numeric_limits<uint8_t>::max(),
+                   const bool&              reconfigurable = false) :
         mDescription(desc),
         mPeripherie(peripherie),
         mConfiguration(std::move(conf)),
         mPinSource(pinSource),
-        mAF(AF) {}
+        mAF(AF),
+        mReconfigurable(reconfigurable) {}
 
     const Description mDescription;
     const uint32_t mPeripherie;
     const GPIO_InitTypeDef mConfiguration;
     const uint16_t mPinSource;
     const uint8_t mAF;
+    const bool mReconfigurable;
 
     void initialize(void) const;
 
@@ -159,6 +174,31 @@ public:
         static_assert(Container[index].mConfiguration.GPIO_Mode == GPIO_Mode_AF,
                       "You can only access alternateFunction pin for a GPIO object");
         return getGpio<index>();
+    }
+
+    template<enum Gpio::Description index, uint8_t af>
+    static void changeAlternateFunction(void)
+    {
+        static_assert(Container[index].mReconfigurable == true, "Pin must be reconfigurable!");
+        static_assert(IS_GPIO_AF(af), "Invalid alternate function!");
+        Container[index].changeAlternateFunction(af);
+    }
+
+    template<enum Gpio::Description index, const GPIOMode_TypeDef mode>
+    static void changeGpioMode(void)
+    {
+        static_assert(Container[index].mReconfigurable == true, "Pin must be reconfigurable!");
+        static_assert(IS_GPIO_MODE(mode), "Invalid Gpio Mode!");
+        Container[index].changeGpioMode(mode);
+    }
+
+    /// @brief Returns at compile time whether a pin is reconfigurable or not.
+    ///
+    /// This function is useful for static asserts.
+    template<enum Gpio::Description index>
+    static constexpr const bool isReconfigurable(void)
+    {
+        return Container[index].mReconfigurable;
     }
 
     template<typename U>

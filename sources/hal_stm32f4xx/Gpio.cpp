@@ -21,11 +21,21 @@ static const int __attribute__((unused)) g_DebugZones = ZONE_ERROR | ZONE_WARNIN
 using hal::Factory;
 using hal::Gpio;
 
+GPIOMode_TypeDef Gpio::getModeFromHardware(void) const
+{
+    if (mReconfigurable) {
+        auto peripherie = reinterpret_cast<GPIO_TypeDef* const>(mPeripherie);
+        return static_cast<GPIOMode_TypeDef>(((peripherie->MODER) & (0x03 << (mPinSource * 2))) >> (mPinSource * 2));
+    } else {
+        return mConfiguration.GPIO_Mode;
+    }
+}
+
 Gpio::operator bool() const
 {
     auto peripherie = reinterpret_cast<GPIO_TypeDef* const>(mPeripherie);
 
-    if (mConfiguration.GPIO_Mode == GPIO_Mode_OUT) {
+    if (getModeFromHardware() == GPIO_Mode_OUT) {
         return GPIO_ReadOutputDataBit(peripherie, (uint16_t)mConfiguration.GPIO_Pin);
     } else {
         return GPIO_ReadInputDataBit(peripherie, (uint16_t)mConfiguration.GPIO_Pin);
@@ -34,7 +44,7 @@ Gpio::operator bool() const
 
 void Gpio::operator=(const bool& state) const
 {
-    if (mConfiguration.GPIO_Mode == GPIO_Mode_OUT) {
+    if (getModeFromHardware() == GPIO_Mode_OUT) {
         auto peripherie = reinterpret_cast<GPIO_TypeDef*>(mPeripherie);
         GPIO_WriteBit(peripherie, static_cast<uint16_t>(mConfiguration.GPIO_Pin), static_cast<BitAction>(state));
     } else {
@@ -44,16 +54,47 @@ void Gpio::operator=(const bool& state) const
 
 void Gpio::initialize(void) const
 {
-    auto peripherie = reinterpret_cast<GPIO_TypeDef*>(mPeripherie);
+    const auto peripherie = reinterpret_cast<GPIO_TypeDef*>(mPeripherie);
+    const auto configuration = static_cast<GPIO_InitTypeDef const*>(&mConfiguration);
 
-    GPIO_TypeDef* GPIOx = static_cast<GPIO_TypeDef*>(peripherie);
-    const GPIO_InitTypeDef* GPIO_InitStruct = static_cast<GPIO_InitTypeDef const*>(&mConfiguration);
-
-    GPIO_Init(GPIOx, GPIO_InitStruct);
-//    GPIO_Init(peripherie, &mConfiguration);
+    GPIO_Init(peripherie, configuration);
 
     if ((mConfiguration.GPIO_Mode == GPIO_Mode_AF) && IS_GPIO_PIN_SOURCE(mPinSource) && IS_GPIO_AF(mAF)) {
         GPIO_PinAFConfig(peripherie, mPinSource, mAF);
+    }
+}
+
+void Gpio::changeAlternateFunction(const uint8_t afMode) const
+{
+    if (!mReconfigurable) {
+        Trace(ZONE_WARNING, "Pin must be reconfigurable, to change the alternate function!");
+        return;
+    }
+
+    if (IS_GPIO_AF(afMode)) {
+        const auto peripherie = reinterpret_cast<GPIO_TypeDef*>(mPeripherie);
+
+        GPIO_InitTypeDef configuration = mConfiguration;
+        configuration.GPIO_Mode = GPIO_Mode_AF;
+
+        GPIO_PinAFConfig(peripherie, mPinSource, afMode);
+        GPIO_Init(peripherie, &configuration);
+    }
+}
+
+void Gpio::changeGpioMode(const GPIOMode_TypeDef mode) const
+{
+    if (!mReconfigurable) {
+        Trace(ZONE_WARNING, "Pin must be reconfigurable, to change the mode!");
+        return;
+    }
+
+    if (IS_GPIO_MODE(mode)) {
+        GPIO_TypeDef* peripherie = reinterpret_cast<GPIO_TypeDef*>(mPeripherie);
+        GPIO_InitTypeDef configuration = mConfiguration;
+        configuration.GPIO_Mode = mode;
+
+        GPIO_Init(peripherie, &configuration);
     }
 }
 
