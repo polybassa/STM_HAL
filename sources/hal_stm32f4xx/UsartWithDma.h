@@ -57,6 +57,9 @@ struct UsartWithDma {
     void registerTransferCompleteCallback(std::function<void(void)> ) const;
     void registerReceiveCompleteCallback(std::function<void(void)> ) const;
 
+    bool isReadyToReceive(void) const;
+    bool isReadyToSend(void) const;
+
     const Usart& mUsart;
 
 private:

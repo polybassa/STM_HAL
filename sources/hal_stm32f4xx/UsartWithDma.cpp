@@ -123,7 +123,7 @@ size_t UsartWithDma::receive(uint8_t* const data, const size_t length, const uin
 
     if (mUsart.hasOverRunError()) {
         mUsart.clearOverRunError();
-        //Trace(ZONE_INFO, "OverRun Error detected \r\n");
+        Trace(ZONE_INFO, "OverRun Error detected \r\n");
     }
 
     if ((mRxDma != nullptr) && (mDmaCmd & USART_DMAReq_Rx) && (length > MIN_LENGTH_FOR_DMA_TRANSFER)) {
@@ -161,7 +161,7 @@ void UsartWithDma::sendNonBlocking(uint8_t const* const data, const size_t lengt
     if ((mTxDma != nullptr) && (mDmaCmd & USART_DMAReq_Tx)) {
         // we have DMA support
         mTxDma->setupTransfer(data, length, repeat);
-        mTxDma->enable();
+//        mTxDma->enable();
     }
 }
 void UsartWithDma::receiveNonBlocking(uint8_t const* const data, const size_t length, const bool repeat) const
@@ -193,6 +193,16 @@ void UsartWithDma::stopNonBlockingReceive(void) const
     if (mRxDma != nullptr) {
         mRxDma->disable();
     }
+}
+
+bool UsartWithDma::isReadyToReceive(void) const
+{
+    return mUsart.isReadyToReceive();
+}
+
+bool UsartWithDma::isReadyToSend(void) const
+{
+    return mUsart.isReadyToSend();
 }
 
 constexpr const std::array<const UsartWithDma, UsartWithDma::NUMBER_OF_INSTANCES> Factory<UsartWithDma>::Container;
