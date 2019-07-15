@@ -26,13 +26,13 @@ protected:
 
 public:
     enum Priority {
-        HIGHEST = 15,
+        HIGHEST = 14,
         VERY_HIGH = 13,
         HIGH = 10,
         MEDIUM = 7,
         LOW = 4,
-        VERY_LOW = 2,
-        LOWEST = 1
+        VERY_LOW = 1,
+        LOWEST = 0
     };
 
     Task(char const* const name, const uint16_t stackSize, const os::Task::Priority priority,
