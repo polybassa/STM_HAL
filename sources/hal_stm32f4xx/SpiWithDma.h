@@ -40,6 +40,10 @@ struct SpiWithDma {
     size_t send(const std::array<uint8_t, n>&) const;
     size_t send(uint8_t const* const, const size_t) const;
 
+    template<size_t n>
+    size_t transmitReceive(const std::array<uint8_t, n>&, std::array<uint8_t, n>&) const;
+    size_t transmitReceive(uint8_t const* const, uint8_t* const, const size_t) const;
+
 private:
     constexpr SpiWithDma(Spi const* const spiInterface = nullptr,
                          const uint16_t&  dmaCmd = 0,
@@ -58,6 +62,7 @@ private:
 
     bool isReadyToSend(void) const;
     bool isReadyToReceive(void) const;
+    bool isReadyToTransmitReceive(void) const;
 
     static constexpr const size_t MIN_LENGTH_FOR_DMA_TRANSFER = 2;
     static std::array<os::Semaphore, Spi::__ENUM__SIZE> DmaTransferCompleteSemaphores;
@@ -78,6 +83,13 @@ size_t SpiWithDma::send(const std::array<uint8_t, n>& tx) const
     return send(tx.data(), tx.size());
 }
 
+template<size_t n>
+size_t SpiWithDma::transmitReceive(const std::array<uint8_t, n>& tx, std::array<uint8_t, n>& rx) const
+{
+    static_assert(tx.size() == rx.size(), "Rx and tx arrays must have the same size!");
+    return transmitReceive(tx.data(), rx.data(), n);
+}
+
 template<>
 class Factory<SpiWithDma>
 {
@@ -85,13 +97,6 @@ class Factory<SpiWithDma>
 
     Factory(void)
     {
-//        for (auto & semaphore : SpiWithDma::DmaTransferCompleteSemaphores) {
-//              if (!semaphore) {
-//				os::Semaphore tmpSemahore;
-//				semaphore = std::move(tmpSemahore);
-//              }
-//        }
-
         for (const auto& spi : Container) {
             spi.initialize();
         }

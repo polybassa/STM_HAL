@@ -70,6 +70,10 @@ struct Spi {
 
     bool isReadyToReceive(void) const;
 
+    size_t transmitReceive(uint8_t const* const, uint8_t* const, const size_t) const;
+
+    bool isReadyToTransmitReceive(void) const;
+
 private:
     constexpr Spi(const enum Description& desc,
                   const uint32_t&         peripherie,

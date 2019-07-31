@@ -115,12 +115,37 @@ size_t Spi::receive(uint8_t* const data, const size_t length) const
 
     constexpr const uint8_t defaultValueForSend = 0xff;
     size_t bytesReceived = 0;
+    size_t bytesSend = 0;
     while ((size_t)bytesReceived < length) {
-        if (this->isReadyToSend()) {
+        if (this->isReadyToSend() && (bytesSend < length)) {
             this->send(defaultValueForSend);
+            bytesSend++;
         }
         if (this->isReadyToReceive()) {
             data[bytesReceived] = this->receive();
+            bytesReceived++;
+        }
+    }
+    return bytesReceived;
+}
+
+size_t Spi::transmitReceive(uint8_t const* const txData, uint8_t* const rxData, const size_t length) const
+{
+    if ((txData == nullptr) || (rxData == nullptr)) {
+        return 0;
+    }
+    os::LockGuard<os::Mutex> lock(InterfaceAvailableMutex[static_cast<size_t>(mDescription)]);
+
+    size_t bytesReceived = 0;
+    size_t bytesSend = 0;
+
+    while ((size_t)bytesReceived < length) {
+        if (this->isReadyToSend() && (bytesSend < length)) {
+            this->send(txData[bytesSend]);
+            bytesSend++;
+        }
+        if (this->isReadyToReceive()) {
+            rxData[bytesReceived] = this->receive();
             bytesReceived++;
         }
     }
@@ -136,6 +161,11 @@ bool Spi::isReadyToSend(void) const
 {
     return (bool)SPI_I2S_GetFlagStatus(
                                        reinterpret_cast<SPI_TypeDef*>(mPeripherie), SPI_I2S_FLAG_TXE);
+}
+
+bool Spi::isReadyToTransmitReceive(void) const
+{
+    return isReadyToSend() && isReadyToReceive();
 }
 
 std::array<os::Mutex, Spi::Description::__ENUM__SIZE> Spi::InterfaceAvailableMutex;

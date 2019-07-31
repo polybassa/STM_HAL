@@ -95,7 +95,8 @@ size_t SpiWithDma::receive(uint8_t* const data, const size_t length) const
         // disable TX interrupt to avoid two callback calls
         mTxDma->unregisterInterruptSemaphore(Dma::InterruptSource::TC);
 
-        mRxDma->setupTransfer((uint8_t* const)data, length);
+//        mRxDma->setupTransfer((uint8_t* const)data, length);
+        mRxDma->setupTransfer(data, length, false);
         const uint8_t dummy = 0xff;
         mTxDma->setupSendSingleCharMultipleTimes(&dummy, length);
 
@@ -115,9 +116,46 @@ size_t SpiWithDma::receive(uint8_t* const data, const size_t length) const
     }
 }
 
+size_t SpiWithDma::transmitReceive(uint8_t const* const txData, uint8_t* const rxData, const size_t length) const
+{
+    if ((txData == nullptr) || (rxData == nullptr)) {
+        return 0;
+    }
+
+    if (mRxDma && (mDmaCmd & SPI_I2S_DMAReq_Rx)
+        && (length > MIN_LENGTH_FOR_DMA_TRANSFER) && (mTxDma && (mDmaCmd & SPI_I2S_DMAReq_Tx)))
+    {
+        // we have DMA support
+        // disable TX interrupt to avoid two callback calls
+        mTxDma->unregisterInterruptSemaphore(Dma::InterruptSource::TC);
+
+        mRxDma->setupTransfer((uint8_t* const)rxData, length);
+        mTxDma->setupTransfer(txData, length);
+
+        mRxDma->enable();
+        mTxDma->enable();
+
+        DmaTransferCompleteSemaphores.at(mSpi->mDescription).take();
+
+        mTxDma->disable();
+        mRxDma->disable();
+
+        // reregister TX Callback
+        registerInterruptCallbacks();
+        return length;
+    } else {
+        return mSpi->transmitReceive(txData, rxData, length);
+    }
+}
+
 bool SpiWithDma::isReadyToSend(void) const
 {
     return mSpi->isReadyToSend();
+}
+
+bool SpiWithDma::isReadyToTransmitReceive(void) const
+{
+    return mSpi->isReadyToSend() && mSpi->isReadyToReceive();
 }
 
 constexpr const std::array<const SpiWithDma, Spi::__ENUM__SIZE> Factory<SpiWithDma>::Container;
