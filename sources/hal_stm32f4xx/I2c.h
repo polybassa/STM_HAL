@@ -31,6 +31,8 @@
                                         ((PERIPH) == I2C2_BASE) || \
                                         ((PERIPH) == I2C3_BASE))
 ///////////////////////////////////////////////////////////////////////////////
+namespace hal
+{
 /**
  * Note: Currently only master mode is implemented.
  * Missing:
@@ -38,8 +40,6 @@
  *  - Slave mode
  *  - Multimaster
  */
-namespace hal
-{
 struct I2c {
 #include "I2c_config.h"
 
