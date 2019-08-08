@@ -156,6 +156,16 @@ class Factory<Gpio>
         return Container[index];
     }
 
+    /// @brief Recursively walks through the whole Container to check the configuration.
+    template<enum Gpio::Description index>
+    static constexpr void checkPinConfig(void)
+    {
+        if constexpr (index < Gpio::Description::__ENUM__SIZE){
+            getGpio<index>();
+            checkPinConfig<Gpio::Description(index + 1)>();
+        }
+    }
+
 public:
 
     template<enum Gpio::Description index>
@@ -199,6 +209,17 @@ public:
     static constexpr const bool isReconfigurable(void)
     {
         return Container[index].mReconfigurable;
+    }
+
+    /// @brief Checks the configuration of all Pins.
+    ///
+    /// Even the gpios that are not explicitly requested from the factory, and thus their
+    /// configuration remains unchecked, are checked with this function.
+    /// A call to this function at the beginning of main is reasonable, but it increases
+    /// the compile time significantly.
+    static constexpr void checkPinConfig(void)
+    {
+        checkPinConfig<Gpio::Description(0)>();
     }
 
     template<typename U>
