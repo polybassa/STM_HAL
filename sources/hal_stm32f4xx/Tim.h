@@ -127,10 +127,10 @@ class Factory<Tim>
             if (tim.mDescription != Tim::__ENUM__SIZE) {
                 if (IS_TIM_BASE_APB1(tim.mPeripherie)) {
                     RCC_APB1PeriphClockCmd(tim.mClockSource, ENABLE);
-                    tim.mClockFrequency = clocks.SYSCLK_Frequency;
+                    tim.mClockFrequency = clocks.PCLK1_Frequency * 2;
                 } else if (IS_TIM_BASE_APB2(tim.mPeripherie)) {
                     RCC_APB2PeriphClockCmd(tim.mClockSource, ENABLE);
-                    tim.mClockFrequency = clocks.SYSCLK_Frequency;
+                    tim.mClockFrequency = clocks.PCLK2_Frequency * 2;
                 } else {
                     tim.mClockFrequency = 0;
                 }
