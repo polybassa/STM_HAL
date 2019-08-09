@@ -62,6 +62,9 @@ const std::string VERSION(&_version_start, (&_version_end - &_version_start));
 
 int main(void)
 {
+#ifdef ENABLE_CHECK_PIN_CONFIG
+    hal::Factory<hal::Gpio>::checkPinConfig();
+#endif
     hal::initFactory<hal::Factory<hal::Gpio> >();
     hal::initFactory<hal::Factory<hal::Tim> >();
     hal::initFactory<hal::Factory<hal::Pwm> >();

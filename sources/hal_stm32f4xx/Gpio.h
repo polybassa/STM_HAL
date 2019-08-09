@@ -156,7 +156,12 @@ class Factory<Gpio>
         return Container[index];
     }
 
+#ifdef ENABLE_CHECK_PIN_CONFIG
     /// @brief Recursively walks through the whole Container to check the configuration.
+    ///
+    /// Compiling this method increases the compile time significantly and if compiler
+    /// optimizations are switched on it uses a huge amount of memory. Thus this method can
+    /// be excluded from compilation via the ENABLE_CHECK_PIN_CONFIG define.
     template<enum Gpio::Description index>
     static constexpr void checkPinConfig(void)
     {
@@ -165,6 +170,7 @@ class Factory<Gpio>
             checkPinConfig<Gpio::Description(index + 1)>();
         }
     }
+#endif
 
 public:
 
@@ -211,16 +217,22 @@ public:
         return Container[index].mReconfigurable;
     }
 
+#ifdef ENABLE_CHECK_PIN_CONFIG
     /// @brief Checks the configuration of all Pins.
     ///
     /// Even the gpios that are not explicitly requested from the factory, and thus their
     /// configuration remains unchecked, are checked with this function.
-    /// A call to this function at the beginning of main is reasonable, but it increases
-    /// the compile time significantly.
+    /// A call to this function at the beginning of main is reasonable, to check the
+    /// configuration during development.
+    ///
+    /// Compiling this method increases the compile time significantly and if compiler
+    /// optimizations are switched on it uses a huge amount of memory. Thus this method can
+    /// be excluded from compilation via the ENABLE_CHECK_PIN_CONFIG define.
     static constexpr void checkPinConfig(void)
     {
         checkPinConfig<Gpio::Description(0)>();
     }
+#endif
 
     template<typename U>
     friend const U& getFactory(void);
