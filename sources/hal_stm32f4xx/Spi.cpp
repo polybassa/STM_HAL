@@ -92,7 +92,7 @@ size_t Spi::receive(uint16_t* const data, const size_t length) const
     }
     os::LockGuard<os::Mutex> lock(InterfaceAvailableMutex[static_cast<size_t>(mDescription)]);
 
-    constexpr const uint16_t defaultValueForSend = 0xff;
+    constexpr const uint16_t defaultValueForSend = 0xffff;
     size_t halfWordsReceived = 0;
     while ((size_t)halfWordsReceived < length) {
         if (this->isReadyToSend()) {
@@ -166,6 +166,15 @@ bool Spi::isReadyToSend(void) const
 bool Spi::isReadyToTransmitReceive(void) const
 {
     return isReadyToSend() && isReadyToReceive();
+}
+
+void Spi::halfDuplexSwitchSendReceive(const bool send) const
+{
+    if (send) {
+        SPI_BiDirectionalLineConfig(reinterpret_cast<SPI_TypeDef*>(mPeripherie), SPI_Direction_Tx);
+    } else {
+        SPI_BiDirectionalLineConfig(reinterpret_cast<SPI_TypeDef*>(mPeripherie), SPI_Direction_Rx);
+    }
 }
 
 std::array<os::Mutex, Spi::Description::__ENUM__SIZE> Spi::InterfaceAvailableMutex;
