@@ -31,6 +31,11 @@ void Pwm::setPulsWidthInMill(uint32_t value) const
     static const float scale = mTim.getPeriode() / maxValue;
     value = value * scale;
 
+    setPulseWidthAbsolute(value);
+}
+
+void Pwm::setPulseWidthAbsolute(const uint32_t value) const
+{
     switch (mChannel) {
     case CHANNEL1:
         TIM_SetCompare1(mTim.getBasePointer(), value);
