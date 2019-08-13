@@ -94,9 +94,11 @@ size_t Spi::receive(uint16_t* const data, const size_t length) const
 
     constexpr const uint16_t defaultValueForSend = 0xffff;
     size_t halfWordsReceived = 0;
+    size_t halfWordsSend = 0;
     while ((size_t)halfWordsReceived < length) {
-        if (this->isReadyToSend()) {
+        if (this->isReadyToSend() && (halfWordsSend < length)) {
             this->send(defaultValueForSend);
+            halfWordsSend++;
         }
         if (this->isReadyToReceive()) {
             data[halfWordsReceived] = this->receive();
@@ -150,6 +152,29 @@ size_t Spi::transmitReceive(uint8_t const* const txData, uint8_t* const rxData, 
         }
     }
     return bytesReceived;
+}
+
+size_t Spi::transmitReceive(uint16_t const* const txData, uint16_t* const rxData, const size_t length) const
+{
+    if ((txData == nullptr) || (rxData == nullptr)) {
+        return 0;
+    }
+    os::LockGuard<os::Mutex> lock(InterfaceAvailableMutex[static_cast<size_t>(mDescription)]);
+
+    size_t halfWordsReceived = 0;
+    size_t halfWordsSend = 0;
+
+    while ((size_t)halfWordsReceived < length) {
+        if (this->isReadyToSend() && (halfWordsSend < length)) {
+            this->send(txData[halfWordsSend]);
+            halfWordsSend++;
+        }
+        if (this->isReadyToReceive()) {
+            rxData[halfWordsReceived] = this->receive();
+            halfWordsReceived++;
+        }
+    }
+    return halfWordsReceived;
 }
 
 uint16_t Spi::receive(void) const
