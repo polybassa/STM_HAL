@@ -93,6 +93,12 @@ void Gpio::changeGpioMode(const GPIOMode_TypeDef mode) const
         GPIO_TypeDef* peripherie = reinterpret_cast<GPIO_TypeDef*>(mPeripherie);
         GPIO_InitTypeDef configuration = mConfiguration;
         configuration.GPIO_Mode = mode;
+        if (mode == GPIO_Mode_IN) {
+            configuration.GPIO_OType = GPIO_OType_OD;
+        } else if (mode == GPIO_Mode_OUT) {
+            configuration.GPIO_OType = GPIO_OType_PP;
+            configuration.GPIO_PuPd = GPIO_PuPd_NOPULL;
+        }
 
         GPIO_Init(peripherie, &configuration);
     }
