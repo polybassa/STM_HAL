@@ -39,34 +39,42 @@ struct Pwm {
     Pwm& operator=(const Pwm&) = delete;
     Pwm& operator=(Pwm&&) = delete;
 
-    void setPulsWidthInMill(uint32_t) const;
+    /// @brief Set the pulse width per mill.
+    /// Relatively to the configured period.
+    /// @param width Pulse width between 0 and 1000.
+    void setPulsWidthInMill(uint32_t width) const;
 
-    /**
-     * Toggle the polarity of the complementary pwm output.
-     * This only effects the advanced control timers. (Tim1 and Tim8)
-     */
+    /// @brief Directly configure the register value for the output compare register.
+    ///
+    /// This is useful in cases where the period was updated right before calling this function.
+    /// The new period is written to the shadow register and loaded into the timer register on the
+    /// next update event. Thus the reading of the current period returns the old value until the
+    /// update event occurred. So setPulsWidthInMill does not work in these cases.
+    ///
+    /// @param value Output compare value to be written in the register.
+    void setPulseWidthAbsolute(const uint32_t value) const;
+
+    /// @brief Toggle the polarity of the complementary pwm output.
+    /// This only effects the advanced control timers. (Tim1 and Tim8)
     void togglePolarityOfComplementaryChannel(void) const;
 
-    /**
-     * Set the polarity of the complementary pwm output.
-     * This only effects the advanced control timers. (Tim1 and Tim8)
-     * If set to true, the xNChannel outputs a signal with the logical opposite
-     * of the reference signal. Be careful if an additional dead time is configured
-     * for the used timer.
-     * @param high bool indicating the polarity of the n channel
-     */
+    /// @brief Set the polarity of the complementary pwm output.
+    ///
+    /// This only effects the advanced control timers. (Tim1 and Tim8)
+    /// If set to true, the xNChannel outputs a signal with the logical opposite
+    /// of the reference signal. Be careful if an additional dead time is configured
+    /// for the used timer.
+    ///
+    /// @param high Set the polarity of the n channel to high.
     void setPolarityOfComplementaryChannel(const bool& high) const;
 
-    /**
-     * returns whether the complementary channel has a high polarity.
-     * @return bool flag indicating a high polarity of the complementary channel
-     */
+    /// @brief Returns whether the complementary channel has a high polarity.
+    /// @return Flag indicating a high polarity of the complementary channel.
+    ///
     bool getPolarityOfComplementaryChannel(void) const;
 
-    /**
-     * returns whether the main channel has a high polarity.
-     * @return bool flag indicating a high polarity of the high channel
-     */
+    /// @brief Returns whether the main channel has a high polarity.
+    /// @return Flag indicating a high polarity of the high channel.
     bool getPolarityOfMainChannel(void) const;
 
 private:

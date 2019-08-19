@@ -105,7 +105,6 @@ void Dma::initialize(void) const
     if (mDmaInterrupt) {
         DMA_ITConfig(pPeripheral, mDmaInterrupt, ENABLE);
 
-        mpNvic->setPriority(0xa);
         mpNvic->registerClearInterruptProcedure([this](void) {
             Dma::ClearInterruptFlag(this);
         });

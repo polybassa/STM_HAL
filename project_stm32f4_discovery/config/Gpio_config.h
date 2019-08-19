@@ -11,11 +11,11 @@ enum Description {
     USER_BUTTON,
     // ===PORTC===
     ADC_DEMO_PIN,
-    DISCO_DEMO_COM_RX,
     DISCO_DEMO_COM_TX,
+    DISCO_DEMO_COM_RX,
     // ===PORTD===
-    DEBUG_IF_RX,
     DEBUG_IF_TX,
+    DEBUG_IF_RX,
     LED_GREEN,
     LED_ORANGE,
     LED_RED,
@@ -34,6 +34,7 @@ static constexpr const std::array<const Gpio, Gpio::__ENUM__SIZE + 1> Container 
            GPIOA_BASE,
            GPIO_InitTypeDef {GPIO_Pin_0, GPIO_Mode_IN, GPIO_Speed_50MHz, GPIO_OType_PP, GPIO_PuPd_DOWN},
            GPIO_PinSource0),
+
       // ===================PORTC=================
       Gpio(Gpio::ADC_DEMO_PIN,
            GPIOC_BASE,
@@ -48,6 +49,7 @@ static constexpr const std::array<const Gpio, Gpio::__ENUM__SIZE + 1> Container 
            GPIO_InitTypeDef { GPIO_Pin_11, GPIO_Mode_AF, GPIO_Speed_2MHz, GPIO_OType_PP, GPIO_PuPd_UP},
            GPIO_PinSource11,
            GPIO_AF_UART4),
+
       // ===================PORTD=================
       Gpio(Gpio::DEBUG_IF_TX,
            GPIOD_BASE,
@@ -71,6 +73,7 @@ static constexpr const std::array<const Gpio, Gpio::__ENUM__SIZE + 1> Container 
       Gpio(Gpio::LED_BLUE,
            GPIOD_BASE,
            GPIO_InitTypeDef {GPIO_Pin_15, GPIO_Mode_OUT, GPIO_Speed_25MHz, GPIO_OType_PP, GPIO_PuPd_UP}),
+
       // =================== END =================
       Gpio(Gpio::__ENUM__SIZE,
            GPIOG_BASE,

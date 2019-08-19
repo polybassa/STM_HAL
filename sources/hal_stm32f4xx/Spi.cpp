@@ -92,11 +92,13 @@ size_t Spi::receive(uint16_t* const data, const size_t length) const
     }
     os::LockGuard<os::Mutex> lock(InterfaceAvailableMutex[static_cast<size_t>(mDescription)]);
 
-    constexpr const uint16_t defaultValueForSend = 0xff;
+    constexpr const uint16_t defaultValueForSend = 0xffff;
     size_t halfWordsReceived = 0;
+    size_t halfWordsSend = 0;
     while ((size_t)halfWordsReceived < length) {
-        if (this->isReadyToSend()) {
+        if (this->isReadyToSend() && (halfWordsSend < length)) {
             this->send(defaultValueForSend);
+            halfWordsSend++;
         }
         if (this->isReadyToReceive()) {
             data[halfWordsReceived] = this->receive();
@@ -115,9 +117,11 @@ size_t Spi::receive(uint8_t* const data, const size_t length) const
 
     constexpr const uint8_t defaultValueForSend = 0xff;
     size_t bytesReceived = 0;
+    size_t bytesSend = 0;
     while ((size_t)bytesReceived < length) {
-        if (this->isReadyToSend()) {
+        if (this->isReadyToSend() && (bytesSend < length)) {
             this->send(defaultValueForSend);
+            bytesSend++;
         }
         if (this->isReadyToReceive()) {
             data[bytesReceived] = this->receive();
@@ -125,6 +129,52 @@ size_t Spi::receive(uint8_t* const data, const size_t length) const
         }
     }
     return bytesReceived;
+}
+
+size_t Spi::transmitReceive(uint8_t const* const txData, uint8_t* const rxData, const size_t length) const
+{
+    if ((txData == nullptr) || (rxData == nullptr)) {
+        return 0;
+    }
+    os::LockGuard<os::Mutex> lock(InterfaceAvailableMutex[static_cast<size_t>(mDescription)]);
+
+    size_t bytesReceived = 0;
+    size_t bytesSend = 0;
+
+    while ((size_t)bytesReceived < length) {
+        if (this->isReadyToSend() && (bytesSend < length)) {
+            this->send(txData[bytesSend]);
+            bytesSend++;
+        }
+        if (this->isReadyToReceive()) {
+            rxData[bytesReceived] = this->receive();
+            bytesReceived++;
+        }
+    }
+    return bytesReceived;
+}
+
+size_t Spi::transmitReceive(uint16_t const* const txData, uint16_t* const rxData, const size_t length) const
+{
+    if ((txData == nullptr) || (rxData == nullptr)) {
+        return 0;
+    }
+    os::LockGuard<os::Mutex> lock(InterfaceAvailableMutex[static_cast<size_t>(mDescription)]);
+
+    size_t halfWordsReceived = 0;
+    size_t halfWordsSend = 0;
+
+    while ((size_t)halfWordsReceived < length) {
+        if (this->isReadyToSend() && (halfWordsSend < length)) {
+            this->send(txData[halfWordsSend]);
+            halfWordsSend++;
+        }
+        if (this->isReadyToReceive()) {
+            rxData[halfWordsReceived] = this->receive();
+            halfWordsReceived++;
+        }
+    }
+    return halfWordsReceived;
 }
 
 uint16_t Spi::receive(void) const
@@ -136,6 +186,20 @@ bool Spi::isReadyToSend(void) const
 {
     return (bool)SPI_I2S_GetFlagStatus(
                                        reinterpret_cast<SPI_TypeDef*>(mPeripherie), SPI_I2S_FLAG_TXE);
+}
+
+bool Spi::isReadyToTransmitReceive(void) const
+{
+    return isReadyToSend() && isReadyToReceive();
+}
+
+void Spi::halfDuplexSwitchSendReceive(const bool send) const
+{
+    if (send) {
+        SPI_BiDirectionalLineConfig(reinterpret_cast<SPI_TypeDef*>(mPeripherie), SPI_Direction_Tx);
+    } else {
+        SPI_BiDirectionalLineConfig(reinterpret_cast<SPI_TypeDef*>(mPeripherie), SPI_Direction_Rx);
+    }
 }
 
 std::array<os::Mutex, Spi::Description::__ENUM__SIZE> Spi::InterfaceAvailableMutex;

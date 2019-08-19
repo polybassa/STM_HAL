@@ -70,6 +70,16 @@ struct Spi {
 
     bool isReadyToReceive(void) const;
 
+    size_t transmitReceive(uint8_t const* const, uint8_t* const, const size_t) const;
+
+    size_t transmitReceive(uint16_t const* const, uint16_t* const, const size_t) const;
+
+    bool isReadyToTransmitReceive(void) const;
+
+    /// @brief Switches between send and receive in half duplex spi mode.
+    /// @param send Set to true, to configure for transmit.
+    void halfDuplexSwitchSendReceive(const bool send) const;
+
 private:
     constexpr Spi(const enum Description& desc,
                   const uint32_t&         peripherie,
