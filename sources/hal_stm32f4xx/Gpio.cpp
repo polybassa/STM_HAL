@@ -67,7 +67,7 @@ void Gpio::initialize(void) const
 void Gpio::changeAlternateFunction(const uint8_t afMode) const
 {
     if (!mReconfigurable) {
-        Trace(ZONE_WARNING, "Pin must be reconfigurable, to change the alternate function!");
+        Trace(ZONE_WARNING, "Pin must be reconfigurable, to change the alternate function!\n");
         return;
     }
 
@@ -79,13 +79,15 @@ void Gpio::changeAlternateFunction(const uint8_t afMode) const
 
         GPIO_PinAFConfig(peripherie, mPinSource, afMode);
         GPIO_Init(peripherie, &configuration);
+    } else {
+        Trace(ZONE_WARNING, "Invalid alternate function!\n");
     }
 }
 
 void Gpio::changeGpioMode(const GPIOMode_TypeDef mode) const
 {
     if (!mReconfigurable) {
-        Trace(ZONE_WARNING, "Pin must be reconfigurable, to change the mode!");
+        Trace(ZONE_WARNING, "Pin must be reconfigurable, to change the mode!\n");
         return;
     }
 
