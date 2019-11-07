@@ -129,6 +129,22 @@ size_t Usart::send(uint8_t const* const data, const size_t length) const
     return bytesSend;
 }
 
+size_t Usart::send(uint16_t const* const data, const size_t length) const
+{
+    if (data == nullptr) {
+        return 0;
+    }
+
+    size_t bytesSend = 0;
+    while (bytesSend < length) {
+        if (this->isReadyToSend()) {
+            this->send(data[bytesSend]);
+            bytesSend++;
+        }
+    }
+    return bytesSend;
+}
+
 bool Usart::isReadyToReceive(void) const
 {
     return USART_GetFlagStatus(reinterpret_cast<USART_TypeDef*>(mPeripherie), USART_FLAG_RXNE) == SET ? true : false;
@@ -140,6 +156,22 @@ uint16_t Usart::receive(void) const
 }
 
 size_t Usart::receive(uint8_t* const data, const size_t length) const
+{
+    if (data == nullptr) {
+        return 0;
+    }
+
+    size_t bytesReceived = 0;
+    while (bytesReceived < length) {
+        if (this->isReadyToReceive()) {
+            data[bytesReceived] = (uint8_t)this->receive();
+            bytesReceived++;
+        }
+    }
+    return bytesReceived;
+}
+
+size_t Usart::receive(uint16_t* const data, const size_t length) const
 {
     if (data == nullptr) {
         return 0;

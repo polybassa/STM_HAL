@@ -16,7 +16,7 @@
 #include "UsartWithDma.h"
 #include "trace.h"
 
-static const int __attribute__((unused)) g_DebugZones = ZONE_ERROR | ZONE_WARNING | ZONE_VERBOSE | ZONE_INFO;
+static const int __attribute__((unused)) g_DebugZones = 0;//ZONE_ERROR | ZONE_WARNING | ZONE_VERBOSE | ZONE_INFO;
 
 using hal::Dma;
 using hal::Factory;
@@ -133,15 +133,10 @@ size_t UsartWithDma::receive(uint8_t* const data, const size_t length, const uin
         mRxDma->setupTransfer(data, length);
         mRxDma->enable();
 
-        bool deadlineNotExpired =
-            DmaReceiveCompleteSemaphores.at(mUsart.mDescription).take(std::chrono::milliseconds(ticksToWait));
+        DmaReceiveCompleteSemaphores.at(mUsart.mDescription).take(std::chrono::milliseconds(ticksToWait));
 
         mRxDma->disable();
-        if (deadlineNotExpired) {
-            return length - mRxDma->getCurrentDataCounter();
-        } else {
-            return 0;
-        }
+        return length - mRxDma->getCurrentDataCounter();
     } else {
         // Dangerous, if you want to rely on the timeout, so I consider a failure the cleaner way.
         if (ticksToWait == portMAX_DELAY) {
@@ -149,6 +144,38 @@ size_t UsartWithDma::receive(uint8_t* const data, const size_t length, const uin
         } else {
             return 0;
         }
+    }
+}
+
+size_t UsartWithDma::transmitReceive(uint16_t const* const txData, uint16_t* const rxData, const size_t length) const
+{
+    if ((txData == nullptr) || (rxData == nullptr)) {
+        return 0;
+    }
+
+    if (mRxDma && (mDmaCmd & USART_DMAReq_Rx)
+        && (length > MIN_LENGTH_FOR_DMA_TRANSFER) && (mTxDma && (mDmaCmd & USART_DMAReq_Tx)))
+    {
+        // we have DMA support
+        // disable TX interrupt to avoid two callback calls
+        mTxDma->unregisterInterruptSemaphore(Dma::InterruptSource::TC);
+
+        mRxDma->setupTransfer(rxData, length);
+        mTxDma->setupTransfer(txData, length);
+
+        mRxDma->enable();
+        mTxDma->enable();
+
+        DmaReceiveCompleteSemaphores.at(mUsart.mDescription).take();
+
+        mTxDma->disable();
+        mRxDma->disable();
+
+        // reregister TX Callback
+        registerInterruptSemaphores();
+        return length;
+    } else {
+        return 0;
     }
 }
 
