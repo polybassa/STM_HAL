@@ -67,6 +67,11 @@ public:
     static uint32_t getTickCount(void);
     static uint32_t getTickCountFromISR(void);
 
+    static uint32_t calcTimeInterval(const uint32_t& before, const uint32_t& after);
+
+    /// @return True if timestamp a is after timestamp b.
+    static uint32_t isTimeStampAfter(const uint32_t& a, const uint32_t& b);
+
     friend struct ThisTask;
 };
 
