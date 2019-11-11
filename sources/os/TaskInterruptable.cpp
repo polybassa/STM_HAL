@@ -46,9 +46,13 @@ void TaskInterruptable::start(void)
 
 void TaskInterruptable::join(void)
 {
-    this->mJoinFlag = true;
-    xSemaphoreTake(this->mJoinSemaphore, portMAX_DELAY);
-    Trace(ZONE_INFO, "%s joined \r\n", this->getName());
+    if (mJoinFlag == false) {
+        this->mJoinFlag = true;
+        xSemaphoreTake(this->mJoinSemaphore, portMAX_DELAY);
+        Trace(ZONE_INFO, "%s joined \r\n", this->getName());
+    } else {
+        Trace(ZONE_INFO, "%s try join, but already suspended\r\n", this->getName());
+    }
 }
 
 void TaskInterruptable::detach(void)
