@@ -3,6 +3,7 @@ IPATH+=${ROOT}/sources/config
 IPATH+=${ROOT}/sources/app
 IPATH+=${ROOT}/sources/os
 IPATH+=${ROOT}/sources/dev
+IPATH+=${ROOT}/sources/com
 IPATH+=${ROOT}/sources/interface
 IPATH+=${ROOT}/sources/utility
 IPATH+=${ROOT}/sources/hal_stm32f30x
@@ -22,6 +23,7 @@ VPATH+=${ROOT}/sources
 VPATH+=${ROOT}/sources/dev
 VPATH+=${ROOT}/sources/os
 VPATH+=${ROOT}/sources/app
+VPATH+=${ROOT}/sources/com
 VPATH+=${ROOT}/sources/interface
 VPATH+=${ROOT}/sources/hal_stm32f30x
 
@@ -55,6 +57,11 @@ ${BINDIR}/PIDController_ut.bin: DEFINES+=-DUNITTEST
 ${BINDIR}/PIDController_ut.bin: ${OBJDIR}/PIDController.o
 ${BINDIR}/PIDController_ut.bin: ${OBJDIR}/PIDController_ut.o
 
+################################## DataTransferObject ########################################
+
+${BINDIR}/DataTransferObject_ut.bin: DEFINES +=-DUNITTEST
+${BINDIR}/DataTransferObject_ut.bin: ${OBJDIR}/DataTransferObject_ut.o
+
 ################################################################################
 
 test: clean-all ${BINDIR} ${OBJDIR} test_binarys
@@ -66,6 +73,7 @@ TESTS=${BINDIR}/DebugInterface_ut.bin
 TESTS+=${BINDIR}/BatteryObserver_ut.bin
 TESTS+=${BINDIR}/TemperatureSensor_ut.bin	
 TESTS+=${BINDIR}/PIDController_ut.bin
+TESTS+=${BINDIR}/DataTransferObject_ut.bin
 
 test_binarys: ${TESTS}  
 	@echo "-------------------------------------------------------------"
