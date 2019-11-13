@@ -72,6 +72,11 @@ struct UsartWithDma {
     bool isReadyToReceive(void) const;
     bool isReadyToSend(void) const;
 
+    /// Does nothing, just for legacy compatibility.
+    constexpr inline void enableReceiveTimeout(const size_t bitsUntilTimeout) const {}
+    /// Does nothing, just for legacy compatibility.
+    constexpr inline void disableReceiveTimeout(void) const {}
+
     const Usart& mUsart;
 
 private:
