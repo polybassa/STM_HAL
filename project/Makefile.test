@@ -62,6 +62,14 @@ ${BINDIR}/PIDController_ut.bin: ${OBJDIR}/PIDController_ut.o
 ${BINDIR}/DataTransferObject_ut.bin: DEFINES +=-DUNITTEST
 ${BINDIR}/DataTransferObject_ut.bin: ${OBJDIR}/DataTransferObject_ut.o
 
+##################################### Communication ##########################################
+
+${BINDIR}/Communication_ut.bin: DEFINES +=-DUNITTEST
+${BINDIR}/Communication_ut.bin: DEFINES +=-pthread
+${BINDIR}/Communication_ut.bin: DEFINES +=-DCOM_INTERFACE=MSCOM_IF
+${BINDIR}/Communication_ut.bin: ${OBJDIR}/Communication_ut.o
+${BINDIR}/Communication_ut.bin: ${OBJDIR}/DeepSleepInterface.o
+
 ################################################################################
 
 test: clean-all ${BINDIR} ${OBJDIR} test_binarys
@@ -74,6 +82,7 @@ TESTS+=${BINDIR}/BatteryObserver_ut.bin
 TESTS+=${BINDIR}/TemperatureSensor_ut.bin	
 TESTS+=${BINDIR}/PIDController_ut.bin
 TESTS+=${BINDIR}/DataTransferObject_ut.bin
+TESTS+=${BINDIR}/Communication_ut.bin
 
 test_binarys: ${TESTS}  
 	@echo "-------------------------------------------------------------"

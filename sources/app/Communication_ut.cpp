@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0
 /*
  * Copyright (c) 2014-2018 Nils Weiss
+ * Modified 2019 by Henning Mende
  */
 
 #include <cmath>
@@ -16,18 +17,32 @@
 //--------------------------BUFFERS--------------------------
 uint32_t g_currentTickCount;
 bool g_taskJoined, g_taskStarted;
-uint8_t g_crc;
 std::thread::id g_masterThreadId, g_slaveThreadId;
 static constexpr size_t MEMORYSIZE = 255;
 uint8_t g_masterRxMemroy[MEMORYSIZE], g_slaveRxMemory[MEMORYSIZE];
 bool g_comError = false;
 
+#ifdef CRC_32BIT
+uint32_t g_crc;
+#else
+uint8_t g_crc;
+#endif // CRC_32BIT
 //--------------------------MOCKING--------------------------
 constexpr const std::array<const hal::Crc, hal::Crc::__ENUM__SIZE> hal::Factory<hal::Crc>::Container;
-constexpr const std::array<const hal::Usart, hal::Usart::__ENUM__SIZE + 1> hal::Factory<hal::Usart>::Container;
-constexpr const std::array<const hal::Dma, hal::Dma::__ENUM__SIZE + 1> hal::Factory<hal::Dma>::Container;
 constexpr const std::array<const hal::UsartWithDma,
-                           hal::Usart::__ENUM__SIZE> hal::Factory<hal::UsartWithDma>::Container;
+                           hal::UsartWithDma::NUMBER_OF_INSTANCES> hal::Factory<hal::UsartWithDma>::Container;
+constexpr const std::array<const hal::Dma, hal::Dma::__ENUM__SIZE + 1> hal::Factory<hal::Dma>::Container;
+
+#ifdef NVIC_ABSTRACTION
+constexpr const std::array<const hal::Nvic, hal::Nvic::__ENUM__SIZE + 1> hal::Factory<hal::Nvic>::Container;
+constexpr const std::array<const hal::Usart, hal::Usart::__ENUM__SIZE> hal::Factory<hal::Usart>::Container;
+#else
+constexpr const std::array<const hal::Usart, hal::Usart::__ENUM__SIZE + 1> hal::Factory<hal::Usart>::Container;
+#endif
+
+#ifndef COM_INTERFACE
+#error COM_INTERFACE must be defined with a member of hal::Usart::Description!
+#endif
 
 void os::TaskInterruptable::join(void)
 {
@@ -61,10 +76,17 @@ uint32_t os::Task::getTickCount(void)
     return g_currentTickCount;
 }
 
+#ifdef CRC_32BIT
+uint32_t hal::Crc::getCrc(uint8_t const* const data, const size_t length) const
+{
+    return g_crc;
+}
+#else
 uint8_t hal::Crc::getCrc(uint8_t const* const data, const size_t length) const
 {
     return g_crc;
 }
+#endif // CRC_32BIT
 
 size_t hal::UsartWithDma::send(uint8_t const* const data, const size_t length, const uint32_t ticksToWait) const
 {
@@ -86,7 +108,9 @@ size_t hal::UsartWithDma::receive(uint8_t* const data, const size_t length, cons
     return g_comError ? 0 : length;
 }
 
+#ifndef NO_USART_HARDWARE_TIMEOUT
 void hal::UsartWithDma::enableReceiveTimeout(const size_t) const {}
+#endif
 
 size_t hal::UsartWithDma::receiveWithTimeout(uint8_t* const data, const size_t length,
                                              const uint32_t ticksToWait) const
@@ -94,7 +118,9 @@ size_t hal::UsartWithDma::receiveWithTimeout(uint8_t* const data, const size_t l
     return receive(data, length, ticksToWait);
 }
 
+#ifndef NO_USART_HARDWARE_TIMEOUT
 void hal::UsartWithDma::disableReceiveTimeout() const {}
+#endif
 
 void os::ThisTask::enterCriticalSection() {}
 
@@ -112,13 +138,13 @@ int ut_CrcError(void)
 
     auto crcError = false;
 
-    uint32_t a, b;
+    uint32_t a = 0, b = 0;
 
     auto rxDto = com::make_dto(a);
     auto txDto = com::make_dto(b);
 
     app::Communication<decltype(rxDto), decltype(txDto)> masterCom(hal::Factory<hal::UsartWithDma>::get<hal::Usart::
-                                                                                                        MSCOM_IF>(),
+                                                                                                        COM_INTERFACE>(),
                                                                    rxDto,
                                                                    txDto,
                                                                    [&](auto error)
@@ -130,43 +156,27 @@ int ut_CrcError(void)
                                                                    }
         });
     app::Communication<decltype(txDto), decltype(rxDto)> slaveCom(hal::Factory<hal::UsartWithDma>::get<hal::Usart::
-                                                                                                       MSCOM_IF>(),
+                                                                                                       COM_INTERFACE>(),
                                                                   txDto,
                                                                   rxDto);
 
-    std::thread masterThread([&] {
-                             g_masterThreadId = std::this_thread::get_id();
+    masterCom.triggerTxTaskExecution();
+    masterCom.triggerRxTaskExecution();
+    slaveCom.triggerTxTaskExecution();
+    slaveCom.triggerRxTaskExecution();
 
-                             for (size_t i = 0; i < 100; i++) {
-                                 masterCom.triggerTxTaskExecution();
-                                 masterCom.triggerRxTaskExecution();
-                                 std::this_thread::yield();
-                                 std::this_thread::sleep_for(std::chrono::milliseconds(1));
-                             }
-        });
-    std::thread slaveThread([&] {
-                            g_slaveThreadId = std::this_thread::get_id();
-
-                            for (size_t i = 0; i < 100; i++) {
-                                slaveCom.triggerTxTaskExecution();
-                                slaveCom.triggerRxTaskExecution();
-                                std::this_thread::yield();
-                                std::this_thread::sleep_for(std::chrono::milliseconds(1));
-                            }
-        });
-
-    std::this_thread::sleep_for(std::chrono::milliseconds(5));
+    masterCom.triggerTxTaskExecution();
+    slaveCom.triggerTxTaskExecution();
+    masterCom.triggerRxTaskExecution();
+    slaveCom.triggerRxTaskExecution();
 
     CHECK(crcError == false);
 
     g_crc = 0x11;
 
-    std::this_thread::sleep_for(std::chrono::milliseconds(5));
+    masterCom.triggerRxTaskExecution();
 
     CHECK(crcError == true);
-
-    masterThread.join();
-    slaveThread.join();
 
     TestCaseEnd();
 }
@@ -191,7 +201,7 @@ int ut_DeepSleep(void)
 
     app::Communication<decltype(rxDto), decltype(txDto)> masterCom(
                                                                    hal::Factory<hal::UsartWithDma>::get<hal::Usart::
-                                                                                                        MSCOM_IF>(),
+                                                                                                        COM_INTERFACE>(),
                                                                    rxDto,
                                                                    txDto);
 
@@ -225,7 +235,7 @@ int ut_ValueExchange(void)
                                                                                                                     ::
                                                                                                                     Usart
                                                                                                                     ::
-                                                                                                                    MSCOM_IF>(),
+                                                                                                                    COM_INTERFACE>(),
                                                                                masterRxDto,
                                                                                masterTxDto);
     app::Communication<decltype(masterTxDto), decltype(masterRxDto)> slaveCom(
@@ -233,7 +243,7 @@ int ut_ValueExchange(void)
                                                                                                                    ::
                                                                                                                    Usart
                                                                                                                    ::
-                                                                                                                   MSCOM_IF>(),
+                                                                                                                   COM_INTERFACE>(),
                                                                               slaveRxDto,
                                                                               slaveTxDto);
 

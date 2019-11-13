@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0
 /*
  * Copyright (c) 2014-2018 Nils Weiss
+ * Modified 2019 by Henning Mende
  */
 
 #pragma once
@@ -8,6 +9,7 @@
 #include "TaskInterruptable.h"
 #include "DeepSleepInterface.h"
 #include "UsartWithDma.h"
+#include "Gpio.h"
 
 namespace app
 {
@@ -23,7 +25,12 @@ struct Communication final :
     };
 
     Communication(const hal::UsartWithDma& interface, rxDto&, txDto&,
+                  const std::chrono::milliseconds& transferPeriodMS,
                   std::function<void(ErrorCode)> errorCallback = nullptr);
+    Communication(const hal::UsartWithDma& interface,
+                  rxDto& rx, txDto& tx,
+                  std::function<void(ErrorCode)> errorCallback = nullptr) :
+        Communication(interface, rx, tx, std::chrono::milliseconds(10), errorCallback){}
 
     Communication(const Communication&) = delete;
     Communication(Communication&&) = default;
@@ -44,6 +51,7 @@ private:
     const hal::UsartWithDma& mInterface;
     rxDto& mRxDto;
     txDto& mTxDto;
+    const uint8_t mTransferPeriod;
     std::function<void(ErrorCode)> mErrorCallback;
 
     os::TaskInterruptable mTxTask;
@@ -56,11 +64,13 @@ private:
 
 template<typename rxDto, typename txDto>
 app::Communication<rxDto, txDto>::Communication(const hal::UsartWithDma& interface, rxDto& rx_dto, txDto& tx_dto,
+                                                const std::chrono::milliseconds& transferPeriodMS,
                                                 std::function<void(ErrorCode)> errorCallback) :
     os::DeepSleepModule(),
         mInterface(interface),
     mRxDto(rx_dto),
     mTxDto(tx_dto),
+    mTransferPeriod(transferPeriodMS.count()),
     mErrorCallback(errorCallback),
     mTxTask("4ComTx",
             Communication::STACKSIZE,
@@ -109,7 +119,7 @@ void app::Communication<rxDto, txDto>::TxTaskFunction(const bool& join)
                 mErrorCallback(ErrorCode::TX_ERROR);
             }
         }
-        os::ThisTask::sleep(std::chrono::milliseconds(10));
+        os::ThisTask::sleep(std::chrono::milliseconds(mTransferPeriod));
     } while (!join);
 }
 
@@ -117,12 +127,10 @@ template<typename rxDto, typename txDto>
 void app::Communication<rxDto, txDto>::RxTaskFunction(const bool& join)
 {
     mInterface.enableReceiveTimeout(10);
+    const uint32_t ticksToWaitForRx = mTransferPeriod * 2;
+    const std::chrono::milliseconds rxPeriod = std::chrono::milliseconds(mTransferPeriod - 1);
 
     do {
-        os::ThisTask::sleep(std::chrono::milliseconds(9));
-
-        constexpr uint32_t ticksToWaitForRx = 30;
-
         const auto bytesReceived = mInterface.receiveWithTimeout(mRxDto.data(),
                                                                  mRxDto.length(),
                                                                  ticksToWaitForRx);
@@ -138,10 +146,16 @@ void app::Communication<rxDto, txDto>::RxTaskFunction(const bool& join)
             if (mErrorCallback) {
                 mErrorCallback(ErrorCode::CRC_ERROR);
             }
+            // consume remaining bytes in hardware buffer
+            auto bytesReceived = mInterface.receiveWithTimeout(mRxDto.data(),
+                                                               mRxDto.length(),
+                                                               mTransferPeriod / 2);
             continue;
         }
 
         mRxDto.updateTuple();
+
+        os::ThisTask::sleep(rxPeriod);
     } while (!join);
 
     mInterface.disableReceiveTimeout();
