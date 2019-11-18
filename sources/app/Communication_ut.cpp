@@ -149,9 +149,7 @@ int ut_CrcError(void)
                                                                    txDto,
                                                                    [&](auto error)
         {
-                                                                   if (error ==
-                                                                       decltype(masterCom) ::ErrorCode::CRC_ERROR)
-                                                                   {
+                                                                   if (error == com::ErrorCode::CRC_ERROR) {
                                                                        crcError = true;
                                                                    }
         });

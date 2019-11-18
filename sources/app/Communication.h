@@ -11,25 +11,28 @@
 #include "UsartWithDma.h"
 #include "Gpio.h"
 
+namespace com
+{
+enum class ErrorCode : uint8_t {
+    CRC_ERROR = 0,
+    OFFSET_ERROR,
+    UPDATE_ERROR,
+    NO_COMMUNICATION_ERROR,
+    TX_ERROR
+};
+}
+
 namespace app
 {
 template<typename rxDto, typename txDto>
 struct Communication final :
     private os::DeepSleepModule {
-    enum class ErrorCode {
-        CRC_ERROR = 0,
-        OFFSET_ERROR,
-        UPDATE_ERROR,
-        NO_COMMUNICATION_ERROR,
-        TX_ERROR
-    };
-
     Communication(const hal::UsartWithDma& interface, rxDto&, txDto&,
                   const std::chrono::milliseconds& transferPeriodMS,
-                  std::function<void(ErrorCode)> errorCallback = nullptr);
+                  std::function<void(com::ErrorCode)> errorCallback = nullptr);
     Communication(const hal::UsartWithDma& interface,
                   rxDto& rx, txDto& tx,
-                  std::function<void(ErrorCode)> errorCallback = nullptr) :
+                  std::function<void(com::ErrorCode)> errorCallback = nullptr) :
         Communication(interface, rx, tx, std::chrono::milliseconds(10), errorCallback){}
 
     Communication(const Communication&) = delete;
@@ -52,7 +55,7 @@ private:
     rxDto& mRxDto;
     txDto& mTxDto;
     const uint8_t mTransferPeriod;
-    std::function<void(ErrorCode)> mErrorCallback;
+    std::function<void(com::ErrorCode)> mErrorCallback;
 
     os::TaskInterruptable mTxTask;
     os::TaskInterruptable mRxTask;
@@ -65,7 +68,7 @@ private:
 template<typename rxDto, typename txDto>
 app::Communication<rxDto, txDto>::Communication(const hal::UsartWithDma& interface, rxDto& rx_dto, txDto& tx_dto,
                                                 const std::chrono::milliseconds& transferPeriodMS,
-                                                std::function<void(ErrorCode)> errorCallback) :
+                                                std::function<void(com::ErrorCode)> errorCallback) :
     os::DeepSleepModule(),
         mInterface(interface),
     mRxDto(rx_dto),
@@ -116,7 +119,7 @@ void app::Communication<rxDto, txDto>::TxTaskFunction(const bool& join)
 
         if (bytesTransmitted != mTxDto.length()) {
             if (mErrorCallback) {
-                mErrorCallback(ErrorCode::TX_ERROR);
+                mErrorCallback(com::ErrorCode::TX_ERROR);
             }
         }
         os::ThisTask::sleep(std::chrono::milliseconds(mTransferPeriod));
@@ -137,14 +140,14 @@ void app::Communication<rxDto, txDto>::RxTaskFunction(const bool& join)
 
         if (bytesReceived != mRxDto.length()) {
             if (mErrorCallback) {
-                mErrorCallback(ErrorCode::NO_COMMUNICATION_ERROR);
+                mErrorCallback(com::ErrorCode::NO_COMMUNICATION_ERROR);
             }
             continue;
         }
 
         if (!mRxDto.isValid()) {
             if (mErrorCallback) {
-                mErrorCallback(ErrorCode::CRC_ERROR);
+                mErrorCallback(com::ErrorCode::CRC_ERROR);
             }
             // consume remaining bytes in hardware buffer
             auto bytesReceived = mInterface.receiveWithTimeout(mRxDto.data(),
