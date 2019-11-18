@@ -169,12 +169,16 @@ int ut_CrcError(void)
     slaveCom.triggerRxTaskExecution();
 
     CHECK(crcError == false);
+    CHECK(masterCom.isConnected() == true);
+    CHECK(slaveCom.isConnected() == true);
 
     g_crc = 0x11;
 
     masterCom.triggerRxTaskExecution();
 
     CHECK(crcError == true);
+    CHECK(masterCom.isConnected() == false);
+    CHECK(slaveCom.isConnected() == true);
 
     TestCaseEnd();
 }

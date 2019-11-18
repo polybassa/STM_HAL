@@ -40,6 +40,11 @@ struct Communication final :
     Communication& operator=(const Communication&) = delete;
     Communication& operator=(Communication&&) = delete;
 
+    inline bool isConnected(void) const
+    {
+        return mConnected;
+    }
+
 #ifdef UNITTEST
     void triggerRxTaskExecution(void) { this->RxTaskFunction(true); }
     void triggerTxTaskExecution(void) { this->TxTaskFunction(true); }
@@ -56,6 +61,7 @@ private:
     txDto& mTxDto;
     const uint8_t mTransferPeriod;
     std::function<void(com::ErrorCode)> mErrorCallback;
+    bool mConnected = false;
 
     os::TaskInterruptable mTxTask;
     os::TaskInterruptable mRxTask;
@@ -142,6 +148,7 @@ void app::Communication<rxDto, txDto>::RxTaskFunction(const bool& join)
             if (mErrorCallback) {
                 mErrorCallback(com::ErrorCode::NO_COMMUNICATION_ERROR);
             }
+            mConnected = false;
             continue;
         }
 
@@ -149,6 +156,7 @@ void app::Communication<rxDto, txDto>::RxTaskFunction(const bool& join)
             if (mErrorCallback) {
                 mErrorCallback(com::ErrorCode::CRC_ERROR);
             }
+            mConnected = false;
             // consume remaining bytes in hardware buffer
             auto bytesReceived = mInterface.receiveWithTimeout(mRxDto.data(),
                                                                mRxDto.length(),
@@ -157,6 +165,12 @@ void app::Communication<rxDto, txDto>::RxTaskFunction(const bool& join)
         }
 
         mRxDto.updateTuple();
+
+        // This is only reached if a connection is established.
+        if (mErrorCallback) {
+            mErrorCallback(com::ErrorCode::NO_COMMUNICATION_ERROR);
+        }
+        mConnected = true;
 
         os::ThisTask::sleep(rxPeriod);
     } while (!join);
