@@ -49,6 +49,7 @@ Task::Task(char const* const                      name,
 Task::~Task(void)
 {
     if (this->mHandle) {
+        Trace(ZONE_INFO, "delete %8x %s\n", this->mHandle, this->getName());
         vTaskDelete(this->mHandle);
     }
 }
@@ -61,23 +62,31 @@ void Task::task(void* pvParameters)
 void Task::taskFunction(void)
 {
     mTaskFunction(false);
-    vTaskDelete(nullptr);
+    Trace(ZONE_INFO, "Task %s (%8x) deleted, due to end of task function.\n", this->getName(), this->mHandle);
     this->mHandle = 0;
+    vTaskDelete(nullptr);
 }
 
 void Task::suspend(void) const
 {
-    vTaskSuspend(this->mHandle);
+    if (this->mHandle) {
+        vTaskSuspend(this->mHandle);
+    }
 }
 
 void Task::resume(void) const
 {
-    vTaskResume(this->mHandle);
+    if (this->mHandle) {
+        Trace(ZONE_INFO, "resume %s (%8x)\n", this->getName(), this->mHandle);
+        vTaskResume(this->mHandle);
+    }
 }
 
 void Task::resumeFromISR(void) const
 {
-    xTaskResumeFromISR(this->mHandle);
+    if (this->mHandle) {
+        xTaskResumeFromISR(this->mHandle);
+    }
 }
 
 uint32_t Task::getPriority(void) const
@@ -143,6 +152,24 @@ uint32_t Task::getTickCount(void)
 uint32_t Task::getTickCountFromISR(void)
 {
     return xTaskGetTickCountFromISR();
+}
+
+uint32_t Task::calcTimeInterval(const uint32_t& before, const uint32_t& after)
+{
+    // Unsigned operation with underflow defined behavior in standard C++17 (6.9.1.4).
+    // (And also in earlier C standards.) The correct time difference is stored, even if
+    // the system tick timer wrapped around between before and after, except after one full
+    // period. But since one period lasts nearly 50 days, with a tick period of one ms, I
+    // consider this okay.
+    uint32_t difference = after - before;
+    return difference;
+}
+
+uint32_t Task::isTimeStampAfter(const uint32_t& after, const uint32_t& before)
+{
+    // https://www.freertos.org/FreeRTOS_Support_Forum_Archive/February_2012/freertos_Tick_count_overflow_5005076.html
+    const uint32_t difference = before - after;
+    return (difference & 0x80000000u) != 0;
 }
 
 void os::ThisTask::sleep(const std::chrono::milliseconds ms)
