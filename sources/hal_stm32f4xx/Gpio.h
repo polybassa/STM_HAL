@@ -56,16 +56,45 @@ struct Gpio {
 
     void operator=(const bool& state) const;
 
+    /// @brief Changes the alternate function of the gpio.
+    ///
+    /// Changes the gpio mode to alternate function mode with the function
+    /// provided as @p afMode.
     /// If this gpio is not reconfigurable, this method has no effect.
+    ///
+    /// @param afMode New alternate function mode.
     void changeAlternateFunction(const uint8_t afMode) const;
+
+    /// @brief Changes the mode of the gpio.
+    ///
     /// If this gpio is not reconfigurable, this method has no effect.
+    /// @param mode New gpio mode.
     void changeGpioMode(const GPIOMode_TypeDef mode) const;
 
+    /// @brief Returns the current gpio mode.
+    ///
+    /// For reconfigurable gpios the mode is read directly from the registers. For
+    /// non-configurable gpios this method is the same as @ref getModeFromConfig.
+    ///
+    /// @return Current GPIO_Mode.
     GPIOMode_TypeDef getModeFromHardware(void) const;
 
+    /// @brief Returns whether the gpio is reconfigurable.
+    /// @return True if gpio is reconfigurable.
     constexpr bool isReconfigurable(void) const
     {
         return mReconfigurable;
+    }
+
+    /// @brief Returns the configured gpio mode.
+    ///
+    /// This method works at compile time. For reconfigurable Gpios, this mode may be
+    /// altered at runtime.
+    ///
+    /// @return Configured GPIO_Mode.
+    constexpr GPIOMode_TypeDef getModeFromConfig(void) const
+    {
+        return mConfiguration.GPIO_Mode;
     }
 
 private:

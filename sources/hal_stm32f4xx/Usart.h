@@ -52,15 +52,23 @@ struct Usart {
     template<size_t n>
     size_t send(const std::array<uint8_t, n>&) const;
 
+    template<size_t n>
+    size_t send(const std::array<uint16_t, n>&) const;
+
     void send(const uint16_t) const;
     size_t send(uint8_t const* const, const size_t) const;
+    size_t send(uint16_t const* const, const size_t) const;
     bool isReadyToSend(void) const;
 
     template<size_t n>
     size_t receive(std::array<uint8_t, n>&) const;
 
+    template<size_t n>
+    size_t receive(std::array<uint16_t, n>&) const;
+
     uint16_t receive(void) const;
     size_t receive(uint8_t* const, const size_t) const;
+    size_t receive(uint16_t* const, const size_t) const;
     size_t receiveAvailableData(uint8_t* const data, const size_t length) const;
     bool isReadyToReceive(void) const;
 
@@ -114,7 +122,19 @@ size_t Usart::send(const std::array<uint8_t, n>& tx) const
 }
 
 template<size_t n>
+size_t Usart::send(const std::array<uint16_t, n>& tx) const
+{
+    return send(tx.data(), tx.size());
+}
+
+template<size_t n>
 size_t Usart::receive(std::array<uint8_t, n>& rx) const
+{
+    return receive(rx.data(), rx.size());
+}
+
+template<size_t n>
+size_t Usart::receive(std::array<uint16_t, n>& rx) const
 {
     return receive(rx.data(), rx.size());
 }

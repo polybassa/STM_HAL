@@ -66,6 +66,7 @@ struct Dma {
     Dma& operator=(Dma&&) = delete;
 
     void setupTransfer(uint8_t const* const data, const size_t length, const bool repeat = false) const;
+    void setupTransfer(uint16_t const* const data, const size_t length, const bool repeat = false) const;
     void setupSendSingleCharMultipleTimes(uint8_t const* const data, const size_t length) const;
 
     void enable(void) const;

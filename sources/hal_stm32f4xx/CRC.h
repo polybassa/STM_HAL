@@ -38,7 +38,7 @@ struct Crc {
     uint32_t getCrc(uint32_t const* const data, const size_t words) const;
 
     template<typename T>
-    uint32_t getCrc(T const* const data, const size_t length) const;
+    uint32_t getCrcUbiquitous(T const* const data, const size_t length) const;
 
 private:
     constexpr Crc(const enum Description desc) :

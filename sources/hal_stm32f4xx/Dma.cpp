@@ -136,6 +136,24 @@ void Dma::setupTransfer(uint8_t const* const data, const size_t length, const bo
     }
 }
 
+void Dma::setupTransfer(uint16_t const* const data, const size_t length, const bool repeat) const
+{
+    DMA_InitTypeDef initStruct = mConfiguration;
+    initStruct.DMA_BufferSize = length;
+    initStruct.DMA_Memory0BaseAddr = reinterpret_cast<uint32_t>(data);
+    if (repeat) {
+        initStruct.DMA_Mode = DMA_Mode_Circular;
+    } else {
+        initStruct.DMA_Mode = DMA_Mode_Normal;
+    }
+
+    disable();
+    DMA_Init(reinterpret_cast<DMA_Stream_TypeDef*>(mPeripherie), &initStruct);
+    if (mDmaInterrupt) {
+        DMA_ITConfig(reinterpret_cast<DMA_Stream_TypeDef*>(mPeripherie), mDmaInterrupt, ENABLE);
+    }
+}
+
 void Dma::memcpy(void const* const dest, void const* const src, const size_t length) const
 {
     if ((dest == nullptr) || (src == nullptr) || (length == 0) || (mDescription != MEMORY)) {

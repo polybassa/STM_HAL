@@ -37,11 +37,23 @@ struct UsartWithDma {
     size_t send(uint8_t const* const, const size_t, const uint32_t ticksToWait = portMAX_DELAY) const;
 
     template<size_t n>
+    size_t send(const std::array<uint16_t, n>&) const;
+    size_t send(uint16_t const* const, const size_t, const uint32_t ticksToWait = portMAX_DELAY) const;
+
+    template<size_t n>
     size_t receive(std::array<uint8_t, n>&) const;
     size_t receive(uint8_t* const, const size_t, const uint32_t ticksToWait = portMAX_DELAY) const;
 
+    template<size_t n>
+    size_t receive(std::array<uint16_t, n>&) const;
+    size_t receive(uint16_t* const, const size_t, const uint32_t ticksToWait = portMAX_DELAY) const;
+
     size_t receiveWithTimeout(uint8_t* const data, const size_t length, const uint32_t ticksToWait =
                                   portMAX_DELAY) const;
+
+    template<size_t n>
+    size_t transmitReceive(const std::array<uint16_t, n>&, std::array<uint16_t, n>&) const;
+    size_t transmitReceive(uint16_t const* const txData, uint16_t* const rxData, const size_t length) const;
 
     template<size_t n>
     void sendNonBlocking(const std::array<uint8_t, n>& rx, const bool repeat) const;
@@ -96,9 +108,27 @@ size_t UsartWithDma::send(const std::array<uint8_t, n>& tx) const
 }
 
 template<size_t n>
+size_t UsartWithDma::send(const std::array<uint16_t, n>& tx) const
+{
+    return send(tx.data(), tx.size());
+}
+
+template<size_t n>
 size_t UsartWithDma::receive(std::array<uint8_t, n>& rx) const
 {
     return receive(rx.data(), rx.size());
+}
+
+template<size_t n>
+size_t UsartWithDma::receive(std::array<uint16_t, n>& rx) const
+{
+    return receive(rx.data(), rx.size());
+}
+
+template<size_t n>
+size_t UsartWithDma::transmitReceive(const std::array<uint16_t, n>& tx, std::array<uint16_t, n>& rx) const
+{
+    return transmitReceive(tx.data(), rx.data(), n);
 }
 
 template<size_t n>
