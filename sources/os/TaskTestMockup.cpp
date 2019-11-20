@@ -4,7 +4,12 @@
 /// @date   Nov 19, 2019
 /// @copyright UrmO GmbH
 ///
+/// The `extern` variable @ref executeMockupTasks need to be defined in your main test
+/// application.
+///
 /// This implementation is intended for software tests of classes that depend on os::Thread.
+/// If you decide, that you don't want to run the task (e.g. for testing endless tasks) simply
+/// set the @ref executeMockupTasks in your tests to false.
 ///
 /// This program is free software: you can redistribute it and/or modify it under the terms
 /// of the GNU General Public License as published by the Free Software Foundation, either
@@ -20,12 +25,18 @@
 #include "os_Task.h"
 #include "thread"
 
+/// @brief Set this true in tests to execute the tasks.
+/// Otherwise the os::Task interface is linked to empty function bodies.
+extern bool executeMockupTasks;
+
 os::Task::Task(char const* name, unsigned short stack, os::Task::Priority prio,
                std::function<void(bool const&)> func) : mHandle(nullptr), mTaskFunction(func)
 {
-    mHandle = reinterpret_cast<xTaskHandle>(new std::thread([this] {
-        taskFunction();
-    }));
+    if (executeMockupTasks) {
+        mHandle = reinterpret_cast<xTaskHandle>(new std::thread([this] {
+            taskFunction();
+        }));
+    }
 }
 
 os::Task::~Task(void)

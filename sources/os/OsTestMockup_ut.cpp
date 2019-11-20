@@ -23,6 +23,8 @@
 #include "Mutex.h"
 #include "LockGuard.h"
 
+bool executeMockupTasks = true;
+
 int ut_TestTaskMock(void)
 {
     TestCaseBegin();
@@ -40,6 +42,25 @@ int ut_TestTaskMock(void)
             });
 
         CHECK(want != have);
+    }
+
+    CHECK(want == have);
+
+    TestCaseEnd();
+}
+
+int ut_TestExecutionSwitch(void)
+{
+    TestCaseBegin();
+
+    constexpr int want = 13;
+    int have = want;
+    executeMockupTasks = false;
+
+    {
+        os::Task sut("name", 1024, os::Task::Priority::MEDIUM, [&have](const bool& join){
+                     have = 7;
+            });
     }
 
     CHECK(want == have);
