@@ -47,6 +47,7 @@ ${BINDIR}/OsTestMockup_ut.bin: ${OBJDIR}/OsTestMockup_ut.o
 ${BINDIR}/OsTestMockup_ut.bin: ${OBJDIR}/MutexTestMockup.o
 ${BINDIR}/OsTestMockup_ut.bin: ${OBJDIR}/SemaphoreTestMockup.o
 ${BINDIR}/OsTestMockup_ut.bin: ${OBJDIR}/TaskTestMockup.o
+${BINDIR}/OsTestMockup_ut.bin: ${OBJDIR}/TaskInterruptableTestMockup.o
 
 ################################################################################
 

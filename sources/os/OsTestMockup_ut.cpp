@@ -22,6 +22,7 @@
 #include "Semaphore.h"
 #include "Mutex.h"
 #include "LockGuard.h"
+#include "TaskInterruptable.h"
 
 bool executeMockupTasks = true;
 
@@ -117,19 +118,17 @@ int ut_TestSemaphoreMock(void)
 {
     TestCaseBegin();
 
-    constexpr unsigned int compareValue = 1000, want = compareValue + 1;
+    constexpr unsigned int compareValue = 1000, want = compareValue;
     unsigned int have = 0;
     bool done = false;
     const os::Semaphore semaphore;
 
     std::function<void(const bool&)> supplier([&](const bool& join) {
                                               for (unsigned int i = 0; i < compareValue; i++) {
-                                                  semaphore.give();
-                                                  os::ThisTask::yield();
                                                   os::ThisTask::sleep(std::chrono::milliseconds(1));
+                                                  semaphore.give();
                                               }
                                               done = true;
-                                              semaphore.give();
         });
 
     std::function<void(const bool&)> consumer([&](const bool& join) {
@@ -149,11 +148,105 @@ int ut_TestSemaphoreMock(void)
     TestCaseEnd();
 }
 
+int ut_TaskInterruptableMockBasicBehavior(void)
+{
+    TestCaseBegin();
+
+    constexpr int want = 100;
+    int have = 0;
+
+    {
+        os::TaskInterruptable sut("name", 1024, os::Task::Priority::MEDIUM, [&have](const bool& join){
+                                  for (unsigned int i = 0; i < 100; i++) {
+                                      os::ThisTask::yield();
+                                      have++;
+                                  }
+                                  os::ThisTask::sleep(std::chrono::milliseconds(5));
+            });
+
+        CHECK(want != have);
+    }
+
+    CHECK(want == have);
+
+    TestCaseEnd();
+}
+
+int ut_TaskInterruptableMockStartStop(void)
+{
+    TestCaseBegin();
+
+    constexpr unsigned int want = 6;
+    unsigned int have = 0;
+    auto counter = [&have](const bool& join) -> void {
+                       while (!join) {
+                           os::ThisTask::sleep(std::chrono::milliseconds(2));
+                           have++;
+                       }
+                   };
+
+    os::TaskInterruptable testTask("test", 42, os::Task::Priority::MEDIUM, counter);
+
+    os::ThisTask::sleep(std::chrono::milliseconds(want - 1));
+    testTask.join();
+
+    CHECK(have == want / 2);
+
+    os::ThisTask::sleep(std::chrono::milliseconds(3));
+
+    CHECK(have == want / 2);
+
+    testTask.start();
+    os::ThisTask::sleep(std::chrono::milliseconds(want - 1));
+    testTask.join();
+
+    CHECK(have == want);
+
+    os::ThisTask::sleep(std::chrono::milliseconds(3));
+
+    CHECK(have == want);
+
+    TestCaseEnd();
+}
+
+int ut_TaskInterruptableMockDetach(void)
+{
+    TestCaseBegin();
+
+    constexpr bool want = true;
+    bool have = false;
+
+    auto func = [&have](const bool& join) {
+                    while (!join) {
+                        os::ThisTask::sleep(std::chrono::milliseconds(1));
+                    }
+                    have = true;
+                };
+
+    os::TaskInterruptable testTask("test", 42, os::Task::Priority::MEDIUM, func);
+
+    os::ThisTask::sleep(std::chrono::milliseconds(4));
+
+    CHECK(want != have);
+
+    testTask.detach();
+    os::ThisTask::sleep(std::chrono::milliseconds(2));
+
+    CHECK(want == have);
+
+    TestCaseEnd();
+}
+
 int main(int argc, char** argv)
 {
     UnitTestMainBegin();
+
     RunTest(true, ut_TestTaskMock);
     RunTest(true, ut_TestMutexMock);
     RunTest(true, ut_TestSemaphoreMock);
+    RunTest(true, ut_TaskInterruptableMockBasicBehavior);
+    RunTest(true, ut_TaskInterruptableMockStartStop);
+    RunTest(true, ut_TaskInterruptableMockDetach);
+
     UnitTestMainEnd();
 }
