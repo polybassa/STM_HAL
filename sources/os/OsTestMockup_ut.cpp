@@ -237,6 +237,30 @@ int ut_TaskInterruptableMockDetach(void)
     TestCaseEnd();
 }
 
+int ut_SemaphoreMockTimeout(void)
+{
+    TestCaseBegin();
+
+    const os::Semaphore semaphore;
+    constexpr std::chrono::milliseconds waitTimeMS(200);
+    bool have = false;
+
+    os::Task testTask("test", 42,
+                      os::Task::Priority::MEDIUM,
+                      [&](const bool& join){
+                      os::ThisTask::sleep(std::chrono::milliseconds(waitTimeMS * 2));
+                      semaphore.give();
+        });
+
+    have = semaphore.take(waitTimeMS);
+    CHECK(have == false);
+    os::ThisTask::sleep(std::chrono::milliseconds(10));
+    have = semaphore.take(waitTimeMS);
+    CHECK(have == true);
+
+    TestCaseEnd();
+}
+
 int main(int argc, char** argv)
 {
     UnitTestMainBegin();
@@ -247,6 +271,7 @@ int main(int argc, char** argv)
     RunTest(true, ut_TaskInterruptableMockBasicBehavior);
     RunTest(true, ut_TaskInterruptableMockStartStop);
     RunTest(true, ut_TaskInterruptableMockDetach);
+    RunTest(true, ut_SemaphoreMockTimeout);
 
     UnitTestMainEnd();
 }

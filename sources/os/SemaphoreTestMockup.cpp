@@ -17,6 +17,7 @@
 #include "Semaphore.h"
 
 #include <mutex>
+#include <thread>
 
 namespace os
 {
@@ -52,8 +53,24 @@ bool Semaphore::take(uint32_t ticksToWait) const
 {
     if (*this) {
         std::mutex* m = reinterpret_cast<std::mutex*>(mSemaphoreHandle);
+
+        bool noUnclockByAwakener = true;
+        std::thread awakener([&] {
+                             if (ticksToWait != portMAX_DELAY) {
+                                 std::mutex* pm = reinterpret_cast<std::mutex*>(mSemaphoreHandle);
+                                 std::this_thread::sleep_for(std::chrono::milliseconds(ticksToWait));
+                                 if (!pm->try_lock()) {
+                                     noUnclockByAwakener = false;
+                                     pm->unlock();
+                                 }
+                             }
+                });
+
         m->lock();
-        return true;
+
+        awakener.detach();
+
+        return noUnclockByAwakener;
     }
 
     return false;
