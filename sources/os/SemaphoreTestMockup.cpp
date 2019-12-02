@@ -54,17 +54,19 @@ bool Semaphore::take(uint32_t ticksToWait) const
     if (*this) {
         std::mutex* m = reinterpret_cast<std::mutex*>(mSemaphoreHandle);
 
+        std::thread::id currentAwakenerId;
         bool noUnclockByAwakener = true;
         std::thread awakener([&] {
                              if (ticksToWait != portMAX_DELAY) {
                                  std::mutex* pm = reinterpret_cast<std::mutex*>(mSemaphoreHandle);
                                  std::this_thread::sleep_for(std::chrono::milliseconds(ticksToWait));
-                                 if (!pm->try_lock()) {
+                                 if ((currentAwakenerId == std::this_thread::get_id()) && (!pm->try_lock())) {
                                      noUnclockByAwakener = false;
                                      pm->unlock();
                                  }
                              }
                 });
+        currentAwakenerId = awakener.get_id();
 
         m->lock();
 
