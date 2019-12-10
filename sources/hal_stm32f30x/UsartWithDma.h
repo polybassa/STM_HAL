@@ -53,6 +53,9 @@ struct UsartWithDma {
     const Usart& mUsart;
 
 private:
+
+#include "UsartWithDma_config.h"
+
     constexpr UsartWithDma(const Usart&     usartInterface,
                            const uint16_t&  dmaCmd = 0,
                            Dma const* const txDma = nullptr,

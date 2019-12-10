@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0
 /*
  * Copyright (c) 2014-2018 Nils Weiss
+ * Modified 2019 by Henning Mende
  */
 
 #pragma once
@@ -11,6 +12,7 @@
 #include "os_Task.h"
 #include "for_each_tuple.h"
 #include "CRC.h"
+#include "returnTypeDeduction.h"
 
 #ifdef UNITTEST
 int ut_tuple(void);
@@ -30,7 +32,7 @@ class DataTransferObject
     typedef struct __attribute__((packed)) {
         uint32_t timestamp;
         uint8_t data [DATASIZE];
-        uint8_t crc;
+        decltype(utility::getReturnType<const uint8_t* const>(&hal::Crc::getCrc))crc;
     } DataTransferStruct;
 
     DataTransferStruct mTransferData;
@@ -56,6 +58,11 @@ public:
     constexpr inline size_t length(void) const
     {
         return sizeof(mTransferData);
+    }
+
+    inline uint32_t crc(void) const
+    {
+        return mTransferData.crc;
     }
 
 #ifdef UNITTEST
@@ -92,7 +99,13 @@ template<typename ... types>
 bool com::DataTransferObject<types ...>::isValid(void)
 {
     const hal::Crc& crcUnit = hal::Factory<hal::Crc>::get<hal::Crc::SYSTEM_CRC>();
-    const bool crcValid = (0x00 == (crcUnit.getCrc(this->data(), this->length())));
+
+    // This check: 0x00 == (crcUnit.getCrc(this->data(), this->length()))
+    // is not possible anymore, due to crc module working with words instead of bytes on the STM32F4.
+    // Maybe find a more sophisticated way
+    uint32_t calcCrc = crcUnit.getCrc(this->data(), this->length() - sizeof(mTransferData.crc));
+    const bool crcValid = calcCrc == mTransferData.crc;
+
     return crcValid;
 }
 

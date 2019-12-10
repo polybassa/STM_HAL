@@ -39,6 +39,16 @@ ${BINDIR}/PIDController_ut.bin: DEFINES+=-DUNITTEST
 ${BINDIR}/PIDController_ut.bin: ${OBJDIR}/PIDController.o
 ${BINDIR}/PIDController_ut.bin: ${OBJDIR}/PIDController_ut.o
 
+##################################### OsTestMockup ###########################################
+
+${BINDIR}/OsTestMockup_ut.bin: DEFINES +=-DUNITTEST
+${BINDIR}/OsTestMockup_ut.bin:  DEFINES +=-pthread
+${BINDIR}/OsTestMockup_ut.bin: ${OBJDIR}/OsTestMockup_ut.o
+${BINDIR}/OsTestMockup_ut.bin: ${OBJDIR}/MutexTestMockup.o
+${BINDIR}/OsTestMockup_ut.bin: ${OBJDIR}/SemaphoreTestMockup.o
+${BINDIR}/OsTestMockup_ut.bin: ${OBJDIR}/TaskTestMockup.o
+${BINDIR}/OsTestMockup_ut.bin: ${OBJDIR}/TaskInterruptableTestMockup.o
+
 ################################################################################
 
 test: clean-all ${BINDIR} ${OBJDIR} test_binarys
@@ -48,6 +58,7 @@ test: clean-all ${BINDIR} ${OBJDIR} test_binarys
 
 TESTS=${BINDIR}/DebugInterface_ut.bin
 TESTS+=${BINDIR}/PIDController_ut.bin
+TESTS+=${BINDIR}/OsTestMockup_ut.bin
 
 test_binarys: ${TESTS}  
 	@echo "-------------------------------------------------------------"

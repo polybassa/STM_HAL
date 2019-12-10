@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0
 /*
  * Copyright (c) 2014-2018 Nils Weiss
+ * Modified 2019 by Henning Mende
  */
 
 #pragma once
@@ -8,27 +9,41 @@
 #include "TaskInterruptable.h"
 #include "DeepSleepInterface.h"
 #include "UsartWithDma.h"
+#include "Gpio.h"
+
+namespace com
+{
+enum class ErrorCode : uint8_t {
+    CRC_ERROR = 0,
+    OFFSET_ERROR,
+    UPDATE_ERROR,
+    NO_COMMUNICATION_ERROR,
+    TX_ERROR
+};
+}
 
 namespace app
 {
 template<typename rxDto, typename txDto>
 struct Communication final :
     private os::DeepSleepModule {
-    enum class ErrorCode {
-        CRC_ERROR = 0,
-        OFFSET_ERROR,
-        UPDATE_ERROR,
-        NO_COMMUNICATION_ERROR,
-        TX_ERROR
-    };
-
     Communication(const hal::UsartWithDma& interface, rxDto&, txDto&,
-                  std::function<void(ErrorCode)> errorCallback = nullptr);
+                  const std::chrono::milliseconds& transferPeriodMS,
+                  std::function<void(com::ErrorCode)> errorCallback = nullptr);
+    Communication(const hal::UsartWithDma& interface,
+                  rxDto& rx, txDto& tx,
+                  std::function<void(com::ErrorCode)> errorCallback = nullptr) :
+        Communication(interface, rx, tx, std::chrono::milliseconds(10), errorCallback){}
 
     Communication(const Communication&) = delete;
     Communication(Communication&&) = default;
     Communication& operator=(const Communication&) = delete;
     Communication& operator=(Communication&&) = delete;
+
+    inline bool isConnected(void) const
+    {
+        return mConnected;
+    }
 
 #ifdef UNITTEST
     void triggerRxTaskExecution(void) { this->RxTaskFunction(true); }
@@ -44,7 +59,9 @@ private:
     const hal::UsartWithDma& mInterface;
     rxDto& mRxDto;
     txDto& mTxDto;
-    std::function<void(ErrorCode)> mErrorCallback;
+    const uint8_t mTransferPeriod;
+    std::function<void(com::ErrorCode)> mErrorCallback;
+    bool mConnected = false;
 
     os::TaskInterruptable mTxTask;
     os::TaskInterruptable mRxTask;
@@ -56,11 +73,13 @@ private:
 
 template<typename rxDto, typename txDto>
 app::Communication<rxDto, txDto>::Communication(const hal::UsartWithDma& interface, rxDto& rx_dto, txDto& tx_dto,
-                                                std::function<void(ErrorCode)> errorCallback) :
+                                                const std::chrono::milliseconds& transferPeriodMS,
+                                                std::function<void(com::ErrorCode)> errorCallback) :
     os::DeepSleepModule(),
         mInterface(interface),
     mRxDto(rx_dto),
     mTxDto(tx_dto),
+    mTransferPeriod(transferPeriodMS.count()),
     mErrorCallback(errorCallback),
     mTxTask("4ComTx",
             Communication::STACKSIZE,
@@ -106,10 +125,10 @@ void app::Communication<rxDto, txDto>::TxTaskFunction(const bool& join)
 
         if (bytesTransmitted != mTxDto.length()) {
             if (mErrorCallback) {
-                mErrorCallback(ErrorCode::TX_ERROR);
+                mErrorCallback(com::ErrorCode::TX_ERROR);
             }
         }
-        os::ThisTask::sleep(std::chrono::milliseconds(10));
+        os::ThisTask::sleep(std::chrono::milliseconds(mTransferPeriod));
     } while (!join);
 }
 
@@ -117,31 +136,43 @@ template<typename rxDto, typename txDto>
 void app::Communication<rxDto, txDto>::RxTaskFunction(const bool& join)
 {
     mInterface.enableReceiveTimeout(10);
+    const uint32_t ticksToWaitForRx = mTransferPeriod * 2;
+    const std::chrono::milliseconds rxPeriod = std::chrono::milliseconds(mTransferPeriod - 1);
 
     do {
-        os::ThisTask::sleep(std::chrono::milliseconds(9));
-
-        constexpr uint32_t ticksToWaitForRx = 30;
-
         const auto bytesReceived = mInterface.receiveWithTimeout(mRxDto.data(),
                                                                  mRxDto.length(),
                                                                  ticksToWaitForRx);
 
         if (bytesReceived != mRxDto.length()) {
             if (mErrorCallback) {
-                mErrorCallback(ErrorCode::NO_COMMUNICATION_ERROR);
+                mErrorCallback(com::ErrorCode::NO_COMMUNICATION_ERROR);
             }
+            mConnected = false;
             continue;
         }
 
         if (!mRxDto.isValid()) {
             if (mErrorCallback) {
-                mErrorCallback(ErrorCode::CRC_ERROR);
+                mErrorCallback(com::ErrorCode::CRC_ERROR);
             }
+            mConnected = false;
+            // consume remaining bytes in hardware buffer
+            auto bytesReceived = mInterface.receiveWithTimeout(mRxDto.data(),
+                                                               mRxDto.length(),
+                                                               mTransferPeriod / 2);
             continue;
         }
 
         mRxDto.updateTuple();
+
+        // This is only reached if a connection is established.
+        if (mErrorCallback) {
+            mErrorCallback(com::ErrorCode::NO_COMMUNICATION_ERROR);
+        }
+        mConnected = true;
+
+        os::ThisTask::sleep(rxPeriod);
     } while (!join);
 
     mInterface.disableReceiveTimeout();

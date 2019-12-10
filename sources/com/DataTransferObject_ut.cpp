@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0
 /*
  * Copyright (c) 2014-2018 Nils Weiss
+ * Modified 2019 by Henning Mende
  */
 
 #include <cmath>
@@ -15,7 +16,12 @@
 
 //--------------------------BUFFERS--------------------------
 uint32_t g_currentTickCount;
+
+#ifdef CRC_32BIT
+uint32_t g_crc;
+#else
 uint8_t g_crc;
+#endif // CRC_32BIT
 
 //--------------------------MOCKING--------------------------
 constexpr const std::array<const hal::Crc, hal::Crc::__ENUM__SIZE> hal::Factory<hal::Crc>::Container;
@@ -29,10 +35,17 @@ uint32_t os::Task::getTickCount(void)
     return g_currentTickCount;
 }
 
+#ifdef CRC_32BIT
+uint32_t hal::Crc::getCrc(uint8_t const* const data, const size_t length) const
+{
+    return g_crc;
+}
+#else
 uint8_t hal::Crc::getCrc(uint8_t const* const data, const size_t length) const
 {
     return g_crc;
 }
+#endif // CRC_32BIT
 
 //-------------------------TESTCASES-------------------------
 
@@ -49,7 +62,7 @@ int ut_length(void)
 
     com::DataTransferObject<uint8_t, uint32_t, uint16_t> dto(c, a, b);
 
-    const size_t length = sizeof(uint32_t) + sizeof(uint16_t) + sizeof(uint8_t) + sizeof(uint32_t) + sizeof(uint8_t);
+    const size_t length = sizeof(uint32_t) + sizeof(uint16_t) + sizeof(uint8_t) + sizeof(uint32_t) + sizeof(g_crc);
 
     CHECK(dto.length() == length);
 
