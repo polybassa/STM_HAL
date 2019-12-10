@@ -207,6 +207,7 @@ void Dma::enable(void) const
 void Dma::disable(void) const
 {
     DMA_Cmd(reinterpret_cast<DMA_Stream_TypeDef*>(mPeripherie), DISABLE);
+    ClearInterruptFlag(this);
 }
 
 bool Dma::registerInterruptSemaphore(os::Semaphore* const semaphore, const Dma::InterruptSource source) const
