@@ -8,6 +8,7 @@
 #if  defined(USE_FREERTOS) && defined(__cplusplus)
 
 #include "FreeRTOS.h"
+#include "task.h"
 #ifdef DEBUG
 #include "SEGGER_RTT.h"
 #endif
