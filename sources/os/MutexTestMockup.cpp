@@ -20,7 +20,7 @@
 namespace os
 {
 Mutex::Mutex(void) :
-    mMutexHandle((SemaphoreHandle_t) new std::mutex)
+    mMutexHandle((SemaphoreHandle_t) new std::timed_mutex)
 {}
 
 Mutex::Mutex(Mutex&& rhs) :
@@ -45,9 +45,8 @@ Mutex::~Mutex(void)
 bool Mutex::take(uint32_t ticksToWait) const
 {
     if (*this) {
-        std::mutex* m = reinterpret_cast<std::mutex*>(mMutexHandle);
-        m->lock();
-        return true;
+        std::timed_mutex* m = reinterpret_cast<std::timed_mutex*>(mMutexHandle);
+        return m->try_lock_for(std::chrono::milliseconds(ticksToWait));
     }
 
     return false;
@@ -56,7 +55,7 @@ bool Mutex::take(uint32_t ticksToWait) const
 bool Mutex::give(void) const
 {
     if (*this) {
-        std::mutex* m = reinterpret_cast<std::mutex*>(mMutexHandle);
+        std::timed_mutex* m = reinterpret_cast<std::timed_mutex*>(mMutexHandle);
         m->unlock();
         return true;
     }
