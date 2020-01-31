@@ -35,6 +35,10 @@ public:
         LOWEST = 0
     };
 
+    static_assert(configMAX_PRIORITIES > Priority::HIGHEST, "Too few priority levels configured in FreeRTOSConfig.h");
+    static_assert(configMAX_PRIORITIES == (Priority::HIGHEST + 1),
+                  "Too many priority levels configured in FreeRTOSConfig.h");
+
     Task(char const* const name, const uint16_t stackSize, const os::Task::Priority priority,
          const std::function<void(const bool&)> function);
     Task(const Task&) = delete;
