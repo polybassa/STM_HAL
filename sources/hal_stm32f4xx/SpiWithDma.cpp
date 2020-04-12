@@ -88,6 +88,11 @@ size_t SpiWithDma::receive(uint8_t* const data, const size_t length) const
         return 0;
     }
 
+    // clear receive buffer
+    if (mSpi->isReadyToReceive()) {
+        mSpi->receive();
+    }
+
     if (mRxDma && (mDmaCmd & SPI_I2S_DMAReq_Rx)
         && (length > MIN_LENGTH_FOR_DMA_TRANSFER) && (mTxDma && (mDmaCmd & SPI_I2S_DMAReq_Tx)))
     {
@@ -120,6 +125,12 @@ size_t SpiWithDma::transmitReceive(uint8_t const* const txData, uint8_t* const r
 {
     if ((txData == nullptr) || (rxData == nullptr)) {
         return 0;
+    }
+
+    // clear receive buffer
+    if (mSpi->isReadyToReceive()) {
+        Trace(ZONE_INFO, "clear buffer\n");
+        mSpi->receive();
     }
 
     if (mRxDma && (mDmaCmd & SPI_I2S_DMAReq_Rx)
