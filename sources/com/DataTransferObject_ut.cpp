@@ -197,7 +197,7 @@ int ut_tupleValid(void)
     uint8_t c = 3;
 
     com::DataTransferObject<uint32_t, uint16_t, uint8_t> dto(a, b, c);
-    dto.updateTuple();
+    dto.prepareForTx();
     CHECK(dto.isValid() == true);
     TestCaseEnd();
 }
