@@ -23,6 +23,7 @@ PARSE_EXTS=true
 
 # file types to parse. Only effective when PARSE_EXTS is true.
 # FILE_EXTS=".c .h .cpp .hpp"
-FILE_EXTS=".c .h .cpp .hpp"
+TEXT_FILE_EXTS=" .txt .md"
+FILE_EXTS=".c .h .cpp .hpp"${TEXT_FILE_EXTS}
 
 ##################################################################
