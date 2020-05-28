@@ -20,7 +20,7 @@
 
 #******************************************************************************
 #
-# Makefile - Rules for building the WyLight bootloader.
+# Makefile - Rules for building the STM32F4 Discovery board demo
 #
 #
 #*****************************************************************************
@@ -81,9 +81,11 @@ filelist:
 	@$(foreach END, ${ENDINGS}, $(foreach DIR, ${CODE_DIRS}, find ./$(DIR) -name "*.$(END)" >> $@.txt;))
 	@echo "Created $@.txt"
 
+REPLACE_CMD=sed -i -e 's/\s\+$$//g'
 uncrustify: filelist
 	${UNCRUSTIFY} -F filelist.txt --no-backup -c ../utilities/uncrustify.cfg
-
+	# clean trailing white space in text and markdown files
+	@$(foreach END, md txt, $(foreach DIR, ${CODE_DIRS}, find ./$(DIR) -name "*.$(END)" -exec ${REPLACE_CMD} '{}' \;;))
 
 # The rule to clean out all the build products.
 clean:
