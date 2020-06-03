@@ -46,7 +46,6 @@ VPATH+=${ROOT}/libraries/CMSIS/Device/ST/STM32F4xx/Source
 VPATH+=${ROOT}/libraries/CMSIS/Device/ST/STM32F4xx/Source/Templates
 VPATH+=${ROOT}/libraries/STM32F4xx_StdPeriph_Driver/src
 VPATH+=${ROOT}/libraries/Filters-master
-VPATH+=${ROOT}/libraries/STM32F4xx_EEPROM_EMULATION
 
 ifneq (,$(findstring DSYSVIEW, $(DEFINES)))
 VPATH+=${SEGGER_SOURCE_DIR}/SEGGER
@@ -130,6 +129,7 @@ ${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/Usart.o
 ${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/UsartWithDma.o
 ${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/Nvic.o
 ${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/TimInterrupt.o
+${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/TimInputCapture.o
 ${BINDIR}/${PRJ_NAME}.elf: ${OBJDIR}/FlashAsEeprom.o
 
 # DEV Layer

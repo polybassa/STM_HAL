@@ -27,6 +27,12 @@ The project consists of four tasks/apps:
    Every second this tasks prints the current  reading of the analog to digital
    converter (ADC) on pin C1 to the debug interface.
 
+5. timer capture (anonymous, created in main procedure):
+
+   After 3 seconds this task measures every 25 milliseconds the input frequencies
+   on pin C6 (Channel 1) and C7 (Channel 2). The results and timer flags are printed
+   via Segger Real Time Trace (RTT).
+
 By pressing the "User Button" the direction of the LedBlinker animation can be
 inversed.
 
@@ -50,3 +56,8 @@ enabled as well. It is set by the startup script.
 - Discovery Board "User Button" on pin C0
 
 - ADC analog input pin C1
+
+- Timer capture compare input:
+  - Pin C6 channel 1
+  - Pin C7 channel 2
+
