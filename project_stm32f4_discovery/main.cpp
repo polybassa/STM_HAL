@@ -176,12 +176,18 @@ void timeCaptureMeasurement(const bool& join)
         // capture compare channel 1
         inputCapture1.selectInputTrigger(hal::TimInputCapture::TriggerSelection::TI1FP1);
         os::ThisTask::sleep(std::chrono::milliseconds(1));
-        Trace(ZONE_INFO, "channel 1:   %8d us\n", inputCapture1.getCapture());
+        Trace(ZONE_INFO,
+              "channel 1:   %8d us (over captured %1x)\n",
+              inputCapture1.getCapture(),
+              inputCapture1.isOverCaptured(true));
 
         // capture compare channel 2
         inputCapture2.prepareMeasurement();
         os::ThisTask::sleep(std::chrono::milliseconds(1));
-        Trace(ZONE_INFO, "channel 2:   %8d us\n", inputCapture2.getCapture());
+        Trace(ZONE_INFO,
+              "channel 2:   %8d us (over captured %1x)\n",
+              inputCapture2.getCapture(),
+              inputCapture2.isOverCaptured(true));
 
         // For the flag handling it is not important which inputCapture object we use, because
         // both use the same base timer.
