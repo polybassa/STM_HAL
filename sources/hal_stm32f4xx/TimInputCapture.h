@@ -28,6 +28,12 @@ class TimInputCapture
 public:
 #include "TimInputCapture_config.h"
 
+    TimInputCapture() = delete;
+    TimInputCapture(const TimInputCapture&) = delete;
+    TimInputCapture(TimInputCapture&&) = default;
+    TimInputCapture& operator=(const TimInputCapture&) = delete;
+    TimInputCapture& operator=(TimInputCapture&&) = delete;
+
     /// Counter triggers
     enum TriggerSelection {
         ITR0 = TIM_TS_ITR0,      //!< Internal trigger 0
