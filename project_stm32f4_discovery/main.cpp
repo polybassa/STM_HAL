@@ -41,6 +41,7 @@
 #include "I2c.h"
 #include "Nvic.h"
 #include "TimInterrupt.h"
+#include "FlashAsEeprom.h"
 
 /* DEV LAYER INLCUDES */
 #include "DebugInterface.h"
@@ -81,6 +82,7 @@ int main(void)
     hal::initFactory<hal::Factory<hal::AdcWithDma> >();
     hal::initFactory<hal::Factory<hal::Crc> >();
     hal::initFactory<hal::Factory<hal::I2c> >();
+    hal::initFactory<hal::Factory<hal::FlashAsEeprom> > ();
 
     TraceInit();
     Trace(ZONE_INFO, "Version: %s \r\n", VERSION.c_str());
@@ -125,6 +127,20 @@ int main(void)
             os::ThisTask::sleep(std::chrono::seconds(1));
         }
     });
+
+    // flash as eeprom demo
+    const hal::FlashAsEeprom& counterStorage =
+        hal::Factory<hal::FlashAsEeprom>::get<hal::FlashAsEeprom::RESTART_COUNTER>();
+
+    bool status = false;
+    uint16_t startCounter = counterStorage.read(status);
+
+    if (status != true) {
+        startCounter = 0;
+    }
+    startCounter++;
+    status = counterStorage.write(startCounter);
+    Trace(ZONE_INFO, "started %d times (write status: %s)\n", startCounter, status ? "success" : "fail");
 
     // print info and start scheduler
     Trace(ZONE_INFO, "%d Tasks registered.\n", os::Task::getNumberOfTasks());
