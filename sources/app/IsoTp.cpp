@@ -143,7 +143,7 @@ size_t ISOTP::receive_SF(const std::string_view message, char* buffer, const siz
 
 size_t ISOTP::receive_FF(const std::string_view message, char* buffer, const size_t length)
 {
-    mRxMsgLength = (message[0] & 0x0f) | (message[1]);
+    mRxMsgLength = ((message[0] & 0x0f) << 8) | (message[1]);
 
     if (mRxMsgLength <= MAX_SINGLE_FRAME_PAYLOAD) {
         Trace(ZONE_INFO, "Message is to short for a first frame.\r\n");
