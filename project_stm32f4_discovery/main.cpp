@@ -41,6 +41,7 @@
 #include "I2c.h"
 #include "Nvic.h"
 #include "TimInterrupt.h"
+#include "TimInputCapture.h"
 #include "FlashAsEeprom.h"
 
 /* DEV LAYER INLCUDES */
@@ -52,6 +53,8 @@
 
 /* APP LAYER INLCUDES */
 #include "LedBlinker.h"
+
+void timeCaptureMeasurement(const bool& join);
 
 /* GLOBAL VARIABLES */
 static const int __attribute__((used)) g_DebugZones = ZONE_ERROR | ZONE_WARNING |
@@ -82,6 +85,7 @@ int main(void)
     hal::initFactory<hal::Factory<hal::AdcWithDma> >();
     hal::initFactory<hal::Factory<hal::Crc> >();
     hal::initFactory<hal::Factory<hal::I2c> >();
+    hal::initFactory<hal::Factory<hal::TimInputCapture> > ();
     hal::initFactory<hal::Factory<hal::FlashAsEeprom> > ();
 
     TraceInit();
@@ -128,6 +132,12 @@ int main(void)
         }
     });
 
+    // create timer period demo task
+    auto* const periodMeasurement = new os::TaskInterruptable("timer capture", 2048, os::Task::Priority::LOW,
+                                                              [](const bool& join) {
+        timeCaptureMeasurement(join);
+    });
+
     // flash as eeprom demo
     const hal::FlashAsEeprom& counterStorage =
         hal::Factory<hal::FlashAsEeprom>::get<hal::FlashAsEeprom::RESTART_COUNTER>();
@@ -148,4 +158,48 @@ int main(void)
     os::Task::startScheduler();
 
     while (1) {}
+}
+
+void timeCaptureMeasurement(const bool& join)
+{
+    os::ThisTask::sleep(std::chrono::seconds(3));
+
+    const hal::TimInputCapture& inputCapture1 =
+        hal::Factory<hal::TimInputCapture>::get<hal::TimInputCapture::PERIOD_MEASUREMENT_1>();
+    const hal::TimInputCapture& inputCapture2 =
+        hal::Factory<hal::TimInputCapture>::get<hal::TimInputCapture::PERIOD_MEASUREMENT_2>();
+
+    inputCapture1.enable();
+    inputCapture2.enable();
+
+    while (!join) {
+        // capture compare channel 1
+        inputCapture1.selectInputTrigger(hal::TimInputCapture::TriggerSelection::TI1FP1);
+        os::ThisTask::sleep(std::chrono::milliseconds(1));
+        Trace(ZONE_INFO,
+              "channel 1:   %8d us (over captured %1x)\n",
+              inputCapture1.getCapture(),
+              inputCapture1.isOverCaptured(true));
+
+        // capture compare channel 2
+        inputCapture2.prepareMeasurement();
+        os::ThisTask::sleep(std::chrono::milliseconds(1));
+        Trace(ZONE_INFO,
+              "channel 2:   %8d us (over captured %1x)\n",
+              inputCapture2.getCapture(),
+              inputCapture2.isOverCaptured(true));
+
+        // For the flag handling it is not important which inputCapture object we use, because
+        // both use the same base timer.
+
+        // print flag status (cursor up: \033[A)
+        Trace(ZONE_INFO, "status flags:    %4x\r\033[A\033[A", inputCapture2.getFlags());
+
+        // clear both over capture and update flags
+        inputCapture1.clearFlag(hal::TimInputCapture::Flags::CC1OF_OVER_CAPTURE_1 |
+                                hal::TimInputCapture::Flags::CC2OF_OVER_CAPTURE_2 |
+                                hal::TimInputCapture::Flags::UPDATE);
+
+        os::ThisTask::sleep(std::chrono::milliseconds(25));
+    }
 }

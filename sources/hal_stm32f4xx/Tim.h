@@ -74,10 +74,8 @@ struct Tim {
     ITStatus getInterruptStatus(const uint16_t interruptFlag) const;
     void clearPendingInterruptFlag(const uint16_t interruptFlag) const;
 
-    /**
-     * returns whether the current counting direction is up or down
-     * @return true if upcounting
-     */
+    /// Returns whether the current counting direction is up or down.
+    /// @return True if upcounting.
     bool isDirectionUp(void) const;
 
     const enum Description mDescription;
@@ -111,6 +109,7 @@ private:
     friend struct dev::SensorBLDC;
     friend struct PhaseCurrentSensor;
     friend class TimInterrupt;
+    friend class TimInputCapture;
 };
 
 template<>
